@@ -98,7 +98,7 @@ export default function CardTable({ color }) {
                   2518, Leányvár Bécsi út 86
                 </td>
                 <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-                  <TableDropdown />
+                  <TableDropdown link = "/admin/soforForm"/>
                 </td>
               </tr>
             </tbody>

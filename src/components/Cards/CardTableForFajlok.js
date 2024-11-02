@@ -5,7 +5,7 @@ import PropTypes from "prop-types";
 
 import TableDropdown from "components/Dropdowns/TableDropdown.js";
 
-export default function CardTable({ color }) {
+export default function CardTableForFajlok({ color }) {
   return (
     <>
       <div
@@ -24,7 +24,7 @@ export default function CardTable({ color }) {
                   (color === "light" ? "text-blueGray-700" : "text-white")
                 }
               >
-                Pótkocsik
+                Fájlok
               </h3>
             <button
               className="bg-lightBlue-500 text-white active:bg-lightBlue-600 font-bold uppercase text-xs px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none mr-1 ease-linear transition-all duration-150"
@@ -49,7 +49,7 @@ export default function CardTable({ color }) {
                       : "bg-lightBlue-800 text-lightBlue-300 border-lightBlue-700")
                   }
                 >
-                  Rendszám
+                  File név
                 </th>
                 <th
                   className={
@@ -59,7 +59,7 @@ export default function CardTable({ color }) {
                       : "bg-lightBlue-800 text-lightBlue-300 border-lightBlue-700")
                   }
                 >
-                  Sofőr
+                  Méret
                 </th>
                 <th
                   className={
@@ -69,23 +69,23 @@ export default function CardTable({ color }) {
                       : "bg-lightBlue-800 text-lightBlue-300 border-lightBlue-700")
                   }
                 >
-                  Pótkocsi
+                  Feltöltve
                 </th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-                  TES-001
+                  Teszt.pdf
                 </td>
                 <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-                  Szikora Ágoston
+                  2,4 Mb
                 </td>
                 <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-                  Nincs
+                  2024-12-12
                 </td>
                 <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-                <TableDropdown link = "/admin/potkocsiForm"/>
+                  <TableDropdown link = ""/>
                 </td>
               </tr>
             </tbody>
@@ -96,10 +96,10 @@ export default function CardTable({ color }) {
   );
 }
 
-CardTable.defaultProps = {
+CardTableForFajlok.defaultProps = {
   color: "light",
 };
 
-CardTable.propTypes = {
+CardTableForFajlok.propTypes = {
   color: PropTypes.oneOf(["light", "dark"]),
 };

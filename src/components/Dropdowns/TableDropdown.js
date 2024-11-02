@@ -1,7 +1,8 @@
 import React from "react";
 import { createPopper } from "@popperjs/core";
+import { Link } from "react-router-dom";
 
-const NotificationDropdown = () => {
+const TableDropdown = ({ link }) => {
   // dropdown props
   const [dropdownPopoverShow, setDropdownPopoverShow] = React.useState(false);
   const btnDropdownRef = React.createRef();
@@ -35,20 +36,20 @@ const NotificationDropdown = () => {
           "bg-white text-base z-50 float-left py-2 list-none text-left rounded shadow-lg min-w-48"
         }
       >
-        <a
-          href="#pablo"
+        <Link
+          to={link}
           className={
             "text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-blueGray-700"
           }
-          onClick={(e) => e.preventDefault()}
         >
           Megnyitás
-        </a>
+        </Link>
+        <hr className="my-4 md:min-w-full" />
         <a
-          href="#pablo"
           className={
             "text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-red-700"
           }
+          style={{ color: "red" }}
           onClick={(e) => e.preventDefault()}
         >
           Törlés
@@ -58,4 +59,4 @@ const NotificationDropdown = () => {
   );
 };
 
-export default NotificationDropdown;
+export default TableDropdown;
