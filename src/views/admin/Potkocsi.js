@@ -2,7 +2,7 @@ import React from "react";
 
 // components
 
-import CardTable from "components/Cards/CardTableForPotkocsi";
+import CardTable from "components/Table/CardTableForPotkocsi";
 
 export default function Potkocsi() {
   return (

@@ -1,0 +1,10 @@
+//cliens indtása
+npm install
+npm start
+
+//server indtása
+cd backend
+php8.2 -S localhost:8000
+
+//adatbázis user létrehozása
+grant select,insert,update,delete,lock tables, ALTER on kamion.* to kamion@localhost identified by 'VW4h2gzwm6vzA05xYGdWoNXFzHhSCdNQ';

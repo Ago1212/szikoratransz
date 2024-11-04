@@ -2,7 +2,7 @@ import React from "react";
 
 // components
 
-import CardTable from "components/Cards/CardTableForSoforok.js";
+import CardTable from "components/Table/CardTableForSoforok.js";
 
 export default function Soforok() {
   return (

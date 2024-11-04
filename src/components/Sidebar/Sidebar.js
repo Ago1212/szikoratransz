@@ -1,12 +1,23 @@
 /*eslint-disable*/
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link,Redirect } from "react-router-dom";
 
 import NotificationDropdown from "components/Dropdowns/NotificationDropdown.js";
 import UserDropdown from "components/Dropdowns/UserDropdown.js";
+import { fetchAction } from "utils/fetchAction";
 
 export default function Sidebar() {
+  const storedUserData = sessionStorage.getItem("user");
   const [collapseShow, setCollapseShow] = React.useState("hidden");
+  const handleLogout = async () => {
+    const result = await fetchAction("logoutUser", { id: storedUserData.id });
+    if (result && result.success) {
+      sessionStorage.removeItem("user");
+      window.location.reload();
+    } else {
+      alert(result.message || "Logout failed.");
+    }
+  };
   return (
     <>
       <nav className="md:left-0 md:block md:fixed md:top-0 md:bottom-0 md:overflow-y-auto md:flex-row md:flex-nowrap md:overflow-hidden shadow-xl bg-white flex flex-wrap items-center justify-between relative md:w-64 z-10 py-4 px-6">
@@ -234,6 +245,14 @@ export default function Sidebar() {
               </li>
             </ul>
           </div>
+            <div className="mt-auto">
+              <button
+                onClick={handleLogout}
+                className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg"
+              >
+                Kijelentkezés
+              </button>
+            </div>
         </div>
       </nav>
     </>

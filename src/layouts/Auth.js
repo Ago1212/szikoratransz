@@ -1,17 +1,25 @@
-import React from "react";
-import { Switch, Route, Redirect } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Switch, Route, Redirect, useHistory } from "react-router-dom";
 
 // components
-
 import Navbar from "components/Navbars/AuthNavbar.js";
 import FooterSmall from "components/Footers/FooterSmall.js";
 
 // views
-
 import Login from "views/auth/Login.js";
 import Register from "views/auth/Register.js";
 
 export default function Auth() {
+  const history = useHistory(); // Használj useHistory-t
+
+  // Ellenőrizd a bejelentkezett állapotot
+  useEffect(() => {
+    const isAuthenticated = sessionStorage.getItem('user') !== null;
+    if (isAuthenticated) {
+      history.push("/admin/dashboard"); // Navigálj a dashboard oldalra
+    }
+  }, [history]);
+
   return (
     <>
       <Navbar transparent />

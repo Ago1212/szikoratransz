@@ -1,29 +1,43 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 // components
 import CardStats from "components/Cards/CardStats";
 import CardCalender from "components/Cards/CardCalender";
+import { fetchAction } from "utils/fetchAction";
 
 export default function Dashboard() {
+  const [stats, setStats] = useState({
+    soforok: 0,
+    kamionok: 0,
+    potkocsik: 0,
+    hatarido: 0,
+  });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const userId = 1;
+      const result = await fetchAction("getSum", { id: userId });
+      if (result.success) {
+        setStats({
+          soforok: result.sofor || 0,
+          kamionok: result.kamion || 0,
+          potkocsik: result.potkocsi || 0,
+          hatarido: result.hatarido || 0,
+        });
+      } else {
+        console.error("Error fetching stats:", result.message);
+      }
+    };
+
+    fetchData();
+  }, []);
   return (
     <>
       <div className="flex flex-wrap">
         <div className="w-full lg:w-6/12 xl:w-3/12 px-4">
           <CardStats
-            statSubtitle="Kamionok"
-            statTitle="4"
-            statArrow="up"
-            statPercent="3.48"
-            statPercentColor="text-emerald-500"
-            statDescripiron=""
-            statIconName="fas fa-truck"
-            statIconColor="bg-red-500"
-          />
-        </div>
-        <div className="w-full lg:w-6/12 xl:w-3/12 px-4">
-          <CardStats
             statSubtitle="Sofőrök"
-            statTitle="10"
+            statTitle={stats.soforok.toString()}
             statArrow="down"
             statPercent="1.10"
             statPercentColor="text-orange-500"
@@ -34,14 +48,38 @@ export default function Dashboard() {
         </div>
         <div className="w-full lg:w-6/12 xl:w-3/12 px-4">
           <CardStats
+            statSubtitle="Kamionok"
+            statTitle={stats.kamionok.toString()}
+            statArrow="up"
+            statPercent="3.48"
+            statPercentColor="text-emerald-500"
+            statDescripiron=""
+            statIconName="fas fa-truck"
+            statIconColor="bg-red-500"
+          />
+        </div>
+        <div className="w-full lg:w-6/12 xl:w-3/12 px-4">
+          <CardStats
+            statSubtitle="Pótkocsik"
+            statTitle={stats.potkocsik.toString()}
+            statArrow="down"
+            statPercent="1.10"
+            statPercentColor="text-orange-500"
+            statDescripiron=""
+            statIconName="fas fa-trailer"
+            statIconColor="bg-pink-500"
+          />
+        </div>
+        <div className="w-full lg:w-6/12 xl:w-3/12 px-4">
+          <CardStats
             statSubtitle="Hónapban lejáró határidők"
-            statTitle="10"
+            statTitle={stats.hatarido.toString()}
             statArrow="down"
             statPercent="1.10"
             statPercentColor="text-orange-500"
             statDescripiron=""
             statIconName="fas fa-calendar-days"
-            statIconColor="bg-pink-500"
+            statIconColor="bg-red-500"
           />
         </div>
       </div>

@@ -1,7 +1,27 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import {React,useState} from "react";
+import { Link,useHistory } from "react-router-dom";
+import { fetchAction } from "utils/fetchAction";
 
 export default function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const history = useHistory(); // Használj useHistory-t
+
+  const handleLogin = async () => {
+    const result = await fetchAction("loginUser",{email: email, password: password});
+    if (result && result.success) {
+      sessionStorage.setItem('user', JSON.stringify(result.user));
+      history.push("/admin/dashboard"); // Navigálj a dashboard oldalra
+    } else {
+      alert(result.message || 'Login failed.');
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleLogin();
+    }
+  };
   return (
     <>
       <div className="container mx-auto px-4 h-full">
@@ -29,6 +49,9 @@ export default function Login() {
                       type="email"
                       className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
                       placeholder="Email"
+                      required
+                      autoComplete="email" 
+                      onChange={(e) => setEmail(e.target.value)}
                     />
                   </div>
 
@@ -43,12 +66,16 @@ export default function Login() {
                       type="password"
                       className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
                       placeholder="Password"
+                      required
+                      onChange={(e) => setPassword(e.target.value)}
+                      onKeyDown={handleKeyDown} 
                     />
                   </div>
                   <div className="text-center mt-6">
                     <button
                       className="bg-blueGray-800 text-white active:bg-blueGray-600 text-sm font-bold uppercase px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 w-full ease-linear transition-all duration-150"
                       type="button"
+                      onClick={handleLogin}
                     >
                       Belépés
                     </button>

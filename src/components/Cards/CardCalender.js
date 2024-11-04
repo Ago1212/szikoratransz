@@ -36,8 +36,8 @@ export default function CardCalender() {
         popup
         messages={{
           today: 'Ma',
-          previous: 'Előző',
-          next: 'Következő',
+          previous: '<',
+          next: '>',
           month: 'Hónap',
           week: 'Hét',
           day: 'Nap',

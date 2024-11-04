@@ -2,7 +2,7 @@ import React from "react";
 
 // components
 
-import CardTable from "components/Cards/CardTableForKamionok.js";
+import CardTable from "components/Table/CardTableForKamionok.js";
 
 export default function Kamionok() {
   return (

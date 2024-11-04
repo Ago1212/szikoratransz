@@ -1,6 +1,6 @@
 import React from "react";
-import CardTableForTervezettKarbantartasok from "./CardTableForTervezettKarbantartasok";
-import CardTableForElvegzettKarbantartas from "./CardTableForElvegzettKarbantartas";
+import CardTableForTervezettKarbantartasok from "../Table/CardTableForTervezettKarbantartasok";
+import CardTableForElvegzettKarbantartas from "../Table/CardTableForElvegzettKarbantartas";
 
 export default function CardJarmuEsemenyekForm() {
   return (

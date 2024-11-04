@@ -1,4 +1,4 @@
-import CardTableForFajlok from "components/Cards/CardTableForFajlok";
+import CardTableForFajlok from "components/Table/CardTableForFajlok";
 import React from "react";
 
 // components

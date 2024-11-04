@@ -1,5 +1,5 @@
 import React from "react";
-import CardTableForFajlok from "./CardTableForFajlok";
+import CardTableForFajlok from "../Table/CardTableForFajlok";
 
 export default function CardJarmuFajlok() {
 
