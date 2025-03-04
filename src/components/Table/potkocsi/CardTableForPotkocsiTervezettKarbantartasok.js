@@ -1,8 +1,8 @@
 import React, { useRef, useState, useEffect } from "react";
 import { fetchAction } from "utils/fetchAction";
 
-export default function CardTableForTervezettKarbantartasok({
-  kamion_id,
+export default function CardTableForPotkocsiTervezettKarbantartasok({
+  potkocsi_id,
   refresh,
   onRefresh,
 }) {
@@ -22,7 +22,7 @@ export default function CardTableForTervezettKarbantartasok({
   };
 
   const handleSetKarbantartasKesz = async (karbantartasId) => {
-    const result = await fetchAction("setKarbantartasKesz", {
+    const result = await fetchAction("setPotkocsiKarbantartasKesz", {
       id: karbantartasId,
       elvegzett: true,
     });
@@ -43,7 +43,7 @@ export default function CardTableForTervezettKarbantartasok({
 
     try {
       // API hívás törléshez
-      const result = await fetchAction("deleteKarbantartas", { id });
+      const result = await fetchAction("deletePotkocsiKarbantartas", { id });
 
       if (result && result.success) {
         alert("A karbantartás sikeresen törölve.");
@@ -64,10 +64,10 @@ export default function CardTableForTervezettKarbantartasok({
       id: selectedKarbantartas?.id,
       datum: selectedKarbantartas?.datum,
       log: selectedKarbantartas?.log,
-      kamion_id: kamion_id,
+      potkocsi_id: potkocsi_id,
     };
 
-    const result = await fetchAction("updateKarbantartas", dataToSave);
+    const result = await fetchAction("updatePotkocsiKarbantartas", dataToSave);
 
     if (result && result.success) {
       fetchKarbantartasok(); // Újrarenderelés friss adatokkal
@@ -78,8 +78,8 @@ export default function CardTableForTervezettKarbantartasok({
   };
 
   const fetchKarbantartasok = async () => {
-    const result = await fetchAction("getKarbantartas", {
-      kamion_id: kamion_id,
+    const result = await fetchAction("getPotkocsiKarbantartas", {
+      potkocsi_id: potkocsi_id,
       elvegzett: false,
     });
     if (result && result.success) {
@@ -97,7 +97,7 @@ export default function CardTableForTervezettKarbantartasok({
     } else {
       dialogRef.current.close();
     }
-  }, [openDialog, kamion_id, refresh]);
+  }, [openDialog, potkocsi_id, refresh]);
 
   return (
     <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded bg-white">

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import CardTableForTervezettKarbantartasok from "../Table/CardTableForTervezettKarbantartasok";
-import CardTableForElvegzettKarbantartas from "../Table/CardTableForElvegzettKarbantartas";
-export default function CardJarmuEsemenyekForm({ kamion_id }) {
+import CardTableForPotkocsiElvegzettKarbantartas from "components/Table/potkocsi/CardTableForPotkocsiElvegzettKarbantartas";
+import CardTableForPotkocsiTervezettKarbantartasok from "components/Table/potkocsi/CardTableForPotkocsiTervezettKarbantartasok";
+export default function CardPotkocsiEsemenyekForm({ potkocsi_id }) {
   const [refresh, setRefresh] = useState(false);
   const [refresh2, setRefresh2] = useState(false);
 
@@ -11,15 +11,15 @@ export default function CardJarmuEsemenyekForm({ kamion_id }) {
     <form>
       <div className="flex flex-col md:flex-row space-y-6 md:space-y-0 md:space-x-6 pt-6">
         <div className="w-full md:w-1/2">
-          <CardTableForTervezettKarbantartasok
-            kamion_id={kamion_id}
+          <CardTableForPotkocsiTervezettKarbantartasok
+            potkocsi_id={potkocsi_id}
             onRefresh={triggerRefresh}
             refresh={refresh2}
           />
         </div>
         <div className="w-full md:w-1/2">
-          <CardTableForElvegzettKarbantartas
-            kamion_id={kamion_id}
+          <CardTableForPotkocsiElvegzettKarbantartas
+            potkocsi_id={potkocsi_id}
             onRefresh={triggerRefresh2}
             refresh={refresh}
           />

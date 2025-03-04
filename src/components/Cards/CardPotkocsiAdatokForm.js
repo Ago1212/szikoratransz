@@ -1,10 +1,14 @@
 import React, { useState } from "react";
 
-export default function CardJarmuAdatokForm({ kamion , setFormData, handleSave }) {
+export default function CardPotkocsiAdatokForm({
+  potkocsi,
+  setFormData,
+  handleSave,
+}) {
   const handleFormChange = (e) => {
     const { id, value } = e.target;
-    setFormData((prevKamion) => ({
-      ...prevKamion,
+    setFormData((prevPotkocsi) => ({
+      ...prevPotkocsi,
       [id]: value,
     }));
   };
@@ -25,25 +29,8 @@ export default function CardJarmuAdatokForm({ kamion , setFormData, handleSave }
             <input
               type="text"
               className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.rendszam}
+              value={potkocsi.rendszam}
               id="rendszam"
-              onChange={handleFormChange}
-            />
-          </div>
-        </div>
-        <div className="w-full lg:w-4/12 px-4">
-          <div className="relative w-full mb-3">
-            <label
-              className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
-              htmlFor="potkocsi"
-            >
-              Pótkocsi
-            </label>
-            <input
-              type="text"
-              className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.potkocsi}
-              id="potkocsi"
               onChange={handleFormChange}
             />
           </div>
@@ -67,7 +54,7 @@ export default function CardJarmuAdatokForm({ kamion , setFormData, handleSave }
             <input
               type="date"
               className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.muszaki_lejarat}
+              value={potkocsi.muszaki_lejarat}
               id="muszaki_lejarat"
               onChange={handleFormChange}
             />
@@ -84,7 +71,7 @@ export default function CardJarmuAdatokForm({ kamion , setFormData, handleSave }
             <input
               type="date"
               className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.adr_lejarat}
+              value={potkocsi.adr_lejarat}
               id="adr_lejarat"
               onChange={handleFormChange}
             />
@@ -101,7 +88,7 @@ export default function CardJarmuAdatokForm({ kamion , setFormData, handleSave }
             <input
               type="date"
               className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.taograf_illesztes}
+              value={potkocsi.taograf_illesztes}
               id="taograf_illesztes"
               onChange={handleFormChange}
             />
@@ -118,7 +105,7 @@ export default function CardJarmuAdatokForm({ kamion , setFormData, handleSave }
             <input
               type="date"
               className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.emelohatfal_vizsga}
+              value={potkocsi.emelohatfal_vizsga}
               id="emelohatfal_vizsga"
               onChange={handleFormChange}
             />
@@ -137,7 +124,7 @@ export default function CardJarmuAdatokForm({ kamion , setFormData, handleSave }
             <input
               type="date"
               className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.porolto_lejarat}
+              value={potkocsi.porolto_lejarat}
               id="porolto_lejarat"
               onChange={handleFormChange}
             />
@@ -154,7 +141,7 @@ export default function CardJarmuAdatokForm({ kamion , setFormData, handleSave }
             <input
               type="date"
               className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.porolto_lejarat_2}
+              value={potkocsi.porolto_lejarat_2}
               id="porolto_lejarat_2"
               onChange={handleFormChange}
             />
@@ -179,7 +166,7 @@ export default function CardJarmuAdatokForm({ kamion , setFormData, handleSave }
             <input
               type="text"
               className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.kot_biztositas}
+              value={potkocsi.kot_biztositas}
               id="kot_biztositas"
               onChange={handleFormChange}
             />
@@ -196,7 +183,7 @@ export default function CardJarmuAdatokForm({ kamion , setFormData, handleSave }
             <input
               type="text"
               className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.kot_biz_dij}
+              value={potkocsi.kot_biz_dij}
               id="kot_biz_dij"
               onChange={handleFormChange}
             />
@@ -213,7 +200,7 @@ export default function CardJarmuAdatokForm({ kamion , setFormData, handleSave }
             <input
               type="text"
               className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.kot_biz_utem}
+              value={potkocsi.kot_biz_utem}
               id="kot_biz_utem"
               onChange={handleFormChange}
             />
@@ -236,7 +223,7 @@ export default function CardJarmuAdatokForm({ kamion , setFormData, handleSave }
             <input
               type="text"
               className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.kaszko_biztositas}
+              value={potkocsi.kaszko_biztositas}
               id="kaszko_biztositas"
               onChange={handleFormChange}
             />
@@ -253,7 +240,7 @@ export default function CardJarmuAdatokForm({ kamion , setFormData, handleSave }
             <input
               type="text"
               className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.kaszko_dij}
+              value={potkocsi.kaszko_dij}
               id="kaszko_dij"
               onChange={handleFormChange}
             />
@@ -270,7 +257,7 @@ export default function CardJarmuAdatokForm({ kamion , setFormData, handleSave }
             <input
               type="text"
               className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.kaszko_fizetesi_utem}
+              value={potkocsi.kaszko_fizetesi_utem}
               id="kaszko_fizetesi_utem"
               onChange={handleFormChange}
             />

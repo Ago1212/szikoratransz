@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { fetchAction } from "utils/fetchAction";
 
-export default function CardTableForElvegzettKarbantartas({
-  kamion_id,
+export default function CardTableForPotkocsiElvegzettKarbantartas({
+  potkocsi_id,
   refresh,
   onRefresh,
 }) {
   const [karbantartasok, setKarbantartasok] = useState([]);
   const fetchKarbantartasok = async () => {
-    const result = await fetchAction("getKarbantartas", {
-      kamion_id: kamion_id,
+    const result = await fetchAction("getPotkocsiKarbantartas", {
+      potkocsi_id: potkocsi_id,
       elvegzett: true,
     });
     if (result && result.success) {
@@ -20,10 +20,10 @@ export default function CardTableForElvegzettKarbantartas({
   };
   useEffect(() => {
     fetchKarbantartasok();
-  }, [kamion_id, refresh]);
+  }, [potkocsi_id, refresh]);
 
   const handleSetKarbantartasKesz = async (karbantartasId) => {
-    const result = await fetchAction("setKarbantartasKesz", {
+    const result = await fetchAction("setPotkocsiKarbantartasKesz", {
       id: karbantartasId,
       elvegzett: false,
     });
@@ -44,7 +44,7 @@ export default function CardTableForElvegzettKarbantartas({
 
     try {
       // API hívás törléshez
-      const result = await fetchAction("deleteKarbantartas", { id });
+      const result = await fetchAction("deletePotkocsiKarbantartas", { id });
 
       if (result && result.success) {
         alert("A karbantartás sikeresen törölve.");

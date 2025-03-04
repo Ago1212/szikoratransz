@@ -15,8 +15,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const userId = 1;
-      const result = await fetchAction("getSum", { id: userId });
+      const user = JSON.parse(sessionStorage.getItem('user'));
+      const result = await fetchAction("getSum", { id: user.id });
       if (result.success) {
         setStats({
           soforok: result.sofor || 0,

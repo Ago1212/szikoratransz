@@ -1,6 +1,9 @@
 <?php
 require 'db.php';
-require 'FileHandler.php';
+require 'interface/kamionInterface.php';
+require 'interface/potkocsiInterface.php';
+require 'interface/soforokInterface.php';
+require 'interface/filesInterface.php';
 
 class ApiHandler {
     protected string $auth_hash;
@@ -17,9 +20,36 @@ class ApiHandler {
     private function getActions(): array {
         return [
             'loginUser' => ['email', 'password'],
+            'logoutUser' => [],
             'getSum' => ['id'],
             'saveAdminData' => ['id'],
-            'logoutUser' => []
+            'newKamion' => ['rendszam'],
+            'saveKamionData' => ['id'],
+            'getKamionok'=>['id'],
+            'deleteKarbantartas'=>['id'],
+            'setKarbantartasKesz'=>['id','elvegzett'],
+            'updateKarbantartas'=>['log','kamion_id','datum'],
+            'getKarbantartas'=>['kamion_id', 'elvegzett'],
+            'deleteKamion' => ['id'],
+
+            'newPotkocsi' => ['rendszam'],
+            'savePotkocsiData' => ['id'],
+            'getPotkocsik'=>['id'],
+            'deletePotkocsiKarbantartas'=>['id'],
+            'setPotkocsiKarbantartasKesz'=>['id','elvegzett'],
+            'updatePotkocsiKarbantartas'=>['log','potkocsi_id','datum'],
+            'getPotkocsiKarbantartas'=>['potkocsi_id', 'elvegzett'],
+            'deletePotkocsi' => ['id'],
+
+            'getSoforok'=>['id'],
+            'newSofor' => ['name','email'],
+            'saveSoforData' => ['id'],
+            'deleteSofor' => ['id'],
+
+            'getFiles'=>['id','tabla'],
+            'fileUpload'=>['id','tabla','file','name','size'],
+            'deleteFile'=>['id'],
+            'downloadFile'=>['id'],
         ];
     }
 
@@ -49,12 +79,13 @@ class ApiHandler {
         if(isset($request['email']) && !filter_var($request['email'], FILTER_VALIDATE_EMAIL)){
             throw new Exception('Invalid email format.');
         }
-        if (isset($request['birthdate'])) {
-            $this->validateBirthdate($request['birthdate']);
+        if(isset($request['email']) && isset($request['id']) ){
+            $this->validateUniqueEmail($request['email'],$request['id']);
         }
     }
 
     public function process(?array $request) {
+        global $kamionInterface,$potkocsiInterface,$soforokInterface,$filesInterface;
         try {
             $this->validation($request);
             $action = $request['action'];
@@ -71,6 +102,78 @@ class ApiHandler {
                     return;
                 case 'logoutUser':
                     echo json_encode($this->logoutUser($request['id']));
+                    return;
+                case 'saveKamionData':
+                    echo json_encode($kamionInterface->saveKamionData($request));
+                    return;
+                case 'newKamion':
+                    echo json_encode($kamionInterface->newKamion($request));
+                    return;
+                case 'getKamionok':
+                    echo json_encode($kamionInterface->getKamionok($request['id']));
+                    return;
+                case 'deleteKamion':
+                    echo json_encode($kamionInterface->deleteKamion($request['id']));
+                    return;
+                case 'getKarbantartas':
+                    echo json_encode($kamionInterface->getKarbantartas($request['kamion_id'],$request['elvegzett']));
+                    return;
+                case 'updateKarbantartas':
+                    echo json_encode($kamionInterface->updateKarbantartas(isset($request['id'])?$request['id']:0,$request['kamion_id'],$request['datum'],$request['log']));
+                    return;
+                case 'setKarbantartasKesz':
+                    echo json_encode($kamionInterface->setKarbantartasKesz($request['id'],$request['elvegzett']));
+                    return;
+                case 'deleteKarbantartas':
+                    echo json_encode($kamionInterface->deleteKarbantartas($request['id']));
+                    return;
+                case 'savePotkocsiData':
+                    echo json_encode($potkocsiInterface->savePotkocsiData($request));
+                    return;
+                case 'newPotkocsi':
+                    echo json_encode($potkocsiInterface->newPotkocsi($request));
+                    return;
+                case 'deletePotkocsi':
+                    echo json_encode($potkocsiInterface->deletePotkocsi($request['id']));
+                    return;
+                case 'getPotkocsik':
+                    echo json_encode($potkocsiInterface->getPotkocsik($request['id']));
+                    return;
+                case 'getPotkocsiKarbantartas':
+                    echo json_encode($potkocsiInterface->getPotkocsiKarbantartas($request['potkocsi_id'],$request['elvegzett']));
+                    return;
+                case 'updatePotkocsiKarbantartas':
+                    echo json_encode($potkocsiInterface->updatePotkocsiKarbantartas(isset($request['id'])?$request['id']:0,$request['potkocsi_id'],$request['datum'],$request['log']));
+                    return;
+                case 'setPotkocsiKarbantartasKesz':
+                    echo json_encode($potkocsiInterface->setPotkocsiKarbantartasKesz($request['id'],$request['elvegzett']));
+                    return;
+                case 'deletePotkocsiKarbantartas':
+                    echo json_encode($potkocsiInterface->deletePotkocsiKarbantartas($request['id']));
+                    return;
+                case 'getSoforok':
+                    echo json_encode($soforokInterface->getSoforok($request['id']));
+                    return;
+                case 'newSofor':
+                    echo json_encode($soforokInterface->newSofor($request));
+                    return;
+                case 'saveSoforData':
+                    echo json_encode($soforokInterface->saveSoforData($request));
+                    return;
+                case 'deleteSofor':
+                    echo json_encode($soforokInterface->deleteSofor($request['id']));
+                    return;
+                case 'getFiles':
+                    echo json_encode($filesInterface->getFiles($request['tabla'],$request['id']));
+                    return;
+                case 'fileUpload':
+                    echo json_encode($filesInterface->fileUpload($request['tabla'],$request['id'],$request['file'],$request['name'],$request['size']));
+                    return;
+                case 'downloadFile':
+                    echo json_encode($filesInterface->downloadFile($request['id']));
+                    return;
+                case 'deleteFile':
+                    echo json_encode($filesInterface->deleteFile($request['id']));
                     return;
                 case 'saveAdminData':echo json_encode($this->saveAdminData(
                     $request['id'],
@@ -98,19 +201,19 @@ class ApiHandler {
 
     private function getSum($id) {
         try {    
-            $query = "SELECT IFNULL(COUNT(id),0) as id FROM user WHERE admin = :id";
+            $query = "SELECT IFNULL(COUNT(id),0) as id FROM user WHERE admin = :id AND torolt <> 'I'";
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':id', $id);
             $stmt->execute();
             $sum_soforok = $stmt->fetch(PDO::FETCH_ASSOC)['id'];
 
-            $query = "SELECT IFNULL(COUNT(id),0) as id FROM kamion WHERE admin = :id";
+            $query = "SELECT IFNULL(COUNT(id),0) as id FROM kamion WHERE admin = :id AND torolt <> 'I'";
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':id', $id);
             $stmt->execute();
             $sum_kamion = $stmt->fetch(PDO::FETCH_ASSOC)['id'];
 
-            $query = "SELECT IFNULL(COUNT(id),0) as id FROM potkocsi WHERE admin = :id";
+            $query = "SELECT IFNULL(COUNT(id),0) as id FROM potkocsi WHERE admin = :id AND torolt <> 'I'";
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':id', $id);
             $stmt->execute();
@@ -187,8 +290,6 @@ class ApiHandler {
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
-    
-
     private function updateUser($id, $nickname, $birthdate,$password=null) {
         try {
             $query = "UPDATE user SET nickname = :nickname, birthdate = :birthdate";
@@ -230,13 +331,17 @@ class ApiHandler {
         return $user;
     }
 
-    private function validateBirthdate($birthdate) {
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $birthdate)) {
-            throw new Exception('Invalid birthdate format. Correct format: YYYY-MM-DD.');
-        }
-        $dateParts = explode("-", $birthdate);
-        if (!checkdate($dateParts[1], $dateParts[2], $dateParts[0])) {
-            throw new Exception('Invalid birthdate.');
+    private function validateUniqueEmail($email, $id) {
+        $query = "SELECT COUNT(*) FROM user WHERE email = :email AND id != :id";
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':email', $email, PDO::PARAM_STR);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        $count = $stmt->fetchColumn();
+    
+        if ($count > 0) {
+            throw new Exception('The email address is already in use.');
         }
     }
+    
 }
