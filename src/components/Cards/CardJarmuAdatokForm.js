@@ -1,6 +1,14 @@
 import React, { useState } from "react";
 
-export default function CardJarmuAdatokForm({ kamion , setFormData, handleSave }) {
+export default function CardJarmuAdatokForm({
+  kamion,
+  setFormData,
+  handleSave,
+}) {
+  const formatNumber = (value) => {
+    if (!value) return "";
+    return new Intl.NumberFormat("hu-HU").format(value);
+  };
   const handleFormChange = (e) => {
     const { id, value } = e.target;
     setFormData((prevKamion) => ({
@@ -163,11 +171,34 @@ export default function CardJarmuAdatokForm({ kamion , setFormData, handleSave }
       </div>
 
       <hr className="mt-6 border-b-1 border-blueGray-300" />
-
       <h6 className="text-blueGray-400 text-sm mt-3 mb-6 font-bold uppercase">
         Kötelező biztosítás
       </h6>
       <div className="flex flex-wrap">
+        {/* Ütem kiválasztó */}
+        <div className="w-full lg:w-4/12 px-4">
+          <div className="relative w-full mb-3">
+            <label
+              className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
+              htmlFor="kot_biz_utem"
+            >
+              Ütem
+            </label>
+            <select
+              className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
+              value={kamion.kot_biz_utem || ""}
+              id="kot_biz_utem"
+              onChange={handleFormChange}
+            >
+              <option value="">Válassz...</option>
+              <option value="Nincs">Nincs</option>
+              <option value="Negyed év">Negyed év</option>
+              <option value="Fél év">Fél év</option>
+              <option value="Éves">Éves</option>
+            </select>
+          </div>
+        </div>
+        {/* Dátum mező */}
         <div className="w-full lg:w-4/12 px-4">
           <div className="relative w-full mb-3">
             <label
@@ -177,14 +208,16 @@ export default function CardJarmuAdatokForm({ kamion , setFormData, handleSave }
               Dátum
             </label>
             <input
-              type="text"
+              type="date"
               className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.kot_biztositas}
+              value={kamion.kot_biztositas || ""}
               id="kot_biztositas"
               onChange={handleFormChange}
             />
           </div>
         </div>
+
+        {/* Díj mező */}
         <div className="w-full lg:w-4/12 px-4">
           <div className="relative w-full mb-3">
             <label
@@ -194,37 +227,45 @@ export default function CardJarmuAdatokForm({ kamion , setFormData, handleSave }
               Díj
             </label>
             <input
-              type="text"
+              type="number"
               className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.kot_biz_dij}
+              value={kamion.kot_biz_dij || ""}
               id="kot_biz_dij"
               onChange={handleFormChange}
             />
           </div>
         </div>
-        <div className="w-full lg:w-4/12 px-4">
-          <div className="relative w-full mb-3">
-            <label
-              className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
-              htmlFor="kot_biz_utem"
-            >
-              Ütem
-            </label>
-            <input
-              type="text"
-              className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.kot_biz_utem}
-              id="kot_biz_utem"
-              onChange={handleFormChange}
-            />
-          </div>
-        </div>
       </div>
+
       <hr className="mt-6 border-b-1 border-blueGray-300" />
       <h6 className="text-blueGray-400 text-sm mt-3 mb-6 font-bold uppercase">
         Kaszkó fizetési ütem
       </h6>
       <div className="flex flex-wrap">
+        {/* Ütem kiválasztó */}
+        <div className="w-full lg:w-4/12 px-4">
+          <div className="relative w-full mb-3">
+            <label
+              className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
+              htmlFor="kaszko_fizetesi_utem"
+            >
+              Ütem
+            </label>
+            <select
+              className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
+              value={kamion.kaszko_fizetesi_utem || ""}
+              id="kaszko_fizetesi_utem"
+              onChange={handleFormChange}
+            >
+              <option value="">Válassz...</option>
+              <option value="Nincs">Nincs</option>
+              <option value="Negyed év">Negyed év</option>
+              <option value="Fél év">Fél év</option>
+              <option value="Éves">Éves</option>
+            </select>
+          </div>
+        </div>
+        {/* Dátum mező */}
         <div className="w-full lg:w-4/12 px-4">
           <div className="relative w-full mb-3">
             <label
@@ -234,14 +275,16 @@ export default function CardJarmuAdatokForm({ kamion , setFormData, handleSave }
               Dátum
             </label>
             <input
-              type="text"
+              type="date"
               className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.kaszko_biztositas}
+              value={kamion.kaszko_biztositas || ""}
               id="kaszko_biztositas"
               onChange={handleFormChange}
             />
           </div>
         </div>
+
+        {/* Díj mező */}
         <div className="w-full lg:w-4/12 px-4">
           <div className="relative w-full mb-3">
             <label
@@ -251,27 +294,10 @@ export default function CardJarmuAdatokForm({ kamion , setFormData, handleSave }
               Díj
             </label>
             <input
-              type="text"
+              type="number"
               className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.kaszko_dij}
+              value={kamion.kaszko_dij || ""}
               id="kaszko_dij"
-              onChange={handleFormChange}
-            />
-          </div>
-        </div>
-        <div className="w-full lg:w-4/12 px-4">
-          <div className="relative w-full mb-3">
-            <label
-              className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
-              htmlFor="kaszko_fizetesi_utem"
-            >
-              Ütem
-            </label>
-            <input
-              type="text"
-              className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.kaszko_fizetesi_utem}
-              id="kaszko_fizetesi_utem"
               onChange={handleFormChange}
             />
           </div>

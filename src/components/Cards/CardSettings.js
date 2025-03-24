@@ -16,7 +16,10 @@ export default function CardSettings() {
   };
 
   const handleSave = async () => {
-    const result = await fetchAction("saveAdminData", { id: userData.id, ...userData });
+    const result = await fetchAction("saveAdminData", {
+      id: userData.id,
+      ...userData,
+    });
     if (result && result.success) {
       sessionStorage.setItem("user", JSON.stringify(result.user));
       alert("Mentés sikeres!");
@@ -30,7 +33,9 @@ export default function CardSettings() {
       <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-blueGray-100 border-0">
         <div className="rounded-t bg-white mb-0 px-6 py-6">
           <div className="text-center flex justify-between">
-            <h6 className="text-blueGray-700 text-xl font-bold">Saját adatok</h6>
+            <h6 className="text-blueGray-700 text-xl font-bold">
+              Saját adatok
+            </h6>
             <button
               className="bg-lightBlue-500 text-white active:bg-lightBlue-600 font-bold uppercase text-xs px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none mr-1 ease-linear transition-all duration-150"
               type="button"
@@ -48,7 +53,10 @@ export default function CardSettings() {
             <div className="flex flex-wrap">
               <div className="w-full lg:w-6/12 px-4">
                 <div className="relative w-full mb-3">
-                  <label className="block uppercase text-blueGray-600 text-xs font-bold mb-2" htmlFor="name">
+                  <label
+                    className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
+                    htmlFor="name"
+                  >
                     Név
                   </label>
                   <input
@@ -62,7 +70,10 @@ export default function CardSettings() {
               </div>
               <div className="w-full lg:w-6/12 px-4">
                 <div className="relative w-full mb-3">
-                  <label className="block uppercase text-blueGray-600 text-xs font-bold mb-2" htmlFor="email">
+                  <label
+                    className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
+                    htmlFor="email"
+                  >
                     Email cím
                   </label>
                   <input
@@ -76,7 +87,10 @@ export default function CardSettings() {
               </div>
               <div className="w-full lg:w-4/12 px-4">
                 <div className="relative w-full mb-3">
-                  <label className="block uppercase text-blueGray-600 text-xs font-bold mb-2" htmlFor="phone">
+                  <label
+                    className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
+                    htmlFor="phone"
+                  >
                     Telefonszám
                   </label>
                   <input
@@ -90,7 +104,10 @@ export default function CardSettings() {
               </div>
               <div className="w-full lg:w-4/12 px-4">
                 <div className="relative w-full mb-3">
-                  <label className="block uppercase text-blueGray-600 text-xs font-bold mb-2" htmlFor="birthdate">
+                  <label
+                    className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
+                    htmlFor="birthdate"
+                  >
                     Születési dátum
                   </label>
                   <input
@@ -104,7 +121,10 @@ export default function CardSettings() {
               </div>
               <div className="w-full lg:w-4/12 px-4">
                 <div className="relative w-full mb-3">
-                  <label className="block uppercase text-blueGray-600 text-xs font-bold mb-2" htmlFor="idNumber">
+                  <label
+                    className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
+                    htmlFor="idNumber"
+                  >
                     Személyigazolvány szám
                   </label>
                   <input
@@ -126,7 +146,10 @@ export default function CardSettings() {
             <div className="flex flex-wrap">
               <div className="w-full lg:w-4/12 px-4">
                 <div className="relative w-full mb-3">
-                  <label className="block uppercase text-blueGray-600 text-xs font-bold mb-2" htmlFor="city">
+                  <label
+                    className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
+                    htmlFor="city"
+                  >
                     Város
                   </label>
                   <input
@@ -140,7 +163,10 @@ export default function CardSettings() {
               </div>
               <div className="w-full lg:w-4/12 px-4">
                 <div className="relative w-full mb-3">
-                  <label className="block uppercase text-blueGray-600 text-xs font-bold mb-2" htmlFor="postalCode">
+                  <label
+                    className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
+                    htmlFor="postalCode"
+                  >
                     IRSZ
                   </label>
                   <input
@@ -154,7 +180,10 @@ export default function CardSettings() {
               </div>
               <div className="w-full lg:w-4/12 px-4">
                 <div className="relative w-full mb-3">
-                  <label className="block uppercase text-blueGray-600 text-xs font-bold mb-2" htmlFor="address">
+                  <label
+                    className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
+                    htmlFor="address"
+                  >
                     Cím
                   </label>
                   <input
@@ -177,7 +206,10 @@ export default function CardSettings() {
             <div className="flex flex-wrap">
               <div className="w-full lg:w-3/12 px-4">
                 <div className="relative w-full mb-3">
-                  <label className="block uppercase text-blueGray-600 text-xs font-bold mb-2" htmlFor="idExpiry">
+                  <label
+                    className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
+                    htmlFor="idExpiry"
+                  >
                     Személyigazolvány lejárati dátum
                   </label>
                   <input

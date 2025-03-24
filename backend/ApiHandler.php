@@ -22,6 +22,7 @@ class ApiHandler {
             'loginUser' => ['email', 'password'],
             'logoutUser' => [],
             'getSum' => ['id'],
+            'getEsemenyek' => ['id'],
             'saveAdminData' => ['id'],
             'newKamion' => ['rendszam'],
             'saveKamionData' => ['id'],
@@ -47,7 +48,7 @@ class ApiHandler {
             'deleteSofor' => ['id'],
 
             'getFiles'=>['id','tabla'],
-            'fileUpload'=>['id','tabla','file','name','size'],
+            'fileUpload'=>['admin','id','tabla','file','name','size'],
             'deleteFile'=>['id'],
             'downloadFile'=>['id'],
         ];
@@ -167,13 +168,16 @@ class ApiHandler {
                     echo json_encode($filesInterface->getFiles($request['tabla'],$request['id']));
                     return;
                 case 'fileUpload':
-                    echo json_encode($filesInterface->fileUpload($request['tabla'],$request['id'],$request['file'],$request['name'],$request['size']));
+                    echo json_encode($filesInterface->fileUpload($request['admin'],$request['tabla'],$request['id'],$request['file'],$request['name'],$request['size']));
                     return;
                 case 'downloadFile':
                     echo json_encode($filesInterface->downloadFile($request['id']));
                     return;
                 case 'deleteFile':
                     echo json_encode($filesInterface->deleteFile($request['id']));
+                    return;
+                case 'getEsemenyek':
+                    echo json_encode($this->getEsemenyek($request['id']));
                     return;
                 case 'saveAdminData':echo json_encode($this->saveAdminData(
                     $request['id'],
@@ -198,7 +202,116 @@ class ApiHandler {
             echo json_encode($message);
         } 
     }
-
+    private function getEsemenyek($id) {
+        try {    
+            $data = [];
+    
+            // Sofőr események
+            $query = "SELECT name as leiras,szemelyi_lejarat, jogsi_lejarat, gki_lejarat, adr_lejarat FROM user WHERE admin = :id AND torolt <> 'I'";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            $sofor_esemenyek = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+            if ($sofor_esemenyek) {
+                $data = array_merge($data, $this->formatEvents($sofor_esemenyek, [
+                    'szemelyi_lejarat' => 'Személyi igazolvány lejárat',
+                    'jogsi_lejarat' => 'Jogosítvány lejárat',
+                    'gki_lejarat' => 'Gépjármű-kötelező biztosítás lejárat',
+                    'adr_lejarat' => 'ADR igazolvány lejárat'
+                ]));
+            }
+    
+            // Kamion események
+            $query = "SELECT rendszam as leiras,muszaki_lejarat, porolto_lejarat, porolto_lejarat_2, adr_lejarat, taograf_illesztes, emelohatfal_vizsga, kot_biztositas, kot_biz_utem, kaszko_biztositas, kaszko_fizetesi_utem FROM kamion WHERE admin = :id AND torolt <> 'I'";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            $kamion_esemenyek = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+            if ($kamion_esemenyek) {
+                $data = array_merge($data, $this->formatEvents($kamion_esemenyek, [
+                    'muszaki_lejarat' => 'Műszaki vizsga lejárat',
+                    'porolto_lejarat' => 'Poroltó lejárat (1)',
+                    'porolto_lejarat_2' => 'Poroltó lejárat (2)',
+                    'adr_lejarat' => 'ADR igazolvány lejárat',
+                    'taograf_illesztes' => 'Tachográf illesztés',
+                    'emelohatfal_vizsga' => 'Emelőhátsófal vizsga',
+                    'kot_biztositas' => 'Kötélzet biztosítás lejárat',
+                    'kot_biz_utem' => 'Kötélzet biztosítás fizetési ütem',
+                    'kaszko_biztositas' => 'Kaszkozó biztosítás lejárat',
+                    'kaszko_fizetesi_utem' => 'Kaszkozó fizetési ütem'
+                ]));
+            }
+    
+            // Pótkocsi események
+            $query = "SELECT rendszam as leiras,muszaki_lejarat, porolto_lejarat, porolto_lejarat_2, adr_lejarat, taograf_illesztes, emelohatfal_vizsga, kot_biztositas, kot_biz_utem, kaszko_biztositas, kaszko_fizetesi_utem FROM potkocsi WHERE admin = :id AND torolt <> 'I'";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            $potkocsi_esemenyek = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+            if ($potkocsi_esemenyek) {
+                $data = array_merge($data, $this->formatEvents($potkocsi_esemenyek, [
+                    'muszaki_lejarat' => 'Műszaki vizsga lejárat',
+                    'porolto_lejarat' => 'Poroltó lejárat (1)',
+                    'porolto_lejarat_2' => 'Poroltó lejárat (2)',
+                    'adr_lejarat' => 'ADR igazolvány lejárat',
+                    'taograf_illesztes' => 'Tachográf illesztés',
+                    'emelohatfal_vizsga' => 'Emelőhátsófal vizsga',
+                    'kot_biztositas' => 'Kötélzet biztosítás lejárat',
+                    'kot_biz_utem' => 'Kötélzet biztosítás fizetési ütem',
+                    'kaszko_biztositas' => 'Kaszkozó biztosítás lejárat',
+                    'kaszko_fizetesi_utem' => 'Kaszkozó fizetési ütem'
+                ]));
+            }
+    
+            // Egyedi határidők
+            $query = "SELECT leiras, datum FROM egyedi_hataridok WHERE admin = :id AND torolt <> 'I'";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            $egyedi_hataridok = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+            if ($egyedi_hataridok) {
+                foreach ($egyedi_hataridok as $hatarido) {
+                    if ($hatarido['datum']) {
+                        $data[] = [
+                            'start' => $hatarido['datum'],
+                            'end' => $hatarido['datum'],
+                            'title' => $hatarido['leiras']
+                        ];
+                    }
+                }
+            }
+    
+            return ['success' => true, 'data' => $data];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+    
+    /**
+     * Segédfüggvény az események formázásához.
+     *
+     * @param array $events Az események tömbje.
+     * @param array $labels Az eseményekhez tartozó feliratok.
+     * @return array Formázott események tömbje.
+     */
+    private function formatEvents($events, $labels) {
+        $formattedEvents = [];
+        foreach ($events as $key => $value) {
+            $leiras = $events['leiras'];
+            if ($key != "leiras" && $value && isset($labels[$key])) {
+                $formattedEvents[] = [
+                    'start' => $value,
+                    'end' => $value,
+                    'title' => $leiras." ".$labels[$key]
+                ];
+            }
+        }
+        return $formattedEvents;
+    }
     private function getSum($id) {
         try {    
             $query = "SELECT IFNULL(COUNT(id),0) as id FROM user WHERE admin = :id AND torolt <> 'I'";
@@ -219,7 +332,42 @@ class ApiHandler {
             $stmt->execute();
             $sum_potkocsi = $stmt->fetch(PDO::FETCH_ASSOC)['id'];
 
-            $sum_hatarido = $this->getHataridok($id);
+
+            $currentMonthStart = new DateTime('first day of this month'); // Az aktuális hónap első napja
+            $currentMonthEnd = new DateTime('last day of this month');   // Az aktuális hónap utolsó napja
+    
+            // Lekérjük az összes eseményt
+            $esemenyek = $this->getEsemenyek($id);
+            if (!$esemenyek['success']) {
+                $sum_hatarido = 0;
+            }else{
+                /*$osszes_datum = $esemenyek['data'];
+
+                  // Szűrjük ki azokat a dátumokat, amelyek az aktuális hónapban vannak
+                $szurt_datumok = array_filter($osszes_datum, function($datum) use ($currentMonthStart, $currentMonthEnd) {
+                    $date = new DateTime($datum['start']); // Feltételezzük, hogy a 'start' tartalmazza a dátumot
+                    return ($date >= $currentMonthStart && $date <= $currentMonthEnd);
+                });*/
+                $osszes_datum = $esemenyek['data'];
+
+                // Szűrjük ki azokat a dátumokat, amelyek az aktuális hónapban vannak
+                $szurt_datumok = [];
+                foreach ($osszes_datum as $datum) {
+                    try {
+                        // Ellenőrizzük, hogy a dátum érvényes-e
+                        $date = new DateTime($datum['start']); // Feltételezzük, hogy a 'start' tartalmazza a dátumot
+                        if ($date >= $currentMonthStart && $date <= $currentMonthEnd) {
+                            $szurt_datumok[] = $datum;
+                        }
+                    } catch (Exception $e) {
+                        continue;
+                    }
+                }
+        
+
+                // Az adott hónapban lejáró határidők száma
+                $sum_hatarido = count($szurt_datumok);
+            }
             
             return ['success' => true, 'sofor'=>$sum_soforok, 'kamion'=>$sum_kamion,'potkocsi'=>$sum_potkocsi,'hatarido'=>$sum_hatarido];
         } catch (Exception $e) {
@@ -315,7 +463,7 @@ class ApiHandler {
         }
     }
     private function getUser($email) {
-        $query = "SELECT *,false as admin FROM user WHERE email = :email";
+        $query = "SELECT *,false as admin FROM user WHERE email = :email AND torolt <> 'I'";
         $stmt = $this->db->prepare($query);
         $stmt->bindParam(':email', $email);
         $stmt->execute();

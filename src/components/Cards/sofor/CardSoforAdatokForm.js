@@ -12,7 +12,6 @@ export default function CardSoforAdatokForm({
       [name]: value,
     }));
   };
-
   return (
     <form onSubmit={handleSave}>
       {/* Felhasználó adatok */}

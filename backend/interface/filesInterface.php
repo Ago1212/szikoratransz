@@ -10,10 +10,16 @@ class FilesInterface {
 
     function getFiles($tabla,$id){
         try {    
-            $query = "SELECT * FROM fajlok WHERE rowid = :id AND tabla = :tabla";
-            $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':id', $id);
-            $stmt->bindParam(':tabla', $tabla);
+            if($tabla==="admin"){
+                $query = "SELECT * FROM fajlok WHERE admin = :id";
+                $stmt = $this->db->prepare($query);
+                $stmt->bindParam(':id', $id);
+            }else{
+                $query = "SELECT * FROM fajlok WHERE rowid = :id AND tabla = :tabla";
+                $stmt = $this->db->prepare($query);
+                $stmt->bindParam(':id', $id);
+                $stmt->bindParam(':tabla', $tabla);
+            }
             $stmt->execute();
             $files = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
@@ -76,9 +82,10 @@ class FilesInterface {
         ]);
     }
 
-    function fileToDatabase($tabla,$rowid, $hely, $name, $size) {
-        $query = "INSERT INTO fajlok (tabla,rowid, hely, filename, filesize,feltoltve) VALUES (:tabla,:id, :hely, :filename, :filesize,NOW())";
+    function fileToDatabase($admin,$tabla,$rowid, $hely, $name, $size) {
+        $query = "INSERT INTO fajlok (admin,tabla,rowid, hely, filename, filesize,feltoltve) VALUES (:admin,:tabla,:id, :hely, :filename, :filesize,NOW())";
         $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':admin', $admin);
         $stmt->bindParam(':tabla', $tabla);
         $stmt->bindParam(':id', $rowid);
         $stmt->bindParam(':hely', $hely);
@@ -92,7 +99,7 @@ class FilesInterface {
         return $result;
     }
     
-    function fileUpload($tabla,$rowid, $base64File, $name, $size) {
+    function fileUpload($admin,$tabla,$rowid, $base64File, $name, $size) {
         $baseDirectory =  __DIR__ . '/../files';
         if (!is_dir($baseDirectory)) {
             if (!mkdir($baseDirectory, 0755, true)) {
@@ -109,7 +116,7 @@ class FilesInterface {
         }
     
         if (file_put_contents($filePath, $fileData) !== false) {
-            if ($this->fileToDatabase($tabla,$rowid, $filePath, $safeName, $size)) {
+            if ($this->fileToDatabase($admin,$tabla,$rowid, $filePath, $safeName, $size)) {
                 return ['success' => true, 'message' => 'A fájl mentve'];
             } else {
                 return ['success' => false, 'message' => 'Hiba a fájl mentésénél az adatbázisba'];

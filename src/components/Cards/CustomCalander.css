@@ -1,0 +1,117 @@
+/* Alap stílusok */
+.rbc-calendar {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* Fejléc stílusok */
+.rbc-toolbar {
+  background: #f1f3f4;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  border-radius: 8px 8px 0 0;
+}
+
+.rbc-toolbar button {
+  color: #202124;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 5px 10px;
+  margin: 0 5px;
+  cursor: pointer;
+}
+
+.rbc-toolbar button:hover {
+  background: #f8f9fa;
+}
+
+.rbc-toolbar button.rbc-active {
+  background: #1a73e8;
+  color: #fff;
+  border-color: #1a73e8;
+}
+
+/* Napi és heti nézet stílusai */
+.rbc-time-view {
+  border-left: 1px solid #ddd;
+}
+
+.rbc-time-header {
+  background: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+}
+
+.rbc-time-content {
+  background: #fff;
+}
+
+.rbc-time-gutter {
+  color: #70757a;
+  font-size: 14px;
+}
+
+.rbc-day-bg + .rbc-day-bg,
+.rbc-header + .rbc-header {
+  border-left: 1px solid #ddd;
+}
+
+.rbc-header {
+  background: #f8f9fa;
+  color: #202124;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Események stílusai */
+.rbc-event {
+  background: #1a73e8;
+  color: #fff;
+  border-radius: 4px;
+  border: none;
+  padding: 2px 5px;
+  font-size: 14px;
+}
+
+.rbc-event:hover {
+  background: #1557b0;
+}
+
+.rbc-event-content {
+  white-space: normal !important; /* Több soros eseménycímek */
+}
+
+/* Havi nézet stílusai */
+.rbc-month-view {
+  border: 1px solid #ddd;
+}
+
+.rbc-month-row {
+  border-bottom: 1px solid #ddd;
+}
+
+.rbc-month-header {
+  background: #f8f9fa;
+  color: #202124;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.rbc-date-cell {
+  padding: 10px;
+  text-align: center;
+}
+
+.rbc-off-range-bg {
+  background: #f8f9fa;
+}
+
+.rbc-today {
+  background-color: #e8f0fe;
+}

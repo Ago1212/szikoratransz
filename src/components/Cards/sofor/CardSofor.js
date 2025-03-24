@@ -21,6 +21,7 @@ export default function CardSoforok({ initSofor }) {
     szemelyi_lejarat: sofor.szemelyi_lejarat || "",
     jogsi_lejarat: sofor.jogsi_lejarat || "",
     gki_lejarat: sofor.gki_lejarat || "",
+    adr_lejarat: sofor.adr_lejarat || "",
   });
 
   const handleSave = async () => {

@@ -5,6 +5,8 @@ import { downloadFileAction } from "utils/downloadFileAction";
 
 export default function CardTableForFajlok({ id, tabla }) {
   const [files, setFiles] = useState([]);
+  const storedUserData = sessionStorage.getItem("user");
+  const admin = storedUserData ? JSON.parse(storedUserData).id : "0";
 
   const fetchFiles = async () => {
     const result = await fetchAction("getFiles", {
@@ -44,6 +46,7 @@ export default function CardTableForFajlok({ id, tabla }) {
       const base64File = reader.result.split(",")[1]; // Az adat URL-ből kivesszük a base64 kódolt részt
 
       const result = await fetchAction("fileUpload", {
+        admin,
         id,
         tabla,
         file: base64File, // Base64 kódolt fájl küldése
