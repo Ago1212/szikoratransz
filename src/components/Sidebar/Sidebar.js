@@ -1,6 +1,6 @@
 /*eslint-disable*/
 import React from "react";
-import { Link,Redirect } from "react-router-dom";
+import { Link, Redirect } from "react-router-dom";
 
 import NotificationDropdown from "components/Dropdowns/NotificationDropdown.js";
 import UserDropdown from "components/Dropdowns/UserDropdown.js";
@@ -243,16 +243,37 @@ export default function Sidebar() {
                   Fájlok
                 </Link>
               </li>
+              <li className="items-center">
+                <Link
+                  className={
+                    "text-xs uppercase py-3 font-bold block " +
+                    (window.location.href.indexOf("/admin/esemenyek") !== -1
+                      ? "text-lightBlue-500 hover:text-lightBlue-600"
+                      : "text-blueGray-700 hover:text-blueGray-500")
+                  }
+                  to="/admin/esemenyek"
+                >
+                  <i
+                    className={
+                      "fas fa-calendar mr-2 text-sm " +
+                      (window.location.href.indexOf("/admin/esemenyek") !== -1
+                        ? "opacity-75"
+                        : "text-blueGray-300")
+                    }
+                  ></i>{" "}
+                  Események
+                </Link>
+              </li>
             </ul>
           </div>
-            <div className="mt-auto">
-              <button
-                onClick={handleLogout}
-                className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg"
-              >
-                Kijelentkezés
-              </button>
-            </div>
+          <div className="mt-auto">
+            <button
+              onClick={handleLogout}
+              className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg"
+            >
+              Kijelentkezés
+            </button>
+          </div>
         </div>
       </nav>
     </>

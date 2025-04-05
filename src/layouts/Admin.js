@@ -13,6 +13,7 @@ import Kamionok from "views/admin/Kamionok.js";
 import Potkocsi from "views/admin/Potkocsi.js";
 import Soforok from "views/admin/Soforok.js";
 import Fajlok from "views/admin/Fajlok.js";
+import Esemenyek from "views/admin/Esemenyek.js";
 import KamionForm from "views/admin/KamionForm.js";
 import PotkocsiForm from "views/admin/PotkocsiForm.js";
 import SoforForm from "views/admin/SoforForm.js";
@@ -20,17 +21,13 @@ import LoginPage from "views/auth/Login.js"; // Importáld a bejelentkező oldal
 
 // PrivateRoute komponens létrehozása
 const PrivateRoute = ({ component: Component, ...rest }) => {
-  const isAuthenticated = sessionStorage.getItem('user') !== null;
+  const isAuthenticated = sessionStorage.getItem("user") !== null;
 
   return (
     <Route
       {...rest}
-      render={props =>
-        isAuthenticated ? (
-          <Component {...props} />
-        ) : (
-          <Redirect to="/login" />
-        )
+      render={(props) =>
+        isAuthenticated ? <Component {...props} /> : <Redirect to="/login" />
       }
     />
   );
@@ -47,13 +44,23 @@ export default function Admin() {
             <PrivateRoute path="/admin/dashboard" exact component={Dashboard} />
             <PrivateRoute path="/admin/settings" exact component={Settings} />
             <PrivateRoute path="/admin/kamionok" exact component={Kamionok} />
-            <PrivateRoute path="/admin/kamionForm" exact component={KamionForm} />
+            <PrivateRoute
+              path="/admin/kamionForm"
+              exact
+              component={KamionForm}
+            />
             <PrivateRoute path="/admin/potkocsi" exact component={Potkocsi} />
-            <PrivateRoute path="/admin/potkocsiForm" exact component={PotkocsiForm} />
+            <PrivateRoute
+              path="/admin/potkocsiForm"
+              exact
+              component={PotkocsiForm}
+            />
             <PrivateRoute path="/admin/soforok" exact component={Soforok} />
             <PrivateRoute path="/admin/soforForm" exact component={SoforForm} />
             <PrivateRoute path="/admin/fajlok" exact component={Fajlok} />
-            <Route path="/login" exact component={LoginPage} /> {/* Bejelentkező oldal */}
+            <PrivateRoute path="/admin/esemenyek" exact component={Esemenyek} />
+            <Route path="/login" exact component={LoginPage} />{" "}
+            {/* Bejelentkező oldal */}
             <Redirect from="/admin" to="/admin/dashboard" />
           </Switch>
         </div>

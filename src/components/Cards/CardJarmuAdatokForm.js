@@ -61,6 +61,7 @@ export default function CardJarmuAdatokForm({
     kamion.kaszko_fizetesi_utem,
     kamion.kaszko_dij,
   ]);
+
   const calculateNextPayment = (startDate, frequency, totalAmount, setter) => {
     if (!startDate || !frequency || frequency === "Nincs" || !totalAmount) {
       setter({ date: "", amount: "" });
@@ -68,35 +69,85 @@ export default function CardJarmuAdatokForm({
     }
 
     const start = new Date(startDate);
-    let nextDate = new Date(start);
+    const now = new Date();
     let amount = parseFloat(totalAmount);
 
+    // Helper function to calculate period end date
+    const getPeriodEndDate = (date, freq) => {
+      const endDate = new Date(date);
+      switch (freq) {
+        case "Negyed év":
+          endDate.setMonth(endDate.getMonth() + 3);
+          endDate.setDate(endDate.getDate() - 1);
+          break;
+        case "Fél év":
+          endDate.setMonth(endDate.getMonth() + 6);
+          endDate.setDate(endDate.getDate() - 1);
+          break;
+        case "Éves":
+          endDate.setFullYear(endDate.getFullYear() + 1);
+          endDate.setDate(endDate.getDate() - 1);
+          break;
+        default:
+          return null;
+      }
+      return endDate;
+    };
+
+    // If start date is in the future, return the first period end with full amount
+    if (start > now) {
+      const periodEnd = getPeriodEndDate(start, frequency);
+      setter({
+        date: periodEnd.toISOString().split("T")[0],
+        amount: new Intl.NumberFormat("hu-HU", {
+          style: "currency",
+          currency: "HUF",
+          maximumFractionDigits: 0,
+        }).format(
+          amount /
+            (frequency === "Negyed év" ? 4 : frequency === "Fél év" ? 2 : 1)
+        ),
+      });
+      return;
+    }
+
+    // Calculate the next upcoming period end
+    let periodStart = new Date(start);
+    let periodEnd = getPeriodEndDate(periodStart, frequency);
+
+    while (periodEnd <= now) {
+      // Move to next period
+      periodStart = new Date(periodEnd);
+      periodStart.setDate(periodStart.getDate() + 1);
+      periodEnd = getPeriodEndDate(periodStart, frequency);
+    }
+
+    // Calculate the amount based on frequency
+    let paymentAmount;
     switch (frequency) {
       case "Negyed év":
-        nextDate.setMonth(start.getMonth() + 3);
-        amount = amount / 4;
+        paymentAmount = amount / 4;
         break;
       case "Fél év":
-        nextDate.setMonth(start.getMonth() + 6);
-        amount = amount / 2;
+        paymentAmount = amount / 2;
         break;
       case "Éves":
-        nextDate.setFullYear(start.getFullYear() + 1);
+        paymentAmount = amount;
         break;
       default:
-        setter({ date: "", amount: "" });
-        return;
+        paymentAmount = 0;
     }
 
     setter({
-      date: nextDate.toISOString().split("T")[0],
+      date: periodEnd.toISOString().split("T")[0],
       amount: new Intl.NumberFormat("hu-HU", {
         style: "currency",
         currency: "HUF",
         maximumFractionDigits: 0,
-      }).format(amount),
+      }).format(paymentAmount),
     });
   };
+
   const formatNumber = (value) => {
     if (!value) return "";
     return new Intl.NumberFormat("hu-HU").format(value);
@@ -105,14 +156,15 @@ export default function CardJarmuAdatokForm({
   const parseNumber = (value) => {
     return parseFloat(value.replace(/\s/g, "")) || 0;
   };
+
   const handleFormChange = (e) => {
     const { id, value } = e.target;
-
     setFormData((prevKamion) => ({
       ...prevKamion,
       [id]: value,
     }));
   };
+
   const handleCurrencyFocus = (field) => {
     if (field === "kot_biz_dij") {
       setEditKotBizDij(true);
@@ -122,6 +174,7 @@ export default function CardJarmuAdatokForm({
       setKaszkoDijValue(kamion.kaszko_dij || "");
     }
   };
+
   const handleCurrencyBlur = (field) => {
     if (field === "kot_biz_dij") {
       setEditKotBizDij(false);

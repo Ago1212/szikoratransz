@@ -13,6 +13,7 @@
     "autoprefixer": "^10.4.20",
     "chart.js": "2.9.4",
     "date-arithmetic": "^4.1.0",
+    "date-fns": "^4.1.0",
     "gulp": "4.0.2",
     "gulp-append-prepend": "1.0.8",
     "moment": "^2.30.1",

@@ -53,6 +53,11 @@ class ApiHandler {
             'deleteFile' => ['id'],
             'downloadFile' => ['id'],
 
+            'getEgyediHataridok' => ['id'],
+            'updateEgyediHatarido' => ['id', 'datum', 'leiras'],
+            'deleteEgyediHatarido' => ['id'],
+            'createEgyediHatarido' => ['id', 'datum', 'leiras'],
+
             'sendAjanlatkeres' => ['name', 'email', 'phone', 'message'],
             'sendJelentkezes' => ['name', 'email', 'phone', 'message'],
         ];
@@ -180,6 +185,18 @@ class ApiHandler {
                 case 'deleteFile':
                     echo json_encode($filesInterface->deleteFile($request['id']));
                     return;
+                case 'getEgyediHataridok':
+                    echo json_encode($this->getEgyediHataridok($request['id']));
+                    return;
+                case 'updateEgyediHatarido':
+                    echo json_encode($this->updateEgyediHatarido($request['id'], $request['datum'], $request['leiras']));
+                    return;
+                case 'deleteEgyediHatarido':
+                    echo json_encode($this->deleteEgyediHatarido($request['id']));
+                    return;
+                case 'createEgyediHatarido':
+                    echo json_encode($this->createEgyediHatarido($request['id'], $request['datum'], $request['leiras']));
+                    return;
                 case 'getEsemenyek':
                     echo json_encode($this->getEsemenyek($request['id']));
                     return;
@@ -213,6 +230,59 @@ class ApiHandler {
             echo json_encode($message);
         }
     }
+    private function getEgyediHataridok($id) {
+        try {
+            $query = "SELECT * FROM egyedi_hataridok WHERE admin = :id AND torolt <> 'I'";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            $hataridok = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return ['success' => true, 'esemenyek' => $hataridok];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+    private function updateEgyediHatarido($id, $datum, $leiras) {
+        try {
+            $query = "UPDATE egyedi_hataridok SET datum = :datum, leiras = :leiras WHERE sorszam = :id";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':id', $id);
+            $stmt->bindParam(':datum', $datum);
+            $stmt->bindParam(':leiras', $leiras);
+            $stmt->execute();
+
+            return ['success' => true];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+    private function createEgyediHatarido($id, $datum, $leiras) {
+        try {
+            $query = "INSERT INTO egyedi_hataridok (admin, datum, leiras) VALUES (:admin, :datum, :leiras)";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':admin', $id);
+            $stmt->bindParam(':datum', $datum);
+            $stmt->bindParam(':leiras', $leiras);
+            $stmt->execute();
+
+            return ['success' => true];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+    private function deleteEgyediHatarido($id) {
+        try {
+            $query = "UPDATE egyedi_hataridok SET torolt = 'I' WHERE sorszam = :id";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+
+            return ['success' => true];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
     private function getEsemenyek($id) {
         try {
             $data = [];
@@ -238,21 +308,55 @@ class ApiHandler {
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':id', $id);
             $stmt->execute();
-            $kamion_esemenyek = $stmt->fetch(PDO::FETCH_ASSOC);
+            $kamion_esemenyek = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             if ($kamion_esemenyek) {
-                $data = array_merge($data, $this->formatEvents($kamion_esemenyek, [
-                    'muszaki_lejarat' => 'Műszaki vizsga lejárat',
-                    'porolto_lejarat' => 'Poroltó lejárat (1)',
-                    'porolto_lejarat_2' => 'Poroltó lejárat (2)',
-                    'adr_lejarat' => 'ADR igazolvány lejárat',
-                    'taograf_illesztes' => 'Tachográf illesztés',
-                    'emelohatfal_vizsga' => 'Emelőhátsófal vizsga',
-                    'kot_biztositas' => 'Kötélzet biztosítás lejárat',
-                    'kot_biz_utem' => 'Kötélzet biztosítás fizetési ütem',
-                    'kaszko_biztositas' => 'Kaszkozó biztosítás lejárat',
-                    'kaszko_fizetesi_utem' => 'Kaszkozó fizetési ütem'
-                ]));
+                foreach ($kamion_esemenyek as $kamion) {
+                    $formattedEvents = $this->formatEvents($kamion, [
+                        'muszaki_lejarat' => 'Műszaki vizsga lejárat',
+                        'porolto_lejarat' => 'Poroltó lejárat (1)',
+                        'porolto_lejarat_2' => 'Poroltó lejárat (2)',
+                        'adr_lejarat' => 'ADR igazolvány lejárat',
+                        'taograf_illesztes' => 'Tachográf illesztés',
+                        'emelohatfal_vizsga' => 'Emelőhátsófal vizsga',
+                        'kot_biztositas' => 'Kötélzet biztosítás lejárat'
+                    ]);
+
+                    // Kötélzet biztosítás fizetési ütemek hozzáadása
+                    if ($kamion['kot_biztositas'] && $kamion['kot_biz_utem'] && $kamion['kot_biz_utem'] !== 'Nincs') {
+                        $nextPaymentDate = $this->calculateNextPaymentDate($kamion['kot_biztositas'], $kamion['kot_biz_utem']);
+                        if ($nextPaymentDate) {
+                            $formattedEvents[] = [
+                                'start' => $nextPaymentDate,
+                                'end' => $nextPaymentDate,
+                                'title' => 'Kötélzet biztosítás fizetési ütem (' . $kamion['kot_biz_utem'] . ')'
+                            ];
+                        }
+                    }
+
+                    // Kaszkó biztosítás hozzáadása
+                    if ($kamion['kaszko_biztositas']) {
+                        $formattedEvents[] = [
+                            'start' => $kamion['kaszko_biztositas'],
+                            'end' => $kamion['kaszko_biztositas'],
+                            'title' => 'Kaszkozó biztosítás lejárat'
+                        ];
+                    }
+
+                    // Kaszkó fizetési ütemek hozzáadása
+                    if ($kamion['kaszko_biztositas'] && $kamion['kaszko_fizetesi_utem'] && $kamion['kaszko_fizetesi_utem'] !== 'Nincs') {
+                        $nextPaymentDate = $this->calculateNextPaymentDate($kamion['kaszko_biztositas'], $kamion['kaszko_fizetesi_utem']);
+                        if ($nextPaymentDate) {
+                            $formattedEvents[] = [
+                                'start' => $nextPaymentDate,
+                                'end' => $nextPaymentDate,
+                                'title' => 'Kaszkozó biztosítás fizetési ütem (' . $kamion['kaszko_fizetesi_utem'] . ')'
+                            ];
+                        }
+                    }
+
+                    $data = array_merge($data, $formattedEvents);
+                }
             }
 
             // Pótkocsi események
@@ -260,21 +364,55 @@ class ApiHandler {
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':id', $id);
             $stmt->execute();
-            $potkocsi_esemenyek = $stmt->fetch(PDO::FETCH_ASSOC);
+            $potkocsi_esemenyek = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             if ($potkocsi_esemenyek) {
-                $data = array_merge($data, $this->formatEvents($potkocsi_esemenyek, [
-                    'muszaki_lejarat' => 'Műszaki vizsga lejárat',
-                    'porolto_lejarat' => 'Poroltó lejárat (1)',
-                    'porolto_lejarat_2' => 'Poroltó lejárat (2)',
-                    'adr_lejarat' => 'ADR igazolvány lejárat',
-                    'taograf_illesztes' => 'Tachográf illesztés',
-                    'emelohatfal_vizsga' => 'Emelőhátsófal vizsga',
-                    'kot_biztositas' => 'Kötélzet biztosítás lejárat',
-                    'kot_biz_utem' => 'Kötélzet biztosítás fizetési ütem',
-                    'kaszko_biztositas' => 'Kaszkozó biztosítás lejárat',
-                    'kaszko_fizetesi_utem' => 'Kaszkozó fizetési ütem'
-                ]));
+                foreach ($potkocsi_esemenyek as $potkocsi) {
+                    $formattedEvents = $this->formatEvents($potkocsi, [
+                        'muszaki_lejarat' => 'Műszaki vizsga lejárat',
+                        'porolto_lejarat' => 'Poroltó lejárat (1)',
+                        'porolto_lejarat_2' => 'Poroltó lejárat (2)',
+                        'adr_lejarat' => 'ADR igazolvány lejárat',
+                        'taograf_illesztes' => 'Tachográf illesztés',
+                        'emelohatfal_vizsga' => 'Emelőhátsófal vizsga',
+                        'kot_biztositas' => 'Kötélzet biztosítás lejárat'
+                    ]);
+
+                    // Kötélzet biztosítás fizetési ütemek hozzáadása
+                    if ($potkocsi['kot_biztositas'] && $potkocsi['kot_biz_utem'] && $potkocsi['kot_biz_utem'] !== 'Nincs') {
+                        $nextPaymentDate = $this->calculateNextPaymentDate($potkocsi['kot_biztositas'], $potkocsi['kot_biz_utem']);
+                        if ($nextPaymentDate) {
+                            $formattedEvents[] = [
+                                'start' => $nextPaymentDate,
+                                'end' => $nextPaymentDate,
+                                'title' => 'Kötélzet biztosítás fizetési ütem (' . $potkocsi['kot_biz_utem'] . ')'
+                            ];
+                        }
+                    }
+
+                    // Kaszkó biztosítás hozzáadása
+                    if ($potkocsi['kaszko_biztositas']) {
+                        $formattedEvents[] = [
+                            'start' => $potkocsi['kaszko_biztositas'],
+                            'end' => $potkocsi['kaszko_biztositas'],
+                            'title' => 'Kaszkozó biztosítás lejárat'
+                        ];
+                    }
+
+                    // Kaszkó fizetési ütemek hozzáadása
+                    if ($potkocsi['kaszko_biztositas'] && $potkocsi['kaszko_fizetesi_utem'] && $potkocsi['kaszko_fizetesi_utem'] !== 'Nincs') {
+                        $nextPaymentDate = $this->calculateNextPaymentDate($potkocsi['kaszko_biztositas'], $potkocsi['kaszko_fizetesi_utem']);
+                        if ($nextPaymentDate) {
+                            $formattedEvents[] = [
+                                'start' => $nextPaymentDate,
+                                'end' => $nextPaymentDate,
+                                'title' => 'Kaszkozó biztosítás fizetési ütem (' . $potkocsi['kaszko_fizetesi_utem'] . ')'
+                            ];
+                        }
+                    }
+
+                    $data = array_merge($data, $formattedEvents);
+                }
             }
 
             // Egyedi határidők
@@ -300,6 +438,68 @@ class ApiHandler {
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
+    }
+    private function calculateNextPaymentDate($startDate, $frequency) {
+        if (!$startDate || !$frequency || $frequency === 'Nincs') {
+            return null;
+        }
+
+        $start = new DateTime($startDate);
+        $now = new DateTime();
+
+        // Ha a kezdő dátum a jövőben van, akkor azt adjuk vissza
+        if ($start > $now) {
+            return $this->getPeriodEndDate($start, $frequency);
+        }
+
+        $interval = null;
+        switch ($frequency) {
+            case 'Negyed év':
+                $interval = new DateInterval('P3M');
+                break;
+            case 'Fél év':
+                $interval = new DateInterval('P6M');
+                break;
+            case 'Éves':
+                $interval = new DateInterval('P1Y');
+                break;
+            default:
+                return null;
+        }
+
+        // Kiszámoljuk a következő esedékes időszak végét
+        $periodStart = clone $start;
+        $periodEnd = $this->getPeriodEndDate($periodStart, $frequency);
+
+        while (new DateTime($periodEnd) <= $now) {
+            $periodStart->add($interval);
+            $periodEnd = $this->getPeriodEndDate($periodStart, $frequency);
+        }
+
+        return $periodEnd;
+    }
+
+    private function getPeriodEndDate(DateTime $startDate, $frequency) {
+        $endDate = clone $startDate;
+
+        switch ($frequency) {
+            case 'Negyed év':
+                $endDate->add(new DateInterval('P3M'));
+                $endDate->sub(new DateInterval('P1D')); // 3 hónap múlva -1 nap
+                break;
+            case 'Fél év':
+                $endDate->add(new DateInterval('P6M'));
+                $endDate->sub(new DateInterval('P1D')); // 6 hónap múlva -1 nap
+                break;
+            case 'Éves':
+                $endDate->add(new DateInterval('P1Y'));
+                $endDate->sub(new DateInterval('P1D')); // 1 év múlva -1 nap
+                break;
+            default:
+                return null;
+        }
+
+        return $endDate->format('Y-m-d');
     }
 
     /**
