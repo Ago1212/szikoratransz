@@ -14,7 +14,7 @@ export default function Auth() {
 
   // Ellenőrizd a bejelentkezett állapotot
   useEffect(() => {
-    const isAuthenticated = sessionStorage.getItem('user') !== null;
+    const isAuthenticated = sessionStorage.getItem("user") !== null;
     if (isAuthenticated) {
       history.push("/admin/dashboard"); // Navigálj a dashboard oldalra
     }
@@ -37,7 +37,6 @@ export default function Auth() {
             <Route path="/auth/register" exact component={Register} />
             <Redirect from="/auth" to="/auth/login" />
           </Switch>
-          <FooterSmall absolute />
         </section>
       </main>
     </>
