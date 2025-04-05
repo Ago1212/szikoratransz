@@ -1,22 +1,111 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
 // components
-
 import Navbar from "components/Navbars/AuthNavbar.js";
 import Footer from "components/Footers/Footer.js";
 
 export default function Landing() {
+  const [activeSection, setActiveSection] = useState("home");
+
+  // Handle scroll to detect current section
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = ["home", "services", "about", "contact"];
+      const scrollPosition = window.scrollY + 100;
+
+      for (const section of sections) {
+        const element = document.getElementById(section);
+        if (element) {
+          const offsetTop = element.offsetTop;
+          const offsetHeight = element.offsetHeight;
+
+          if (
+            scrollPosition >= offsetTop &&
+            scrollPosition < offsetTop + offsetHeight
+          ) {
+            setActiveSection(section);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Smooth scroll function
+  const smoothScroll = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      window.scrollTo({
+        top: element.offsetTop - 80,
+        behavior: "smooth",
+      });
+    }
+  };
   return (
     <>
-      <Navbar transparent />
+      {" "}
+      <nav className="fixed top-0 w-full z-50 bg-blueGray-900 bg-opacity-90 backdrop-blur-sm shadow-lg">
+        <div className="w-full mx-auto items-center flex justify-between md:flex-nowrap flex-wrap md:px-10 px-4 py-3">
+          {/* Brand/logo */}
+          <Link
+            className="text-white text-sm uppercase hidden lg:inline-block font-semibold hover:text-yellow-300 transition-colors duration-300"
+            to="/"
+            onClick={(e) => {
+              e.preventDefault();
+              smoothScroll("home");
+            }}
+          >
+            Szikora Transz Kft
+          </Link>
+
+          {/* Navigation links */}
+          <ul className="flex-col md:flex-row flex md:ml-auto md:mr-auto items-center">
+            {[
+              { id: "home", label: "Kezdőlap" },
+              { id: "services", label: "Szolgáltatások" },
+              { id: "about", label: "Rólunk" },
+              { id: "contact", label: "Kapcsolat" },
+            ].map((item) => (
+              <li key={item.id} className="md:ml-8 md:mb-0 mb-3">
+                <button
+                  onClick={() => smoothScroll(item.id)}
+                  className={`${
+                    activeSection === item.id ? "text-yellow-300" : "text-white"
+                  } hover:text-yellow-300 text-xs uppercase py-3 font-bold block transition-colors duration-300`}
+                >
+                  {item.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+
+          {/* Login button (right side) */}
+          <ul className="flex-col md:flex-row flex items-center">
+            <li>
+              <Link
+                to="/auth/login"
+                className="bg-white text-blueGray-700 hover:bg-yellow-300 text-xs font-bold uppercase px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none lg:mr-1 lg:mb-0 ml-3 mb-3 transition-all duration-300"
+              >
+                Bejelentkezés
+              </Link>
+            </li>
+          </ul>
+        </div>
+      </nav>
       <main>
-        <div className="relative pt-16 pb-32 flex content-center items-center justify-center min-h-screen-75">
+        <div
+          id="home"
+          className="relative pt-16 pb-32 flex content-center items-center justify-center min-h-screen-75"
+        >
           <div
             className="absolute top-0 w-full h-full bg-center bg-cover"
             style={{
               backgroundImage:
-                "url('https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1267&q=80')",
+                "url('https://images.unsplash.com/photo-1544620347-c4fd8a51b3db?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80')",
             }}
           >
             <span
@@ -29,12 +118,12 @@ export default function Landing() {
               <div className="w-full lg:w-6/12 px-4 ml-auto mr-auto text-center">
                 <div className="pr-12">
                   <h1 className="text-white font-semibold text-5xl">
-                    Your story starts with us.
+                    Megbízható fuvarozási szolgáltatások
                   </h1>
                   <p className="mt-4 text-lg text-blueGray-200">
-                    This is a simple example of a Landing Page you can build
-                    using Notus React. It features multiple CSS components based
-                    on the Tailwind CSS design system.
+                    Szikora Transz Kft - professzionális árufuvarozás belföldön
+                    és nemzetközileg. Több kamionból és tapasztalt sofőrökből
+                    álló flottánkkal mindig a rendelkezésére állunk.
                   </p>
                 </div>
               </div>
@@ -61,19 +150,21 @@ export default function Landing() {
           </div>
         </div>
 
-        <section className="pb-20 bg-blueGray-200 -mt-24">
+        <section id="services" className="pb-20 bg-blueGray-200 -mt-24">
           <div className="container mx-auto px-4">
             <div className="flex flex-wrap">
               <div className="lg:pt-12 pt-6 w-full md:w-4/12 px-4 text-center">
                 <div className="relative flex flex-col min-w-0 break-words bg-white w-full mb-8 shadow-lg rounded-lg">
                   <div className="px-4 py-5 flex-auto">
                     <div className="text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-red-400">
-                      <i className="fas fa-award"></i>
+                      <i className="fas fa-truck"></i>
                     </div>
-                    <h6 className="text-xl font-semibold">Awarded Agency</h6>
+                    <h6 className="text-xl font-semibold">
+                      Belföldi fuvarozás
+                    </h6>
                     <p className="mt-2 mb-4 text-blueGray-500">
-                      Divide details about your product or agency work into
-                      parts. A paragraph describing a feature will be enough.
+                      Gyors és megbízható áruszállítás Magyarország egész
+                      területén. Rugalmas árazás és pontos határidők.
                     </p>
                   </div>
                 </div>
@@ -83,12 +174,14 @@ export default function Landing() {
                 <div className="relative flex flex-col min-w-0 break-words bg-white w-full mb-8 shadow-lg rounded-lg">
                   <div className="px-4 py-5 flex-auto">
                     <div className="text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-lightBlue-400">
-                      <i className="fas fa-retweet"></i>
+                      <i className="fas fa-globe-europe"></i>
                     </div>
-                    <h6 className="text-xl font-semibold">Free Revisions</h6>
+                    <h6 className="text-xl font-semibold">
+                      Nemzetközi szállítás
+                    </h6>
                     <p className="mt-2 mb-4 text-blueGray-500">
-                      Keep you user engaged by providing meaningful information.
-                      Remember that by this time, the user is curious.
+                      Határon átnyúló fuvarozási szolgáltatás Európa-szerte.
+                      Vámtudás és hivatalos ügyintézés.
                     </p>
                   </div>
                 </div>
@@ -98,12 +191,14 @@ export default function Landing() {
                 <div className="relative flex flex-col min-w-0 break-words bg-white w-full mb-8 shadow-lg rounded-lg">
                   <div className="px-4 py-5 flex-auto">
                     <div className="text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-emerald-400">
-                      <i className="fas fa-fingerprint"></i>
+                      <i className="fas fa-shield-alt"></i>
                     </div>
-                    <h6 className="text-xl font-semibold">Verified Company</h6>
+                    <h6 className="text-xl font-semibold">
+                      Biztosított szállítás
+                    </h6>
                     <p className="mt-2 mb-4 text-blueGray-500">
-                      Write a few lines about each one. A paragraph describing a
-                      feature will be enough. Keep you user engaged!
+                      Minden fuvarunk teljes biztosítási fedezettel történik.
+                      Árukádat biztonságban tudhatja nálunk.
                     </p>
                   </div>
                 </div>
@@ -113,32 +208,27 @@ export default function Landing() {
             <div className="flex flex-wrap items-center mt-32">
               <div className="w-full md:w-5/12 px-4 mr-auto ml-auto">
                 <div className="text-blueGray-500 p-3 text-center inline-flex items-center justify-center w-16 h-16 mb-6 shadow-lg rounded-full bg-white">
-                  <i className="fas fa-user-friends text-xl"></i>
+                  <i className="fas fa-warehouse text-xl"></i>
                 </div>
                 <h3 className="text-3xl mb-2 font-semibold leading-normal">
-                  Working with us is a pleasure
+                  Miért minket válasszon?
                 </h3>
                 <p className="text-lg font-light leading-relaxed mt-4 mb-4 text-blueGray-600">
-                  Don't let your uses guess by attaching tooltips and popoves to
-                  any element. Just make sure you enable them first via
-                  JavaScript.
+                  10+ éves tapasztalattal rendelkezünk a fuvarozási iparágban.
+                  Flottánk állandóan karban van tartva, sofőreink képzettek és
+                  megbízhatóak.
                 </p>
                 <p className="text-lg font-light leading-relaxed mt-0 mb-4 text-blueGray-600">
-                  The kit comes with three pre-built pages to help you get
-                  started faster. You can change the text and images and you're
-                  good to go. Just make sure you enable them first via
-                  JavaScript.
+                  Ügyfeleink számára személyre szabott megoldásokat kínálunk,
+                  figyelembe véve egyedi igényeiket és határidőiket.
                 </p>
-                <Link to="/" className="font-bold text-blueGray-700 mt-8">
-                  Check Notus React!
-                </Link>
               </div>
 
               <div className="w-full md:w-4/12 px-4 mr-auto ml-auto">
                 <div className="relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded-lg bg-lightBlue-500">
                   <img
                     alt="..."
-                    src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1051&q=80"
+                    src="https://images.unsplash.com/photo-1602722053028-1c51a1a20620?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80"
                     className="w-full align-middle rounded-t-lg"
                   />
                   <blockquote className="relative p-8 mb-4">
@@ -153,13 +243,11 @@ export default function Landing() {
                         className="text-lightBlue-500 fill-current"
                       ></polygon>
                     </svg>
-                    <h4 className="text-xl font-bold text-white">
-                      Top Notch Services
-                    </h4>
+                    <h4 className="text-xl font-bold text-white">Flottánk</h4>
                     <p className="text-md font-light mt-2 text-white">
-                      The Arctic Ocean freezes every winter and much of the
-                      sea-ice then thaws every summer, and that process will
-                      continue whatever happens.
+                      Több modern, karbantartott kamionból álló flottánk és
+                      tapasztalt, hosszú távú sofőreink garantálja a megbízható
+                      szállítást.
                     </p>
                   </blockquote>
                 </div>
@@ -168,7 +256,7 @@ export default function Landing() {
           </div>
         </section>
 
-        <section className="relative py-20">
+        <section id="about" className="relative py-20">
           <div
             className="bottom-auto top-0 left-0 right-0 w-full absolute pointer-events-none overflow-hidden -mt-20 h-20"
             style={{ transform: "translateZ(0)" }}
@@ -195,31 +283,32 @@ export default function Landing() {
                 <img
                   alt="..."
                   className="max-w-full rounded-lg shadow-lg"
-                  src="https://images.unsplash.com/photo-1555212697-194d092e3b8f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=634&q=80"
+                  src="https://images.unsplash.com/photo-1519181245277-c07eb80a4bea?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80"
                 />
               </div>
               <div className="w-full md:w-5/12 ml-auto mr-auto px-4">
                 <div className="md:pr-12">
                   <div className="text-lightBlue-600 p-3 text-center inline-flex items-center justify-center w-16 h-16 mb-6 shadow-lg rounded-full bg-lightBlue-300">
-                    <i className="fas fa-rocket text-xl"></i>
+                    <i className="fas fa-road text-xl"></i>
                   </div>
-                  <h3 className="text-3xl font-semibold">A growing company</h3>
+                  <h3 className="text-3xl font-semibold">Cégtörténetünk</h3>
                   <p className="mt-4 text-lg leading-relaxed text-blueGray-500">
-                    The extension comes with three pre-built pages to help you
-                    get started faster. You can change the text and images and
-                    you're good to go.
+                    Szikora Transz Kft 2010-ben alakult kis családi
+                    vállalkozásként. Azóta folyamatosan bővült flottánk és
+                    szolgáltatási körünk, de megtartottuk személyes
+                    hangvételünket és ügyfélközpontú hozzáállásunkat.
                   </p>
                   <ul className="list-none mt-6">
                     <li className="py-2">
                       <div className="flex items-center">
                         <div>
                           <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-lightBlue-600 bg-lightBlue-200 mr-3">
-                            <i className="fas fa-fingerprint"></i>
+                            <i className="fas fa-truck-moving"></i>
                           </span>
                         </div>
                         <div>
                           <h4 className="text-blueGray-500">
-                            Carefully crafted components
+                            Több modern kamionból álló flotta
                           </h4>
                         </div>
                       </div>
@@ -228,12 +317,12 @@ export default function Landing() {
                       <div className="flex items-center">
                         <div>
                           <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-lightBlue-600 bg-lightBlue-200 mr-3">
-                            <i className="fab fa-html5"></i>
+                            <i className="fas fa-user-tie"></i>
                           </span>
                         </div>
                         <div>
                           <h4 className="text-blueGray-500">
-                            Amazing page examples
+                            Több tapasztalt, hosszú távú sofőr
                           </h4>
                         </div>
                       </div>
@@ -242,12 +331,12 @@ export default function Landing() {
                       <div className="flex items-center">
                         <div>
                           <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-lightBlue-600 bg-lightBlue-200 mr-3">
-                            <i className="far fa-paper-plane"></i>
+                            <i className="fas fa-map-marked-alt"></i>
                           </span>
                         </div>
                         <div>
                           <h4 className="text-blueGray-500">
-                            Dynamic components
+                            Belföldi és nemzetközi fuvarozás
                           </h4>
                         </div>
                       </div>
@@ -259,7 +348,7 @@ export default function Landing() {
           </div>
         </section>
 
-        <section className="pb-20 relative block bg-blueGray-800">
+        <section id="contact" className="pb-20 relative block bg-blueGray-800">
           <div
             className="bottom-auto top-0 left-0 right-0 w-full absolute pointer-events-none overflow-hidden -mt-20 h-20"
             style={{ transform: "translateZ(0)" }}
@@ -284,50 +373,50 @@ export default function Landing() {
             <div className="flex flex-wrap text-center justify-center">
               <div className="w-full lg:w-6/12 px-4">
                 <h2 className="text-4xl font-semibold text-white">
-                  Build something
+                  Miben vagyunk jók?
                 </h2>
                 <p className="text-lg leading-relaxed mt-4 mb-4 text-blueGray-400">
-                  Put the potentially record low maximum sea ice extent tihs
-                  year down to low ice. According to the National Oceanic and
-                  Atmospheric Administration, Ted, Scambos.
+                  Szikora Transz Kft a megbízható és pontos fuvarozás
+                  hagyományait követi. Ügyfeleink elégedettsége mindennapos
+                  motivációnk.
                 </p>
               </div>
             </div>
             <div className="flex flex-wrap mt-12 justify-center">
               <div className="w-full lg:w-3/12 px-4 text-center">
                 <div className="text-blueGray-800 p-3 w-12 h-12 shadow-lg rounded-full bg-white inline-flex items-center justify-center">
-                  <i className="fas fa-medal text-xl"></i>
+                  <i className="fas fa-clock text-xl"></i>
                 </div>
                 <h6 className="text-xl mt-5 font-semibold text-white">
-                  Excelent Services
+                  Pontosság
                 </h6>
                 <p className="mt-2 mb-4 text-blueGray-400">
-                  Some quick example text to build on the card title and make up
-                  the bulk of the card's content.
+                  Mindig időben érkezünk és teljesítjük ígéreteinket. Határidők
+                  betartása nálunk alapvető elv.
                 </p>
               </div>
               <div className="w-full lg:w-3/12 px-4 text-center">
                 <div className="text-blueGray-800 p-3 w-12 h-12 shadow-lg rounded-full bg-white inline-flex items-center justify-center">
-                  <i className="fas fa-poll text-xl"></i>
+                  <i className="fas fa-euro-sign text-xl"></i>
                 </div>
                 <h5 className="text-xl mt-5 font-semibold text-white">
-                  Grow your market
+                  Versenyképes árak
                 </h5>
                 <p className="mt-2 mb-4 text-blueGray-400">
-                  Some quick example text to build on the card title and make up
-                  the bulk of the card's content.
+                  Áraink a piaci viszonyoknak megfelelőek, miközben nem
+                  veszítünk a minőségből.
                 </p>
               </div>
               <div className="w-full lg:w-3/12 px-4 text-center">
                 <div className="text-blueGray-800 p-3 w-12 h-12 shadow-lg rounded-full bg-white inline-flex items-center justify-center">
-                  <i className="fas fa-lightbulb text-xl"></i>
+                  <i className="fas fa-headset text-xl"></i>
                 </div>
                 <h5 className="text-xl mt-5 font-semibold text-white">
-                  Launch time
+                  Ügyfélszolgálat
                 </h5>
                 <p className="mt-2 mb-4 text-blueGray-400">
-                  Some quick example text to build on the card title and make up
-                  the bulk of the card's content.
+                  Szakértő csapatunk mindig rendelkezésére áll kérdéseivel,
+                  problémáival kapcsolatban.
                 </p>
               </div>
             </div>
@@ -339,24 +428,22 @@ export default function Landing() {
               <div className="w-full lg:w-6/12 px-4">
                 <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-blueGray-200">
                   <div className="flex-auto p-5 lg:p-10">
-                    <h4 className="text-2xl font-semibold">
-                      Want to work with us?
-                    </h4>
+                    <h4 className="text-2xl font-semibold">Ajánlatkérés</h4>
                     <p className="leading-relaxed mt-1 mb-4 text-blueGray-500">
-                      Complete this form and we will get back to you in 24
-                      hours.
+                      Töltse ki az alábbi űrlapot és 24 órán belül visszajelzünk
+                      részletes ajánlattal.
                     </p>
                     <div className="relative w-full mb-3 mt-8">
                       <label
                         className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
                         htmlFor="full-name"
                       >
-                        Full Name
+                        Teljes név
                       </label>
                       <input
                         type="text"
                         className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-                        placeholder="Full Name"
+                        placeholder="Teljes név"
                       />
                     </div>
 
@@ -365,12 +452,12 @@ export default function Landing() {
                         className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
                         htmlFor="email"
                       >
-                        Email
+                        Email cím
                       </label>
                       <input
                         type="email"
                         className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-                        placeholder="Email"
+                        placeholder="Email cím"
                       />
                     </div>
 
@@ -379,13 +466,13 @@ export default function Landing() {
                         className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
                         htmlFor="message"
                       >
-                        Message
+                        Üzenet
                       </label>
                       <textarea
                         rows="4"
                         cols="80"
                         className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full"
-                        placeholder="Type a message..."
+                        placeholder="Üzenet szövege..."
                       />
                     </div>
                     <div className="text-center mt-6">
@@ -393,7 +480,7 @@ export default function Landing() {
                         className="bg-blueGray-800 text-white active:bg-blueGray-600 text-sm font-bold uppercase px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
                         type="button"
                       >
-                        Send Message
+                        Üzenet küldése
                       </button>
                     </div>
                   </div>
@@ -403,7 +490,6 @@ export default function Landing() {
           </div>
         </section>
       </main>
-      <Footer />
     </>
   );
 }

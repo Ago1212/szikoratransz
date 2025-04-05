@@ -70,7 +70,7 @@ export default function CardTable({ potkocsik }) {
                   Rendszám
                 </th>
                 <th className="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left bg-blueGray-50 text-blueGray-500 border-blueGray-100">
-                  Sofőr
+                  Típus
                 </th>
                 <th className="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-right bg-blueGray-50 text-blueGray-500 border-blueGray-100">
                   Műveletek
@@ -84,7 +84,7 @@ export default function CardTable({ potkocsik }) {
                     {potkocsi.rendszam}
                   </td>
                   <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-                    {potkocsi.sofor || "Nincs"}
+                    {potkocsi.tipus || "Nincs"}
                   </td>
                   <td className="border-t-0 px-6 border-l-0 border-r-0 whitespace-nowrap p-4 align-middle flex justify-end">
                     <i

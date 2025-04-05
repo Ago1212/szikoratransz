@@ -10,7 +10,7 @@ export default function CardPotkocsi({ initialPotkocsi }) {
   const [formData, setFormData] = useState({
     id: potkocsi.id || "",
     rendszam: potkocsi.rendszam || "",
-    potkocsi: potkocsi.potkocsi || "",
+    tipus: potkocsi.tipus || "",
     muszaki_lejarat: potkocsi.muszaki_lejarat || "",
     adr_lejarat: potkocsi.adr_lejarat || "",
     taograf_illesztes: potkocsi.taograf_illesztes || "",
@@ -18,9 +18,11 @@ export default function CardPotkocsi({ initialPotkocsi }) {
     porolto_lejarat: potkocsi.porolto_lejarat || "",
     porolto_lejarat_2: potkocsi.porolto_lejarat_2 || "",
     kot_biztositas: potkocsi.kot_biztositas || "",
+    kot_biz_nev: potkocsi.kot_biz_nev || "",
     kot_biz_dij: potkocsi.kot_biz_dij || "",
     kot_biz_utem: potkocsi.kot_biz_utem || "",
     kaszko_biztositas: potkocsi.kaszko_biztositas || "",
+    kaszko_nev: potkocsi.kaszko_nev || "",
     kaszko_dij: potkocsi.kaszko_dij || "",
     kaszko_fizetesi_utem: potkocsi.kaszko_fizetesi_utem || "",
   });
