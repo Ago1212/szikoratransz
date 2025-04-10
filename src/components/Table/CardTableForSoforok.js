@@ -30,7 +30,10 @@ export default function CardTable({ soforok }) {
       const result = await fetchAction("deleteSofor", { id });
 
       if (result && result.success) {
-        window.location.reload();
+        history.push("/admin");
+        setTimeout(() => {
+          history.replace("/admin/soforok"); // Adjust this to your actual route
+        }, 0);
         alert("A sofőr sikeresen törölve.");
       } else {
         alert(result?.message || "Hiba történt a törlés során.");

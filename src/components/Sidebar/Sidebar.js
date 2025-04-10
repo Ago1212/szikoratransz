@@ -1,6 +1,6 @@
 /*eslint-disable*/
 import React from "react";
-import { Link, Redirect } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 
 import NotificationDropdown from "components/Dropdowns/NotificationDropdown.js";
 import UserDropdown from "components/Dropdowns/UserDropdown.js";
@@ -9,11 +9,12 @@ import { fetchAction } from "utils/fetchAction";
 export default function Sidebar() {
   const storedUserData = sessionStorage.getItem("user");
   const [collapseShow, setCollapseShow] = React.useState("hidden");
+  const history = useHistory();
   const handleLogout = async () => {
     const result = await fetchAction("logoutUser", { id: storedUserData.id });
     if (result && result.success) {
       sessionStorage.removeItem("user");
-      window.location.reload();
+      history.push("/");
     } else {
       alert(result.message || "Logout failed.");
     }

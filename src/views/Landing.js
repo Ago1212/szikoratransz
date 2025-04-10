@@ -466,6 +466,9 @@ export default function Landing() {
                 <h2 className="text-4xl font-semibold text-white">
                   Miben vagyunk jók?
                 </h2>
+                <div className="flex justify-center mt-4">
+                  <div className="w-24 h-1 bg-yellow-400 rounded"></div>
+                </div>
                 <p className="text-lg leading-relaxed mt-4 mb-4 text-blueGray-400">
                   Szikora Transz Kft a megbízható és pontos fuvarozás
                   hagyományait követi. Ügyfeleink elégedettsége mindennapos

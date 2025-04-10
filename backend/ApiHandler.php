@@ -68,10 +68,7 @@ class ApiHandler {
             throw new Exception('Request body is empty.');
         }
 
-        $headers = apache_request_headers();
-        $authHeader = $headers['Authorization'] ?? '';
-        $authHash = str_replace('Bearer ', '', $authHeader);
-
+        $authHash = $request['authHash'];
         if ($this->auth_hash !== $authHash) {
             throw new Exception('Authorization failed.');
         }

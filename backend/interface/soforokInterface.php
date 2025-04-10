@@ -8,20 +8,19 @@ class SoforokInterface {
         $this->db = $database->connect();
     }
 
-    public function getSoforok($id){
+    public function getSoforok($id) {
 
-        try {    
+        try {
             $query = "SELECT * FROM user WHERE admin = :id AND admin <> id AND torolt <> 'I'";
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':id', $id);
             $stmt->execute();
             $soforok = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            return ['success' => true, 'soforok'=>$soforok];
+
+            return ['success' => true, 'soforok' => $soforok];
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
-
     }
     public function saveSoforData($data) {
         try {
@@ -39,9 +38,9 @@ class SoforokInterface {
                           gki_lejarat = :gki_lejarat, 
                           adr_lejarat = :adr_lejarat 
                       WHERE id = :id";
-    
+
             $stmt = $this->db->prepare($query);
-    
+
             // Paraméterek kötése
             $stmt->bindParam(':id', $data['id'], PDO::PARAM_INT);
             $stmt->bindParam(':name', $data['name'], PDO::PARAM_STR);
@@ -56,10 +55,10 @@ class SoforokInterface {
             $stmt->bindParam(':jogsi_lejarat', $data['jogsi_lejarat'], PDO::PARAM_STR);
             $stmt->bindParam(':gki_lejarat', $data['gki_lejarat'], PDO::PARAM_STR);
             $stmt->bindParam(':adr_lejarat', $data['adr_lejarat'], PDO::PARAM_STR);
-    
+
             // Lekérdezés végrehajtása
             $stmt->execute();
-    
+
             return ['success' => true, 'message' => 'Sofőr adatai sikeresen frissítve.'];
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
@@ -71,9 +70,9 @@ class SoforokInterface {
                       (admin,name, email, phone, szul_datum, szemelyi, varos, irsz, cim, szemelyi_lejarat, jogsi_lejarat, gki_lejarat, adr_lejarat) 
                       VALUES 
                       (:admin,:name, :email, :phone, :szul_datum, :szemelyi, :varos, :irsz, :cim, :szemelyi_lejarat, :jogsi_lejarat, :gki_lejarat, :adr_lejarat)";
-    
+
             $stmt = $this->db->prepare($query);
-    
+
             // Paraméterek kötése
             $stmt->bindParam(':admin', $data['admin'], PDO::PARAM_STR);
             $stmt->bindParam(':name', $data['name'], PDO::PARAM_STR);
@@ -88,20 +87,20 @@ class SoforokInterface {
             $stmt->bindParam(':jogsi_lejarat', $data['jogsi_lejarat'], PDO::PARAM_STR);
             $stmt->bindParam(':gki_lejarat', $data['gki_lejarat'], PDO::PARAM_STR);
             $stmt->bindParam(':adr_lejarat', $data['adr_lejarat'], PDO::PARAM_STR);
-    
+
             // Lekérdezés végrehajtása
             $stmt->execute();
-    
+
             $newSoforId = $this->db->lastInsertId();
             $newSoforData = $this->getSofor($newSoforId);
-    
+
             return ['success' => true, 'message' => 'Sofőr adatai sikeresen beszúrva.', 'sofor' => $newSoforData];
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
-    
-    public function deleteSofor($id){
+
+    public function deleteSofor($id) {
         try {
             $query = "UPDATE user SET torolt='I' WHERE id = :id";
             $stmt = $this->db->prepare($query);
@@ -114,7 +113,7 @@ class SoforokInterface {
     }
 
 
-    private function getSofor($email) {
+    private function getSofor($id) {
         $query = "SELECT * FROM user WHERE id = :id";
         $stmt = $this->db->prepare($query);
         $stmt->bindParam(':id', $id);
@@ -124,5 +123,3 @@ class SoforokInterface {
 }
 
 $soforokInterface = new SoforokInterface();
-
-?>

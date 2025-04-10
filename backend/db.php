@@ -1,7 +1,7 @@
 <?php
 
 class Database {
-    private $host = 'localhost';        
+    private $host = 'localhost';
     private $db_name = 'kamion';          // Adatbázis neve
     private $username = 'kamion';         // Adatbázis felhasználónév
     private $password = 'VW4h2gzwm6vzA05xYGdWoNXFzHhSCdNQ';             // Adatbázis jelszó

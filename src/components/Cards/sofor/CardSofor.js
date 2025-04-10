@@ -31,7 +31,7 @@ export default function CardSoforok({ initSofor }) {
       admin: storedUserData.id,
       ...formData,
     });
-    if (result && result.success && action === "newKamion") {
+    if (result && result.success && action === "newSofor") {
       alert("Új sofőr rögzítése sikeres!");
 
       setSofor(result.sofor);

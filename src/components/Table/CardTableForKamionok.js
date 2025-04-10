@@ -30,7 +30,10 @@ export default function CardTable({ kamionok }) {
       const result = await fetchAction("deleteKamion", { id });
 
       if (result && result.success) {
-        window.location.reload();
+        history.push("/admin");
+        setTimeout(() => {
+          history.replace("/admin/kamionok"); // Adjust this to your actual route
+        }, 0);
         alert("A kamion sikeresen törölve.");
       } else {
         alert(result?.message || "Hiba történt a törlés során.");

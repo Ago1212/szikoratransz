@@ -30,7 +30,11 @@ export default function CardTable({ potkocsik }) {
       const result = await fetchAction("deletePotkocsi", { id });
 
       if (result && result.success) {
-        window.location.reload();
+        history.push("/admin");
+        setTimeout(() => {
+          history.replace("/admin/potkocsi"); // Adjust this to your actual route
+        }, 0);
+
         alert("A pótkocsi sikeresen törölve.");
       } else {
         alert(result?.message || "Hiba történt a törlés során.");

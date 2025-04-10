@@ -78,7 +78,7 @@ class PotkocsiInterface {
             // SQL lekérdezés előkészítése az adatok beszúrásához
             $query = "INSERT INTO potkocsi 
                       (admin,rendszam,tipus, muszaki_lejarat, adr_lejarat, taograf_illesztes, emelohatfal_vizsga, porolto_lejarat, porolto_lejarat_2, kot_biztositas,kot_biz_nev, kot_biz_dij, kot_biz_utem, kaszko_biztositas, kaszko_nev,kaszko_dij, kaszko_fizetesi_utem) 
-                      VALUES (:admin,:rendszam, :muszaki_lejarat, :adr_lejarat, :taograf_illesztes, :emelohatfal_vizsga, :porolto_lejarat, :porolto_lejarat_2, :kot_biztositas,:kot_biz_nev, :kot_biz_dij, :kot_biz_utem, :kaszko_biztositas,  :kaszko_nev,:kaszko_dij, :kaszko_fizetesi_utem)";
+                      VALUES (:admin,:rendszam,:tipus, :muszaki_lejarat, :adr_lejarat, :taograf_illesztes, :emelohatfal_vizsga, :porolto_lejarat, :porolto_lejarat_2, :kot_biztositas,:kot_biz_nev, :kot_biz_dij, :kot_biz_utem, :kaszko_biztositas,  :kaszko_nev,:kaszko_dij, :kaszko_fizetesi_utem)";
 
             $stmt = $this->db->prepare($query);
 
@@ -104,9 +104,9 @@ class PotkocsiInterface {
             $stmt->execute();
 
             $newPotkocsiId = $this->db->lastInsertId();
-            $newKamionData = $this->getPotkocsi($newPotkocsiId);
+            $newPotkocsiData = $this->getPotkocsi($newPotkocsiId);
 
-            return ['success' => true, 'message' => 'Pótkocsi adatai sikeresen beszúrva.', 'kamion' => $newKamionData];
+            return ['success' => true, 'message' => 'Pótkocsi adatai sikeresen beszúrva.', 'potkocsi' => $newPotkocsiData];
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }

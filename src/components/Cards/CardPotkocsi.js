@@ -34,7 +34,7 @@ export default function CardPotkocsi({ initialPotkocsi }) {
       admin: storedUserData.id,
       ...formData,
     });
-    if (result && result.success && action === "newKamion") {
+    if (result && result.success && action === "newPotkocsi") {
       alert("Új pótkocsi rögzítése sikeres!");
 
       setPotkocsi(result.potkocsi);
