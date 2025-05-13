@@ -214,6 +214,30 @@ export default function Sidebar() {
                 </Link>
               </li>
             </ul>
+            <ul className="md:flex-col md:min-w-full flex flex-col list-none md:mb-4">
+              <li className="items-center">
+                <Link
+                  className={
+                    "text-xs uppercase py-3 font-bold block " +
+                    (window.location.href.indexOf("/admin/bejelenetesek") !== -1
+                      ? "text-lightBlue-500 hover:text-lightBlue-600"
+                      : "text-blueGray-700 hover:text-blueGray-500")
+                  }
+                  to="/admin/bejelentesek"
+                >
+                  <i
+                    className={
+                      "fas fa-comments mr-2 text-sm " +
+                      (window.location.href.indexOf("/admin/bejelentesek") !==
+                      -1
+                        ? "opacity-75"
+                        : "text-blueGray-300")
+                    }
+                  ></i>{" "}
+                  Bejelentések
+                </Link>
+              </li>
+            </ul>
 
             {/* Divider */}
             <hr className="my-4 md:min-w-full" />

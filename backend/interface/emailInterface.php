@@ -27,7 +27,7 @@ class EmailInterface {
         $body .= "Telefonszám: $phone\n";
         $body .= "Üzenet:\n$message";
 
-        return $this->sendEmail($email, 'sziago12@gmail.com', $subject, $body);
+        return $this->sendEmail($email, 'szikoratransz@gmail.com', $subject, $body);
     }
 
     protected function sendEmail(string $from, string $to, string $subject, string $body) {

@@ -18,6 +18,8 @@ import KamionForm from "views/admin/KamionForm.js";
 import PotkocsiForm from "views/admin/PotkocsiForm.js";
 import SoforForm from "views/admin/SoforForm.js";
 import LoginPage from "views/auth/Login.js"; // Importáld a bejelentkező oldalt
+import Bejelentesek from "views/admin/Bejelentesek";
+import BejelentesekForm from "views/admin/BejelentesekForm";
 
 // PrivateRoute komponens létrehozása
 const PrivateRoute = ({ component: Component, ...rest }) => {
@@ -59,6 +61,16 @@ export default function Admin() {
             <PrivateRoute path="/admin/soforForm" exact component={SoforForm} />
             <PrivateRoute path="/admin/fajlok" exact component={Fajlok} />
             <PrivateRoute path="/admin/esemenyek" exact component={Esemenyek} />
+            <PrivateRoute
+              path="/admin/bejelentesek"
+              exact
+              component={Bejelentesek}
+            />
+            <PrivateRoute
+              path="/admin/bejelentesForm"
+              exact
+              component={BejelentesekForm}
+            />
             <Route path="/login" exact component={LoginPage} />{" "}
             {/* Bejelentkező oldal */}
             <Redirect from="/admin" to="/admin/dashboard" />

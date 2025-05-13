@@ -22,3 +22,10 @@ class Database {
         return $this->db;
     }
 }
+
+
+
+/*
+    create database akm_erp_fejl;
+    grant select,insert,update,delete,lock tables on kamion.* to kamion@localhost identified by 'VW4h2gzwm6vzA05xYGdWoNXFzHhSCdNQ';
+*/

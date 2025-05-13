@@ -5,20 +5,20 @@ import { useHistory } from "react-router-dom";
 // components
 import { fetchAction } from "utils/fetchAction";
 
-export default function CardTable({ soforok }) {
+export default function CardTable({ bejelentesek }) {
   const history = useHistory(); // Navigációhoz
 
-  const handleNewSofor = () => {
+  const handleNewBejelentes = () => {
     // Navigáció az új sofőr űrlapjára
-    history.push("/admin/soforForm", { data: {} });
+    history.push("/admin/bejelentesForm", { data: {} });
   };
-  const handleEditClick = (sofor) => {
+  const handleEditClick = (bejelentes) => {
     // Navigáció az új sofőr űrlapjára
-    history.push("/admin/soforForm", { data: sofor });
+    history.push("/admin/bejelentesForm", { data: bejelentes });
   };
   const handleDelete = async (id) => {
     const confirmDelete = window.confirm(
-      "Biztosan törölni szeretnéd a sofőrt?"
+      "Biztosan törölni szeretnéd a bejelentést?"
     );
     if (!confirmDelete) {
       return; // Ha nem erősíti meg, kilépünk a függvényből
@@ -26,14 +26,14 @@ export default function CardTable({ soforok }) {
 
     try {
       // API hívás törléshez
-      const result = await fetchAction("deleteSofor", { id });
+      const result = await fetchAction("deleteBejelentes", { id });
 
       if (result && result.success) {
         history.push("/admin");
         setTimeout(() => {
-          history.replace("/admin/soforok"); // Adjust this to your actual route
+          history.replace("/admin/bejelentesek"); // Adjust this to your actual route
         }, 0);
-        alert("A sofőr sikeresen törölve.");
+        alert("A bejelentés sikeresen törölve.");
       } else {
         alert(result?.message || "Hiba történt a törlés során.");
       }
@@ -51,12 +51,12 @@ export default function CardTable({ soforok }) {
             <div className="relative w-full px-4 max-w-full flex-grow flex-1">
               <div className="text-center flex justify-between">
                 <h3 className="font-semibold text-lg text-blueGray-700">
-                  Sofőrök
+                  Bejelentések
                 </h3>
                 <button
                   className="bg-lightBlue-500 text-white active:bg-lightBlue-600 font-bold uppercase text-xs px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none mr-1 ease-linear transition-all duration-150"
                   type="button"
-                  onClick={handleNewSofor}
+                  onClick={handleNewBejelentes}
                 >
                   Új
                 </button>
@@ -70,16 +70,13 @@ export default function CardTable({ soforok }) {
             <thead>
               <tr>
                 <th className="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left bg-blueGray-50 text-blueGray-500 border-blueGray-100">
-                  Név
+                  Bejelentő
                 </th>
                 <th className="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left bg-blueGray-50 text-blueGray-500 border-blueGray-100">
-                  Email
+                  Bejelentve
                 </th>
                 <th className="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left bg-blueGray-50 text-blueGray-500 border-blueGray-100">
-                  Telefon
-                </th>
-                <th className="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left bg-blueGray-50 text-blueGray-500 border-blueGray-100">
-                  Lakcím
+                  Típus
                 </th>
                 <th className="px-6 align-middle flex justify-end border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left bg-blueGray-50 text-blueGray-500 border-blueGray-100">
                   Műveletek
@@ -87,29 +84,26 @@ export default function CardTable({ soforok }) {
               </tr>
             </thead>
             <tbody>
-              {soforok.map((sofor, index) => (
+              {bejelentesek.map((bejelentes, index) => (
                 <tr key={index}>
                   <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-                    {sofor.name}
+                    {bejelentes.name}
                   </td>
                   <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-                    {sofor.email}
+                    {bejelentes.bejelentve}
                   </td>
                   <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-                    {sofor.phone}
-                  </td>
-                  <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-                    {sofor.lakcim}
+                    {bejelentes.tipus}
                   </td>
                   <td className="border-t-0 px-6 border-l-0 border-r-0 whitespace-nowrap p-4 align-middle flex justify-end">
                     <i
                       className="fa-solid fa-file-pen cursor-pointer text-blue-500 hover:text-blue-700 transition transform hover:scale-110 mr-4"
-                      onClick={() => handleEditClick(sofor)}
+                      onClick={() => handleEditClick(bejelentes)}
                       title="Megnyitás"
                     ></i>
                     <i
                       className="fa-solid fa-trash-can cursor-pointer text-red-500 hover:text-red-700 transition transform hover:scale-110"
-                      onClick={() => handleDelete(sofor.id)}
+                      onClick={() => handleDelete(bejelentes.id)}
                       title="Törlés"
                     ></i>
                   </td>

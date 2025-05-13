@@ -10,7 +10,7 @@ export default function Kamionok() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const user = JSON.parse(sessionStorage.getItem('user'));
+      const user = JSON.parse(sessionStorage.getItem("user"));
       const result = await fetchAction("getKamionok", { id: user.id });
       if (result.success) {
         setKamionok(result.kamionok || []);
@@ -27,7 +27,7 @@ export default function Kamionok() {
     <>
       <div className="flex flex-wrap mt-0">
         <div className="w-full mb-12 px-4">
-        <CardTable kamionok={kamionok} />
+          <CardTable kamionok={kamionok} />
         </div>
       </div>
     </>

@@ -5,7 +5,7 @@ require 'interface/potkocsiInterface.php';
 require 'interface/soforokInterface.php';
 require 'interface/filesInterface.php';
 require 'interface/emailInterface.php';
-
+require 'interface/bejelentesekInterface.php';
 class ApiHandler {
     protected string $auth_hash;
     protected array $actions = [];
@@ -28,6 +28,7 @@ class ApiHandler {
             'newKamion' => ['rendszam'],
             'saveKamionData' => ['id'],
             'getKamionok' => ['id'],
+            'getKamionValaszto' => ['user'],
             'deleteKarbantartas' => ['id'],
             'setKarbantartasKesz' => ['id', 'elvegzett'],
             'updateKarbantartas' => ['log', 'kamion_id', 'datum'],
@@ -47,6 +48,8 @@ class ApiHandler {
             'newSofor' => ['name', 'email'],
             'saveSoforData' => ['id'],
             'deleteSofor' => ['id'],
+
+            'getBejelentesek' => ['kamion'],
 
             'getFiles' => ['id', 'tabla'],
             'fileUpload' => ['admin', 'id', 'tabla', 'file', 'name', 'size'],
@@ -92,7 +95,7 @@ class ApiHandler {
     }
 
     public function process(?array $request) {
-        global $kamionInterface, $potkocsiInterface, $soforokInterface, $filesInterface, $emailInterface;
+        global $kamionInterface, $potkocsiInterface, $soforokInterface, $filesInterface, $emailInterface, $bejelentesekInterface;
         try {
             $this->validation($request);
             $action = $request['action'];
@@ -118,6 +121,9 @@ class ApiHandler {
                     return;
                 case 'getKamionok':
                     echo json_encode($kamionInterface->getKamionok($request['id']));
+                    return;
+                case 'getKamionValaszto':
+                    echo json_encode($kamionInterface->getKamionValaszto($request['user']));
                     return;
                 case 'deleteKamion':
                     echo json_encode($kamionInterface->deleteKamion($request['id']));
@@ -170,6 +176,19 @@ class ApiHandler {
                 case 'deleteSofor':
                     echo json_encode($soforokInterface->deleteSofor($request['id']));
                     return;
+                case 'getBejelentesek':
+                    echo json_encode($bejelentesekInterface->getBejelentesek($request['kamion']));
+                    return;
+                case 'newBejelentes':
+                    echo json_encode($bejelentesekInterface->newBejelentes($request));
+                    return;
+                case 'saveBejelentesData':
+                    echo json_encode($bejelentesekInterface->saveBejelentesData($request));
+                    return;
+                case 'deleteBejelentes':
+                    echo json_encode($bejelentesekInterface->deleteBejelentes($request['id']));
+                    return;
+
                 case 'getFiles':
                     echo json_encode($filesInterface->getFiles($request['tabla'], $request['id']));
                     return;

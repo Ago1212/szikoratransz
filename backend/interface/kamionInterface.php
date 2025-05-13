@@ -8,6 +8,19 @@ class KamionInterface {
         $this->db = $database->connect();
     }
 
+    public function getKamionValaszto($user) {
+        try {
+            $query = "SELECT id, rendszam FROM kamion WHERE torolt <> 'I'";
+            $stmt = $this->db->prepare($query);
+            $stmt->execute();
+            $kamionok = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return ['success' => true, 'kamionok' => $kamionok];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
     public function getKamionok($id) {
 
         try {

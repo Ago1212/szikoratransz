@@ -207,9 +207,12 @@ export default function Landing() {
             <div className="items-center flex flex-wrap">
               <div className="w-full lg:w-6/12 px-4 ml-auto mr-auto text-center">
                 <div className="pr-12">
-                  <h1 className="text-white font-semibold text-5xl">
-                    Szikora Transz Kft
-                  </h1>
+                  <h1
+                    className="text-white font-semibold text-5xl"
+                    dangerouslySetInnerHTML={{
+                      __html: "Szikora Transz",
+                    }}
+                  />
                   <p className="mt-6 text-lg text-blueGray-200">
                     Megbízható fuvarozási szolgáltatások, professzionális
                     árufuvarozás belföldön és nemzetközileg. Több kamionból és
@@ -251,9 +254,9 @@ export default function Landing() {
                     <div className="text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-red-400">
                       <i className="fas fa-truck"></i>
                     </div>
-                    <h6 className="text-xl font-semibold">
+                    <h2 className="text-xl font-semibold">
                       Belföldi fuvarozás
-                    </h6>
+                    </h2>
                     <p className="mt-2 mb-4 text-blueGray-500">
                       Gyors és megbízható áruszállítás Magyarország egész
                       területén. Rugalmas árazás és pontos határidők.
@@ -268,9 +271,9 @@ export default function Landing() {
                     <div className="text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-lightBlue-400">
                       <i className="fas fa-globe-europe"></i>
                     </div>
-                    <h6 className="text-xl font-semibold">
+                    <h2 className="text-xl font-semibold">
                       Nemzetközi szállítás
-                    </h6>
+                    </h2>
                     <p className="mt-2 mb-4 text-blueGray-500">
                       Határon átnyúló fuvarozási szolgáltatás Európa-szerte.
                       Vámtudás és hivatalos ügyintézés.
@@ -285,9 +288,9 @@ export default function Landing() {
                     <div className="text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-emerald-400">
                       <i className="fas fa-shield-alt"></i>
                     </div>
-                    <h6 className="text-xl font-semibold">
+                    <h2 className="text-xl font-semibold">
                       Biztosított szállítás
-                    </h6>
+                    </h2>
                     <p className="mt-2 mb-4 text-blueGray-500">
                       Minden fuvarunk teljes biztosítási fedezettel történik.
                       Árukádat biztonságban tudhatja nálunk.
@@ -481,9 +484,9 @@ export default function Landing() {
                 <div className="text-blueGray-800 p-3 w-12 h-12 shadow-lg rounded-full bg-white inline-flex items-center justify-center">
                   <i className="fas fa-clock text-xl"></i>
                 </div>
-                <h6 className="text-xl mt-5 font-semibold text-white">
+                <h3 className="text-xl mt-5 font-semibold text-white">
                   Pontosság
-                </h6>
+                </h3>
                 <p className="mt-2 mb-4 text-blueGray-400">
                   Mindig időben érkezünk és teljesítjük ígéreteinket. Határidők
                   betartása nálunk alapvető elv.
@@ -493,9 +496,9 @@ export default function Landing() {
                 <div className="text-blueGray-800 p-3 w-12 h-12 shadow-lg rounded-full bg-white inline-flex items-center justify-center">
                   <i className="fas fa-euro-sign text-xl"></i>
                 </div>
-                <h5 className="text-xl mt-5 font-semibold text-white">
+                <h3 className="text-xl mt-5 font-semibold text-white">
                   Versenyképes árak
-                </h5>
+                </h3>
                 <p className="mt-2 mb-4 text-blueGray-400">
                   Áraink a piaci viszonyoknak megfelelőek, miközben nem
                   veszítünk a minőségből.
@@ -505,9 +508,9 @@ export default function Landing() {
                 <div className="text-blueGray-800 p-3 w-12 h-12 shadow-lg rounded-full bg-white inline-flex items-center justify-center">
                   <i className="fas fa-headset text-xl"></i>
                 </div>
-                <h5 className="text-xl mt-5 font-semibold text-white">
+                <h3 className="text-xl mt-5 font-semibold text-white">
                   Ügyfélszolgálat
-                </h5>
+                </h3>
                 <p className="mt-2 mb-4 text-blueGray-400">
                   Szakértő csapatunk mindig rendelkezésére áll kérdéseivel,
                   problémáival kapcsolatban.
@@ -539,7 +542,7 @@ export default function Landing() {
 
             <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
               {/* Partner logo 1 */}
-              <div className="w-32 md:w-40 grayscale hover:grayscale-0 transition-all duration-300">
+              <div className="w-32 md:w-40 p-3 bg-white/80 rounded-lg shadow hover:bg-white transition-all duration-300 grayscale hover:grayscale-0">
                 <img
                   src="/dreher.png"
                   alt="Partner 1"
@@ -548,28 +551,19 @@ export default function Landing() {
               </div>
 
               {/* Partner logo 2 */}
-              <div className="w-32 md:w-40 grayscale hover:grayscale-0 transition-all duration-300">
+              <div className="w-32 md:w-40 p-3 bg-white/80 rounded-lg shadow hover:bg-white transition-all duration-300 grayscale hover:grayscale-0">
                 <img
-                  src="/dreher.png"
+                  src="/transzdanubia.png"
                   alt="Partner 2"
                   className="w-full h-auto object-contain"
                 />
               </div>
 
               {/* Partner logo 3 */}
-              <div className="w-32 md:w-40 grayscale hover:grayscale-0 transition-all duration-300">
+              <div className="w-32 md:w-40 p-3 bg-white/80 rounded-lg shadow hover:bg-white transition-all duration-300 grayscale hover:grayscale-0">
                 <img
-                  src="/dreher.png"
+                  src="/engelmayer.png"
                   alt="Partner 3"
-                  className="w-full h-auto object-contain"
-                />
-              </div>
-
-              {/* Partner logo 4 */}
-              <div className="w-32 md:w-40 grayscale hover:grayscale-0 transition-all duration-300">
-                <img
-                  src="/dreher.png"
-                  alt="Partner 4"
                   className="w-full h-auto object-contain"
                 />
               </div>
