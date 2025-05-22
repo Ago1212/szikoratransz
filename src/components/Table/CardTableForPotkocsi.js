@@ -1,40 +1,68 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { useHistory } from "react-router-dom";
-
-// components
-
+import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 import { fetchAction } from "utils/fetchAction";
 
-export default function CardTable({ potkocsik }) {
-  const history = useHistory(); // Hook a history-hoz
+// Reusable components
+const ActionButton = ({ onClick, icon, color, title, className = "" }) => (
+  <button
+    onClick={onClick}
+    title={title}
+    className={`${color} cursor-pointer transition transform hover:scale-125 ${className}`}
+  >
+    {icon}
+  </button>
+);
 
-  const handleNewKamion = () => {
-    // Navigálj az admin/kamionForm oldalra üres adatokkal
+const TableHeader = ({ children, align = "left" }) => (
+  <th
+    className={`px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-${align} bg-blueGray-50 text-blueGray-500 border-blueGray-100`}
+  >
+    {children}
+  </th>
+);
+
+const TableRow = ({ children, index }) => (
+  <tr className={index % 2 === 0 ? "bg-white" : "bg-blueGray-50"}>
+    {children}
+  </tr>
+);
+
+const TableCell = ({ children, align = "left", className = "" }) => {
+  const baseClasses =
+    "border-t-0 px-6 align-middle border-l-0 border-r-0 text-sm whitespace-nowrap p-4";
+  const alignmentClass = `text-${align}`;
+
+  return (
+    <td className={`${baseClasses} ${alignmentClass} ${className}`}>
+      {children}
+    </td>
+  );
+};
+
+// Main component
+const CardTable = ({ potkocsik }) => {
+  const history = useHistory();
+
+  const handleNewPotkocsi = () => {
     history.push("/admin/potkocsiForm", { data: {} });
   };
+
   const handleEditClick = (potkocsi) => {
-    // Navigáció az új sofőr űrlapjára
     history.push("/admin/potkocsiForm", { data: potkocsi });
   };
+
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm(
-      "Biztosan törölni szeretnéd a pótkocsit?"
-    );
-    if (!confirmDelete) {
-      return; // Ha nem erősíti meg, kilépünk a függvényből
-    }
+    if (!window.confirm("Biztosan törölni szeretnéd a pótkocsit?")) return;
 
     try {
-      // API hívás törléshez
       const result = await fetchAction("deletePotkocsi", { id });
 
-      if (result && result.success) {
+      if (result?.success) {
+        // Refresh the page after deletion
         history.push("/admin");
-        setTimeout(() => {
-          history.replace("/admin/potkocsi"); // Adjust this to your actual route
-        }, 0);
-
+        setTimeout(() => history.replace("/admin/potkocsi"), 0);
         alert("A pótkocsi sikeresen törölve.");
       } else {
         alert(result?.message || "Hiba történt a törlés során.");
@@ -44,80 +72,91 @@ export default function CardTable({ potkocsik }) {
       alert("Hiba történt a törlés során.");
     }
   };
+
   return (
-    <>
-      <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded bg-white">
-        <div className="rounded-t mb-0 px-4 py-3 border-0">
-          <div className="flex flex-wrap items-center">
-            <div className="relative w-full px-4 max-w-full flex-grow flex-1">
-              <div className="text-center flex justify-between">
-                <h3 className="font-semibold text-lg text-blueGray-700">
-                  Pótkocsik
-                </h3>
-                <button
-                  className="bg-lightBlue-500 text-white active:bg-lightBlue-600 font-bold uppercase text-xs px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none mr-1 ease-linear transition-all duration-150"
-                  type="button"
-                  onClick={handleNewKamion}
-                >
-                  Új
-                </button>
-              </div>
+    <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-white overflow-hidden">
+      {/* Table Header */}
+      <div className="rounded-t-lg mb-0 px-6 py-4 border-0 bg-gradient-to-r from-blue-500 to-blue-700">
+        <div className="flex flex-wrap items-center">
+          <div className="relative w-full max-w-full flex-grow flex-1">
+            <div className="flex justify-between items-center">
+              <h3 className="font-semibold text-xl text-white">Pótkocsik</h3>
+              <button
+                className="bg-white text-blue-600 hover:bg-blue-50 active:bg-blue-100 font-bold uppercase text-sm px-4 py-2 rounded-lg shadow hover:shadow-md outline-none focus:outline-none ease-linear transition-all duration-150 flex items-center"
+                type="button"
+                onClick={handleNewPotkocsi}
+              >
+                <FaPlus className="mr-2" /> Új
+              </button>
             </div>
           </div>
         </div>
-        <div className="block w-full overflow-x-auto">
-          {/* Projects table */}
-          <table className="items-center w-full bg-transparent border-collapse">
-            <thead>
-              <tr>
-                <th className="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left bg-blueGray-50 text-blueGray-500 border-blueGray-100">
-                  Rendszám
-                </th>
-                <th className="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left bg-blueGray-50 text-blueGray-500 border-blueGray-100">
-                  Típus
-                </th>
-                <th className="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-right bg-blueGray-50 text-blueGray-500 border-blueGray-100">
-                  Műveletek
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {potkocsik.map((potkocsi, index) => (
-                <tr key={index}>
-                  <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-                    {potkocsi.rendszam}
-                  </td>
-                  <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-                    {potkocsi.tipus || "Nincs"}
-                  </td>
-                  <td className="border-t-0 px-6 border-l-0 border-r-0 whitespace-nowrap p-4 align-middle flex justify-end">
-                    <i
-                      className="fa-solid fa-file-pen cursor-pointer text-blue-500 hover:text-blue-700 transition transform hover:scale-110 mr-4"
-                      onClick={() => handleEditClick(potkocsi)}
-                      title="Megnyitás"
-                    ></i>
-                    <i
-                      className="fa-solid fa-trash-can cursor-pointer text-red-500 hover:text-red-700 transition transform hover:scale-110"
-                      onClick={() => handleDelete(potkocsi.id)}
-                      title="Törlés"
-                    ></i>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       </div>
-    </>
+
+      {/* Table Content */}
+      <div className="block w-full overflow-x-auto">
+        <table className="items-center w-full bg-transparent border-collapse">
+          <thead className="bg-blueGray-50">
+            <tr>
+              <TableHeader>Rendszám</TableHeader>
+              <TableHeader>Típus</TableHeader>
+              <TableHeader align="right">Műveletek</TableHeader>
+            </tr>
+          </thead>
+          <tbody>
+            {potkocsik.length > 0 ? (
+              potkocsik.map((potkocsi, index) => (
+                <TableRow key={index} index={index}>
+                  <TableCell>{potkocsi.rendszam}</TableCell>
+                  <TableCell>{potkocsi.tipus || "Nincs"}</TableCell>
+                  <TableCell align="right">
+                    <div className="flex justify-end space-x-4">
+                      <ActionButton
+                        icon={<FaEdit />}
+                        color="text-blue-500 hover:text-blue-700"
+                        onClick={() => handleEditClick(potkocsi)}
+                        title="Szerkesztés"
+                      />
+                      <ActionButton
+                        icon={<FaTrash />}
+                        color="text-red-500 hover:text-red-700"
+                        onClick={() => handleDelete(potkocsi.id)}
+                        title="Törlés"
+                      />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={3}
+                  align="center"
+                  className="py-8 text-gray-500"
+                >
+                  Nincsenek pótkocsik megjelenítve
+                </TableCell>
+              </TableRow>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
-}
+};
 
 CardTable.propTypes = {
-  kamionok: PropTypes.arrayOf(
+  potkocsik: PropTypes.arrayOf(
     PropTypes.shape({
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
       rendszam: PropTypes.string.isRequired,
-      sofor: PropTypes.string.isRequired,
-      potkocsi: PropTypes.string,
+      tipus: PropTypes.string,
     })
-  ),
+  ).isRequired,
 };
+
+CardTable.defaultProps = {
+  potkocsik: [],
+};
+
+export default CardTable;

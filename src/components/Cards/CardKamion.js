@@ -4,6 +4,16 @@ import CardJarmuAdatokForm from "./CardJarmuAdatokForm";
 import CardJarmuEsemenyekForm from "./CardJarmuEsemenyekForm";
 import CardJarmuFajlok from "./CardJarmuFajlok";
 import { fetchAction } from "utils/fetchAction";
+const ActionButton = ({ onClick, children, className = "", icon }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`bg-blue-500 text-white font-bold uppercase text-xs px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none ease-linear transition-all duration-150 flex items-center ${className}`}
+  >
+    {icon && <span className="mr-2">{icon}</span>}
+    {children}
+  </button>
+);
 
 export default function CardKamion({ initialKamion }) {
   const [kamion, setKamion] = useState(initialKamion || {});
@@ -108,87 +118,46 @@ export default function CardKamion({ initialKamion }) {
   }
 
   return (
-    <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-xl rounded-lg bg-white border-0">
-      {/* Header with Tabs */}
-      <div className="rounded-t-lg bg-blue-600 mb-0 px-6 py-4">
-        <div className="flex justify-between items-center">
-          {/* Tabs */}
-          <div className="flex space-x-1">
+    <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-white border-0">
+      <div className="rounded-t bg-white mb-0 px-6 py-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
+          <div className="flex space-x-2">
             <button
               onClick={() => setActiveTab(1)}
-              className={`flex items-center px-4 py-2 text-sm font-medium rounded-t-lg transition-all duration-200 ${
+              className={`px-6 py-3 font-semibold text-sm rounded-md transition-all duration-300 focus:outline-none ${
                 activeTab === 1
-                  ? "bg-white text-blue-600"
-                  : "text-blue-100 hover:bg-blue-500 hover:text-white"
+                  ? "bg-blue-500 text-white shadow-md"
+                  : "bg-blueGray-200 text-blueGray-600 hover:bg-blueGray-300"
               }`}
             >
-              <FaTruck className="mr-2" />
-              Kamion adatok
+              <span className="text-base font-bold">Kamion adatok</span>
             </button>
             <button
               onClick={() => setActiveTab(2)}
-              className={`flex items-center px-4 py-2 text-sm font-medium rounded-t-lg transition-all duration-200 ${
+              className={`px-6 py-3 font-semibold text-sm rounded-md transition-all duration-300 focus:outline-none ${
                 activeTab === 2
-                  ? "bg-white text-blue-600"
-                  : "text-blue-100 hover:bg-blue-500 hover:text-white"
+                  ? "bg-blue-500 text-white shadow-md"
+                  : "bg-blueGray-200 text-blueGray-600 hover:bg-blueGray-300"
               }`}
             >
-              <FaTools className="mr-2" />
-              Karbantartások
+              <span className="text-base font-bold">Karbantartások</span>
             </button>
             <button
               onClick={() => setActiveTab(3)}
-              className={`flex items-center px-4 py-2 text-sm font-medium rounded-t-lg transition-all duration-200 ${
+              className={`px-6 py-3 font-semibold text-sm rounded-md transition-all duration-300 focus:outline-none ${
                 activeTab === 3
-                  ? "bg-white text-blue-600"
-                  : "text-blue-100 hover:bg-blue-500 hover:text-white"
+                  ? "bg-blue-500 text-white shadow-md"
+                  : "bg-blueGray-200 text-blueGray-600 hover:bg-blueGray-300"
               }`}
             >
-              <FaFileAlt className="mr-2" />
-              Fájlok
+              <span className="text-base font-bold">Fájlok</span>
             </button>
           </div>
 
-          {/* Save button */}
           {activeTab === 1 && (
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className={`bg-white text-blue-600 font-bold uppercase text-xs px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none mr-1 ease-linear transition-all duration-150 flex items-center ${
-                isSaving ? "opacity-75 cursor-not-allowed" : ""
-              }`}
-            >
-              {isSaving ? (
-                <>
-                  <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Mentés...
-                </>
-              ) : (
-                <>
-                  <FaSave className="mr-1" />
-                  Mentés
-                </>
-              )}
-            </button>
+            <ActionButton onClick={handleSave} icon={<FaSave />}>
+              Mentés
+            </ActionButton>
           )}
         </div>
       </div>

@@ -55,7 +55,7 @@ export default function CardSettings() {
     ...props
   }) => (
     <div className="relative w-full mb-4">
-      <label className="block uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+      <label className=" uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
         <Icon className="mr-2 text-blue-500" />
         {label}
       </label>

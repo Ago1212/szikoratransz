@@ -1,10 +1,20 @@
 import React, { useState, useEffect } from "react";
+import PropTypes from "prop-types";
+import {
+  FaCar,
+  FaShieldAlt,
+  FaCalendarAlt,
+  FaMoneyBillWave,
+  FaBuilding,
+  FaIdCard,
+  FaFireExtinguisher,
+  FaTruck,
+  FaTrailer,
+  FaRuler,
+  FaSave,
+} from "react-icons/fa";
 
-export default function CardJarmuAdatokForm({
-  kamion,
-  setFormData,
-  handleSave,
-}) {
+const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
   const [nextKotBizInfo, setNextKotBizInfo] = useState({
     date: "",
     amount: "",
@@ -17,6 +27,7 @@ export default function CardJarmuAdatokForm({
   const [editKaszkoDij, setEditKaszkoDij] = useState(false);
   const [kotBizDijValue, setKotBizDijValue] = useState("");
   const [kaszkoDijValue, setKaszkoDijValue] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (kamion.kot_biz_dij) {
@@ -26,7 +37,6 @@ export default function CardJarmuAdatokForm({
       setKaszkoDijValue(formatNumber(kamion.kaszko_dij));
     }
 
-    // Calculate next payment for mandatory insurance
     if (kamion.kot_biztositas && kamion.kot_biz_utem && kamion.kot_biz_dij) {
       calculateNextPayment(
         kamion.kot_biztositas,
@@ -38,7 +48,6 @@ export default function CardJarmuAdatokForm({
       setNextKotBizInfo({ date: "", amount: "" });
     }
 
-    // Calculate next payment for casco insurance
     if (
       kamion.kaszko_biztositas &&
       kamion.kaszko_fizetesi_utem &&
@@ -72,7 +81,6 @@ export default function CardJarmuAdatokForm({
     const now = new Date();
     let amount = parseFloat(totalAmount);
 
-    // Helper function to calculate period end date
     const getPeriodEndDate = (date, freq) => {
       const endDate = new Date(date);
       switch (freq) {
@@ -94,7 +102,6 @@ export default function CardJarmuAdatokForm({
       return endDate;
     };
 
-    // If start date is in the future, return the first period end with full amount
     if (start > now) {
       const periodEnd = getPeriodEndDate(start, frequency);
       setter({
@@ -111,18 +118,15 @@ export default function CardJarmuAdatokForm({
       return;
     }
 
-    // Calculate the next upcoming period end
     let periodStart = new Date(start);
     let periodEnd = getPeriodEndDate(periodStart, frequency);
 
     while (periodEnd <= now) {
-      // Move to next period
       periodStart = new Date(periodEnd);
       periodStart.setDate(periodStart.getDate() + 1);
       periodEnd = getPeriodEndDate(periodStart, frequency);
     }
 
-    // Calculate the amount based on frequency
     let paymentAmount;
     switch (frequency) {
       case "Negyed év":
@@ -198,442 +202,385 @@ export default function CardJarmuAdatokForm({
     }
   };
 
-  return (
-    <form onSubmit={handleSave}>
-      <h6 className="text-blueGray-400 text-sm mt-3 mb-6 font-bold uppercase">
-        Fő adatok
-      </h6>
-      <div className="flex flex-wrap">
-        <div className="w-full lg:w-4/12 px-4">
-          <div className="relative w-full mb-3">
-            <label
-              className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
-              htmlFor="rendszam"
-            >
-              Rendszám
-            </label>
-            <input
-              type="text"
-              className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.rendszam}
-              id="rendszam"
-              onChange={handleFormChange}
-            />
-          </div>
-        </div>
-        <div className="w-full lg:w-4/12 px-4">
-          <div className="relative w-full mb-3">
-            <label
-              className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
-              htmlFor="tipus"
-            >
-              Típus
-            </label>
-            <input
-              type="text"
-              className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.tipus || ""}
-              id="tipus"
-              onChange={handleFormChange}
-              placeholder="Jármű típusa"
-            />
-          </div>
-        </div>
-        <div className="w-full lg:w-4/12 px-4">
-          <div className="relative w-full mb-3">
-            <label
-              className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
-              htmlFor="meret"
-            >
-              Méret
-            </label>
-            <select
-              className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.meret || ""}
-              id="meret"
-              onChange={handleFormChange}
-            >
-              <option value="">Válassz...</option>
-              <option value="3.5T">3.5T</option>
-              <option value="7.5T">7.5T</option>
-              <option value="12T">12T</option>
-              <option value="18T">18T</option>
-              <option value="24T">24T</option>
-            </select>
-          </div>
-        </div>
-      </div>
-      <div className="flex flex-wrap">
-        <div className="w-full lg:w-4/12 px-4">
-          <div className="relative w-full mb-3">
-            <label
-              className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
-              htmlFor="potkocsi"
-            >
-              Pótkocsi
-            </label>
-            <input
-              type="text"
-              className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.potkocsi}
-              id="potkocsi"
-              onChange={handleFormChange}
-            />
-          </div>
-        </div>
-      </div>
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSaving(true);
+    try {
+      await handleSave();
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
-      <hr className="mt-6 border-b-1 border-blueGray-300" />
-
-      <h6 className="text-blueGray-400 text-sm mt-3 mb-6 font-bold uppercase">
-        Lejárati dátumok
-      </h6>
-      <div className="flex flex-wrap">
-        <div className="w-full lg:w-3/12 px-4">
-          <div className="relative w-full mb-3">
-            <label
-              className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
-              htmlFor="muszaki_lejarat"
-            >
-              Műszaki
-            </label>
-            <input
-              type="date"
-              className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.muszaki_lejarat}
-              id="muszaki_lejarat"
-              onChange={handleFormChange}
-            />
-          </div>
-        </div>
-        <div className="w-full lg:w-3/12 px-4">
-          <div className="relative w-full mb-3">
-            <label
-              className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
-              htmlFor="adr_lejarat"
-            >
-              Adr
-            </label>
-            <input
-              type="date"
-              className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.adr_lejarat}
-              id="adr_lejarat"
-              onChange={handleFormChange}
-            />
-          </div>
-        </div>
-        <div className="w-full lg:w-3/12 px-4">
-          <div className="relative w-full mb-3">
-            <label
-              className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
-              htmlFor="taograf_illesztes"
-            >
-              Taográf illesztés
-            </label>
-            <input
-              type="date"
-              className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.taograf_illesztes}
-              id="taograf_illesztes"
-              onChange={handleFormChange}
-            />
-          </div>
-        </div>
-        <div className="w-full lg:w-3/12 px-4">
-          <div className="relative w-full mb-3">
-            <label
-              className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
-              htmlFor="emelohatfal_vizsga"
-            >
-              Emelő hátfal
-            </label>
-            <input
-              type="date"
-              className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.emelohatfal_vizsga}
-              id="emelohatfal_vizsga"
-              onChange={handleFormChange}
-            />
-          </div>
-        </div>
-      </div>
-      <div className="flex flex-wrap">
-        <div className="w-full lg:w-3/12 px-4">
-          <div className="relative w-full mb-3">
-            <label
-              className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
-              htmlFor="porolto_lejarat"
-            >
-              Poroltó #1
-            </label>
-            <input
-              type="date"
-              className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.porolto_lejarat}
-              id="porolto_lejarat"
-              onChange={handleFormChange}
-            />
-          </div>
-        </div>
-        <div className="w-full lg:w-3/12 px-4">
-          <div className="relative w-full mb-3">
-            <label
-              className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
-              htmlFor="porolto_lejarat_2"
-            >
-              Poroltó #2
-            </label>
-            <input
-              type="date"
-              className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.porolto_lejarat_2}
-              id="porolto_lejarat_2"
-              onChange={handleFormChange}
-            />
-          </div>
-        </div>
-      </div>
-
-      <hr className="mt-6 border-b-1 border-blueGray-300" />
-      <h6 className="text-blueGray-400 text-sm mt-3 mb-6 font-bold uppercase">
-        Kötelező biztosítás
-      </h6>
-      <div className="flex flex-wrap">
-        {/* Ütem kiválasztó */}
-        <div className="w-full lg:w-3/12 px-4">
-          <div className="relative w-full mb-3">
-            <label
-              className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
-              htmlFor="kot_biz_utem"
-            >
-              Ütem
-            </label>
-            <select
-              className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.kot_biz_utem || ""}
-              id="kot_biz_utem"
-              onChange={handleFormChange}
-            >
-              <option value="">Válassz...</option>
-              <option value="Nincs">Nincs</option>
-              <option value="Negyed év">Negyed év</option>
-              <option value="Fél év">Fél év</option>
-              <option value="Éves">Éves</option>
-            </select>
-          </div>
-        </div>
-        {/* Dátum mező */}
-        <div className="w-full lg:w-3/12 px-4">
-          <div className="relative w-full mb-3">
-            <label
-              className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
-              htmlFor="kot_biztositas"
-            >
-              Kezdő dátum
-            </label>
-            <input
-              type="date"
-              className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.kot_biztositas || ""}
-              id="kot_biztositas"
-              onChange={handleFormChange}
-            />
-          </div>
-        </div>
-
-        {/* Díj mező */}
-        <div className="w-full lg:w-3/12 px-4">
-          <div className="relative w-full mb-3">
-            <label
-              className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
-              htmlFor="kot_biz_dij"
-            >
-              Éves díj
-            </label>
-            <input
-              type="text"
-              className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={
-                editKotBizDij
-                  ? kotBizDijValue
-                  : formatNumber(kamion.kot_biz_dij)
-              }
-              onChange={(e) => handleCurrencyChange(e, "kot_biz_dij")}
-              onFocus={() => handleCurrencyFocus("kot_biz_dij")}
-              onBlur={() => handleCurrencyBlur("kot_biz_dij")}
-            />
-            {!editKotBizDij && (
-              <span className="absolute right-3 top-10 text-blueGray-600">
-                Ft
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Biztosító neve */}
-        <div className="w-full lg:w-3/12 px-4">
-          <div className="relative w-full mb-3">
-            <label
-              className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
-              htmlFor="kot_biz_nev"
-            >
-              Biztosító neve
-            </label>
-            <input
-              type="text"
-              className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.kot_biz_nev || ""}
-              id="kot_biz_nev"
-              onChange={handleFormChange}
-              placeholder="Kötelező bizt. biztosítója"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Next payment info for mandatory insurance */}
-      <div className="flex flex-wrap">
-        <div className="w-full lg:w-3/12 px-4">
-          <div className="relative w-full mb-3">
-            <label className="block uppercase text-blueGray-600 text-xs font-bold mb-2">
-              Következő fizetés dátuma
-            </label>
-            <div className="border-0 px-3 py-3 text-blueGray-600 bg-blueGray-100 rounded text-sm shadow w-full">
-              {nextKotBizInfo.date || "-"}
-            </div>
-          </div>
-        </div>
-        <div className="w-full lg:w-3/12 px-4">
-          <div className="relative w-full mb-3">
-            <label className="block uppercase text-blueGray-600 text-xs font-bold mb-2">
-              Következő fizetés összege
-            </label>
-            <div className="border-0 px-3 py-3 text-blueGray-600 bg-blueGray-100 rounded text-sm shadow w-full">
-              {nextKotBizInfo.amount || "-"}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <hr className="mt-6 border-b-1 border-blueGray-300" />
-      <h6 className="text-blueGray-400 text-sm mt-3 mb-6 font-bold uppercase">
-        Kaszkó fizetési ütem
-      </h6>
-      <div className="flex flex-wrap">
-        {/* Ütem kiválasztó */}
-        <div className="w-full lg:w-3/12 px-4">
-          <div className="relative w-full mb-3">
-            <label
-              className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
-              htmlFor="kaszko_fizetesi_utem"
-            >
-              Ütem
-            </label>
-            <select
-              className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.kaszko_fizetesi_utem || ""}
-              id="kaszko_fizetesi_utem"
-              onChange={handleFormChange}
-            >
-              <option value="">Válassz...</option>
-              <option value="Nincs">Nincs</option>
-              <option value="Negyed év">Negyed év</option>
-              <option value="Fél év">Fél év</option>
-              <option value="Éves">Éves</option>
-            </select>
-          </div>
-        </div>
-        {/* Dátum mező */}
-        <div className="w-full lg:w-3/12 px-4">
-          <div className="relative w-full mb-3">
-            <label
-              className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
-              htmlFor="kaszko_biztositas"
-            >
-              Kezdő dátum
-            </label>
-            <input
-              type="date"
-              className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.kaszko_biztositas || ""}
-              id="kaszko_biztositas"
-              onChange={handleFormChange}
-            />
-          </div>
-        </div>
-
-        {/* Díj mező */}
-        <div className="w-full lg:w-3/12 px-4">
-          <div className="relative w-full mb-3">
-            <label
-              className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
-              htmlFor="kaszko_dij"
-            >
-              Éves díj
-            </label>
-            <input
-              type="text"
-              className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={
-                editKaszkoDij ? kaszkoDijValue : formatNumber(kamion.kaszko_dij)
-              }
-              onChange={(e) => handleCurrencyChange(e, "kaszko_dij")}
-              onFocus={() => handleCurrencyFocus("kaszko_dij")}
-              onBlur={() => handleCurrencyBlur("kaszko_dij")}
-            />
-            {!editKaszkoDij && (
-              <span className="absolute right-3 top-10 text-blueGray-600">
-                Ft
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Biztosító neve */}
-        <div className="w-full lg:w-3/12 px-4">
-          <div className="relative w-full mb-3">
-            <label
-              className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
-              htmlFor="kaszko_nev"
-            >
-              Biztosító neve
-            </label>
-            <input
-              type="text"
-              className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-              value={kamion.kaszko_nev || ""}
-              id="kaszko_nev"
-              onChange={handleFormChange}
-              placeholder="Kaszkó bizt. biztosítója"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Next payment info for casco insurance */}
-      <div className="flex flex-wrap">
-        <div className="w-full lg:w-3/12 px-4">
-          <div className="relative w-full mb-3">
-            <label className="block uppercase text-blueGray-600 text-xs font-bold mb-2">
-              Következő fizetés dátuma
-            </label>
-            <div className="border-0 px-3 py-3 text-blueGray-600 bg-blueGray-100 rounded text-sm shadow w-full">
-              {nextKaszkoInfo.date || "-"}
-            </div>
-          </div>
-        </div>
-        <div className="w-full lg:w-3/12 px-4">
-          <div className="relative w-full mb-3">
-            <label className="block uppercase text-blueGray-600 text-xs font-bold mb-2">
-              Következő fizetés összege
-            </label>
-            <div className="border-0 px-3 py-3 text-blueGray-600 bg-blueGray-100 rounded text-sm shadow w-full">
-              {nextKaszkoInfo.amount || "-"}
-            </div>
-          </div>
-        </div>
-      </div>
-    </form>
+  const InputField = ({
+    icon: Icon,
+    label,
+    name,
+    type = "text",
+    value,
+    required = false,
+    ...props
+  }) => (
+    <div className="relative w-full mb-4">
+      <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+        <Icon className="mr-2 text-blue-500" />
+        {label}
+        {required && <span className="text-red-500 ml-1">*</span>}
+      </label>
+      <input
+        type={type}
+        name={name}
+        id={name}
+        value={value || ""}
+        onChange={type === "text" ? handleFormChange : props.onChange}
+        className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+        required={required}
+        {...props}
+      />
+    </div>
   );
-}
+
+  const SelectField = ({
+    icon: Icon,
+    label,
+    name,
+    value,
+    children,
+    ...props
+  }) => (
+    <div className="relative w-full mb-4">
+      <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+        <Icon className="mr-2 text-blue-500" />
+        {label}
+      </label>
+      <select
+        className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+        value={value || ""}
+        id={name}
+        onChange={handleFormChange}
+        {...props}
+      >
+        {children}
+      </select>
+    </div>
+  );
+
+  const DateField = ({ icon: Icon, label, name, value, ...props }) => (
+    <div className="relative w-full mb-4">
+      <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+        <Icon className="mr-2 text-blue-500" />
+        {label}
+      </label>
+      <input
+        type="date"
+        className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+        value={value || ""}
+        id={name}
+        onChange={handleFormChange}
+        {...props}
+      />
+    </div>
+  );
+
+  const InfoField = ({ icon: Icon, label, value }) => (
+    <div className="relative w-full mb-4">
+      <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+        <Icon className="mr-2 text-blue-500" />
+        {label}
+      </label>
+      <div className="border-0 px-3 py-3 text-gray-700 bg-gray-100 rounded-lg text-sm shadow w-full">
+        {value || "-"}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="relative flex flex-col min-w-0 break-words w-full mb-6 rounded-lg bg-white border-0">
+      {/* Form Content */}
+      <form onSubmit={handleSubmit} className="flex-auto px-4 lg:px-10 py-10">
+        {/* Main Data Section */}
+        <div className="mb-8">
+          <h6 className="text-gray-500 text-sm mb-4 font-bold uppercase flex items-center">
+            <FaCar className="mr-2" />
+            Fő adatok
+          </h6>
+          <div className="flex flex-wrap -mx-2">
+            <div className="w-full lg:w-4/12 px-2">
+              <InputField
+                icon={FaIdCard}
+                label="Rendszám"
+                name="rendszam"
+                value={kamion.rendszam}
+                required
+              />
+            </div>
+            <div className="w-full lg:w-4/12 px-2">
+              <InputField
+                icon={FaTruck}
+                label="Típus"
+                name="tipus"
+                value={kamion.tipus || ""}
+                placeholder="Jármű típusa"
+              />
+            </div>
+            <div className="w-full lg:w-4/12 px-2">
+              <SelectField
+                icon={FaRuler}
+                label="Méret"
+                name="meret"
+                value={kamion.meret || ""}
+              >
+                <option value="">Válassz...</option>
+                <option value="3.5T">3.5T</option>
+                <option value="7.5T">7.5T</option>
+                <option value="12T">12T</option>
+                <option value="18T">18T</option>
+                <option value="24T">24T</option>
+              </SelectField>
+            </div>
+            <div className="w-full lg:w-4/12 px-2">
+              <InputField
+                icon={FaTrailer}
+                label="Pótkocsi"
+                name="potkocsi"
+                value={kamion.potkocsi}
+              />
+            </div>
+          </div>
+        </div>
+
+        <hr className="my-6 border-gray-300" />
+
+        {/* Expiry Dates Section */}
+        <div className="mb-8">
+          <h6 className="text-gray-500 text-sm mb-4 font-bold uppercase flex items-center">
+            <FaCalendarAlt className="mr-2" />
+            Lejárati dátumok
+          </h6>
+          <div className="flex flex-wrap -mx-2">
+            <div className="w-full lg:w-3/12 px-2">
+              <DateField
+                icon={FaCar}
+                label="Műszaki"
+                name="muszaki_lejarat"
+                value={kamion.muszaki_lejarat}
+              />
+            </div>
+            <div className="w-full lg:w-3/12 px-2">
+              <DateField
+                icon={FaShieldAlt}
+                label="Adr"
+                name="adr_lejarat"
+                value={kamion.adr_lejarat}
+              />
+            </div>
+            <div className="w-full lg:w-3/12 px-2">
+              <DateField
+                icon={FaIdCard}
+                label="Taográf illesztés"
+                name="taograf_illesztes"
+                value={kamion.taograf_illesztes}
+              />
+            </div>
+            <div className="w-full lg:w-3/12 px-2">
+              <DateField
+                icon={FaTruck}
+                label="Emelő hátfal"
+                name="emelohatfal_vizsga"
+                value={kamion.emelohatfal_vizsga}
+              />
+            </div>
+            <div className="w-full lg:w-3/12 px-2">
+              <DateField
+                icon={FaFireExtinguisher}
+                label="Poroltó #1"
+                name="porolto_lejarat"
+                value={kamion.porolto_lejarat}
+              />
+            </div>
+            <div className="w-full lg:w-3/12 px-2">
+              <DateField
+                icon={FaFireExtinguisher}
+                label="Poroltó #2"
+                name="porolto_lejarat_2"
+                value={kamion.porolto_lejarat_2}
+              />
+            </div>
+          </div>
+        </div>
+
+        <hr className="my-6 border-gray-300" />
+
+        {/* Mandatory Insurance Section */}
+        <div className="mb-8">
+          <h6 className="text-gray-500 text-sm mb-4 font-bold uppercase flex items-center">
+            <FaShieldAlt className="mr-2" />
+            Kötelező biztosítás
+          </h6>
+          <div className="flex flex-wrap -mx-2">
+            <div className="w-full lg:w-3/12 px-2">
+              <SelectField
+                icon={FaCalendarAlt}
+                label="Ütem"
+                name="kot_biz_utem"
+                value={kamion.kot_biz_utem || ""}
+              >
+                <option value="">Válassz...</option>
+                <option value="Nincs">Nincs</option>
+                <option value="Negyed év">Negyed év</option>
+                <option value="Fél év">Fél év</option>
+                <option value="Éves">Éves</option>
+              </SelectField>
+            </div>
+            <div className="w-full lg:w-3/12 px-2">
+              <DateField
+                icon={FaCalendarAlt}
+                label="Kezdő dátum"
+                name="kot_biztositas"
+                value={kamion.kot_biztositas || ""}
+              />
+            </div>
+            <div className="w-full lg:w-3/12 px-2">
+              <div className="relative w-full mb-4">
+                <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+                  <FaMoneyBillWave className="mr-2 text-blue-500" />
+                  Éves díj
+                </label>
+                <input
+                  type="text"
+                  className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+                  value={
+                    editKotBizDij
+                      ? kotBizDijValue
+                      : formatNumber(kamion.kot_biz_dij)
+                  }
+                  onChange={(e) => handleCurrencyChange(e, "kot_biz_dij")}
+                  onFocus={() => handleCurrencyFocus("kot_biz_dij")}
+                  onBlur={() => handleCurrencyBlur("kot_biz_dij")}
+                />
+                {!editKotBizDij && (
+                  <span className="absolute right-3 top-10 text-gray-600">
+                    Ft
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="w-full lg:w-3/12 px-2">
+              <InputField
+                icon={FaBuilding}
+                label="Biztosító neve"
+                name="kot_biz_nev"
+                value={kamion.kot_biz_nev || ""}
+                placeholder="Kötelező bizt. biztosítója"
+              />
+            </div>
+            <div className="w-full lg:w-3/12 px-2">
+              <InfoField
+                icon={FaCalendarAlt}
+                label="Következő fizetés dátuma"
+                value={nextKotBizInfo.date}
+              />
+            </div>
+            <div className="w-full lg:w-3/12 px-2">
+              <InfoField
+                icon={FaMoneyBillWave}
+                label="Következő fizetés összege"
+                value={nextKotBizInfo.amount}
+              />
+            </div>
+          </div>
+        </div>
+
+        <hr className="my-6 border-gray-300" />
+
+        {/* Casco Insurance Section */}
+        <div className="mb-8">
+          <h6 className="text-gray-500 text-sm mb-4 font-bold uppercase flex items-center">
+            <FaShieldAlt className="mr-2" />
+            Kaszkó biztosítás
+          </h6>
+          <div className="flex flex-wrap -mx-2">
+            <div className="w-full lg:w-3/12 px-2">
+              <SelectField
+                icon={FaCalendarAlt}
+                label="Ütem"
+                name="kaszko_fizetesi_utem"
+                value={kamion.kaszko_fizetesi_utem || ""}
+              >
+                <option value="">Válassz...</option>
+                <option value="Nincs">Nincs</option>
+                <option value="Negyed év">Negyed év</option>
+                <option value="Fél év">Fél év</option>
+                <option value="Éves">Éves</option>
+              </SelectField>
+            </div>
+            <div className="w-full lg:w-3/12 px-2">
+              <DateField
+                icon={FaCalendarAlt}
+                label="Kezdő dátum"
+                name="kaszko_biztositas"
+                value={kamion.kaszko_biztositas || ""}
+              />
+            </div>
+            <div className="w-full lg:w-3/12 px-2">
+              <div className="relative w-full mb-4">
+                <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+                  <FaMoneyBillWave className="mr-2 text-blue-500" />
+                  Éves díj
+                </label>
+                <input
+                  type="text"
+                  className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+                  value={
+                    editKaszkoDij
+                      ? kaszkoDijValue
+                      : formatNumber(kamion.kaszko_dij)
+                  }
+                  onChange={(e) => handleCurrencyChange(e, "kaszko_dij")}
+                  onFocus={() => handleCurrencyFocus("kaszko_dij")}
+                  onBlur={() => handleCurrencyBlur("kaszko_dij")}
+                />
+                {!editKaszkoDij && (
+                  <span className="absolute right-3 top-10 text-gray-600">
+                    Ft
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="w-full lg:w-3/12 px-2">
+              <InputField
+                icon={FaBuilding}
+                label="Biztosító neve"
+                name="kaszko_nev"
+                value={kamion.kaszko_nev || ""}
+                placeholder="Kaszkó bizt. biztosítója"
+              />
+            </div>
+            <div className="w-full lg:w-3/12 px-2">
+              <InfoField
+                icon={FaCalendarAlt}
+                label="Következő fizetés dátuma"
+                value={nextKaszkoInfo.date}
+              />
+            </div>
+            <div className="w-full lg:w-3/12 px-2">
+              <InfoField
+                icon={FaMoneyBillWave}
+                label="Következő fizetés összege"
+                value={nextKaszkoInfo.amount}
+              />
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+CardJarmuAdatokForm.propTypes = {
+  kamion: PropTypes.object.isRequired,
+  setFormData: PropTypes.func.isRequired,
+  handleSave: PropTypes.func.isRequired,
+};
+
+export default CardJarmuAdatokForm;

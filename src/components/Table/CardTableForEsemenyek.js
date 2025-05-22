@@ -1,8 +1,48 @@
 import React, { useEffect, useState } from "react";
-import { fetchAction } from "utils/fetchAction";
+import PropTypes from "prop-types";
+import { FaEdit, FaTrash, FaPlus, FaTimes } from "react-icons/fa";
 import { format } from "date-fns";
+import { fetchAction } from "utils/fetchAction";
 
-export default function CardTableForEsemenyek({ id }) {
+// Reusable components
+const ActionButton = ({ onClick, icon, color, title, className = "" }) => (
+  <button
+    onClick={onClick}
+    title={title}
+    className={`${color} cursor-pointer transition transform hover:scale-125 ${className}`}
+  >
+    {icon}
+  </button>
+);
+
+const TableHeader = ({ children, align = "left" }) => (
+  <th
+    className={`px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-${align} bg-blueGray-50 text-blueGray-500 border-blueGray-100`}
+  >
+    {children}
+  </th>
+);
+
+const TableRow = ({ children, index }) => (
+  <tr className={index % 2 === 0 ? "bg-white" : "bg-blueGray-50"}>
+    {children}
+  </tr>
+);
+
+const TableCell = ({ children, align = "left", className = "" }) => {
+  const baseClasses =
+    "border-t-0 px-6 align-middle border-l-0 border-r-0 text-sm whitespace-nowrap p-4";
+  const alignmentClass = `text-${align}`;
+
+  return (
+    <td className={`${baseClasses} ${alignmentClass} ${className}`}>
+      {children}
+    </td>
+  );
+};
+
+// Main component
+const CardTableForEsemenyek = ({ id }) => {
   const [esemenyek, setEsemenyek] = useState([]);
   const [showDialog, setShowDialog] = useState(false);
   const [currentEsemeny, setCurrentEsemeny] = useState(null);
@@ -16,10 +56,10 @@ export default function CardTableForEsemenyek({ id }) {
 
   const fetchEsemenyek = async () => {
     const result = await fetchAction("getEgyediHataridok", { id });
-    if (result && result.success) {
+    if (result?.success) {
       setEsemenyek(result.esemenyek);
     } else {
-      alert(result.message || "Események betöltése sikertelen.");
+      alert(result?.message || "Események betöltése sikertelen.");
     }
   };
 
@@ -28,18 +68,15 @@ export default function CardTableForEsemenyek({ id }) {
   }, [id]);
 
   const handleEsemenyDelete = async (esemeny_id) => {
-    const confirmed = window.confirm(
-      "Biztosan törölni szeretné ezt az eseményt?"
-    );
-    if (!confirmed) return;
+    if (!window.confirm("Biztosan törölni szeretné ezt az eseményt?")) return;
 
     const result = await fetchAction("deleteEgyediHatarido", {
       id: esemeny_id,
     });
-    if (result && result.success) {
-      fetchEsemenyek();
+    if (result?.success) {
+      await fetchEsemenyek();
     } else {
-      alert(result.message || "Hiba történt a törlés során");
+      alert(result?.message || "Hiba történt a törlés során");
     }
   };
 
@@ -55,16 +92,14 @@ export default function CardTableForEsemenyek({ id }) {
       : "createEgyediHatarido";
     const data = currentEsemeny
       ? { ...formData, id: currentEsemeny.sorszam }
-      : { ...formData, id: id };
+      : { ...formData, id };
 
     const result = await fetchAction(action, data);
-    if (result && result.success) {
-      fetchEsemenyek();
-      setShowDialog(false);
-      setCurrentEsemeny(null);
-      setFormData({ leiras: "", datum: format(new Date(), "yyyy-MM-dd") });
+    if (result?.success) {
+      await fetchEsemenyek();
+      resetForm();
     } else {
-      alert(result.message || "Hiba történt a művelet során");
+      alert(result?.message || "Hiba történt a művelet során");
     }
   };
 
@@ -77,135 +112,141 @@ export default function CardTableForEsemenyek({ id }) {
     setShowDialog(true);
   };
 
+  const resetForm = () => {
+    setShowDialog(false);
+    setCurrentEsemeny(null);
+    setFormData({
+      leiras: "",
+      datum: format(new Date(), "yyyy-MM-dd"),
+    });
+  };
+
   return (
-    <>
-      <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded bg-white">
-        <div className="rounded-t mb-0 px-4 py-3 border-0">
-          <div className="flex flex-wrap items-center">
-            <div className="relative w-full px-4 max-w-full flex-grow flex-1">
-              <div className="text-center flex justify-between">
-                <h3 className="font-semibold text-lg text-blueGray-700">
-                  Események
-                </h3>
-                <button
-                  onClick={() => setShowDialog(true)}
-                  className="bg-lightBlue-500 text-white active:bg-lightBlue-600 font-bold uppercase text-xs px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none mr-1 ease-linear transition-all duration-150 cursor-pointer"
-                >
-                  Új esemény
-                </button>
-              </div>
+    <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-white overflow-hidden">
+      {/* Table Header */}
+      <div className="rounded-t-lg mb-0 px-6 py-4 border-0 bg-gradient-to-r from-blue-500 to-blue-700">
+        <div className="flex flex-wrap items-center">
+          <div className="relative w-full max-w-full flex-grow flex-1">
+            <div className="flex justify-between items-center">
+              <h3 className="font-semibold text-xl text-white">Események</h3>
+              <button
+                onClick={() => setShowDialog(true)}
+                className="bg-white text-blue-600 hover:bg-blue-50 active:bg-blue-100 font-bold uppercase text-sm px-4 py-2 rounded-lg shadow hover:shadow-md outline-none focus:outline-none ease-linear transition-all duration-150 flex items-center"
+              >
+                <FaPlus className="mr-2" /> Új esemény
+              </button>
             </div>
           </div>
         </div>
-
-        <div className="block w-full overflow-x-auto">
-          <table className="items-center w-full bg-transparent border-collapse">
-            <thead>
-              <tr>
-                <th className="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-center bg-blueGray-50 text-blueGray-500 border-blueGray-100">
-                  Műveletek
-                </th>
-                <th className="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left bg-blueGray-50 text-blueGray-500 border-blueGray-100">
-                  Esemény
-                </th>
-                <th className="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left bg-blueGray-50 text-blueGray-500 border-blueGray-100">
-                  Dátum
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {esemenyek.map((esemeny, index) => (
-                <tr key={index}>
-                  <td className="border-t-0 px-6 border-l-0 border-r-0 whitespace-nowrap p-4 align-middle">
-                    <i
-                      className="fas fa-edit cursor-pointer text-yellow-500 hover:text-yellow-700 transition transform hover:scale-110 mr-4"
-                      onClick={() => openEditDialog(esemeny)}
-                      title="Szerkesztés"
-                    ></i>
-                    <i
-                      className="fa-solid fa-trash-can cursor-pointer text-red-500 hover:text-red-700 transition transform hover:scale-110"
-                      onClick={() => handleEsemenyDelete(esemeny.sorszam)}
-                      title="Törlés"
-                    ></i>
-                  </td>
-                  <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-                    {esemeny.leiras}
-                  </td>
-                  <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-                    {esemeny.datum}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       </div>
 
-      {/* Dialog modal */}
-      {showDialog && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-            <h3 className="text-lg font-medium mb-4">
-              {currentEsemeny
-                ? "Esemény szerkesztése"
-                : "Új esemény létrehozása"}
-            </h3>
-
-            <form onSubmit={handleSubmit}>
-              <div className="mb-4">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="leiras"
+      {/* Table Content */}
+      <div className="block w-full overflow-x-auto">
+        <table className="items-center w-full bg-transparent border-collapse">
+          <thead className="bg-blueGray-50">
+            <tr>
+              <TableHeader align="center">Műveletek</TableHeader>
+              <TableHeader>Esemény</TableHeader>
+              <TableHeader>Dátum</TableHeader>
+            </tr>
+          </thead>
+          <tbody>
+            {esemenyek.length > 0 ? (
+              esemenyek.map((esemeny, index) => (
+                <TableRow key={index} index={index}>
+                  <TableCell align="center">
+                    <div className="flex justify-center space-x-4">
+                      <ActionButton
+                        onClick={() => openEditDialog(esemeny)}
+                        icon={<FaEdit />}
+                        color="text-yellow-500 hover:text-yellow-700"
+                        title="Szerkesztés"
+                      />
+                      <ActionButton
+                        onClick={() => handleEsemenyDelete(esemeny.sorszam)}
+                        icon={<FaTrash />}
+                        color="text-red-500 hover:text-red-700"
+                        title="Törlés"
+                      />
+                    </div>
+                  </TableCell>
+                  <TableCell>{esemeny.leiras}</TableCell>
+                  <TableCell>{esemeny.datum}</TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={3}
+                  align="center"
+                  className="py-8 text-gray-500"
                 >
+                  Nincsenek események megjelenítve
+                </TableCell>
+              </TableRow>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Dialog Modal */}
+      {showDialog && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {currentEsemeny
+                  ? "Esemény szerkesztése"
+                  : "Új esemény létrehozása"}
+              </h3>
+              <button
+                onClick={resetForm}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Leírás
                 </label>
                 <input
                   type="text"
-                  id="leiras"
                   name="leiras"
                   value={formData.leiras}
                   onChange={handleInputChange}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
 
-              <div className="mb-6">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="datum"
-                >
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Dátum
                 </label>
                 <input
                   type="date"
-                  id="datum"
                   name="datum"
                   value={formData.datum}
                   onChange={handleInputChange}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
 
-              <div className="flex justify-end">
+              <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowDialog(false);
-                    setCurrentEsemeny(null);
-                    setFormData({
-                      leiras: "",
-                      datum: format(new Date(), "yyyy-MM-dd"),
-                    });
-                  }}
-                  className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-2"
+                  onClick={resetForm}
+                  className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                 >
                   Mégse
                 </button>
                 <button
                   type="submit"
-                  className="bg-lightBlue-500 hover:bg-lightBlue-700 text-white font-bold py-2 px-4 rounded"
+                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
                   {currentEsemeny ? "Mentés" : "Létrehozás"}
                 </button>
@@ -214,6 +255,12 @@ export default function CardTableForEsemenyek({ id }) {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
-}
+};
+
+CardTableForEsemenyek.propTypes = {
+  id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+};
+
+export default CardTableForEsemenyek;

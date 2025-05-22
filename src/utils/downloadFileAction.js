@@ -10,6 +10,7 @@ export const downloadFileAction = async (id, filename) => {
         Authorization: `Bearer ${authHash}`,
       },
       body: JSON.stringify({
+        authHash: authHash,
         action: "downloadFile",
         id,
       }),
