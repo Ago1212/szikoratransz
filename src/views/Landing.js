@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-
-// components
 import Footer from "components/Footers/Footer.js";
 import { fetchAction } from "utils/fetchAction";
 
@@ -24,6 +22,8 @@ export default function Landing() {
     success: null,
     message: "",
   });
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const handleQuoteChange = (e) => {
     const { name, value } = e.target;
     setQuoteForm((prev) => ({
@@ -51,6 +51,7 @@ export default function Landing() {
       phone: quoteForm.phone,
       message: quoteForm.message,
     });
+
     if (result && result.success) {
       setSubmitStatus({
         success: true,
@@ -58,11 +59,14 @@ export default function Landing() {
           "Ajánlatkérés sikeresen elküldve! Hamarosan felvesszük Önnel a kapcsolatot.",
       });
       setQuoteForm({ name: "", email: "", phone: "", message: "" });
-      setIsSubmitting(false);
     } else {
-      setSubmitStatus({ success: false, message: result.message });
-      setIsSubmitting(false);
+      setSubmitStatus({
+        success: false,
+        message:
+          result.message || "Hiba történt az ajánlatkérés küldése közben.",
+      });
     }
+    setIsSubmitting(false);
   };
 
   const submitDriverApplication = async (e) => {
@@ -76,6 +80,7 @@ export default function Landing() {
       email: applicationForm.email,
       message: applicationForm.message,
     });
+
     if (result && result.success) {
       setSubmitStatus({
         success: true,
@@ -83,17 +88,18 @@ export default function Landing() {
           "Jelentkezés sikeresen elküldve! Hamarosan felvesszük Önnel a kapcsolatot.",
       });
       setApplicationForm({ name: "", phone: "", email: "", message: "" });
-      setIsSubmitting(false);
     } else {
-      setSubmitStatus({ success: false, message: result.message });
-      setIsSubmitting(false);
+      setSubmitStatus({
+        success: false,
+        message: result.message || "Hiba történt a jelentkezés küldése közben.",
+      });
     }
+    setIsSubmitting(false);
   };
 
-  // Handle scroll to detect current section
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ["home", "services", "about", "partners", "contact"];
+      const sections = ["home", "services", "about", "contact"];
       const scrollPosition = window.scrollY + 100;
 
       for (const section of sections) {
@@ -117,7 +123,6 @@ export default function Landing() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Smooth scroll function
   const smoothScroll = (id) => {
     const element = document.getElementById(id);
     if (element) {
@@ -127,71 +132,156 @@ export default function Landing() {
       });
     }
   };
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
   return (
     <>
-      {" "}
-      <nav className="fixed top-0 w-full z-50 bg-blueGray-900 bg-opacity-90 backdrop-blur-sm shadow-lg">
-        <div className="w-full mx-auto items-center flex justify-between md:flex-nowrap flex-wrap md:px-10 px-4 py-3">
-          {/* Brand/logo */}
-          <Link
-            className="text-white text-sm uppercase hidden lg:inline-block font-semibold hover:text-yellow-300 transition-colors duration-300"
-            to="/"
-            onClick={(e) => {
-              e.preventDefault();
-              smoothScroll("home");
-            }}
-          >
-            Szikora Transz Kft
-          </Link>
+      <nav className="fixed top-0 w-full z-50 bg-gray-900 bg-opacity-90 backdrop-blur-sm shadow-lg transition-all duration-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex-shrink-0 flex items-center">
+              <Link
+                className="text-white text-lg font-bold hover:text-lightBlue-400 transition-colors duration-300"
+                to="/"
+                onClick={(e) => {
+                  e.preventDefault();
+                  smoothScroll("home");
+                }}
+              >
+                <span className="text-lightBlue-400">Szikora</span> Transz Kft
+              </Link>
+            </div>
 
-          {/* Navigation links */}
-          <ul className="flex flex-nowrap space-x-4 md:flex-row items-center space-y-0 md:space-x-8">
+            <div className="hidden md:block">
+              <div className="ml-10 flex items-center space-x-8">
+                {[
+                  { id: "home", label: "Kezdőlap" },
+                  { id: "services", label: "Szolgáltatások" },
+                  { id: "about", label: "Rólunk" },
+                  { id: "contact", label: "Kapcsolat" },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => smoothScroll(item.id)}
+                    className={`${
+                      activeSection === item.id
+                        ? "text-lightBlue-400 border-b-2 border-lightBlue-400"
+                        : "text-gray-300 hover:text-white"
+                    } px-1 py-2 text-sm font-medium transition-colors duration-300`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+
+                <Link
+                  to="/auth/login"
+                  className="bg-lightBlue-500 hover:bg-lightBlue-600 text-gray-900 px-4 py-2 rounded-md text-sm font-medium transition-colors duration-300"
+                >
+                  Bejelentkezés
+                </Link>
+              </div>
+            </div>
+
+            {/* Mobile menu button */}
+            <div className="md:hidden flex items-center">
+              <button
+                type="button"
+                onClick={toggleMobileMenu}
+                className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none"
+                aria-controls="mobile-menu"
+                aria-expanded="false"
+              >
+                <span className="sr-only">Open main menu</span>
+                {mobileMenuOpen ? (
+                  <svg
+                    className="block h-6 w-6"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    className="block h-6 w-6"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile menu */}
+        <div
+          className={`md:hidden ${mobileMenuOpen ? "block" : "hidden"}`}
+          id="mobile-menu"
+        >
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-gray-800">
             {[
               { id: "home", label: "Kezdőlap" },
               { id: "services", label: "Szolgáltatások" },
               { id: "about", label: "Rólunk" },
-              { id: "partners", label: "Partnereink" },
               { id: "contact", label: "Kapcsolat" },
             ].map((item) => (
-              <li key={item.id}>
-                <button
-                  onClick={() => smoothScroll(item.id)}
-                  className={`${
-                    activeSection === item.id ? "text-yellow-300" : "text-white"
-                  } hover:text-yellow-300 text-xs uppercase py-1 md:py-3 font-bold block transition-colors duration-300`}
-                >
-                  {item.label}
-                </button>
-              </li>
-            ))}
-          </ul>
-
-          {/* Login button (right side) */}
-          <ul className="flex-col md:flex-row flex items-center">
-            <li>
-              <Link
-                to="/auth/login"
-                className="bg-white text-blueGray-700 hover:bg-yellow-300 text-xs font-bold uppercase px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none lg:mr-1 lg:mb-0 ml-3 mb-3 transition-all duration-300"
+              <button
+                key={item.id}
+                onClick={() => smoothScroll(item.id)}
+                className={`${
+                  activeSection === item.id
+                    ? "bg-gray-900 text-white"
+                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                } block px-3 py-2 rounded-md text-base font-medium w-full text-left`}
               >
-                Bejelentkezés
-              </Link>
-            </li>
-          </ul>
+                {item.label}
+              </button>
+            ))}
+
+            <Link
+              to="/auth/login"
+              className="block w-full px-3 py-2 rounded-md text-base font-medium text-gray-900 bg-lightBlue-500 hover:bg-lightBlue-600 text-center mt-2"
+            >
+              Bejelentkezés
+            </Link>
+          </div>
         </div>
       </nav>
+
       <main>
-        <div
+        {/* Hero Section */}
+        <section
           id="home"
-          className="relative pt-16 pb-32 flex content-center items-center justify-center min-h-screen-75"
+          className="relative pt-24 pb-32 flex items-center justify-center min-h-screen"
         >
-          {/* Videó háttér */}
-          <div className="absolute top-0 w-full h-full overflow-hidden">
+          {/* Video background */}
+          <div className="absolute inset-0 overflow-hidden">
             <video
               autoPlay
               loop
               muted
               playsInline
-              className="absolute top-0 left-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-cover"
             >
               <source src="/road.mp4" type="video/mp4" />
               <img
@@ -200,610 +290,576 @@ export default function Landing() {
                 className="w-full h-full object-cover"
               />
             </video>
-            <span className="w-full h-full absolute top-0 left-0 bg-black opacity-30"></span>
+            <div className="absolute inset-0 bg-black opacity-40"></div>
           </div>
 
-          <div className="container relative mx-auto">
-            <div className="items-center flex flex-wrap">
-              <div className="w-full lg:w-6/12 px-4 ml-auto mr-auto text-center">
-                <div className="pr-12">
-                  <h1
-                    className="text-white font-semibold text-5xl"
-                    dangerouslySetInnerHTML={{
-                      __html: "Szikora Transz",
-                    }}
-                  />
-                  <p className="mt-6 text-lg text-blueGray-200">
-                    Megbízható fuvarozási szolgáltatások, professzionális
-                    árufuvarozás belföldön és nemzetközileg. Több kamionból és
-                    tapasztalt sofőrökből álló flottánkkal mindig a
-                    rendelkezésére állunk.
+          <div className="container mx-auto px-4 relative z-10">
+            <div className="max-w-3xl mx-auto text-center">
+              <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6">
+                <span>Szikora Transz</span> Kft
+              </h1>
+              <p className="text-xl md:text-2xl text-gray-200 mb-8">
+                Megbízható fuvarozási szolgáltatások belföldön és nemzetközileg.
+                Professzionális megoldások, precíz végrehajtás.
+              </p>
+              <div className="flex flex-col sm:flex-row justify-center gap-4">
+                <button
+                  onClick={() => smoothScroll("contact")}
+                  className="px-8 py-3 bg-lightBlue-500 hover:bg-lightBlue-600 text-gray-900 font-bold rounded-lg shadow-lg hover:shadow-xl transition duration-300"
+                >
+                  Ajánlatkérés
+                </button>
+                <button
+                  onClick={() => smoothScroll("services")}
+                  className="px-8 py-3 bg-transparent border-2 border-white text-white hover:bg-white hover:text-gray-900 font-bold rounded-lg transition duration-300"
+                >
+                  Szolgáltatások
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="absolute bottom-0 left-0 right-0 w-full h-24 pointer-events-none">
+            <svg
+              className="absolute bottom-0 w-full h-full"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 1440 320"
+              preserveAspectRatio="none"
+            >
+              <path
+                fill="#f3f4f6"
+                fillOpacity="1"
+                d="M0,192L48,197.3C96,203,192,213,288,229.3C384,245,480,267,576,250.7C672,235,768,181,864,181.3C960,181,1056,235,1152,234.7C1248,235,1344,181,1392,154.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+              ></path>
+            </svg>
+          </div>
+        </section>
+
+        {/* Services Section */}
+        <section id="services" className="py-20 bg-gray-100 -mt-1">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Szolgáltatásaink
+              </h2>
+              <div className="w-20 h-1 bg-lightBlue-500 mx-auto mb-6"></div>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Teljes körű fuvarozási megoldások, amelyek kielégítik ügyfeleink
+                egyedi igényeit
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105">
+                <div className="p-6">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4 mx-auto">
+                    <i className="fas fa-truck text-blue-600 text-2xl"></i>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 text-center">
+                    Belföldi fuvarozás
+                  </h3>
+                  <p className="text-gray-600 text-center">
+                    Gyors és megbízható áruszállítás Magyarország egész
+                    területén. Rugalmas árazás és pontos határidők.
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105">
+                <div className="p-6">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4 mx-auto">
+                    <i className="fas fa-globe-europe text-green-600 text-2xl"></i>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 text-center">
+                    Nemzetközi szállítás
+                  </h3>
+                  <p className="text-gray-600 text-center">
+                    Határon átnyúló fuvarozási szolgáltatás Európa-szerte.
+                    Vámtudás és hivatalos ügyintézés.
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105">
+                <div className="p-6">
+                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4 mx-auto">
+                    <i className="fas fa-shield-alt text-purple-600 text-2xl"></i>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 text-center">
+                    Biztosított szállítás
+                  </h3>
+                  <p className="text-gray-600 text-center">
+                    Minden fuvarunk teljes biztosítási fedezettel történik.
+                    Árukádat biztonságban tudhatja nálunk.
                   </p>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div
-            className="top-auto bottom-0 left-0 right-0 w-full absolute pointer-events-none overflow-hidden h-70-px"
-            style={{ transform: "translateZ(0)" }}
-          >
-            <svg
-              className="absolute bottom-0 overflow-hidden"
-              xmlns="http://www.w3.org/2000/svg"
-              preserveAspectRatio="none"
-              version="1.1"
-              viewBox="0 0 2560 100"
-              x="0"
-              y="0"
-            >
-              <polygon
-                className="text-blueGray-200 fill-current"
-                points="2560 0 2560 100 0 100"
-              ></polygon>
-            </svg>
-          </div>
-        </div>
-
-        <section id="services" className="pb-20 bg-blueGray-200 -mt-24">
-          <div className="container mx-auto px-4">
-            <div className="flex flex-wrap">
-              <div className="lg:pt-12 pt-6 w-full md:w-4/12 px-4 text-center">
-                <div className="relative flex flex-col min-w-0 break-words bg-white w-full mb-8 shadow-lg rounded-lg">
-                  <div className="px-4 py-5 flex-auto">
-                    <div className="text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-red-400">
-                      <i className="fas fa-truck"></i>
-                    </div>
-                    <h2 className="text-xl font-semibold">
-                      Belföldi fuvarozás
-                    </h2>
-                    <p className="mt-2 mb-4 text-blueGray-500">
-                      Gyors és megbízható áruszállítás Magyarország egész
-                      területén. Rugalmas árazás és pontos határidők.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="w-full md:w-4/12 px-4 text-center">
-                <div className="relative flex flex-col min-w-0 break-words bg-white w-full mb-8 shadow-lg rounded-lg">
-                  <div className="px-4 py-5 flex-auto">
-                    <div className="text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-lightBlue-400">
-                      <i className="fas fa-globe-europe"></i>
-                    </div>
-                    <h2 className="text-xl font-semibold">
-                      Nemzetközi szállítás
-                    </h2>
-                    <p className="mt-2 mb-4 text-blueGray-500">
-                      Határon átnyúló fuvarozási szolgáltatás Európa-szerte.
-                      Vámtudás és hivatalos ügyintézés.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-6 w-full md:w-4/12 px-4 text-center">
-                <div className="relative flex flex-col min-w-0 break-words bg-white w-full mb-8 shadow-lg rounded-lg">
-                  <div className="px-4 py-5 flex-auto">
-                    <div className="text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-emerald-400">
-                      <i className="fas fa-shield-alt"></i>
-                    </div>
-                    <h2 className="text-xl font-semibold">
-                      Biztosított szállítás
-                    </h2>
-                    <p className="mt-2 mb-4 text-blueGray-500">
-                      Minden fuvarunk teljes biztosítási fedezettel történik.
-                      Árukádat biztonságban tudhatja nálunk.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center mt-32">
-              <div className="w-full md:w-5/12 px-4 mr-auto ml-auto">
-                <div className="text-blueGray-500 p-3 text-center inline-flex items-center justify-center w-16 h-16 mb-6 shadow-lg rounded-full bg-white">
-                  <i className="fas fa-warehouse text-xl"></i>
-                </div>
-                <h3 className="text-3xl mb-2 font-semibold leading-normal">
-                  Miért minket válasszon?
+            <div className="mt-20 flex flex-col lg:flex-row items-center">
+              <div className="lg:w-1/2 mb-10 lg:mb-0 lg:pr-10">
+                <h3 className="text-3xl font-bold text-gray-900 mb-6">
+                  Miért válasszon minket?
                 </h3>
-                <p className="text-lg font-light leading-relaxed mt-4 mb-4 text-blueGray-600">
+                <p className="text-lg text-gray-600 mb-6">
                   10+ éves tapasztalattal rendelkezünk a fuvarozási iparágban.
                   Flottánk állandóan karban van tartva, sofőreink képzettek és
                   megbízhatóak.
                 </p>
-                <p className="text-lg font-light leading-relaxed mt-0 mb-4 text-blueGray-600">
-                  Ügyfeleink számára személyre szabott megoldásokat kínálunk,
-                  figyelembe véve egyedi igényeiket és határidőiket.
-                </p>
-              </div>
-
-              <div className="w-full md:w-4/12 px-4 mr-auto ml-auto ">
-                <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-lightBlue-500">
-                  <img
-                    alt="..."
-                    src="/sample.png"
-                    className="w-full align-middle rounded-t-lg"
-                  />
-                  <blockquote className="relative p-8 mb-4 bg-lightBlue-500">
-                    <svg
-                      preserveAspectRatio="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 583 95"
-                      className="absolute left-0 w-full block h-95-px -top-94-px"
-                    >
-                      <polygon
-                        points="-30,95 583,95 583,65"
-                        className="text-lightBlue-500 fill-current"
-                      ></polygon>
-                    </svg>
-                    <h4 className="text-xl font-bold text-white">Flottánk</h4>
-                    <p className="text-md font-light mt-2 text-white">
-                      Több modern, karbantartott kamionból álló flottánk és
-                      tapasztalt, hosszú távú sofőreink garantálja a megbízható
-                      szállítást.
-                    </p>
-                  </blockquote>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="about" className="relative py-20 bg-white">
-          <div
-            className="bottom-auto top-0 left-0 right-0 w-full absolute pointer-events-none overflow-hidden -mt-24"
-            style={{ height: "100px", transform: "translateZ(0)" }}
-          >
-            <svg
-              className="absolute bottom-0 overflow-hidden"
-              xmlns="http://www.w3.org/2000/svg"
-              preserveAspectRatio="none"
-              version="1.1"
-              viewBox="0 0 2560 100"
-              x="0"
-              y="0"
-            >
-              <polygon
-                className="text-white fill-current"
-                points="2560 0 2560 100 0 100"
-              ></polygon>
-            </svg>
-          </div>
-
-          <div className="container mx-auto px-4">
-            <div className="items-center flex flex-wrap">
-              <div className="w-full md:w-4/12 ml-auto mr-auto px-4">
-                <img
-                  alt="..."
-                  className="max-w-full rounded-lg shadow-lg"
-                  src="/sample.png"
-                />
-              </div>
-              <div className="w-full md:w-5/12 ml-auto mr-auto px-4">
-                <div className="md:pr-12">
-                  <div className="text-lightBlue-600 p-3 text-center inline-flex items-center justify-center w-16 h-16 mb-6 shadow-lg rounded-full bg-lightBlue-300">
-                    <i className="fas fa-road text-xl"></i>
-                  </div>
-                  <h3 className="text-3xl font-semibold">Cégtörténetünk</h3>
-                  <p className="mt-4 text-lg leading-relaxed text-blueGray-500">
-                    Szikora Transz Kft 2010-ben alakult kis családi
-                    vállalkozásként. Azóta folyamatosan bővült flottánk és
-                    szolgáltatási körünk, de megtartottuk személyes
-                    hangvételünket és ügyfélközpontú hozzáállásunkat.
-                  </p>
-                  <ul className="list-none mt-6">
-                    <li className="py-2">
-                      <div className="flex items-center">
-                        <div>
-                          <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-lightBlue-600 bg-lightBlue-200 mr-3">
-                            <i className="fas fa-truck-moving"></i>
-                          </span>
-                        </div>
-                        <div>
-                          <h4 className="text-blueGray-500">
-                            Több modern kamionból álló flotta
-                          </h4>
-                        </div>
-                      </div>
-                    </li>
-                    <li className="py-2">
-                      <div className="flex items-center">
-                        <div>
-                          <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-lightBlue-600 bg-lightBlue-200 mr-3">
-                            <i className="fas fa-user-tie"></i>
-                          </span>
-                        </div>
-                        <div>
-                          <h4 className="text-blueGray-500">
-                            Több tapasztalt, hosszú távú sofőr
-                          </h4>
-                        </div>
-                      </div>
-                    </li>
-                    <li className="py-2">
-                      <div className="flex items-center">
-                        <div>
-                          <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-lightBlue-600 bg-lightBlue-200 mr-3">
-                            <i className="fas fa-map-marked-alt"></i>
-                          </span>
-                        </div>
-                        <div>
-                          <h4 className="text-blueGray-500">
-                            Belföldi és nemzetközi fuvarozás
-                          </h4>
-                        </div>
-                      </div>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-        <section className="relative block py-20 bg-blueGray-800">
-          <div
-            className="bottom-auto top-0 left-0 right-0 w-full absolute pointer-events-none overflow-hidden -mt-24"
-            style={{ height: "100px", transform: "translateZ(0)" }}
-          >
-            <svg
-              className="absolute bottom-0 overflow-hidden "
-              xmlns="http://www.w3.org/2000/svg"
-              preserveAspectRatio="none"
-              version="1.1"
-              viewBox="0 0 2560 100"
-              x="0"
-              y="0"
-            >
-              <polygon
-                className="text-blueGray-800 fill-current"
-                points="2560 0 2560 100 0 100"
-              ></polygon>
-            </svg>
-          </div>
-
-          <div className="container mx-auto px-4 lg:pt-24 lg:pb-32 ">
-            <div className="flex flex-wrap text-center justify-center">
-              <div className="w-full lg:w-6/12 px-4">
-                <h2 className="text-4xl font-semibold text-white">
-                  Miben vagyunk jók?
-                </h2>
-                <div className="flex justify-center mt-4">
-                  <div className="w-24 h-1 bg-yellow-400 rounded"></div>
-                </div>
-                <p className="text-lg leading-relaxed mt-4 mb-4 text-blueGray-400">
-                  Szikora Transz Kft a megbízható és pontos fuvarozás
-                  hagyományait követi. Ügyfeleink elégedettsége mindennapos
-                  motivációnk.
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-wrap mt-12 justify-center">
-              <div className="w-full lg:w-3/12 px-4 text-center">
-                <div className="text-blueGray-800 p-3 w-12 h-12 shadow-lg rounded-full bg-white inline-flex items-center justify-center">
-                  <i className="fas fa-clock text-xl"></i>
-                </div>
-                <h3 className="text-xl mt-5 font-semibold text-white">
-                  Pontosság
-                </h3>
-                <p className="mt-2 mb-4 text-blueGray-400">
-                  Mindig időben érkezünk és teljesítjük ígéreteinket. Határidők
-                  betartása nálunk alapvető elv.
-                </p>
-              </div>
-              <div className="w-full lg:w-3/12 px-4 text-center">
-                <div className="text-blueGray-800 p-3 w-12 h-12 shadow-lg rounded-full bg-white inline-flex items-center justify-center">
-                  <i className="fas fa-euro-sign text-xl"></i>
-                </div>
-                <h3 className="text-xl mt-5 font-semibold text-white">
-                  Versenyképes árak
-                </h3>
-                <p className="mt-2 mb-4 text-blueGray-400">
-                  Áraink a piaci viszonyoknak megfelelőek, miközben nem
-                  veszítünk a minőségből.
-                </p>
-              </div>
-              <div className="w-full lg:w-3/12 px-4 text-center">
-                <div className="text-blueGray-800 p-3 w-12 h-12 shadow-lg rounded-full bg-white inline-flex items-center justify-center">
-                  <i className="fas fa-headset text-xl"></i>
-                </div>
-                <h3 className="text-xl mt-5 font-semibold text-white">
-                  Ügyfélszolgálat
-                </h3>
-                <p className="mt-2 mb-4 text-blueGray-400">
-                  Szakértő csapatunk mindig rendelkezésére áll kérdéseivel,
-                  problémáival kapcsolatban.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-        {/* Új Partnereink szekció */}
-
-        <section
-          id="partners"
-          className="relative block pb-20  bg-blueGray-800"
-        >
-          <div className="container mx-auto px-4">
-            <div className="flex flex-wrap justify-center text-center mb-12">
-              <div className="w-full lg:w-6/12 px-4">
-                <h2 className="text-4xl font-semibold text-white">
-                  Partnereink
-                </h2>
-                <div className="flex justify-center mt-4">
-                  <div className="w-24 h-1 bg-yellow-400 rounded"></div>
-                </div>
-                <p className="mt-4 text-lg text-white">
-                  Büszkék vagyunk kiváló partnereinkre, akikkel együtt dolgozunk
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
-              {/* Partner logo 1 */}
-              <div className="w-32 md:w-40 p-3 bg-white/80 rounded-lg shadow hover:bg-white transition-all duration-300 grayscale hover:grayscale-0">
-                <img
-                  src="/dreher.png"
-                  alt="Partner 1"
-                  className="w-full h-auto object-contain"
-                />
-              </div>
-
-              {/* Partner logo 2 */}
-              <div className="w-32 md:w-40 p-3 bg-white/80 rounded-lg shadow hover:bg-white transition-all duration-300 grayscale hover:grayscale-0">
-                <img
-                  src="/transzdanubia.png"
-                  alt="Partner 2"
-                  className="w-full h-auto object-contain"
-                />
-              </div>
-
-              {/* Partner logo 3 */}
-              <div className="w-32 md:w-40 p-3 bg-white/80 rounded-lg shadow hover:bg-white transition-all duration-300 grayscale hover:grayscale-0">
-                <img
-                  src="/engelmayer.png"
-                  alt="Partner 3"
-                  className="w-full h-auto object-contain"
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-        <section
-          id="contact"
-          className="relative block pt-20 pb-24 bg-blueGray-800"
-        >
-          <div className="container mx-auto px-4">
-            <div className="flex flex-wrap justify-center lg:-mt-0 -mt-0">
-              <div className="w-full px-4">
-                {/* Formok fejléc */}
-                <div className="text-center mb-12">
-                  <h2 className="text-4xl font-semibold text-white mb-4">
-                    Kapcsolatfelvétel
-                  </h2>
-                  <div className="flex justify-center">
-                    <div className="w-24 h-1 bg-yellow-400 rounded"></div>
-                  </div>
-                </div>
-
-                {/* Submit status message */}
-                {submitStatus.message && (
-                  <div
-                    className={`mb-8 text-center p-4 rounded-lg ${
-                      submitStatus.success
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {submitStatus.message}
-                  </div>
-                )}
-
-                {/* Formok konténer - árnyékokkal és térbeli elválasztással */}
-                <div className="flex flex-wrap justify-center lg:flex-nowrap lg:space-x-8">
-                  {/* Ajánlatkérés űrlap - kék hangsúlyokkal */}
-                  <div className="w-full lg:w-1/2 mb-8 lg:mb-0 transform hover:scale-101 transition duration-300">
-                    <form
-                      onSubmit={submitQuoteRequest}
-                      className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-xl rounded-lg bg-white border-t-4 border-blue-500"
-                    >
-                      <div className="flex-auto p-8">
-                        <div className="flex items-center mb-6">
-                          <div className="bg-blue-100 p-3 rounded-full mr-4">
-                            <i className="fas fa-envelope text-blue-600 text-xl"></i>
-                          </div>
-                          <h3 className="text-2xl font-bold text-blueGray-800">
-                            Ajánlatkérés
-                          </h3>
-                        </div>
-                        <p className="leading-relaxed mb-6 text-blueGray-600">
-                          Küldjön üzenetet, és 24 órán belül visszajelzünk
-                          részletes ajánlattal.
-                        </p>
-
-                        <div className="space-y-4">
-                          <div>
-                            <label className="block uppercase text-blueGray-600 text-xs font-bold mb-2">
-                              Teljes név
-                            </label>
-                            <input
-                              type="text"
-                              name="name"
-                              value={quoteForm.name}
-                              onChange={handleQuoteChange}
-                              className="border-0 px-4 py-3 placeholder-blueGray-300 text-blueGray-700 bg-blueGray-100 rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                              placeholder="Teljes név"
-                              required
-                            />
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="block uppercase text-blueGray-600 text-xs font-bold mb-2">
-                                Telefonszám
-                              </label>
-                              <input
-                                type="tel"
-                                name="phone"
-                                value={quoteForm.phone}
-                                onChange={handleQuoteChange}
-                                className="border-0 px-4 py-3 placeholder-blueGray-300 text-blueGray-700 bg-blueGray-100 rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-orange-500 w-full"
-                                placeholder="Telefonszám"
-                                required
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block uppercase text-blueGray-600 text-xs font-bold mb-2">
-                                Email cím
-                              </label>
-                              <input
-                                type="email"
-                                name="email"
-                                value={quoteForm.email}
-                                onChange={handleQuoteChange}
-                                className="border-0 px-4 py-3 placeholder-blueGray-300 text-blueGray-700 bg-blueGray-100 rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                                placeholder="Email cím"
-                                required
-                              />
-                            </div>
-                          </div>
-                          <div>
-                            <label className="block uppercase text-blueGray-600 text-xs font-bold mb-2">
-                              Üzenet
-                            </label>
-                            <textarea
-                              rows="3"
-                              name="message"
-                              value={quoteForm.message}
-                              onChange={handleQuoteChange}
-                              className="border-0 px-4 py-3 placeholder-blueGray-300 text-blueGray-700 bg-blueGray-100 rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                              placeholder="Üzenet szövege..."
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        <div className="text-center mt-8">
-                          <button
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold uppercase px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transition duration-300 ease-in-out transform hover:-translate-y-1 disabled:opacity-50"
-                            type="submit"
-                            disabled={isSubmitting}
-                          >
-                            {isSubmitting ? "Küldés..." : "Üzenet küldése"}
-                          </button>
-                        </div>
-                      </div>
-                    </form>
-                  </div>
-
-                  {/* Középső elválasztó - csak nagy képernyőn látszik */}
-                  <div className="hidden lg:block">
-                    <div className="h-full w-1 bg-blueGray-700 mx-4 rounded-full relative">
-                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-yellow-400 text-blueGray-900 font-bold py-2 px-4 rounded-full">
-                        VAGY
+                <div className="space-y-4">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 mt-1">
+                      <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                        <i className="fas fa-check text-lightBlue-600"></i>
                       </div>
                     </div>
+                    <div className="ml-3">
+                      <h4 className="text-lg font-semibold text-gray-900">
+                        Kiváló minőség
+                      </h4>
+                      <p className="text-gray-600">
+                        Minden szállítási folyamat precíz tervezéssel és
+                        végrehajtással.
+                      </p>
+                    </div>
                   </div>
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 mt-1">
+                      <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                        <i className="fas fa-check text-lightBlue-600"></i>
+                      </div>
+                    </div>
+                    <div className="ml-3">
+                      <h4 className="text-lg font-semibold text-gray-900">
+                        Rugalmasság
+                      </h4>
+                      <p className="text-gray-600">
+                        Személyre szabott megoldások minden egyedi igényre.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="lg:w-1/2">
+                <div className="relative rounded-xl overflow-hidden shadow-2xl">
+                  <img
+                    src="/sample.png"
+                    alt="Flottánk"
+                    className="w-full h-auto"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent"></div>
+                  <div className="absolute bottom-0 left-0 p-6">
+                    <h4 className="text-xl font-bold text-white mb-2">
+                      Modern flotta
+                    </h4>
+                    <p className="text-gray-200">
+                      Több modern, karbantartott kamionból álló flottánk és
+                      tapasztalt sofőreink garantálják a megbízható szállítást.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
-                  {/* Sofőr jelentkezés űrlap - narancs hangsúlyokkal */}
-                  <div className="w-full lg:w-1/2 transform hover:scale-101 transition duration-300">
-                    <form
-                      onSubmit={submitDriverApplication}
-                      className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-xl rounded-lg bg-white border-t-4 border-orange-500"
-                    >
-                      <div className="flex-auto p-8">
-                        <div className="flex items-center mb-6">
-                          <div className="bg-orange-100 p-3 rounded-full mr-4">
-                            <i className="fas fa-truck text-orange-600 text-xl"></i>
-                          </div>
-                          <h3 className="text-2xl font-bold text-blueGray-800">
-                            Sofőr jelentkezés
-                          </h3>
+        {/* About Section */}
+        <section id="about" className="py-20 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col lg:flex-row items-center">
+              <div className="lg:w-1/2 mb-10 lg:mb-0 lg:pr-10">
+                <div className="relative rounded-xl overflow-hidden shadow-2xl">
+                  <img
+                    src="/sample.png"
+                    alt="Cégünkről"
+                    className="w-full h-auto"
+                  />
+                </div>
+              </div>
+              <div className="lg:w-1/2 lg:pl-10">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+                  Cégtörténetünk
+                </h2>
+                <div className="w-20 h-1 bg-lightBlue-500 mb-6"></div>
+                <p className="text-lg text-gray-600 mb-6">
+                  Szikora Transz Kft 2010-ben alakult kis családi
+                  vállalkozásként. Azóta folyamatosan bővült flottánk és
+                  szolgáltatási körünk, de megtartottuk személyes hangvételünket
+                  és ügyfélközpontú hozzáállásunkat.
+                </p>
+                <div className="space-y-4">
+                  <div className="flex items-center p-4 bg-gray-50 rounded-lg">
+                    <div className="flex-shrink-0 mr-4">
+                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i className="fas fa-truck-moving text-blue-600"></i>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900">
+                        Modern flotta
+                      </h4>
+                      <p className="text-gray-600">
+                        Több modern kamionból álló, állandóan karbantartott
+                        flotta.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center p-4 bg-gray-50 rounded-lg">
+                    <div className="flex-shrink-0 mr-4">
+                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                        <i className="fas fa-user-tie text-green-600"></i>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900">
+                        Tapasztalt sofőrök
+                      </h4>
+                      <p className="text-gray-600">
+                        Több tapasztalt, hosszú távú sofőr alkotja csapatunkat.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Stats Section */}
+        <section className="py-20 bg-gray-900 text-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                Számokban kifejezve
+              </h2>
+              <div className="w-20 h-1 bg-lightBlue-500 mx-auto mb-6"></div>
+              <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+                Büszkék vagyunk eredményeinkre és ügyfeleink elégedettségére
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              <div className="text-center">
+                <div className="text-4xl md:text-5xl font-bold text-lightBlue-400 mb-2">
+                  10+
+                </div>
+                <div className="text-gray-300">Év tapasztalat</div>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl md:text-5xl font-bold text-lightBlue-400 mb-2">
+                  50+
+                </div>
+                <div className="text-gray-300">Elégedett ügyfél</div>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl md:text-5xl font-bold text-lightBlue-400 mb-2">
+                  100%
+                </div>
+                <div className="text-gray-300">Biztosított szállítás</div>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl md:text-5xl font-bold text-lightBlue-400 mb-2">
+                  24/7
+                </div>
+                <div className="text-gray-300">Ügyfélszolgálat</div>
+              </div>
+            </div>
+          </div>
+        </section>
+        {/*
+        {/* Partners Section 
+        <section id="partners" className="py-20 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Partnereink
+              </h2>
+              <div className="w-20 h-1 bg-lightBlue-500 mx-auto mb-6"></div>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Büszkék vagyunk kiváló partnereinkre, akikkel együtt dolgozunk
+              </p>
+            </div>
+
+            <div className="flex flex-wrap justify-center gap-8 md:gap-12">
+              {[
+                { logo: "/dreher.png", name: "Dreher" },
+                { logo: "/transzdanubia.png", name: "TranszDanubia" },
+                { logo: "/engelmayer.png", name: "Engelmayer" },
+              ].map((partner, index) => (
+                <div
+                  key={index}
+                  className="w-40 h-24 p-4 bg-gray-50 rounded-lg shadow-md hover:shadow-xl transition duration-300 flex items-center justify-center"
+                >
+                  <img
+                    src={partner.logo}
+                    alt={partner.name}
+                    className="max-h-full max-w-full object-contain grayscale hover:grayscale-0 transition duration-300"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+/*}
+        {/* Contact Section */}
+        <section id="contact" className="py-20 bg-gray-100">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Kapcsolatfelvétel
+              </h2>
+              <div className="w-20 h-1 bg-lightBlue-500 mx-auto mb-6"></div>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Kérjük töltse ki az alábbi űrlapot, és hamarosan válaszolunk
+              </p>
+            </div>
+
+            {/* Submit status message */}
+            {submitStatus.message && (
+              <div
+                className={`mb-8 mx-auto max-w-2xl p-4 rounded-lg text-center ${
+                  submitStatus.success
+                    ? "bg-green-100 text-green-800"
+                    : "bg-red-100 text-red-800"
+                }`}
+              >
+                {submitStatus.message}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+              {/* Quote Request Form */}
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-transform duration-300 hover:scale-[1.01]">
+                <div className="p-8">
+                  <div className="flex items-center mb-6">
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                      <i className="fas fa-envelope text-blue-600 text-xl"></i>
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900">
+                      Ajánlatkérés
+                    </h3>
+                  </div>
+                  <p className="text-gray-600 mb-6">
+                    Küldjön üzenetet, és 24 órán belül visszajelzünk részletes
+                    ajánlattal.
+                  </p>
+
+                  <form onSubmit={submitQuoteRequest}>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Teljes név
+                        </label>
+                        <input
+                          type="text"
+                          name="name"
+                          value={quoteForm.name}
+                          onChange={handleQuoteChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-300"
+                          placeholder="Teljes név"
+                          required
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Telefonszám
+                          </label>
+                          <input
+                            type="tel"
+                            name="phone"
+                            value={quoteForm.phone}
+                            onChange={handleQuoteChange}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-300"
+                            placeholder="Telefonszám"
+                            required
+                          />
                         </div>
-                        <p className="leading-relaxed mb-6 text-blueGray-600">
-                          Csatlakozzon profi sofőr csapatunkhoz!
-                        </p>
 
-                        <div className="space-y-4">
-                          <div>
-                            <label className="block uppercase text-blueGray-600 text-xs font-bold mb-2">
-                              Teljes név
-                            </label>
-                            <input
-                              type="text"
-                              name="name"
-                              value={applicationForm.name}
-                              onChange={handleApplicationChange}
-                              className="border-0 px-4 py-3 placeholder-blueGray-300 text-blueGray-700 bg-blueGray-100 rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-orange-500 w-full"
-                              placeholder="Teljes név"
-                              required
-                            />
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="block uppercase text-blueGray-600 text-xs font-bold mb-2">
-                                Telefonszám
-                              </label>
-                              <input
-                                type="tel"
-                                name="phone"
-                                value={applicationForm.phone}
-                                onChange={handleApplicationChange}
-                                className="border-0 px-4 py-3 placeholder-blueGray-300 text-blueGray-700 bg-blueGray-100 rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-orange-500 w-full"
-                                placeholder="Telefonszám"
-                                required
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block uppercase text-blueGray-600 text-xs font-bold mb-2">
-                                Email cím
-                              </label>
-                              <input
-                                type="email"
-                                name="email"
-                                value={applicationForm.email}
-                                onChange={handleApplicationChange}
-                                className="border-0 px-4 py-3 placeholder-blueGray-300 text-blueGray-700 bg-blueGray-100 rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                                placeholder="Email cím"
-                                required
-                              />
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="block uppercase text-blueGray-600 text-xs font-bold mb-2">
-                              Üzenet
-                            </label>
-                            <textarea
-                              rows="3"
-                              name="message"
-                              value={applicationForm.message}
-                              onChange={handleApplicationChange}
-                              className="border-0 px-4 py-3 placeholder-blueGray-300 text-blueGray-700 bg-blueGray-100 rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                              placeholder="Üzenet szövege..."
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        <div className="text-center mt-8">
-                          <button
-                            className="bg-orange-500 hover:bg-orange-600 text-white font-bold uppercase px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transition duration-300 ease-in-out transform hover:-translate-y-1 disabled:opacity-50"
-                            type="submit"
-                            disabled={isSubmitting}
-                          >
-                            {isSubmitting
-                              ? "Küldés..."
-                              : "Jelentkezés elküldése"}
-                          </button>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Email cím
+                          </label>
+                          <input
+                            type="email"
+                            name="email"
+                            value={quoteForm.email}
+                            onChange={handleQuoteChange}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-300"
+                            placeholder="Email cím"
+                            required
+                          />
                         </div>
                       </div>
-                    </form>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Üzenet
+                        </label>
+                        <textarea
+                          rows="4"
+                          name="message"
+                          value={quoteForm.message}
+                          onChange={handleQuoteChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-300"
+                          placeholder="Üzenet szövege..."
+                          required
+                        ></textarea>
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full mt-6 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition duration-300 disabled:opacity-50"
+                    >
+                      {isSubmitting ? (
+                        <span className="flex items-center justify-center">
+                          <svg
+                            className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                          Küldés...
+                        </span>
+                      ) : (
+                        "Üzenet küldése"
+                      )}
+                    </button>
+                  </form>
+                </div>
+              </div>
+
+              {/* Driver Application Form */}
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-transform duration-300 hover:scale-[1.01]">
+                <div className="p-8">
+                  <div className="flex items-center mb-6">
+                    <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mr-4">
+                      <i className="fas fa-truck text-yellow-600 text-xl"></i>
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900">
+                      Sofőr jelentkezés
+                    </h3>
                   </div>
+                  <p className="text-gray-600 mb-6">
+                    Csatlakozzon profi sofőr csapatunkhoz!
+                  </p>
+
+                  <form onSubmit={submitDriverApplication}>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Teljes név
+                        </label>
+                        <input
+                          type="text"
+                          name="name"
+                          value={applicationForm.name}
+                          onChange={handleApplicationChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-lightBlue-500 transition duration-300"
+                          placeholder="Teljes név"
+                          required
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Telefonszám
+                          </label>
+                          <input
+                            type="tel"
+                            name="phone"
+                            value={applicationForm.phone}
+                            onChange={handleApplicationChange}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition duration-300"
+                            placeholder="Telefonszám"
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Email cím
+                          </label>
+                          <input
+                            type="email"
+                            name="email"
+                            value={applicationForm.email}
+                            onChange={handleApplicationChange}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition duration-300"
+                            placeholder="Email cím"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Üzenet
+                        </label>
+                        <textarea
+                          rows="4"
+                          name="message"
+                          value={applicationForm.message}
+                          onChange={handleApplicationChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition duration-300"
+                          placeholder="Üzenet szövege..."
+                          required
+                        ></textarea>
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full mt-6 px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-medium rounded-lg shadow-md hover:shadow-lg transition duration-300 disabled:opacity-50"
+                    >
+                      {isSubmitting ? (
+                        <span className="flex items-center justify-center">
+                          <svg
+                            className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-900"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                          Küldés...
+                        </span>
+                      ) : (
+                        "Jelentkezés elküldése"
+                      )}
+                    </button>
+                  </form>
                 </div>
               </div>
             </div>

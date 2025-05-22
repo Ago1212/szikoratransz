@@ -1,23 +1,75 @@
 import React, { useRef, useState, useEffect } from "react";
+import PropTypes from "prop-types";
+import { FaEdit, FaTrash, FaPlus, FaArrowRight, FaTimes } from "react-icons/fa";
 import { fetchAction } from "utils/fetchAction";
 
-export default function CardTableForTervezettKarbantartasok({
+const ActionButton = ({ onClick, icon, color, title, className = "" }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    title={title}
+    className={`${color} cursor-pointer transition transform hover:scale-125 ${className}`}
+  >
+    {icon}
+  </button>
+);
+
+const TableHeader = ({ children, align = "left" }) => (
+  <th
+    className={`px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-${align} bg-blueGray-50 text-blueGray-500 border-blueGray-100`}
+  >
+    {children}
+  </th>
+);
+
+const TableRow = ({ children, index }) => (
+  <tr className={index % 2 === 0 ? "bg-white" : "bg-blueGray-50"}>
+    {children}
+  </tr>
+);
+
+const TableCell = ({ children, align = "left", className = "" }) => {
+  const baseClasses =
+    "border-t-0 px-6 align-middle border-l-0 border-r-0 text-sm whitespace-nowrap p-4";
+  const alignmentClass = `text-${align}`;
+
+  return (
+    <td className={`${baseClasses} ${alignmentClass} ${className}`}>
+      {children}
+    </td>
+  );
+};
+
+const CardTableForTervezettKarbantartasok = ({
   kamion_id,
   refresh,
   onRefresh,
-}) {
+}) => {
   const [openDialog, setOpenDialog] = useState(false);
   const [karbantartasok, setKarbantartasok] = useState([]);
   const [selectedKarbantartas, setSelectedKarbantartas] = useState(null);
   const dialogRef = useRef(null);
 
+  const fetchKarbantartasok = async () => {
+    const result = await fetchAction("getKarbantartas", {
+      kamion_id: kamion_id,
+      elvegzett: false,
+    });
+
+    if (result?.success) {
+      setKarbantartasok(result.karbantartas);
+    } else {
+      alert(result?.message || "Karbantartások betöltése sikertelen.");
+    }
+  };
+
   const handleAddClick = () => {
-    setSelectedKarbantartas(null); // Új hozzáadás esetén nincs kiválasztott elem
+    setSelectedKarbantartas(null);
     setOpenDialog(true);
   };
 
   const handleEditClick = (karbantartas) => {
-    setSelectedKarbantartas(karbantartas); // Kiválasztott elem beállítása
+    setSelectedKarbantartas(karbantartas);
     setOpenDialog(true);
   };
 
@@ -26,28 +78,24 @@ export default function CardTableForTervezettKarbantartasok({
       id: karbantartasId,
       elvegzett: true,
     });
-    if (result && result.success) {
-      fetchKarbantartasok(); // Frissíti a listát
-      onRefresh();
+
+    if (result?.success) {
+      await fetchKarbantartasok();
+      onRefresh?.();
     } else {
-      alert(result.message || "Hiba történt a státusz frissítésekor.");
+      alert(result?.message || "Hiba történt a státusz frissítésekor.");
     }
   };
+
   const handleKarbantartasDelete = async (id) => {
-    const confirmDelete = window.confirm(
-      "Biztosan törölni szeretnéd a karbantartást?"
-    );
-    if (!confirmDelete) {
-      return; // Ha nem erősíti meg, kilépünk a függvényből
-    }
+    if (!window.confirm("Biztosan törölni szeretnéd a karbantartást?")) return;
 
     try {
-      // API hívás törléshez
       const result = await fetchAction("deleteKarbantartas", { id });
 
-      if (result && result.success) {
+      if (result?.success) {
         alert("A karbantartás sikeresen törölve.");
-        fetchKarbantartasok(); // Frissíti a listát
+        await fetchKarbantartasok();
       } else {
         alert(result?.message || "Hiba történt a törlés során.");
       }
@@ -57,9 +105,9 @@ export default function CardTableForTervezettKarbantartasok({
     }
   };
 
-  const handleCloseDialog = () => setOpenDialog(false);
+  const handleSave = async (e) => {
+    e.preventDefault(); // Megakadályozzuk az alapértelmezett form küldést
 
-  const handleSave = async () => {
     const dataToSave = {
       id: selectedKarbantartas?.id,
       datum: selectedKarbantartas?.datum,
@@ -69,155 +117,170 @@ export default function CardTableForTervezettKarbantartasok({
 
     const result = await fetchAction("updateKarbantartas", dataToSave);
 
-    if (result && result.success) {
-      fetchKarbantartasok(); // Újrarenderelés friss adatokkal
-      handleCloseDialog();
+    if (result?.success) {
+      await fetchKarbantartasok();
+      setOpenDialog(false);
     } else {
-      alert(result.message || "Módosítás sikertelen.");
-    }
-  };
-
-  const fetchKarbantartasok = async () => {
-    const result = await fetchAction("getKarbantartas", {
-      kamion_id: kamion_id,
-      elvegzett: false,
-    });
-    if (result && result.success) {
-      setKarbantartasok(result.karbantartas);
-    } else {
-      alert(result.message || "Karbantartások betöltése sikertelen.");
+      alert(result?.message || "Módosítás sikertelen.");
     }
   };
 
   useEffect(() => {
     fetchKarbantartasok();
+  }, [kamion_id, refresh]);
 
-    if (openDialog) {
-      dialogRef.current.showModal();
-    } else {
-      dialogRef.current.close();
+  useEffect(() => {
+    if (dialogRef.current) {
+      openDialog ? dialogRef.current.showModal() : dialogRef.current.close();
     }
-  }, [openDialog, kamion_id, refresh]);
+  }, [openDialog]);
 
   return (
-    <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded bg-white">
+    <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-white overflow-hidden">
       <div className="block w-full overflow-x-auto">
         <table className="items-center w-full bg-transparent border-collapse">
           <thead>
             <tr>
-              <th className="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-center bg-blueGray-50 text-blueGray-500 border-blueGray-100">
-                Műveletek
-              </th>
-              <th className="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-center bg-blueGray-50 text-blueGray-500 border-blueGray-100">
-                Tervezett karbantartás
-              </th>
-              <th className="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left bg-blueGray-50 text-blueGray-500 border-blueGray-100">
-                Dátum
-              </th>
-              <th className="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-right bg-blueGray-50 text-blueGray-500 border-blueGray-100">
+              <TableHeader align="center">Műveletek</TableHeader>
+              <TableHeader align="center">Tervezett karbantartás</TableHeader>
+              <TableHeader align="left">Dátum</TableHeader>
+              <TableHeader align="right">
                 <button
-                  className="bg-lightBlue-500 text-white font-bold uppercase text-xs px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none mr-1 ease-linear transition-all duration-150"
-                  type="button"
+                  className="bg-blue-500 text-white font-bold uppercase text-xs px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none ease-linear transition-all duration-150 flex items-center"
                   onClick={handleAddClick}
                 >
-                  Új
+                  <FaPlus className="mr-1" /> Új
                 </button>
-              </th>
+              </TableHeader>
             </tr>
           </thead>
           <tbody>
-            {karbantartasok.map((karbantartas) => (
-              <tr key={karbantartas.id}>
-                <td className="border-t-0 px-6 border-l-0 border-r-0 whitespace-nowrap p-4 align-middle">
-                  <i
-                    className="fa-solid fa-file-pen cursor-pointer text-blue-500 hover:text-blue-700 transition transform hover:scale-110 mr-4"
-                    onClick={() => handleEditClick(karbantartas)}
-                    title="Edit"
-                  ></i>
-                  <i
-                    className="fa-solid fa-trash-can cursor-pointer text-red-500 hover:text-red-700 transition transform hover:scale-110"
-                    onClick={() => handleKarbantartasDelete(karbantartas.id)}
-                    title="Delete"
-                  ></i>
-                </td>
-
-                <td className="border-t-0 px-6 border-l-0 border-r-0 text-xs whitespace-normal break-words max-w-xs p-4 align-middle">
-                  {karbantartas.log}
-                </td>
-
-                <td className="border-t-0 px-6 border-l-0 border-r-0 text-xs whitespace-nowrap p-4 align-middle">
-                  {karbantartas.datum}
-                </td>
-                <td className="border-t-0 px-6 border-l-0 border-r-0 whitespace-nowrap p-4 align-middle">
-                  <i
-                    className="fa-solid fa-angles-right cursor-pointer"
-                    onClick={() => handleSetKarbantartasKesz(karbantartas.id)}
-                  ></i>
-                </td>
-              </tr>
-            ))}
+            {karbantartasok.length > 0 ? (
+              karbantartasok.map((karbantartas, index) => (
+                <TableRow key={karbantartas.id} index={index}>
+                  <TableCell align="center">
+                    <div className="flex justify-center space-x-4">
+                      <ActionButton
+                        onClick={() => handleEditClick(karbantartas)}
+                        icon={<FaEdit />}
+                        color="text-blue-500 hover:text-blue-700"
+                        title="Szerkesztés"
+                      />
+                      <ActionButton
+                        onClick={() =>
+                          handleKarbantartasDelete(karbantartas.id)
+                        }
+                        icon={<FaTrash />}
+                        color="text-red-500 hover:text-red-700"
+                        title="Törlés"
+                      />
+                    </div>
+                  </TableCell>
+                  <TableCell className="whitespace-normal break-words max-w-xs">
+                    {karbantartas.log}
+                  </TableCell>
+                  <TableCell>{karbantartas.datum}</TableCell>
+                  <TableCell align="right">
+                    <ActionButton
+                      onClick={() => handleSetKarbantartasKesz(karbantartas.id)}
+                      icon={<FaArrowRight />}
+                      color="text-green-500 hover:text-green-700"
+                      title="Elvégzettként jelöl"
+                    />
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={4}
+                  align="center"
+                  className="py-8 text-gray-500"
+                >
+                  Nincsenek tervezett karbantartások
+                </TableCell>
+              </TableRow>
+            )}
           </tbody>
         </table>
       </div>
-      <dialog
-        ref={dialogRef}
-        className="relative rounded-lg bg-white shadow-xl p-6"
-        onClose={handleCloseDialog}
-      >
-        <button
-          type="button"
-          onClick={() => dialogRef.current.close()}
-          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 focus:outline-none"
-          style={{ right: "0.5rem", top: "1rem" }}
-        >
-          &#x2715;
-        </button>
+      {openDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="relative rounded-lg bg-white shadow-xl p-6 w-full max-w-md">
+            <button
+              type="button"
+              onClick={() => setOpenDialog(false)}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+            >
+              <FaTimes />
+            </button>
 
-        <h3 className="text-base font-semibold text-gray-900 mb-4">
-          {selectedKarbantartas ? "Karbantartás Módosítása" : "Új Karbantartás"}
-        </h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              {selectedKarbantartas
+                ? "Karbantartás módosítása"
+                : "Új karbantartás"}
+            </h3>
 
-        <label className="block text-sm font-medium mb-1">Dátum</label>
-        <input
-          type="date"
-          value={selectedKarbantartas?.datum || ""}
-          onChange={(e) =>
-            setSelectedKarbantartas({
-              ...selectedKarbantartas,
-              datum: e.target.value,
-            })
-          }
-          className="border border-gray-300 px-3 py-2 mb-4 w-full rounded-md focus:outline-none focus:ring focus:ring-blue-500"
-        />
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Dátum
+                </label>
+                <input
+                  type="date"
+                  value={selectedKarbantartas?.datum || ""}
+                  onChange={(e) =>
+                    setSelectedKarbantartas((prev) => ({
+                      ...prev,
+                      datum: e.target.value,
+                    }))
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
 
-        <label className="block text-sm font-medium mb-1">
-          Tervezett karbantartás
-        </label>
-        <textarea
-          value={selectedKarbantartas?.log || ""}
-          onChange={(e) =>
-            setSelectedKarbantartas({
-              ...selectedKarbantartas,
-              log: e.target.value,
-            })
-          }
-          className="border border-gray-300 px-3 py-2 mb-4 w-full rounded-md focus:outline-none focus:ring focus:ring-blue-500"
-          placeholder="Leírás..."
-          rows="5"
-        />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Leírás
+                </label>
+                <textarea
+                  value={selectedKarbantartas?.log || ""}
+                  onChange={(e) =>
+                    setSelectedKarbantartas((prev) => ({
+                      ...prev,
+                      log: e.target.value,
+                    }))
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows="5"
+                  placeholder="Karbantartás leírása..."
+                  required
+                />
+              </div>
+            </div>
 
-        <div className="flex justify-between items-center mt-4">
-          {/* Törlés gomb balra igazítva */}
-
-          <button
-            type="button"
-            onClick={handleSave}
-            className="inline-flex rounded-md bg-lightBlue-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-600"
-          >
-            Mentés
-          </button>
+            <div className="flex justify-end mt-6">
+              <button
+                type="button"
+                onClick={handleSave}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                Mentés
+              </button>
+            </div>
+          </div>
         </div>
-      </dialog>
+      )}
     </div>
   );
-}
+};
+
+CardTableForTervezettKarbantartasok.propTypes = {
+  kamion_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+    .isRequired,
+  refresh: PropTypes.bool,
+  onRefresh: PropTypes.func,
+};
+
+export default CardTableForTervezettKarbantartasok;

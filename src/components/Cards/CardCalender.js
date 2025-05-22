@@ -4,10 +4,9 @@ import moment from "moment";
 import "moment/locale/hu";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { fetchAction } from "utils/fetchAction";
-//import "./CustomCalander.css"; // Egyéni CSS fájl
 
-// Hozd létre a localizer-t
-moment.locale("hu"); // Állítsd be a locale-t magyarra
+// Lokalizáció beállítása
+moment.locale("hu");
 const localizer = momentLocalizer(moment);
 
 export default function CardCalender() {
@@ -20,41 +19,46 @@ export default function CardCalender() {
       if (result.success) {
         const formattedEvents = result.data.map((event) => ({
           ...event,
-          start: new Date(event.start), // start dátum átalakítása Date objektummá
-          end: new Date(event.end), // end dátum átalakítása Date objektummá
+          start: new Date(event.start),
+          end: new Date(event.end),
         }));
         setEsemenyek(formattedEvents || []);
       } else {
-        console.error("Error fetching stats:", result.message);
+        console.error("Hiba az események lekérésekor:", result.message);
       }
     };
 
     fetchData();
   }, []);
+
   return (
-    // Itt a return utasítás
-    <div>
-      <Calendar
-        views={["month", "agenda", "day", "week"]}
-        localizer={localizer}
-        events={esemenyek}
-        startAccessor="start"
-        endAccessor="end"
-        style={{ height: 700 }}
-        defaultDate={new Date()}
-        defaultView="month"
-        popup
-        messages={{
-          today: "Ma",
-          previous: "<",
-          next: ">",
-          month: "Hónap",
-          week: "Hét",
-          day: "Nap",
-          agenda: "Lista",
-          date: "Dátum",
-        }}
-      />
+    <div className="p-4">
+      <div className="bg-white shadow-lg rounded-2xl p-6">
+        <Calendar
+          views={["month", "agenda", "day", "week"]}
+          localizer={localizer}
+          events={esemenyek}
+          startAccessor="start"
+          endAccessor="end"
+          style={{ height: 700 }}
+          defaultDate={new Date()}
+          defaultView="month"
+          popup
+          messages={{
+            today: "Ma",
+            previous: "Előző",
+            next: "Következő",
+            month: "Hónap",
+            week: "Hét",
+            day: "Nap",
+            agenda: "Lista",
+            date: "Dátum",
+            time: "Idő",
+            event: "Esemény",
+            noEventsInRange: "Nincs esemény az adott időszakban.",
+          }}
+        />
+      </div>
     </div>
   );
 }

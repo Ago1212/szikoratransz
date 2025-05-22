@@ -1,6 +1,17 @@
 /*eslint-disable*/
 import React from "react";
-import { Link, useHistory } from "react-router-dom";
+import { Link, useHistory, useLocation } from "react-router-dom";
+import {
+  FiHome,
+  FiTruck,
+  FiUsers,
+  FiFile,
+  FiCalendar,
+  FiSettings,
+  FiLogOut,
+} from "react-icons/fi";
+import { FaTrailer, FaComments } from "react-icons/fa";
+import { RiDashboardLine } from "react-icons/ri";
 
 import NotificationDropdown from "components/Dropdowns/NotificationDropdown.js";
 import UserDropdown from "components/Dropdowns/UserDropdown.js";
@@ -8,299 +19,147 @@ import { fetchAction } from "utils/fetchAction";
 
 export default function Sidebar() {
   const storedUserData = sessionStorage.getItem("user");
-  const [collapseShow, setCollapseShow] = React.useState("hidden");
+  const [isMobileOpen, setIsMobileOpen] = React.useState(false);
   const history = useHistory();
+  const location = useLocation();
+
   const handleLogout = async () => {
     const result = await fetchAction("logoutUser", { id: storedUserData.id });
-    if (result && result.success) {
+    if (result?.success) {
       sessionStorage.removeItem("user");
       history.push("/");
     } else {
-      alert(result.message || "Logout failed.");
+      alert(result?.message || "Logout failed.");
     }
   };
+
+  const isActive = (path) => location.pathname.includes(path);
+
+  const NavItem = ({ to, icon: Icon, text, subPath }) => (
+    <li className="items-center">
+      <Link
+        className={`flex items-center py-3 px-4 text-sm font-medium rounded-lg transition-colors ${
+          isActive(subPath || to)
+            ? "bg-blue-50 text-blue-600"
+            : "text-gray-700 hover:bg-gray-100"
+        }`}
+        to={to}
+        onClick={() => setIsMobileOpen(false)}
+      >
+        <Icon
+          className={`mr-3 ${
+            isActive(subPath || to) ? "text-blue-500" : "text-gray-400"
+          }`}
+        />
+        {text}
+      </Link>
+    </li>
+  );
+
+  const SectionHeader = ({ children }) => (
+    <h6 className="text-gray-500 text-xs uppercase font-semibold tracking-wider px-4 pt-4 pb-2">
+      {children}
+    </h6>
+  );
+
   return (
     <>
-      <nav className="md:left-0 md:block md:fixed md:top-0 md:bottom-0 md:overflow-y-auto md:flex-row md:flex-nowrap md:overflow-hidden shadow-xl bg-white flex flex-wrap items-center justify-between relative md:w-64 z-10 py-4 px-6">
-        <div className="md:flex-col md:items-stretch md:min-h-full md:flex-nowrap px-0 flex flex-wrap items-center justify-between w-full mx-auto">
-          {/* Toggler */}
-          <button
-            className="cursor-pointer text-black opacity-50 md:hidden px-3 py-1 text-xl leading-none bg-transparent rounded border border-solid border-transparent"
-            type="button"
-            onClick={() => setCollapseShow("bg-white m-2 py-3 px-6")}
-          >
-            <i className="fas fa-bars"></i>
-          </button>
-          {/* Brand */}
+      {/* Mobile Overlay */}
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+
+      <nav
+        className={`fixed inset-y-0 left-0 w-64 bg-white shadow-lg flex flex-col z-30 transition-all duration-300 ease-in-out transform ${
+          isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
+      >
+        {/* Brand & Mobile Toggle */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <Link
-            className="md:block text-left md:pb-2 text-blueGray-600 mr-0 inline-block whitespace-nowrap text-sm uppercase font-bold p-4 px-0"
             to="/"
+            className="text-xl font-bold text-blue-600 hover:text-blue-700 flex items-center"
+            onClick={() => setIsMobileOpen(false)}
           >
+            <RiDashboardLine className="mr-2" />
             Főoldal
           </Link>
-          {/* User */}
-          <ul className="md:hidden items-center flex flex-wrap list-none">
-            <li className="inline-block relative">
-              <NotificationDropdown />
-            </li>
-            <li className="inline-block relative">
-              <UserDropdown />
-            </li>
-          </ul>
-          {/* Collapse */}
-          <div
-            className={
-              "md:flex md:flex-col md:items-stretch md:opacity-100 md:relative md:mt-4 md:shadow-none shadow absolute top-0 left-0 right-0 z-40 overflow-y-auto overflow-x-hidden h-auto items-center flex-1 rounded " +
-              collapseShow
-            }
+          <button
+            className="md:hidden text-gray-500 hover:text-gray-700 focus:outline-none"
+            onClick={() => setIsMobileOpen(!isMobileOpen)}
           >
-            {/* Collapse header */}
-            <div className="md:min-w-full md:hidden block pb-4 mb-4 border-b border-solid border-blueGray-200">
-              <div className="flex flex-wrap">
-                <div className="w-6/12">
-                  <Link
-                    className="md:block text-left md:pb-2 text-blueGray-600 mr-0 inline-block whitespace-nowrap text-sm uppercase font-bold p-4 px-0"
-                    to="/"
-                  >
-                    Főoldal
-                  </Link>
-                </div>
-                <div className="w-6/12 flex justify-end">
-                  <button
-                    type="button"
-                    className="cursor-pointer text-black opacity-50 md:hidden px-3 py-1 text-xl leading-none bg-transparent rounded border border-solid border-transparent"
-                    onClick={() => setCollapseShow("hidden")}
-                  >
-                    <i className="fas fa-times"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-            {/* Divider */}
-            <hr className="my-4 md:min-w-full" />
-            {/* Heading */}
-            <h6 className="md:min-w-full text-blueGray-500 text-xs uppercase font-bold block pt-1 pb-4 no-underline">
-              Saját adatok
-            </h6>
-            {/* Navigation */}
+            <i className={`fas ${isMobileOpen ? "fa-times" : "fa-bars"}`} />
+          </button>
+        </div>
 
-            <ul className="md:flex-col md:min-w-full flex flex-col list-none">
-              <li className="items-center">
-                <Link
-                  className={
-                    "text-xs uppercase py-3 font-bold block " +
-                    (window.location.href.indexOf("/admin/dashboard") !== -1
-                      ? "text-lightBlue-500 hover:text-lightBlue-600"
-                      : "text-blueGray-700 hover:text-blueGray-500")
-                  }
-                  to="/admin/dashboard"
-                >
-                  <i
-                    className={
-                      "fas fa-tv mr-2 text-sm " +
-                      (window.location.href.indexOf("/admin/dashboard") !== -1
-                        ? "opacity-75"
-                        : "text-blueGray-300")
-                    }
-                  ></i>{" "}
-                  Főmenü
-                </Link>
-              </li>
-
-              <li className="items-center">
-                <Link
-                  className={
-                    "text-xs uppercase py-3 font-bold block " +
-                    (window.location.href.indexOf("/admin/settings") !== -1
-                      ? "text-lightBlue-500 hover:text-lightBlue-600"
-                      : "text-blueGray-700 hover:text-blueGray-500")
-                  }
-                  to="/admin/settings"
-                >
-                  <i
-                    className={
-                      "fas fa-user mr-2 text-sm " +
-                      (window.location.href.indexOf("/admin/settings") !== -1
-                        ? "opacity-75"
-                        : "text-blueGray-300")
-                    }
-                  ></i>{" "}
-                  Saját adatok
-                </Link>
-              </li>
+        {/* Main Navigation */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4">
+            {/* Personal Data Section */}
+            <SectionHeader>Saját adatok</SectionHeader>
+            <ul className="space-y-1">
+              <NavItem
+                to="/admin/dashboard"
+                icon={RiDashboardLine}
+                text="Főmenü"
+              />
+              <NavItem
+                to="/admin/settings"
+                icon={FiSettings}
+                text="Saját adatok"
+              />
             </ul>
 
-            {/* Divider */}
-            <hr className="my-4 md:min-w-full" />
-            {/* Heading */}
-            <h6 className="md:min-w-full text-blueGray-500 text-xs uppercase font-bold block pt-1 pb-4 no-underline">
-              Járművek
-            </h6>
-            {/* Navigation */}
-
-            <ul className="md:flex-col md:min-w-full flex flex-col list-none md:mb-4">
-              <li className="items-center">
-                <Link
-                  className={
-                    "text-xs uppercase py-3 font-bold block " +
-                    (window.location.href.indexOf("/admin/kamionok") !== -1
-                      ? "text-lightBlue-500 hover:text-lightBlue-600"
-                      : "text-blueGray-700 hover:text-blueGray-500")
-                  }
-                  to="/admin/kamionok"
-                >
-                  <i
-                    className={
-                      "fas fa-truck mr-2 text-sm " +
-                      (window.location.href.indexOf("/admin/kamionok") !== -1
-                        ? "opacity-75"
-                        : "text-blueGray-300")
-                    }
-                  ></i>{" "}
-                  Kamionok
-                </Link>
-              </li>
-              <li className="items-center">
-                <Link
-                  className={
-                    "text-xs uppercase py-3 font-bold block " +
-                    (window.location.href.indexOf("/admin/potkocsi") !== -1
-                      ? "text-lightBlue-500 hover:text-lightBlue-600"
-                      : "text-blueGray-700 hover:text-blueGray-500")
-                  }
-                  to="/admin/potkocsi"
-                >
-                  <i
-                    className={
-                      "fas fa-trailer mr-2 text-sm " +
-                      (window.location.href.indexOf("/admin/potkocsi") !== -1
-                        ? "opacity-75"
-                        : "text-blueGray-300")
-                    }
-                  ></i>{" "}
-                  Pótkocsik
-                </Link>
-              </li>
+            <SectionHeader>Járművek</SectionHeader>
+            <ul className="space-y-1">
+              <NavItem to="/admin/kamionok" icon={FiTruck} text="Kamionok" />
+              <NavItem to="/admin/potkocsi" icon={FaTrailer} text="Pótkocsik" />
             </ul>
 
-            {/* Divider */}
-            <hr className="my-4 md:min-w-full" />
-            {/* Heading */}
-            <h6 className="md:min-w-full text-blueGray-500 text-xs uppercase font-bold block pt-1 pb-4 no-underline">
-              Alkalmazottak
-            </h6>
-            {/* Navigation */}
-
-            <ul className="md:flex-col md:min-w-full flex flex-col list-none md:mb-4">
-              <li className="items-center">
-                <Link
-                  className={
-                    "text-xs uppercase py-3 font-bold block " +
-                    (window.location.href.indexOf("/admin/soforok") !== -1
-                      ? "text-lightBlue-500 hover:text-lightBlue-600"
-                      : "text-blueGray-700 hover:text-blueGray-500")
-                  }
-                  to="/admin/soforok"
-                >
-                  <i
-                    className={
-                      "fas fa-users mr-2 text-sm " +
-                      (window.location.href.indexOf("/admin/soforok") !== -1
-                        ? "opacity-75"
-                        : "text-blueGray-300")
-                    }
-                  ></i>{" "}
-                  Sofőrök
-                </Link>
-              </li>
-            </ul>
-            <ul className="md:flex-col md:min-w-full flex flex-col list-none md:mb-4">
-              <li className="items-center">
-                <Link
-                  className={
-                    "text-xs uppercase py-3 font-bold block " +
-                    (window.location.href.indexOf("/admin/bejelenetesek") !== -1
-                      ? "text-lightBlue-500 hover:text-lightBlue-600"
-                      : "text-blueGray-700 hover:text-blueGray-500")
-                  }
-                  to="/admin/bejelentesek"
-                >
-                  <i
-                    className={
-                      "fas fa-comments mr-2 text-sm " +
-                      (window.location.href.indexOf("/admin/bejelentesek") !==
-                      -1
-                        ? "opacity-75"
-                        : "text-blueGray-300")
-                    }
-                  ></i>{" "}
-                  Bejelentések
-                </Link>
-              </li>
+            <SectionHeader>Alkalmazottak</SectionHeader>
+            <ul className="space-y-1">
+              <NavItem to="/admin/soforok" icon={FiUsers} text="Sofőrök" />
+              <NavItem
+                to="/admin/bejelentesek"
+                icon={FaComments}
+                text="Bejelentések"
+              />
             </ul>
 
-            {/* Divider */}
-            <hr className="my-4 md:min-w-full" />
-            {/* Heading */}
-            <h6 className="md:min-w-full text-blueGray-500 text-xs uppercase font-bold block pt-1 pb-4 no-underline">
-              Egyéb
-            </h6>
-            {/* Navigation */}
-            <ul className="md:flex-col md:min-w-full flex flex-col list-none md:mb-4">
-              <li className="items-center">
-                <Link
-                  className={
-                    "text-xs uppercase py-3 font-bold block " +
-                    (window.location.href.indexOf("/admin/fajlok") !== -1
-                      ? "text-lightBlue-500 hover:text-lightBlue-600"
-                      : "text-blueGray-700 hover:text-blueGray-500")
-                  }
-                  to="/admin/fajlok"
-                >
-                  <i
-                    className={
-                      "fas fa-file mr-2 text-sm " +
-                      (window.location.href.indexOf("/admin/fajlok") !== -1
-                        ? "opacity-75"
-                        : "text-blueGray-300")
-                    }
-                  ></i>{" "}
-                  Fájlok
-                </Link>
-              </li>
-              <li className="items-center">
-                <Link
-                  className={
-                    "text-xs uppercase py-3 font-bold block " +
-                    (window.location.href.indexOf("/admin/esemenyek") !== -1
-                      ? "text-lightBlue-500 hover:text-lightBlue-600"
-                      : "text-blueGray-700 hover:text-blueGray-500")
-                  }
-                  to="/admin/esemenyek"
-                >
-                  <i
-                    className={
-                      "fas fa-calendar mr-2 text-sm " +
-                      (window.location.href.indexOf("/admin/esemenyek") !== -1
-                        ? "opacity-75"
-                        : "text-blueGray-300")
-                    }
-                  ></i>{" "}
-                  Események
-                </Link>
-              </li>
+            <SectionHeader>Egyéb</SectionHeader>
+            <ul className="space-y-1">
+              <NavItem to="/admin/fajlok" icon={FiFile} text="Fájlok" />
+              <NavItem
+                to="/admin/esemenyek"
+                icon={FiCalendar}
+                text="Események"
+              />
             </ul>
-          </div>
-          <div className="mt-auto">
-            <button
-              onClick={handleLogout}
-              className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg"
-            >
-              Kijelentkezés
-            </button>
           </div>
         </div>
+
+        {/* Logout Button */}
+        <div className="p-4 border-t border-gray-100">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center py-2 px-4 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg font-medium transition-colors"
+          >
+            <FiLogOut className="mr-2" />
+            Kijelentkezés
+          </button>
+        </div>
       </nav>
+
+      {/* Mobile Menu Button */}
+      <button
+        className="fixed bottom-4 left-4 bg-blue-600 text-white p-3 rounded-full shadow-lg z-20 md:hidden"
+        onClick={() => setIsMobileOpen(true)}
+      >
+        <i className="fas fa-bars"></i>
+      </button>
     </>
   );
 }

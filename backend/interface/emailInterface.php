@@ -9,23 +9,37 @@ class EmailInterface {
     }
 
     public function sendAjanlatkeres(string $name, string $email, string $phone, string $message) {
-        // E-mail küldés logikája ajánlatkéréshez
         $subject = "Új ajánlatkérés érkezett: $name";
-        $body = "Név: $name\n";
-        $body .= "E-mail: $email\n";
-        $body .= "Telefonszám: $phone\n";
-        $body .= "Üzenet:\n$message";
 
-        return $this->sendEmail($email, 'sziago12@gmail.com', $subject, $body);
+        $body = '
+            <div style="font-family:sans-serif;">
+                <div style="background-color:#2563eb; color:white; padding:12px; border-radius:6px; display:inline-block; margin-bottom:16px;">
+                    <h2>Ajánlatkérés</h2>
+                </div>
+                <p><strong>Név:</strong> ' . htmlspecialchars($name) . '</p>
+                <p><strong>E-mail:</strong> ' . htmlspecialchars($email) . '</p>
+                <p><strong>Telefonszám:</strong> ' . htmlspecialchars($phone) . '</p>
+                <p><strong>Üzenet:</strong><br>' . nl2br(htmlspecialchars($message)) . '</p>
+            </div>
+        ';
+
+        return $this->sendEmail($email, 'szikoratransz@gmail.com', $subject, $body);
     }
 
     public function sendJelentkezes(string $name, string $email, string $phone, string $message) {
-        // E-mail küldés logikája jelentkezéshez
         $subject = "Új jelentkezés: $name";
-        $body = "Név: $name\n";
-        $body .= "E-mail: $email\n";
-        $body .= "Telefonszám: $phone\n";
-        $body .= "Üzenet:\n$message";
+
+        $body = '
+            <div style="font-family:sans-serif;">
+                <div style="background-color:#f97316; color:white; padding:12px; border-radius:6px; display:inline-block; margin-bottom:16px;"> 
+                    <h2>Sofőr jelentkezés</h2>
+                </div>
+                <p><strong>Név:</strong> ' . htmlspecialchars($name) . '</p>
+                <p><strong>E-mail:</strong> ' . htmlspecialchars($email) . '</p>
+                <p><strong>Telefonszám:</strong> ' . htmlspecialchars($phone) . '</p>
+                <p><strong>Üzenet:</strong><br>' . nl2br(htmlspecialchars($message)) . '</p>
+            </div>
+        ';
 
         return $this->sendEmail($email, 'szikoratransz@gmail.com', $subject, $body);
     }
@@ -33,10 +47,10 @@ class EmailInterface {
     protected function sendEmail(string $from, string $to, string $subject, string $body) {
         // Alap e-mail küldési logika
         $headers = [
-            'From' => $from,
+            'From' => "agoston@ps.hu",
             'Reply-To' => $from,
             'X-Mailer' => 'PHP/' . phpversion(),
-            'Content-Type' => 'text/plain; charset=utf-8'
+            'Content-Type' => 'text/html; charset=utf-8'
         ];
 
         $headerString = '';

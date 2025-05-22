@@ -2,38 +2,36 @@ import React from "react";
 import PropTypes from "prop-types";
 import { useHistory } from "react-router-dom";
 
-// components
+// Utils
 import { fetchAction } from "utils/fetchAction";
 
-export default function CardTable({ kamionok }) {
-  const history = useHistory(); // Hook a history-hoz
+// Icons
+import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
+
+const CardTable = ({ kamionok }) => {
+  const history = useHistory();
 
   const handleNewKamion = () => {
-    // Navigálj az admin/kamionForm oldalra üres adatokkal
     history.push("/admin/kamionForm", { data: {} });
   };
 
   const handleEditClick = (kamion) => {
-    // Navigáció az új sofőr űrlapjára
     history.push("/admin/kamionForm", { data: kamion });
   };
+
   const handleDelete = async (id) => {
     const confirmDelete = window.confirm(
       "Biztosan törölni szeretnéd a kamiont?"
     );
-    if (!confirmDelete) {
-      return; // Ha nem erősíti meg, kilépünk a függvényből
-    }
+    if (!confirmDelete) return;
 
     try {
-      // API hívás törléshez
       const result = await fetchAction("deleteKamion", { id });
 
-      if (result && result.success) {
+      if (result?.success) {
+        // Refresh the page after deletion
         history.push("/admin");
-        setTimeout(() => {
-          history.replace("/admin/kamionok"); // Adjust this to your actual route
-        }, 0);
+        setTimeout(() => history.replace("/admin/kamionok"), 0);
         alert("A kamion sikeresen törölve.");
       } else {
         alert(result?.message || "Hiba történt a törlés során.");
@@ -43,92 +41,138 @@ export default function CardTable({ kamionok }) {
       alert("Hiba történt a törlés során.");
     }
   };
+
   return (
-    <>
-      <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded bg-white">
-        <div className="rounded-t mb-0 px-4 py-3 border-0">
-          <div className="flex flex-wrap items-center">
-            <div className="relative w-full px-4 max-w-full flex-grow flex-1">
-              <div className="text-center flex justify-between">
-                <h3 className="font-semibold text-lg text-blueGray-700">
-                  Kamionok
-                </h3>
-                <button
-                  className="bg-lightBlue-500 text-white active:bg-lightBlue-600 font-bold uppercase text-xs px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none mr-1 ease-linear transition-all duration-150"
-                  type="button"
-                  onClick={handleNewKamion}
-                >
-                  Új
-                </button>
-              </div>
+    <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-white overflow-hidden">
+      {/* Table Header */}
+      <div className="rounded-t-lg mb-0 px-6 py-4 border-0 bg-gradient-to-r from-blue-500 to-blue-700">
+        <div className="flex flex-wrap items-center">
+          <div className="relative w-full max-w-full flex-grow flex-1">
+            <div className="flex justify-between items-center">
+              <h3 className="font-semibold text-xl text-white">Kamionok</h3>
+              <button
+                className="bg-white text-blue-600 hover:bg-blue-50 active:bg-blue-100 font-bold uppercase text-sm px-4 py-2 rounded-lg shadow hover:shadow-md outline-none focus:outline-none ease-linear transition-all duration-150 flex items-center"
+                type="button"
+                onClick={handleNewKamion}
+              >
+                <FaPlus className="mr-2" /> Új
+              </button>
             </div>
           </div>
         </div>
-        <div className="block w-full overflow-x-auto">
-          {/* Projects table */}
-          <table className="items-center w-full bg-transparent border-collapse">
-            <thead>
-              <tr>
-                <th className="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left bg-blueGray-50 text-blueGray-500 border-blueGray-100">
-                  Rendszám
-                </th>
-                <th className="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left bg-blueGray-50 text-blueGray-500 border-blueGray-100">
-                  Típus
-                </th>
-                <th className="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left bg-blueGray-50 text-blueGray-500 border-blueGray-100">
-                  Méret
-                </th>
-                <th className="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left bg-blueGray-50 text-blueGray-500 border-blueGray-100">
-                  Pótkocsi
-                </th>
-                <th className="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-right bg-blueGray-50 text-blueGray-500 border-blueGray-100">
-                  Műveletek
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {kamionok.map((kamion, index) => (
-                <tr key={index}>
-                  <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-                    {kamion.rendszam}
-                  </td>
-                  <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-                    {kamion.tipus || "Nincs"}
-                  </td>
-                  <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-                    {kamion.meret || "Nincs"}
-                  </td>
-                  <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-                    {kamion.potkocsi || "Nincs"}
-                  </td>
-                  <td className="border-t-0 px-6 border-l-0 border-r-0 whitespace-nowrap p-4 align-middle flex justify-end">
-                    <i
-                      className="fa-solid fa-file-pen cursor-pointer text-blue-500 hover:text-blue-700 transition transform hover:scale-110 mr-4"
-                      onClick={() => handleEditClick(kamion)}
-                      title="Megnyitás"
-                    ></i>
-                    <i
-                      className="fa-solid fa-trash-can cursor-pointer text-red-500 hover:text-red-700 transition transform hover:scale-110"
-                      onClick={() => handleDelete(kamion.id)}
-                      title="Törlés"
-                    ></i>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       </div>
-    </>
-  );
-}
 
+      {/* Table Content */}
+      <div className="block w-full overflow-x-auto">
+        <table className="items-center w-full bg-transparent border-collapse">
+          <thead className="bg-blueGray-50">
+            <tr>
+              <TableHeader>Rendszám</TableHeader>
+              <TableHeader>Típus</TableHeader>
+              <TableHeader>Méret</TableHeader>
+              <TableHeader>Pótkocsi</TableHeader>
+              <TableHeader align="right">Műveletek</TableHeader>
+            </tr>
+          </thead>
+          <tbody>
+            {kamionok.length > 0 ? (
+              kamionok.map((kamion, index) => (
+                <TableRow key={index} index={index}>
+                  <TableCell>{kamion.rendszam}</TableCell>
+                  <TableCell>{kamion.tipus || "Nincs"}</TableCell>
+                  <TableCell>{kamion.meret || "Nincs"}</TableCell>
+                  <TableCell>{kamion.potkocsi || "Nincs"}</TableCell>
+                  <TableCell align="right">
+                    <div className="flex justify-end space-x-4">
+                      <ActionIcon
+                        icon={<FaEdit />}
+                        color="text-blue-500 hover:text-blue-700"
+                        onClick={() => handleEditClick(kamion)}
+                        title="Szerkesztés"
+                      />
+                      <ActionIcon
+                        icon={<FaTrash />}
+                        color="text-red-500 hover:text-red-700"
+                        onClick={() => handleDelete(kamion.id)}
+                        title="Törlés"
+                      />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={5}
+                  align="center"
+                  className="py-8 text-gray-500"
+                >
+                  Nincsenek kamionok megjelenítve
+                </TableCell>
+              </TableRow>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+// Reusable sub-components
+const TableHeader = ({ children, align = "left" }) => (
+  <th
+    className={`px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-${align} bg-blueGray-50 text-blueGray-500 border-blueGray-100`}
+  >
+    {children}
+  </th>
+);
+
+const TableRow = ({ children, index }) => (
+  <tr className={index % 2 === 0 ? "bg-white" : "bg-blueGray-50"}>
+    {children}
+  </tr>
+);
+
+const TableCell = ({ children, align = "left", colSpan, className = "" }) => {
+  const baseClasses =
+    "border-t-0 px-6 align-middle border-l-0 border-r-0 text-sm whitespace-nowrap p-4";
+  const alignmentClass = `text-${align}`;
+
+  return (
+    <td
+      className={`${baseClasses} ${alignmentClass} ${className}`}
+      colSpan={colSpan}
+    >
+      {children}
+    </td>
+  );
+};
+
+const ActionIcon = ({ icon, color, onClick, title }) => (
+  <span
+    className={`cursor-pointer ${color} transition transform hover:scale-125`}
+    onClick={onClick}
+    title={title}
+  >
+    {icon}
+  </span>
+);
+
+// Prop types validation
 CardTable.propTypes = {
   kamionok: PropTypes.arrayOf(
     PropTypes.shape({
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
       rendszam: PropTypes.string.isRequired,
-      sofor: PropTypes.string.isRequired,
+      tipus: PropTypes.string,
+      meret: PropTypes.string,
       potkocsi: PropTypes.string,
     })
-  ),
+  ).isRequired,
 };
+
+CardTable.defaultProps = {
+  kamionok: [],
+};
+
+export default CardTable;

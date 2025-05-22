@@ -1,12 +1,9 @@
 import React from "react";
 import { Switch, Route, Redirect } from "react-router-dom";
-
-// components
-import AdminNavbar from "components/Navbars/AdminNavbar.js";
 import Sidebar from "components/Sidebar/Sidebar.js";
 import FooterAdmin from "components/Footers/FooterAdmin.js";
 
-// views
+// Import views
 import Dashboard from "views/admin/Dashboard.js";
 import Settings from "views/admin/Settings.js";
 import Kamionok from "views/admin/Kamionok.js";
@@ -17,14 +14,12 @@ import Esemenyek from "views/admin/Esemenyek.js";
 import KamionForm from "views/admin/KamionForm.js";
 import PotkocsiForm from "views/admin/PotkocsiForm.js";
 import SoforForm from "views/admin/SoforForm.js";
-import LoginPage from "views/auth/Login.js"; // Importáld a bejelentkező oldalt
+import LoginPage from "views/auth/Login.js";
 import Bejelentesek from "views/admin/Bejelentesek";
 import BejelentesekForm from "views/admin/BejelentesekForm";
 
-// PrivateRoute komponens létrehozása
 const PrivateRoute = ({ component: Component, ...rest }) => {
   const isAuthenticated = sessionStorage.getItem("user") !== null;
-
   return (
     <Route
       {...rest}
@@ -39,9 +34,9 @@ export default function Admin() {
   return (
     <>
       <Sidebar />
-      <div className="relative md:ml-64">
-        <AdminNavbar />
-        <div className="px-4 md:px-10 mx-auto w-full -m-24">
+      <div className="relative md:ml-64 bg-gray-50 min-h-screen">
+        {/* Main Content */}
+        <div className="px-4 md:px-8 mx-auto w-full py-6">
           <Switch>
             <PrivateRoute path="/admin/dashboard" exact component={Dashboard} />
             <PrivateRoute path="/admin/settings" exact component={Settings} />
@@ -71,8 +66,7 @@ export default function Admin() {
               exact
               component={BejelentesekForm}
             />
-            <Route path="/login" exact component={LoginPage} />{" "}
-            {/* Bejelentkező oldal */}
+            <Route path="/login" exact component={LoginPage} />
             <Redirect from="/admin" to="/admin/dashboard" />
           </Switch>
         </div>
