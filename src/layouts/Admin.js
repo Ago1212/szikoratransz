@@ -8,6 +8,7 @@ import Dashboard from "views/admin/Dashboard.js";
 import Settings from "views/admin/Settings.js";
 import Kamionok from "views/admin/Kamionok.js";
 import Potkocsi from "views/admin/Potkocsi.js";
+import Karbantartasok from "views/admin/Karbantartasok.js";
 import Soforok from "views/admin/Soforok.js";
 import Fajlok from "views/admin/Fajlok.js";
 import Esemenyek from "views/admin/Esemenyek.js";
@@ -51,6 +52,11 @@ export default function Admin() {
               path="/admin/potkocsiForm"
               exact
               component={PotkocsiForm}
+            />
+            <PrivateRoute
+              path="/admin/karbantartasok"
+              exact
+              component={Karbantartasok}
             />
             <PrivateRoute path="/admin/soforok" exact component={Soforok} />
             <PrivateRoute path="/admin/soforForm" exact component={SoforForm} />

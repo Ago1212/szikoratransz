@@ -46,36 +46,12 @@ export default function CardSettings() {
     }
   };
 
-  const InputField = ({
-    icon: Icon,
-    label,
-    name,
-    type = "text",
-    value,
-    ...props
-  }) => (
-    <div className="relative w-full mb-4">
-      <label className=" uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
-        <Icon className="mr-2 text-blue-500" />
-        {label}
-      </label>
-      <input
-        type={type}
-        name={name}
-        value={value || ""}
-        onChange={handleInputChange}
-        className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
-        {...props}
-      />
-    </div>
-  );
-
   return (
     <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-xl rounded-lg bg-white border-0">
       {/* Header */}
       <div className="rounded-t-lg bg-blue-600 mb-0 px-6 py-4">
-        <div className="text-center flex justify-between items-center">
-          <h6 className="text-white text-xl font-bold">
+        <div className="flex justify-between items-center">
+          <h6 className="text-white text-xl font-bold flex items-center">
             <FaUser className="inline mr-2" />
             Saját adatok
           </h6>
@@ -126,47 +102,79 @@ export default function CardSettings() {
           </h6>
           <div className="flex flex-wrap -mx-2">
             <div className="w-full lg:w-6/12 px-2">
-              <InputField
-                icon={FaUser}
-                label="Név"
-                name="name"
-                value={userData.name}
-              />
+              <div className="relative w-full mb-4">
+                <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+                  <FaUser className="mr-2 text-blue-500" />
+                  Név
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={userData.name || ""}
+                  onChange={handleInputChange}
+                  className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+                />
+              </div>
             </div>
             <div className="w-full lg:w-6/12 px-2">
-              <InputField
-                icon={FaEnvelope}
-                label="Email cím"
-                name="email"
-                type="email"
-                value={userData.email}
-              />
+              <div className="relative w-full mb-4">
+                <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+                  <FaEnvelope className="mr-2 text-blue-500" />
+                  Email cím
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={userData.email || ""}
+                  onChange={handleInputChange}
+                  className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+                />
+              </div>
             </div>
             <div className="w-full lg:w-4/12 px-2">
-              <InputField
-                icon={FaPhone}
-                label="Telefonszám"
-                name="phone"
-                type="tel"
-                value={userData.phone}
-              />
+              <div className="relative w-full mb-4">
+                <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+                  <FaPhone className="mr-2 text-blue-500" />
+                  Telefonszám
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={userData.phone || ""}
+                  onChange={handleInputChange}
+                  className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+                />
+              </div>
             </div>
             <div className="w-full lg:w-4/12 px-2">
-              <InputField
-                icon={FaBirthdayCake}
-                label="Születési dátum"
-                name="szul_datum"
-                type="date"
-                value={userData.szul_datum}
-              />
+              <div className="relative w-full mb-4">
+                <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+                  <FaBirthdayCake className="mr-2 text-blue-500" />
+                  Születési dátum
+                </label>
+                <input
+                  type="date"
+                  name="szul_datum"
+                  value={userData.szul_datum || ""}
+                  onChange={handleInputChange}
+                  className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+                />
+              </div>
             </div>
             <div className="w-full lg:w-4/12 px-2">
-              <InputField
-                icon={FaIdCard}
-                label="Személyigazolvány szám"
-                name="szemelyi"
-                value={userData.szemelyi}
-              />
+              <div className="relative w-full mb-4">
+                <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+                  <FaIdCard className="mr-2 text-blue-500" />
+                  Személyigazolvány szám
+                </label>
+                <input
+                  type="text"
+                  name="szemelyi"
+                  value={userData.szemelyi || ""}
+                  onChange={handleInputChange}
+                  className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -180,28 +188,49 @@ export default function CardSettings() {
           </h6>
           <div className="flex flex-wrap -mx-2">
             <div className="w-full lg:w-4/12 px-2">
-              <InputField
-                icon={FaCity}
-                label="Város"
-                name="varos"
-                value={userData.varos}
-              />
+              <div className="relative w-full mb-4">
+                <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+                  <FaCity className="mr-2 text-blue-500" />
+                  Város
+                </label>
+                <input
+                  type="text"
+                  name="varos"
+                  value={userData.varos || ""}
+                  onChange={handleInputChange}
+                  className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+                />
+              </div>
             </div>
             <div className="w-full lg:w-4/12 px-2">
-              <InputField
-                icon={FaFileAlt}
-                label="IRSZ"
-                name="irsz"
-                value={userData.irsz}
-              />
+              <div className="relative w-full mb-4">
+                <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+                  <FaFileAlt className="mr-2 text-blue-500" />
+                  IRSZ
+                </label>
+                <input
+                  type="text"
+                  name="irsz"
+                  value={userData.irsz || ""}
+                  onChange={handleInputChange}
+                  className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+                />
+              </div>
             </div>
             <div className="w-full lg:w-4/12 px-2">
-              <InputField
-                icon={FaHome}
-                label="Cím"
-                name="cim"
-                value={userData.cim}
-              />
+              <div className="relative w-full mb-4">
+                <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+                  <FaHome className="mr-2 text-blue-500" />
+                  Cím
+                </label>
+                <input
+                  type="text"
+                  name="cim"
+                  value={userData.cim || ""}
+                  onChange={handleInputChange}
+                  className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -215,40 +244,64 @@ export default function CardSettings() {
           </h6>
           <div className="flex flex-wrap -mx-2">
             <div className="w-full lg:w-3/12 px-2">
-              <InputField
-                icon={FaIdCard}
-                label="Személyigazolvány lejárat"
-                name="szemelyi_lejarat"
-                type="date"
-                value={userData.szemelyi_lejarat}
-              />
+              <div className="relative w-full mb-4">
+                <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+                  <FaIdCard className="mr-2 text-blue-500" />
+                  Személyigazolvány lejárat
+                </label>
+                <input
+                  type="date"
+                  name="szemelyi_lejarat"
+                  value={userData.szemelyi_lejarat || ""}
+                  onChange={handleInputChange}
+                  className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+                />
+              </div>
             </div>
             <div className="w-full lg:w-3/12 px-2">
-              <InputField
-                icon={FaCar}
-                label="Jogosítvány lejárat"
-                name="jogsi_lejarat"
-                type="date"
-                value={userData.jogsi_lejarat}
-              />
+              <div className="relative w-full mb-4">
+                <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+                  <FaCar className="mr-2 text-blue-500" />
+                  Jogosítvány lejárat
+                </label>
+                <input
+                  type="date"
+                  name="jogsi_lejarat"
+                  value={userData.jogsi_lejarat || ""}
+                  onChange={handleInputChange}
+                  className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+                />
+              </div>
             </div>
             <div className="w-full lg:w-3/12 px-2">
-              <InputField
-                icon={FaShieldAlt}
-                label="GKI lejárat"
-                name="gki_lejarat"
-                type="date"
-                value={userData.gki_lejarat}
-              />
+              <div className="relative w-full mb-4">
+                <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+                  <FaShieldAlt className="mr-2 text-blue-500" />
+                  GKI lejárat
+                </label>
+                <input
+                  type="date"
+                  name="gki_lejarat"
+                  value={userData.gki_lejarat || ""}
+                  onChange={handleInputChange}
+                  className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+                />
+              </div>
             </div>
             <div className="w-full lg:w-3/12 px-2">
-              <InputField
-                icon={FaTruck}
-                label="ADR lejárat"
-                name="adr_lejarat"
-                type="date"
-                value={userData.adr_lejarat}
-              />
+              <div className="relative w-full mb-4">
+                <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+                  <FaTruck className="mr-2 text-blue-500" />
+                  ADR lejárat
+                </label>
+                <input
+                  type="date"
+                  name="adr_lejarat"
+                  value={userData.adr_lejarat || ""}
+                  onChange={handleInputChange}
+                  className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+                />
+              </div>
             </div>
           </div>
         </div>

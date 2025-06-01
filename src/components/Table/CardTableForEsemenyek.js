@@ -121,6 +121,16 @@ const CardTableForEsemenyek = ({ id }) => {
     });
   };
 
+  const TableRow = ({ children, index, onDoubleClick }) => (
+    <tr
+      className={index % 2 === 0 ? "bg-white" : "bg-blueGray-50"}
+      onDoubleClick={onDoubleClick}
+      style={{ cursor: onDoubleClick ? "pointer" : "default" }}
+    >
+      {children}
+    </tr>
+  );
+
   return (
     <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-white overflow-hidden">
       {/* Table Header */}
@@ -153,7 +163,11 @@ const CardTableForEsemenyek = ({ id }) => {
           <tbody>
             {esemenyek.length > 0 ? (
               esemenyek.map((esemeny, index) => (
-                <TableRow key={index} index={index}>
+                <TableRow
+                  key={index}
+                  index={index}
+                  onDoubleClick={() => openEditDialog(esemeny)}
+                >
                   <TableCell align="center">
                     <div className="flex justify-center space-x-4">
                       <ActionButton

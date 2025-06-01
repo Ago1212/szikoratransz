@@ -42,6 +42,16 @@ const CardTable = ({ kamionok }) => {
     }
   };
 
+  const TableRow = ({ children, index, onDoubleClick }) => (
+    <tr
+      className={index % 2 === 0 ? "bg-white" : "bg-blueGray-50"}
+      onDoubleClick={onDoubleClick}
+      style={{ cursor: onDoubleClick ? "pointer" : "default" }}
+    >
+      {children}
+    </tr>
+  );
+
   return (
     <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-white overflow-hidden">
       {/* Table Header */}
@@ -77,7 +87,11 @@ const CardTable = ({ kamionok }) => {
           <tbody>
             {kamionok.length > 0 ? (
               kamionok.map((kamion, index) => (
-                <TableRow key={index} index={index}>
+                <TableRow
+                  key={index}
+                  index={index}
+                  onDoubleClick={() => handleEditClick(kamion)}
+                >
                   <TableCell>{kamion.rendszam}</TableCell>
                   <TableCell>{kamion.tipus || "Nincs"}</TableCell>
                   <TableCell>{kamion.meret || "Nincs"}</TableCell>

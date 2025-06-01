@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useHistory } from "react-router-dom";
 
 // components
 import CardStats from "components/Cards/CardStats";
@@ -13,8 +14,13 @@ const StatCard = ({
   trend,
   percentage,
   trendColor,
+  onClick,
 }) => (
-  <div className="w-full lg:w-6/12 xl:w-3/12 px-4 mb-4 lg:mb-0">
+  <div
+    className="w-full lg:w-6/12 xl:w-3/12 px-4 mb-4 lg:mb-0 cursor-pointer"
+    onClick={onClick}
+    onDoubleClick={onClick}
+  >
     <CardStats
       statSubtitle={title}
       statTitle={value.toString()}
@@ -29,6 +35,7 @@ const StatCard = ({
 );
 
 export default function Dashboard() {
+  const history = useHistory();
   const [stats, setStats] = useState({
     soforok: 0,
     kamionok: 0,
@@ -64,6 +71,10 @@ export default function Dashboard() {
 
     fetchData();
   }, []);
+
+  const navigateTo = (path) => {
+    history.push(path);
+  };
 
   if (loading) {
     return (
@@ -110,6 +121,7 @@ export default function Dashboard() {
           trend="up"
           percentage="3.48"
           trendColor="text-emerald-500"
+          onClick={() => navigateTo("/admin/soforok")}
         />
 
         <StatCard
@@ -120,6 +132,7 @@ export default function Dashboard() {
           trend="up"
           percentage="2.59"
           trendColor="text-emerald-500"
+          onClick={() => navigateTo("/admin/kamionok")}
         />
 
         <StatCard
@@ -130,6 +143,7 @@ export default function Dashboard() {
           trend="down"
           percentage="1.10"
           trendColor="text-orange-500"
+          onClick={() => navigateTo("/admin/potkocsi")}
         />
 
         <StatCard
@@ -140,6 +154,7 @@ export default function Dashboard() {
           trend="same"
           percentage="0.00"
           trendColor="text-gray-500"
+          onClick={() => navigateTo("/admin/esemenyek")}
         />
       </div>
 

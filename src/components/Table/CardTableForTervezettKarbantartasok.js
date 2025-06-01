@@ -125,6 +125,16 @@ const CardTableForTervezettKarbantartasok = ({
     }
   };
 
+  const TableRow = ({ children, index, onDoubleClick }) => (
+    <tr
+      className={index % 2 === 0 ? "bg-white" : "bg-blueGray-50"}
+      onDoubleClick={onDoubleClick}
+      style={{ cursor: onDoubleClick ? "pointer" : "default" }}
+    >
+      {children}
+    </tr>
+  );
+
   useEffect(() => {
     fetchKarbantartasok();
   }, [kamion_id, refresh]);
@@ -157,7 +167,11 @@ const CardTableForTervezettKarbantartasok = ({
           <tbody>
             {karbantartasok.length > 0 ? (
               karbantartasok.map((karbantartas, index) => (
-                <TableRow key={karbantartas.id} index={index}>
+                <TableRow
+                  key={karbantartas.id}
+                  index={index}
+                  onDoubleClick={() => handleEditClick(karbantartas)}
+                >
                   <TableCell align="center">
                     <div className="flex justify-center space-x-4">
                       <ActionButton

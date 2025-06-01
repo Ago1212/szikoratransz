@@ -57,11 +57,16 @@ export default function CustomCalendar() {
       const user = JSON.parse(sessionStorage.getItem("user"));
       const result = await fetchAction("getEsemenyek", { id: user.id });
       if (result.success) {
-        const formattedEvents = result.data.map((event) => ({
-          ...event,
-          start: new Date(event.start),
-          end: new Date(event.end),
-        }));
+        const formattedEvents = result.data
+          .filter(
+            (event) =>
+              event.start !== "0000-00-00" && event.end !== "0000-00-00"
+          ) // Szűrés érvénytelen dátumokra
+          .map((event) => ({
+            ...event,
+            start: new Date(event.start),
+            end: new Date(event.end),
+          }));
         setEvents(formattedEvents || []);
       } else {
         console.error("Hiba az események lekérésekor:", result.message);

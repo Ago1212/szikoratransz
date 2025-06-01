@@ -293,10 +293,8 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
       </div>
     </div>
   );
-
   return (
     <div className="relative flex flex-col min-w-0 break-words w-full mb-6 rounded-lg bg-white border-0">
-      {/* Form Content */}
       <form onSubmit={handleSubmit} className="flex-auto px-4 lg:px-10 py-10">
         {/* Main Data Section */}
         <div className="mb-8">
@@ -306,45 +304,73 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
           </h6>
           <div className="flex flex-wrap -mx-2">
             <div className="w-full lg:w-4/12 px-2">
-              <InputField
-                icon={FaIdCard}
-                label="Rendszám"
-                name="rendszam"
-                value={kamion.rendszam}
-                required
-              />
+              <div className="relative w-full mb-4">
+                <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+                  <FaIdCard className="mr-2 text-blue-500" />
+                  Rendszám
+                  <span className="text-red-500 ml-1">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="rendszam"
+                  value={kamion.rendszam}
+                  onChange={handleFormChange}
+                  className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+                  required
+                />
+              </div>
             </div>
             <div className="w-full lg:w-4/12 px-2">
-              <InputField
-                icon={FaTruck}
-                label="Típus"
-                name="tipus"
-                value={kamion.tipus || ""}
-                placeholder="Jármű típusa"
-              />
+              <div className="relative w-full mb-4">
+                <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+                  <FaTruck className="mr-2 text-blue-500" />
+                  Típus
+                </label>
+                <input
+                  type="text"
+                  id="tipus"
+                  value={kamion.tipus || ""}
+                  onChange={handleFormChange}
+                  className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+                  placeholder="Jármű típusa"
+                />
+              </div>
             </div>
             <div className="w-full lg:w-4/12 px-2">
-              <SelectField
-                icon={FaRuler}
-                label="Méret"
-                name="meret"
-                value={kamion.meret || ""}
-              >
-                <option value="">Válassz...</option>
-                <option value="3.5T">3.5T</option>
-                <option value="7.5T">7.5T</option>
-                <option value="12T">12T</option>
-                <option value="18T">18T</option>
-                <option value="24T">24T</option>
-              </SelectField>
+              <div className="relative w-full mb-4">
+                <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+                  <FaRuler className="mr-2 text-blue-500" />
+                  Méret
+                </label>
+                <select
+                  className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+                  value={kamion.meret || ""}
+                  id="meret"
+                  onChange={handleFormChange}
+                >
+                  <option value="">Válassz...</option>
+                  <option value="3.5T">3.5T</option>
+                  <option value="7.5T">7.5T</option>
+                  <option value="12T">12T</option>
+                  <option value="18T">18T</option>
+                  <option value="24T">24T</option>
+                </select>
+              </div>
             </div>
             <div className="w-full lg:w-4/12 px-2">
-              <InputField
-                icon={FaTrailer}
-                label="Pótkocsi"
-                name="potkocsi"
-                value={kamion.potkocsi}
-              />
+              <div className="relative w-full mb-4">
+                <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+                  <FaTrailer className="mr-2 text-blue-500" />
+                  Pótkocsi
+                </label>
+                <input
+                  type="text"
+                  id="kamion"
+                  value={kamion.kamion}
+                  onChange={handleFormChange}
+                  className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -359,52 +385,94 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
           </h6>
           <div className="flex flex-wrap -mx-2">
             <div className="w-full lg:w-3/12 px-2">
-              <DateField
-                icon={FaCar}
-                label="Műszaki"
-                name="muszaki_lejarat"
-                value={kamion.muszaki_lejarat}
-              />
+              <div className="relative w-full mb-4">
+                <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+                  <FaCar className="mr-2 text-blue-500" />
+                  Műszaki
+                </label>
+                <input
+                  type="date"
+                  id="muszaki_lejarat"
+                  value={kamion.muszaki_lejarat}
+                  onChange={handleFormChange}
+                  className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+                />
+              </div>
             </div>
             <div className="w-full lg:w-3/12 px-2">
-              <DateField
-                icon={FaShieldAlt}
-                label="Adr"
-                name="adr_lejarat"
-                value={kamion.adr_lejarat}
-              />
+              <div className="relative w-full mb-4">
+                <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+                  <FaShieldAlt className="mr-2 text-blue-500" />
+                  Adr
+                </label>
+                <input
+                  type="date"
+                  id="adr_lejarat"
+                  value={kamion.adr_lejarat}
+                  onChange={handleFormChange}
+                  className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+                />
+              </div>
             </div>
             <div className="w-full lg:w-3/12 px-2">
-              <DateField
-                icon={FaIdCard}
-                label="Taográf illesztés"
-                name="taograf_illesztes"
-                value={kamion.taograf_illesztes}
-              />
+              <div className="relative w-full mb-4">
+                <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+                  <FaIdCard className="mr-2 text-blue-500" />
+                  Taográf illesztés
+                </label>
+                <input
+                  type="date"
+                  id="taograf_illesztes"
+                  value={kamion.taograf_illesztes}
+                  onChange={handleFormChange}
+                  className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+                />
+              </div>
             </div>
             <div className="w-full lg:w-3/12 px-2">
-              <DateField
-                icon={FaTruck}
-                label="Emelő hátfal"
-                name="emelohatfal_vizsga"
-                value={kamion.emelohatfal_vizsga}
-              />
+              <div className="relative w-full mb-4">
+                <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+                  <FaTruck className="mr-2 text-blue-500" />
+                  Emelő hátfal
+                </label>
+                <input
+                  type="date"
+                  id="emelohatfal_vizsga"
+                  value={kamion.emelohatfal_vizsga}
+                  onChange={handleFormChange}
+                  className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+                />
+              </div>
             </div>
             <div className="w-full lg:w-3/12 px-2">
-              <DateField
-                icon={FaFireExtinguisher}
-                label="Poroltó #1"
-                name="porolto_lejarat"
-                value={kamion.porolto_lejarat}
-              />
+              <div className="relative w-full mb-4">
+                <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+                  <FaFireExtinguisher className="mr-2 text-blue-500" />
+                  Poroltó #1
+                </label>
+                <input
+                  type="date"
+                  id="porolto_lejarat"
+                  value={kamion.porolto_lejarat}
+                  onChange={handleFormChange}
+                  className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+                />
+              </div>
             </div>
             <div className="w-full lg:w-3/12 px-2">
-              <DateField
-                icon={FaFireExtinguisher}
-                label="Poroltó #2"
-                name="porolto_lejarat_2"
-                value={kamion.porolto_lejarat_2}
-              />
+              <div className="relative w-full mb-4">
+                <label className="uppercase text-gray-600 text-xs font-bold mb-2 flex items-center">
+                  <FaFireExtinguisher className="mr-2 text-blue-500" />
+                  Poroltó #2
+                </label>
+                <input
+                  type="date"
+                  id="porolto_lejarat_2"
+                  value={kamion.porolto_lejarat_2}
+                  onChange={handleFormChange}
+                  className="border-0 px-3 py-3 placeholder-gray-300 text-gray-700 bg-white rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition duration-200"
+                />
+              </div>
             </div>
           </div>
         </div>

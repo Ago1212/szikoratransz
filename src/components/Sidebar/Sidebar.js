@@ -10,7 +10,7 @@ import {
   FiSettings,
   FiLogOut,
 } from "react-icons/fi";
-import { FaTrailer, FaComments } from "react-icons/fa";
+import { FaTrailer, FaComments, FaAccusoft, FaTools } from "react-icons/fa";
 import { RiDashboardLine } from "react-icons/ri";
 
 import NotificationDropdown from "components/Dropdowns/NotificationDropdown.js";
@@ -117,6 +117,11 @@ export default function Sidebar() {
             <ul className="space-y-1">
               <NavItem to="/admin/kamionok" icon={FiTruck} text="Kamionok" />
               <NavItem to="/admin/potkocsi" icon={FaTrailer} text="Pótkocsik" />
+              <NavItem
+                to="/admin/karbantartasok"
+                icon={FaTools}
+                text="Karbantartások"
+              />
             </ul>
 
             <SectionHeader>Alkalmazottak</SectionHeader>

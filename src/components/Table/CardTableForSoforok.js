@@ -73,6 +73,16 @@ const CardTable = ({ soforok }) => {
     }
   };
 
+  const TableRow = ({ children, index, onDoubleClick }) => (
+    <tr
+      className={index % 2 === 0 ? "bg-white" : "bg-blueGray-50"}
+      onDoubleClick={onDoubleClick}
+      style={{ cursor: onDoubleClick ? "pointer" : "default" }}
+    >
+      {children}
+    </tr>
+  );
+
   return (
     <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-white overflow-hidden">
       {/* Table Header */}
@@ -108,7 +118,11 @@ const CardTable = ({ soforok }) => {
           <tbody>
             {soforok.length > 0 ? (
               soforok.map((sofor, index) => (
-                <TableRow key={index} index={index}>
+                <TableRow
+                  key={index}
+                  index={index}
+                  onDoubleClick={() => handleEditClick(sofor)}
+                >
                   <TableCell>{sofor.name}</TableCell>
                   <TableCell>{sofor.email}</TableCell>
                   <TableCell>{sofor.phone}</TableCell>
