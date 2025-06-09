@@ -53,7 +53,7 @@ const CardTableForTervezettKarbantartasok = ({
   const fetchKarbantartasok = async () => {
     const result = await fetchAction("getKarbantartas", {
       kamion_id: kamion_id,
-      elvegzett: false,
+      kesz: false,
     });
 
     if (result?.success) {
@@ -76,7 +76,7 @@ const CardTableForTervezettKarbantartasok = ({
   const handleSetKarbantartasKesz = async (karbantartasId) => {
     const result = await fetchAction("setKarbantartasKesz", {
       id: karbantartasId,
-      elvegzett: true,
+      kesz: true,
     });
 
     if (result?.success) {
@@ -105,10 +105,12 @@ const CardTableForTervezettKarbantartasok = ({
     }
   };
 
+  const user = JSON.parse(sessionStorage.getItem("user"));
   const handleSave = async (e) => {
     e.preventDefault(); // Megakadályozzuk az alapértelmezett form küldést
 
     const dataToSave = {
+      admin: user.id,
       id: selectedKarbantartas?.id,
       datum: selectedKarbantartas?.datum,
       log: selectedKarbantartas?.log,

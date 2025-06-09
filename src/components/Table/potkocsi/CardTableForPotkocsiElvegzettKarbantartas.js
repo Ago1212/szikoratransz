@@ -54,7 +54,7 @@ const CardTableForPotkocsiElvegzettKarbantartas = ({
   const fetchKarbantartasok = async () => {
     const result = await fetchAction("getPotkocsiKarbantartas", {
       potkocsi_id: potkocsi_id,
-      elvegzett: true,
+      kesz: true,
     });
 
     if (result?.success) {
@@ -67,7 +67,7 @@ const CardTableForPotkocsiElvegzettKarbantartas = ({
   const handleSetKarbantartasKesz = async (karbantartasId) => {
     const result = await fetchAction("setPotkocsiKarbantartasKesz", {
       id: karbantartasId,
-      elvegzett: false,
+      kesz: false,
     });
 
     if (result?.success) {

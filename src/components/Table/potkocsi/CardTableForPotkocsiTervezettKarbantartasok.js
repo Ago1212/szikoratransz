@@ -53,7 +53,7 @@ const CardTableForPotkocsiTervezettKarbantartasok = ({
   const fetchKarbantartasok = async () => {
     const result = await fetchAction("getPotkocsiKarbantartas", {
       potkocsi_id: potkocsi_id,
-      elvegzett: false,
+      kesz: false,
     });
 
     if (result?.success) {
@@ -76,7 +76,7 @@ const CardTableForPotkocsiTervezettKarbantartasok = ({
   const handleSetKarbantartasKesz = async (karbantartasId) => {
     const result = await fetchAction("setPotkocsiKarbantartasKesz", {
       id: karbantartasId,
-      elvegzett: true,
+      kesz: true,
     });
 
     if (result?.success) {
@@ -105,10 +105,12 @@ const CardTableForPotkocsiTervezettKarbantartasok = ({
     }
   };
 
+  const user = JSON.parse(sessionStorage.getItem("user"));
   const handleSave = async (e) => {
     e.preventDefault();
 
     const dataToSave = {
+      admin: user.id,
       id: selectedKarbantartas?.id,
       datum: selectedKarbantartas?.datum,
       log: selectedKarbantartas?.log,

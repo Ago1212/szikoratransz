@@ -131,25 +131,9 @@ class KamionInterface {
         }
     }
 
-    public function getKarbantartas($kamion_id, $elvegzett) {
-        try {
-            $query = "SELECT * FROM kamion_karbantartars WHERE kamionId = :kamionId AND kesz = :kesz AND torolt = 'N'";
-            $stmt = $this->db->prepare($query);
-            $kesz = $elvegzett ? "I" : "N";
-            $stmt->bindParam(':kamionId', $kamion_id);
-            $stmt->bindValue(':kesz', $kesz);
-            $stmt->execute();
-
-            $karbantartas_adatok = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            return ['success' => true, 'message' => 'Karbantartások lekérdezve.', 'karbantartas' => $karbantartas_adatok];
-        } catch (Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
-        }
-    }
-
     public function deleteKamion($id) {
         try {
-            $query = "UPDATE kamion_karbantartars SET torolt='I' WHERE kamionId = :id";
+            $query = "UPDATE kamion_karbantartars SET torolt='I' WHERE kamion_id = :id";
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':id', $id);
             $stmt->execute();
@@ -164,108 +148,12 @@ class KamionInterface {
         }
     }
 
-    public function deleteKarbantartas($id) {
-        try {
-            // Frissítési lekérdezés
-            $query = "UPDATE kamion_karbantartars SET torolt = :torolt WHERE id = :id";
-
-            // Lekérdezés előkészítése
-            $stmt = $this->db->prepare($query);
-
-            $torolt = "I";
-            $stmt->bindParam(':torolt', $torolt);
-            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-
-            // Lekérdezés végrehajtása
-            $stmt->execute();
-
-            // Ellenőrzés, hogy történt-e frissítés
-            if ($stmt->rowCount() > 0) {
-                return ['success' => true, 'message' => 'A karbantartás tőrlése sikeres.'];
-            } else {
-                return ['success' => false, 'message' => 'A karbantartás nem található vagy az adatok nem változtak.'];
-            }
-        } catch (Exception $e) {
-            // Hibakezelés
-            return ['success' => false, 'message' => $e->getMessage()];
-        }
-    }
-    public function setKarbantartasKesz($id, $elvegzett) {
-        try {
-            // Frissítési lekérdezés
-            $query = "UPDATE kamion_karbantartars SET kesz = :kesz WHERE id = :id AND torolt = 'N'";
-
-            // Lekérdezés előkészítése
-            $stmt = $this->db->prepare($query);
-
-            $kesz = $elvegzett ? "I" : "N";
-            $stmt->bindParam(':kesz', $kesz);
-            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-
-            // Lekérdezés végrehajtása
-            $stmt->execute();
-
-            // Ellenőrzés, hogy történt-e frissítés
-            if ($stmt->rowCount() > 0) {
-                return ['success' => true, 'message' => 'A karbantartás sikeresen elvégezve.'];
-            } else {
-                return ['success' => false, 'message' => 'A karbantartás nem található vagy az adatok nem változtak.'];
-            }
-        } catch (Exception $e) {
-            // Hibakezelés
-            return ['success' => false, 'message' => $e->getMessage()];
-        }
-    }
-
-    public function updateKarbantartas($id, $kamion_id, $datum, $log) {
-        try {
-            if ($id === 0) {
-                // Beszúrási lekérdezés
-                $query = "INSERT INTO kamion_karbantartars (kamionId,datum, log, torolt) VALUES (:kamion_id,:datum, :log, 'N')";
-
-                // Lekérdezés előkészítése
-                $stmt = $this->db->prepare($query);
-
-                // Paraméterek kötése
-                $stmt->bindParam(':kamion_id', $kamion_id);
-                $stmt->bindParam(':datum', $datum);
-                $stmt->bindParam(':log', $log);
-
-                // Lekérdezés végrehajtása
-                $stmt->execute();
-
-                // Ellenőrzés, hogy történt-e beszúrás
-                if ($stmt->rowCount() > 0) {
-                    return ['success' => true, 'message' => 'A karbantartás sikeresen hozzáadva.'];
-                } else {
-                    return ['success' => false, 'message' => 'Hiba történt a karbantartás hozzáadása során.'];
-                }
-            } else {
-                // Frissítési lekérdezés
-                $query = "UPDATE kamion_karbantartars SET datum = :datum, log = :log WHERE id = :id AND torolt = 'N'";
-
-                // Lekérdezés előkészítése
-                $stmt = $this->db->prepare($query);
-
-                // Paraméterek kötése
-                $stmt->bindParam(':datum', $datum);
-                $stmt->bindParam(':log', $log);
-                $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-
-                // Lekérdezés végrehajtása
-                $stmt->execute();
-
-                // Ellenőrzés, hogy történt-e frissítés
-                if ($stmt->rowCount() > 0) {
-                    return ['success' => true, 'message' => 'A karbantartás sikeresen frissítve.'];
-                } else {
-                    return ['success' => false, 'message' => 'A karbantartás nem található vagy az adatok nem változtak.'];
-                }
-            }
-        } catch (Exception $e) {
-            // Hibakezelés
-            return ['success' => false, 'message' => $e->getMessage()];
-        }
+    public function getKamionRendszamok($id) {
+        $query = "SELECT id, rendszam,tipus FROM kamion WHERE admin = :id AND torolt <> 'I'";
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        return ['success' => true, 'kamionok' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
 
     public function getKamion($id) {

@@ -7,32 +7,38 @@ import {
   FaArrowRight,
   FaArrowLeft,
   FaTimes,
+  FaChevronUp,
+  FaChevronDown,
 } from "react-icons/fa";
 import { fetchAction } from "utils/fetchAction";
+import { useMediaQuery } from "react-responsive";
 
 const Karbantartasok = () => {
-  return <div>Folyamatban...</div>;
-};
-/* const [karbantartasok, setKarbantartasok] = useState([]);
+  const [filtersOpen, setFiltersOpen] = useState(true);
+  const [karbantartasok, setKarbantartasok] = useState([]);
   const [kamionok, setKamionok] = useState([]);
   const [potkocsik, setPotkocsik] = useState([]);
   const [filter, setFilter] = useState({
     kamion_id: "",
     potkocsi_id: "",
-    elvegzett: "",
+    kesz: "",
     datumTol: "",
     datumIg: "",
   });
   const user = JSON.parse(sessionStorage.getItem("user"));
   const [openDialog, setOpenDialog] = useState(false);
   const [newKarbantartas, setNewKarbantartas] = useState({
-    id: user.id,
+    admin: user.id,
     kamion_id: "",
     potkocsi_id: "",
     datum: "",
     log: "",
-    elvegzett: false,
+    kesz: false,
   });
+  const [jarmuTipus, setJarmuTipus] = useState("kamion");
+
+  // Media query to detect small screens
+  const isSmallScreen = useMediaQuery({ maxWidth: 768 });
 
   // Kamionok és pótkocsik betöltése
   useEffect(() => {
@@ -83,16 +89,20 @@ const Karbantartasok = () => {
 
   const handleAddKarbantartas = async (e) => {
     e.preventDefault();
-    const result = await fetchAction("addKarbantartas", newKarbantartas);
+    const action =
+      jarmuTipus === "kamion"
+        ? "updateKarbantartas"
+        : "updatePotkocsiKarbantartas";
+    const result = await fetchAction(action, newKarbantartas);
     if (result?.success) {
       setOpenDialog(false);
       setNewKarbantartas({
-        id: user.id,
+        admin: user.id,
         kamion_id: "",
         potkocsi_id: "",
         datum: "",
         log: "",
-        elvegzett: false,
+        kesz: false,
       });
       // Frissítjük a listát az aktuális szűrőkkel
       const updatedResult = await fetchAction("getKarbantartasok", {
@@ -105,10 +115,10 @@ const Karbantartasok = () => {
     }
   };
 
-  const handleStatusChange = async (id, currentStatus) => {
-    const result = await fetchAction("setKarbantartasKesz", {
+  const handleStatusChange = async (id, action, currentStatus) => {
+    const result = await fetchAction(action, {
       id,
-      elvegzett: !currentStatus,
+      kesz: !currentStatus,
     });
     if (result?.success) {
       const updatedResult = await fetchAction("getKarbantartasok", {
@@ -143,93 +153,248 @@ const Karbantartasok = () => {
     return jarmu ? `${jarmu.rendszam} (${jarmu.tipus})` : "Ismeretlen";
   };
 
+  // Render table row for large screens
+  const renderTableRow = (karb) => (
+    <tr key={karb.id} className="hover:bg-gray-50">
+      <td className="px-6 py-4 whitespace-nowrap">
+        {karb.potkocsi_id ? "Pótkocsi" : "Kamion"}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        {karb.potkocsi_id
+          ? getJarmuRendszam(karb.potkocsi_id, true)
+          : getJarmuRendszam(karb.kamion_id)}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">{karb.datum}</td>
+      <td className="px-6 py-4">{karb.log}</td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <span
+          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+            karb.kesz === "I"
+              ? "bg-green-100 text-green-800"
+              : "bg-yellow-100 text-yellow-800"
+          }`}
+        >
+          {karb.kesz === "I" ? "Elvégzett" : "Tervezett"}
+        </span>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+        <div className="flex justify-end space-x-2">
+          <button
+            onClick={() =>
+              handleStatusChange(
+                karb.id,
+                karb.potkocsi_id
+                  ? "setPotkocsiKarbantartasKesz"
+                  : "setKarbantartasKesz",
+                karb.kesz === "I"
+              )
+            }
+            className={`p-1 rounded-md ${
+              karb.kesz === "I"
+                ? "text-yellow-600 hover:bg-yellow-100"
+                : "text-green-600 hover:bg-green-100"
+            }`}
+            title={
+              karb.kesz === "I" ? "Tervezettként jelöl" : "Elvégzettként jelöl"
+            }
+          >
+            {karb.kesz === "I" ? <FaArrowLeft /> : <FaArrowRight />}
+          </button>
+          <button
+            onClick={() => handleDelete(karb.id)}
+            className="text-red-600 hover:bg-red-100 p-1 rounded-md"
+            title="Törlés"
+          >
+            <FaTrash />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+
+  // Render card for small screens
+  const renderCard = (karb) => (
+    <div
+      key={karb.id}
+      className="bg-white rounded-lg shadow-md p-4 mb-4 border border-gray-200"
+    >
+      <div className="flex justify-between items-start mb-2">
+        <div>
+          <h3 className="font-semibold">
+            {karb.potkocsi_id ? "Pótkocsi" : "Kamion"}
+          </h3>
+          <p className="text-sm text-gray-600">
+            {karb.potkocsi_id
+              ? getJarmuRendszam(karb.potkocsi_id, true)
+              : getJarmuRendszam(karb.kamion_id)}
+          </p>
+        </div>
+        <span
+          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+            karb.kesz === "I"
+              ? "bg-green-100 text-green-800"
+              : "bg-yellow-100 text-yellow-800"
+          }`}
+        >
+          {karb.kesz === "I" ? "Elvégzett" : "Tervezett"}
+        </span>
+      </div>
+
+      <div className="mb-2">
+        <p className="text-sm font-medium text-gray-500">Dátum:</p>
+        <p>{karb.datum}</p>
+      </div>
+
+      <div className="mb-3">
+        <p className="text-sm font-medium text-gray-500">Leírás:</p>
+        <p className="text-sm">{karb.log}</p>
+      </div>
+
+      <div className="flex justify-end space-x-2">
+        <button
+          onClick={() =>
+            handleStatusChange(
+              karb.id,
+              karb.potkocsi_id
+                ? "setPotkocsiKarbantartasKesz"
+                : "setKarbantartasKesz",
+              karb.kesz === "I"
+            )
+          }
+          className={`p-1 rounded-md ${
+            karb.kesz === "I"
+              ? "text-yellow-600 hover:bg-yellow-100"
+              : "text-green-600 hover:bg-green-100"
+          }`}
+          title={
+            karb.kesz === "I" ? "Tervezettként jelöl" : "Elvégzettként jelöl"
+          }
+        >
+          {karb.kesz === "I" ? <FaArrowLeft /> : <FaArrowRight />}
+        </button>
+        <button
+          onClick={() => handleDelete(karb.id)}
+          className="text-red-600 hover:bg-red-100 p-1 rounded-md"
+          title="Törlés"
+        >
+          <FaTrash />
+        </button>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="mx-auto py-8">
-      <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="mx-auto py-8 h-full flex flex-col">
+      <div className="bg-white rounded-lg shadow-md p-6 flex-grow flex flex-col">
         <h1 className="text-2xl font-bold mb-6">Karbantartások Kezelése</h1>
 
         <div className="bg-gray-50 p-4 rounded-lg mb-6">
-          <div className="flex items-center mb-4">
+          <div
+            className="flex items-center mb-4 cursor-pointer"
+            onClick={() => setFiltersOpen(!filtersOpen)}
+          >
             <FaFilter className="mr-2" />
             <h2 className="text-lg font-semibold">Szűrők</h2>
+            <span className="ml-auto">
+              {filtersOpen ? <FaChevronUp /> : <FaChevronDown />}
+            </span>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Kamion
-              </label>
-              <select
-                name="kamion_id"
-                value={filter.kamion_id}
-                onChange={handleFilterChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+
+          {filtersOpen && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Kamion
+                  </label>
+                  <select
+                    name="kamion_id"
+                    value={filter.kamion_id}
+                    onChange={handleFilterChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  >
+                    <option value="">Összes kamion</option>
+                    {kamionok.map((kamion) => (
+                      <option key={kamion.id} value={kamion.id}>
+                        {kamion.rendszam} ({kamion.tipus})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Pótkocsi
+                  </label>
+                  <select
+                    name="potkocsi_id"
+                    value={filter.potkocsi_id}
+                    onChange={handleFilterChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  >
+                    <option value="">Összes pótkocsi</option>
+                    {potkocsik.map((potkocsi) => (
+                      <option key={potkocsi.id} value={potkocsi.id}>
+                        {potkocsi.rendszam} ({potkocsi.tipus})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Státusz
+                  </label>
+                  <select
+                    name="kesz"
+                    value={filter.kesz}
+                    onChange={handleFilterChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  >
+                    <option value="">Összes</option>
+                    <option value="false">Tervezett</option>
+                    <option value="true">Elvégzett</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Dátumtól
+                  </label>
+                  <input
+                    type="date"
+                    name="datumTol"
+                    value={filter.datumTol}
+                    onChange={handleFilterChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Dátumig
+                  </label>
+                  <input
+                    type="date"
+                    name="datumIg"
+                    value={filter.datumIg}
+                    onChange={handleFilterChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setFilter({
+                    kamion_id: "",
+                    potkocsi_id: "",
+                    kesz: "",
+                    datumTol: "",
+                    datumIg: "",
+                  });
+                }}
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
               >
-                <option value="">Összes kamion</option>
-                {kamionok.map((kamion) => (
-                  <option key={kamion.id} value={kamion.id}>
-                    {kamion.rendszam} ({kamion.tipus})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Pótkocsi
-              </label>
-              <select
-                name="potkocsi_id"
-                value={filter.potkocsi_id}
-                onChange={handleFilterChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              >
-                <option value="">Összes pótkocsi</option>
-                {potkocsik.map((potkocsi) => (
-                  <option key={potkocsi.id} value={potkocsi.id}>
-                    {potkocsi.rendszam} ({potkocsi.tipus})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Státusz
-              </label>
-              <select
-                name="elvegzett"
-                value={filter.elvegzett}
-                onChange={handleFilterChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              >
-                <option value="">Összes</option>
-                <option value="false">Tervezett</option>
-                <option value="true">Elvégzett</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Dátumtól
-              </label>
-              <input
-                type="date"
-                name="datumTol"
-                value={filter.datumTol}
-                onChange={handleFilterChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Dátumig
-              </label>
-              <input
-                type="date"
-                name="datumIg"
-                value={filter.datumIg}
-                onChange={handleFilterChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              />
-            </div>
-          </div>
+                <FaTimes className="inline mr-1" /> Összes szűrő törlése
+              </button>
+            </>
+          )}
         </div>
 
         <div className="mb-4 flex justify-between items-center">
@@ -242,100 +407,60 @@ const Karbantartasok = () => {
           </button>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Jármű típusa
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Rendszám
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Dátum
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Leírás
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Státusz
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Műveletek
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {karbantartasok.length > 0 ? (
-                karbantartasok.map((karb) => (
-                  <tr key={karb.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {karb.potkocsi_id ? "Pótkocsi" : "Kamion"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {karb.potkocsi_id
-                        ? getJarmuRendszam(karb.potkocsi_id, true)
-                        : getJarmuRendszam(karb.kamion_id)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {karb.datum}
-                    </td>
-                    <td className="px-6 py-4">{karb.log}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          karb.elvegzett
-                            ? "bg-green-100 text-green-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
-                      >
-                        {karb.elvegzett ? "Elvégzett" : "Tervezett"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex justify-end space-x-2">
-                        <button
-                          onClick={() =>
-                            handleStatusChange(karb.id, karb.elvegzett)
-                          }
-                          className={`p-1 rounded-md ${
-                            karb.elvegzett
-                              ? "text-yellow-600 hover:bg-yellow-100"
-                              : "text-green-600 hover:bg-green-100"
-                          }`}
-                          title={
-                            karb.elvegzett
-                              ? "Tervezettként jelöl"
-                              : "Elvégzettként jelöl"
-                          }
-                        >
-                          {karb.elvegzett ? <FaArrowLeft /> : <FaArrowRight />}
-                        </button>
-                        <button
-                          onClick={() => handleDelete(karb.id)}
-                          className="text-red-600 hover:bg-red-100 p-1 rounded-md"
-                          title="Törlés"
-                        >
-                          <FaTrash />
-                        </button>
-                      </div>
+        {isSmallScreen ? (
+          // Card view for small screens
+          <div className="space-y-4">
+            {karbantartasok.length > 0 ? (
+              karbantartasok.map(renderCard)
+            ) : (
+              <div className="text-center text-gray-500 py-4">
+                Nincsenek megjeleníthető karbantartások
+              </div>
+            )}
+          </div>
+        ) : (
+          // Table view for larger screens
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Jármű típusa
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Rendszám
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Dátum
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Leírás
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Státusz
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Műveletek
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {karbantartasok.length > 0 ? (
+                  karbantartasok.map(renderTableRow)
+                ) : (
+                  <tr>
+                    <td
+                      colSpan="6"
+                      className="px-6 py-4 text-center text-gray-500"
+                    >
+                      Nincsenek megjeleníthető karbantartások
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan="6"
-                    className="px-6 py-4 text-center text-gray-500"
-                  >
-                    Nincsenek megjeleníthető karbantartások
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {openDialog && (
@@ -362,14 +487,15 @@ const Karbantartasok = () => {
                         type="radio"
                         name="jarmu_tipus"
                         value="kamion"
-                        checked={!newKarbantartas.potkocsi_id}
-                        onChange={() =>
+                        checked={jarmuTipus === "kamion"}
+                        onChange={() => {
+                          setJarmuTipus("kamion");
                           setNewKarbantartas((prev) => ({
                             ...prev,
                             kamion_id: "",
-                            potkocsi_id: "",
-                          }))
-                        }
+                            potkocsi_id: null,
+                          }));
+                        }}
                         className="h-4 w-4 text-blue-600 rounded"
                       />
                       <span className="ml-2 text-sm text-gray-700">Kamion</span>
@@ -379,14 +505,15 @@ const Karbantartasok = () => {
                         type="radio"
                         name="jarmu_tipus"
                         value="potkocsi"
-                        checked={!!newKarbantartas.potkocsi_id}
-                        onChange={() =>
+                        checked={jarmuTipus === "potkocsi"}
+                        onChange={() => {
+                          setJarmuTipus("potkocsi");
                           setNewKarbantartas((prev) => ({
                             ...prev,
-                            kamion_id: "",
+                            kamion_id: null,
                             potkocsi_id: "",
-                          }))
-                        }
+                          }));
+                        }}
                         className="h-4 w-4 text-blue-600 rounded"
                       />
                       <span className="ml-2 text-sm text-gray-700">
@@ -396,17 +523,17 @@ const Karbantartasok = () => {
                   </div>
                 </div>
 
-                {!newKarbantartas.potkocsi_id ? (
+                {jarmuTipus === "kamion" ? (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Kamion
                     </label>
                     <select
                       name="kamion_id"
-                      value={newKarbantartas.kamion_id}
+                      value={newKarbantartas.kamion_id || ""}
                       onChange={handleNewKarbantartasChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                      required={!newKarbantartas.potkocsi_id}
+                      required
                     >
                       <option value="">Válassz kamiont</option>
                       {kamionok.map((kamion) => (
@@ -423,10 +550,10 @@ const Karbantartasok = () => {
                     </label>
                     <select
                       name="potkocsi_id"
-                      value={newKarbantartas.potkocsi_id}
+                      value={newKarbantartas.potkocsi_id || ""}
                       onChange={handleNewKarbantartasChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                      required={!!newKarbantartas.potkocsi_id}
+                      required
                     >
                       <option value="">Válassz pótkocsit</option>
                       {potkocsik.map((potkocsi) => (
@@ -468,12 +595,12 @@ const Karbantartasok = () => {
                   <label className="inline-flex items-center">
                     <input
                       type="checkbox"
-                      name="elvegzett"
-                      checked={newKarbantartas.elvegzett}
+                      name="kesz"
+                      checked={newKarbantartas.kesz}
                       onChange={(e) =>
                         setNewKarbantartas((prev) => ({
                           ...prev,
-                          elvegzett: e.target.checked,
+                          kesz: e.target.checked,
                         }))
                       }
                       className="h-4 w-4 text-blue-600 rounded"
@@ -505,6 +632,6 @@ const Karbantartasok = () => {
       )}
     </div>
   );
-};*/
+};
 
 export default Karbantartasok;

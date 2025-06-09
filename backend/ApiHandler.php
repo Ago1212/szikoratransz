@@ -6,6 +6,7 @@ require 'interface/soforokInterface.php';
 require 'interface/filesInterface.php';
 require 'interface/emailInterface.php';
 require 'interface/bejelentesekInterface.php';
+require 'interface/karbantartasokInterface.php';
 class ApiHandler {
     protected string $auth_hash;
     protected array $actions = [];
@@ -25,24 +26,29 @@ class ApiHandler {
             'getSum' => ['id'],
             'getEsemenyek' => ['id'],
             'saveAdminData' => ['id'],
+
             'newKamion' => ['rendszam'],
             'saveKamionData' => ['id'],
             'getKamionok' => ['id'],
             'getKamionValaszto' => ['user'],
-            'deleteKarbantartas' => ['id'],
-            'setKarbantartasKesz' => ['id', 'elvegzett'],
-            'updateKarbantartas' => ['log', 'kamion_id', 'datum'],
-            'getKarbantartas' => ['kamion_id', 'elvegzett'],
             'deleteKamion' => ['id'],
+            'getKamionRendszamok' => ['id'],
 
             'newPotkocsi' => ['rendszam'],
             'savePotkocsiData' => ['id'],
             'getPotkocsik' => ['id'],
-            'deletePotkocsiKarbantartas' => ['id'],
-            'setPotkocsiKarbantartasKesz' => ['id', 'elvegzett'],
-            'updatePotkocsiKarbantartas' => ['log', 'potkocsi_id', 'datum'],
-            'getPotkocsiKarbantartas' => ['potkocsi_id', 'elvegzett'],
             'deletePotkocsi' => ['id'],
+            'getPotkocsiRendszamok' => ['id'],
+
+            'deleteKarbantartas' => ['id'],
+            'setKarbantartasKesz' => ['id', 'kesz'],
+            'updateKarbantartas' => ['admin', 'log', 'kamion_id', 'datum'],
+            'getKarbantartas' => ['kamion_id', 'kesz'],
+            'deletePotkocsiKarbantartas' => ['id'],
+            'setPotkocsiKarbantartasKesz' => ['id', 'kesz'],
+            'updatePotkocsiKarbantartas' => ['admin', 'log', 'potkocsi_id', 'datum'],
+            'getPotkocsiKarbantartas' => ['potkocsi_id', 'kesz'],
+            'getKarbantartasok' => ['id', 'kamion_id', 'potkocsi_id', 'kesz', 'datumTol', 'datumIg'],
 
             'getSoforok' => ['id'],
             'newSofor' => ['name', 'email'],
@@ -95,7 +101,7 @@ class ApiHandler {
     }
 
     public function process(?array $request) {
-        global $kamionInterface, $potkocsiInterface, $soforokInterface, $filesInterface, $emailInterface, $bejelentesekInterface;
+        global $kamionInterface, $potkocsiInterface, $soforokInterface, $filesInterface, $emailInterface, $bejelentesekInterface, $karbantartasInterface;
         try {
             $this->validation($request);
             $action = $request['action'];
@@ -125,20 +131,23 @@ class ApiHandler {
                 case 'getKamionValaszto':
                     echo json_encode($kamionInterface->getKamionValaszto($request['user']));
                     return;
+                case 'getKamionRendszamok':
+                    echo json_encode($kamionInterface->getKamionRendszamok($request['id']));
+                    return;
                 case 'deleteKamion':
                     echo json_encode($kamionInterface->deleteKamion($request['id']));
                     return;
                 case 'getKarbantartas':
-                    echo json_encode($kamionInterface->getKarbantartas($request['kamion_id'], $request['elvegzett']));
+                    echo json_encode($karbantartasInterface->getKamionKarbantartas($request['kamion_id'], $request['kesz']));
                     return;
                 case 'updateKarbantartas':
-                    echo json_encode($kamionInterface->updateKarbantartas(isset($request['id']) ? $request['id'] : 0, $request['kamion_id'], $request['datum'], $request['log']));
+                    echo json_encode($karbantartasInterface->updateKamionKarbantartas(isset($request['id']) ? $request['id'] : 0, $request['admin'], $request['kamion_id'], $request['datum'], $request['log']));
                     return;
                 case 'setKarbantartasKesz':
-                    echo json_encode($kamionInterface->setKarbantartasKesz($request['id'], $request['elvegzett']));
+                    echo json_encode($karbantartasInterface->setKamionKarbantartasKesz($request['id'], $request['kesz']));
                     return;
                 case 'deleteKarbantartas':
-                    echo json_encode($kamionInterface->deleteKarbantartas($request['id']));
+                    echo json_encode($karbantartasInterface->deleteKamionKarbantartas($request['id']));
                     return;
                 case 'savePotkocsiData':
                     echo json_encode($potkocsiInterface->savePotkocsiData($request));
@@ -152,17 +161,23 @@ class ApiHandler {
                 case 'getPotkocsik':
                     echo json_encode($potkocsiInterface->getPotkocsik($request['id']));
                     return;
+                case 'getPotkocsiRendszamok':
+                    echo json_encode($potkocsiInterface->getPotkocsiRendszamok($request['id']));
+                    return;
                 case 'getPotkocsiKarbantartas':
-                    echo json_encode($potkocsiInterface->getPotkocsiKarbantartas($request['potkocsi_id'], $request['elvegzett']));
+                    echo json_encode($karbantartasInterface->getPotkocsiKarbantartas($request['potkocsi_id'], $request['kesz']));
                     return;
                 case 'updatePotkocsiKarbantartas':
-                    echo json_encode($potkocsiInterface->updatePotkocsiKarbantartas(isset($request['id']) ? $request['id'] : 0, $request['potkocsi_id'], $request['datum'], $request['log']));
+                    echo json_encode($karbantartasInterface->updatePotkocsiKarbantartas(isset($request['id']) ? $request['id'] : 0, $request['admin'], $request['potkocsi_id'], $request['datum'], $request['log']));
                     return;
                 case 'setPotkocsiKarbantartasKesz':
-                    echo json_encode($potkocsiInterface->setPotkocsiKarbantartasKesz($request['id'], $request['elvegzett']));
+                    echo json_encode($karbantartasInterface->setPotkocsiKarbantartasKesz($request['id'], $request['kesz']));
                     return;
                 case 'deletePotkocsiKarbantartas':
-                    echo json_encode($potkocsiInterface->deletePotkocsiKarbantartas($request['id']));
+                    echo json_encode($karbantartasInterface->deletePotkocsiKarbantartas($request['id']));
+                    return;
+                case 'getKarbantartasok':
+                    echo json_encode($karbantartasInterface->getKarbantartasok($request['id'], $request['kamion_id'], $request['potkocsi_id'], $request['kesz'], $request['datumTol'], $request['datumIg']));
                     return;
                 case 'getSoforok':
                     echo json_encode($soforokInterface->getSoforok($request['id']));

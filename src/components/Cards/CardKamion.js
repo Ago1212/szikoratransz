@@ -21,9 +21,25 @@ export default function CardKamion({ initialKamion }) {
   const [isSaving, setIsSaving] = useState(false);
 
   const [formData, setFormData] = useState({
-    id: kamion.id || "",
-    rendszam: kamion.rendszam || "",
-    // ... other fields ...
+    id: kamion.id || null,
+    rendszam: kamion.rendszam || null,
+    potkocsi: kamion.potkocsi || null,
+    meret: kamion.meret || null,
+    tipus: kamion.tipus || null,
+    muszaki_lejarat: kamion.muszaki_lejarat || null,
+    adr_lejarat: kamion.adr_lejarat || null,
+    taograf_illesztes: kamion.taograf_illesztes || null,
+    emelohatfal_vizsga: kamion.emelohatfal_vizsga || null,
+    porolto_lejarat: kamion.porolto_lejarat || null,
+    porolto_lejarat_2: kamion.porolto_lejarat_2 || null,
+    kot_biztositas: kamion.kot_biztositas || null,
+    kot_biz_nev: kamion.kot_biz_nev || null,
+    kot_biz_dij: kamion.kot_biz_dij || null,
+    kot_biz_utem: kamion.kot_biz_utem || null,
+    kaszko_biztositas: kamion.kaszko_biztositas || null,
+    kaszko_nev: kamion.kaszko_nev || null,
+    kaszko_dij: kamion.kaszko_dij || null,
+    kaszko_fizetesi_utem: kamion.kaszko_fizetesi_utem || null,
   });
 
   const handleSave = async () => {
