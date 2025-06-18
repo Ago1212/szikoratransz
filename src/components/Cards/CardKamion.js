@@ -149,16 +149,6 @@ export default function CardKamion({ initialKamion }) {
               <span className="text-base font-bold">Kamion adatok</span>
             </button>
             <button
-              onClick={() => setActiveTab(2)}
-              className={`px-6 py-3 font-semibold text-sm rounded-md transition-all duration-300 focus:outline-none ${
-                activeTab === 2
-                  ? "bg-blue-500 text-white shadow-md"
-                  : "bg-blueGray-200 text-blueGray-600 hover:bg-blueGray-300"
-              }`}
-            >
-              <span className="text-base font-bold">Karbantartások</span>
-            </button>
-            <button
               onClick={() => setActiveTab(3)}
               className={`px-6 py-3 font-semibold text-sm rounded-md transition-all duration-300 focus:outline-none ${
                 activeTab === 3
