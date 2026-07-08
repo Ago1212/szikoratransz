@@ -3,20 +3,23 @@ import { Switch, Route, Redirect, useHistory } from "react-router-dom";
 
 // components
 import Navbar from "components/Navbars/AuthNavbar.js";
-import FooterSmall from "components/Footers/FooterSmall.js";
 
 // views
 import Login from "views/auth/Login.js";
 import Register from "views/auth/Register.js";
 
 export default function Auth() {
-  const history = useHistory(); // Használj useHistory-t
+  const history = useHistory();
 
-  // Ellenőrizd a bejelentkezett állapotot
   useEffect(() => {
-    const isAuthenticated = sessionStorage.getItem("user") !== null;
-    if (isAuthenticated) {
-      history.push("/admin/dashboard"); // Navigálj a dashboard oldalra
+    let user = null;
+    try {
+      user = JSON.parse(sessionStorage.getItem("user"));
+    } catch (e) {
+      user = null;
+    }
+    if (user) {
+      history.push(user.admin ? "/admin/dashboard" : "/user/dashboard");
     }
   }, [history]);
 
@@ -24,19 +27,22 @@ export default function Auth() {
     <>
       <Navbar transparent />
       <main>
-        <section className="relative w-full h-full py-40 min-h-screen">
+        <section className="relative min-h-screen w-full bg-ink-900 py-40">
           <div
-            className="absolute top-0 w-full h-full bg-blueGray-800 bg-no-repeat bg-full"
+            className="absolute inset-0 bg-cover bg-center opacity-40"
             style={{
               backgroundImage:
-                "url(" + require("assets/img/register_bg_2.png").default + ")",
+                "radial-gradient(circle at 15% 10%, rgba(47,77,224,0.35), transparent 45%), radial-gradient(circle at 85% 90%, rgba(47,77,224,0.25), transparent 40%)",
             }}
-          ></div>
-          <Switch>
-            <Route path="/auth/login" exact component={Login} />
-            <Route path="/auth/register" exact component={Register} />
-            <Redirect from="/auth" to="/auth/login" />
-          </Switch>
+          />
+          <div className="grain-overlay" />
+          <div className="relative z-10">
+            <Switch>
+              <Route path="/auth/login" exact component={Login} />
+              <Route path="/auth/register" exact component={Register} />
+              <Redirect from="/auth" to="/auth/login" />
+            </Switch>
+          </div>
         </section>
       </main>
     </>

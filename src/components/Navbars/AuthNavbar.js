@@ -1,28 +1,24 @@
-/*eslint-disable*/
 import React from "react";
 import { Link } from "react-router-dom";
+import { PiArrowLeftLight } from "react-icons/pi";
 
-// components
-
-import PagesDropdown from "components/Dropdowns/PagesDropdown.js";
-
-export default function Navbar(props) {
+export default function Navbar() {
   return (
-    <>
-      <nav className="top-0 absolute z-50 w-full flex flex-wrap items-center justify-between px-2 py-3 navbar-expand-lg">
-        <div className="container px-4 mx-auto flex flex-wrap items-center justify-between">
-          <ul className="flex flex-col lg:flex-row list-none lg:ml-auto">
-            <li className="flex items-center">
-              <Link
-                className="bg-white text-blueGray-700 active:bg-blueGray-50 text-xs font-bold uppercase px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none lg:mr-1 lg:mb-0 ml-3 mb-3 ease-linear transition-all duration-150"
-                to="/landing"
-              >
-                Főoldal
-              </Link>
-            </li>
-          </ul>
-        </div>
-      </nav>
-    </>
+    <nav className="absolute top-0 z-50 flex w-full flex-wrap items-center justify-between px-4 py-5 md:px-8">
+      <Link to="/landing" className="flex items-center gap-2.5">
+        <img
+          src="/logo.svg"
+          alt="Szikora Transz Kft"
+          className="h-10 w-auto mb-8"
+        />
+      </Link>
+      <Link
+        to="/landing"
+        className="flex items-center gap-2 bg-[#1E3AA8] hover:bg-[#172E86] text-white px-5 py-2 rounded-xl text-sm font-semibold transition-colors duration-300"
+      >
+        <PiArrowLeftLight className="h-3.5 w-3.5" />
+        Főoldal
+      </Link>
+    </nav>
   );
 }

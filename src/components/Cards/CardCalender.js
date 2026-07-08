@@ -94,7 +94,7 @@ export default function CustomCalendar() {
           events={events}
           startAccessor="start"
           endAccessor="end"
-          style={{ height: 700 }}
+          style={{ height: "100%" }}
           defaultDate={new Date()}
           defaultView="month"
           popup

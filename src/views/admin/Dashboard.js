@@ -1,38 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
+import {
+  PiUsersLight,
+  PiTruckLight,
+  PiTruckTrailerLight,
+  PiCalendarBlankLight,
+  PiWarningCircleLight,
+} from "react-icons/pi";
 
 // components
 import CardStats from "components/Cards/CardStats";
 import CardCalender from "components/Cards/CardCalender";
 import { fetchAction } from "utils/fetchAction";
-
-const StatCard = ({
-  title,
-  value,
-  statIconName,
-  iconColor,
-  trend,
-  percentage,
-  trendColor,
-  onClick,
-}) => (
-  <div
-    className="w-full lg:w-6/12 xl:w-3/12 px-4 mb-4 lg:mb-0 cursor-pointer"
-    onClick={onClick}
-    onDoubleClick={onClick}
-  >
-    <CardStats
-      statSubtitle={title}
-      statTitle={value.toString()}
-      statArrow={trend}
-      statPercent={percentage}
-      statPercentColor={trendColor}
-      statDescripiron=""
-      statIconName={statIconName}
-      statIconColor={iconColor}
-    />
-  </div>
-);
 
 export default function Dashboard() {
   const history = useHistory();
@@ -72,100 +51,82 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
-  const navigateTo = (path) => {
-    history.push(path);
-  };
+  const navigateTo = (path) => history.push(path);
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="flex h-64 items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-brand-200 border-t-brand-600" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <svg
-              className="h-5 w-5 text-red-500"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-          <div className="ml-3">
-            <p className="text-sm text-red-700">{error}</p>
-          </div>
-        </div>
+      <div className="flex items-start gap-3 rounded-2xl border border-red-100 bg-red-50 p-4">
+        <PiWarningCircleLight className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-500" />
+        <p className="text-sm text-red-700">{error}</p>
       </div>
     );
   }
 
+  const cards = [
+    {
+      title: "Sofőrök",
+      value: stats.soforok,
+      icon: PiUsersLight,
+      path: "/admin/soforok",
+    },
+    {
+      title: "Kamionok",
+      value: stats.kamionok,
+      icon: PiTruckLight,
+      path: "/admin/kamionok",
+    },
+    {
+      title: "Pótkocsik",
+      value: stats.potkocsik,
+      icon: PiTruckTrailerLight,
+      path: "/admin/potkocsi",
+    },
+    {
+      title: "Lejáró határidők",
+      value: stats.hatarido,
+      icon: PiCalendarBlankLight,
+      path: "/admin/esemenyek",
+    },
+  ];
+
   return (
-    <div className="container mx-auto px-4">
-      {/* Stats Cards Section */}
-      <div className="flex flex-wrap -mx-4">
-        <StatCard
-          title="Sofőrök"
-          value={stats.soforok}
-          statIconName="fas fa-users"
-          iconColor="bg-indigo-500"
-          trend="up"
-          percentage="3.48"
-          trendColor="text-emerald-500"
-          onClick={() => navigateTo("/admin/soforok")}
-        />
-
-        <StatCard
-          title="Kamionok"
-          value={stats.kamionok}
-          statIconName="fas fa-truck"
-          iconColor="bg-red-500"
-          trend="up"
-          percentage="2.59"
-          trendColor="text-emerald-500"
-          onClick={() => navigateTo("/admin/kamionok")}
-        />
-
-        <StatCard
-          title="Pótkocsik"
-          value={stats.potkocsik}
-          statIconName="fas fa-trailer"
-          iconColor="bg-pink-500"
-          trend="down"
-          percentage="1.10"
-          trendColor="text-orange-500"
-          onClick={() => navigateTo("/admin/potkocsi")}
-        />
-
-        <StatCard
-          title="Lejáró határidők"
-          value={stats.hatarido}
-          statIconName="fas fa-calendar-days"
-          iconColor="bg-blue-500"
-          trend="same"
-          percentage="0.00"
-          trendColor="text-gray-500"
-          onClick={() => navigateTo("/admin/esemenyek")}
-        />
+    <div className="mx-auto flex h-full w-full max-w-7xl flex-col">
+      <div className="mb-6 flex-shrink-0">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-500">
+          Áttekintés
+        </p>
+        <h1 className="mt-1 font-display text-2xl font-bold text-brand-900">
+          Főmenü
+        </h1>
       </div>
 
-      {/* Calendar Section */}
-      <div className="w-full mt-8 mb-12">
-        <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-white border-0 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-800">
-              Eseménynaptár
-            </h3>
-          </div>
+      <div className="mb-6 flex-shrink-0 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        {cards.map((card) => (
+          <CardStats
+            key={card.title}
+            statSubtitle={card.title}
+            statTitle={card.value}
+            statIcon={card.icon}
+            onClick={() => navigateTo(card.path)}
+          />
+        ))}
+      </div>
+
+      <div className="flex min-h-[420px] flex-1 flex-col overflow-hidden rounded-3xl border border-ink-100 bg-white shadow-soft">
+        <div className="flex-shrink-0 border-b border-ink-100 px-6 py-4">
+          <h3 className="font-display text-lg font-semibold text-brand-900">
+            Eseménynaptár
+          </h3>
+        </div>
+        <div className="min-h-0 flex-1 p-2">
           <CardCalender />
         </div>
       </div>

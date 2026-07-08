@@ -1,78 +1,77 @@
 import React from "react";
 import { createPopper } from "@popperjs/core";
+import { PiBellLight, PiCheckCircleLight } from "react-icons/pi";
 
-const NotificationDropdown = () => {
-  // dropdown props
-  const [dropdownPopoverShow, setDropdownPopoverShow] = React.useState(false);
-  const btnDropdownRef = React.createRef();
-  const popoverDropdownRef = React.createRef();
-  const openDropdownPopover = () => {
-    console.log("hey");
-    createPopper(btnDropdownRef.current, popoverDropdownRef.current, {
-      placement: "bottom-start",
+const NotificationDropdown = ({ notifications = [] }) => {
+  const [open, setOpen] = React.useState(false);
+  const btnRef = React.useRef(null);
+  const popoverRef = React.useRef(null);
+
+  const openPopover = () => {
+    createPopper(btnRef.current, popoverRef.current, {
+      placement: "bottom-end",
+      modifiers: [{ name: "offset", options: { offset: [0, 8] } }],
     });
-    setDropdownPopoverShow(true);
+    setOpen(true);
   };
-  const closeDropdownPopover = () => {
-    setDropdownPopoverShow(false);
-  };
+  const closePopover = () => setOpen(false);
+
+  React.useEffect(() => {
+    const onClick = (e) => {
+      if (
+        popoverRef.current &&
+        !popoverRef.current.contains(e.target) &&
+        !btnRef.current.contains(e.target)
+      ) {
+        closePopover();
+      }
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
+
   return (
     <>
-      <a
-        className="text-blueGray-500 block py-1 px-3"
-        href="#pablo"
-        ref={btnDropdownRef}
-        onClick={(e) => {
-          e.preventDefault();
-          dropdownPopoverShow ? closeDropdownPopover() : openDropdownPopover();
-        }}
+      <button
+        ref={btnRef}
+        onClick={() => (open ? closePopover() : openPopover())}
+        className="relative flex h-9 w-9 items-center justify-center rounded-full text-ink-500 transition-colors duration-300 ease-fluid hover:bg-brand-50 hover:text-brand-700"
+        aria-label="Értesítések"
       >
-        <i className="fas fa-bell"></i>
-      </a>
+        <PiBellLight className="h-5 w-5" />
+        {notifications.length > 0 && (
+          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-ember-500 ring-2 ring-white" />
+        )}
+      </button>
+
       <div
-        ref={popoverDropdownRef}
-        className={
-          (dropdownPopoverShow ? "block " : "hidden ") +
-          "bg-white text-base z-50 float-left py-2 list-none text-left rounded shadow-lg mt-1 min-w-48"
-        }
+        ref={popoverRef}
+        className={`${
+          open ? "animate-scale-in" : "hidden"
+        } z-50 w-72 rounded-2xl border border-ink-100 bg-white p-1.5 shadow-soft-lg`}
       >
-        <a
-          href="#pablo"
-          className={
-            "text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-blueGray-700"
-          }
-          onClick={(e) => e.preventDefault()}
-        >
-          Action
-        </a>
-        <a
-          href="#pablo"
-          className={
-            "text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-blueGray-700"
-          }
-          onClick={(e) => e.preventDefault()}
-        >
-          Another action
-        </a>
-        <a
-          href="#pablo"
-          className={
-            "text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-blueGray-700"
-          }
-          onClick={(e) => e.preventDefault()}
-        >
-          Something else here
-        </a>
-        <div className="h-0 my-2 border border-solid border-blueGray-100" />
-        <a
-          href="#pablo"
-          className={
-            "text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-blueGray-700"
-          }
-          onClick={(e) => e.preventDefault()}
-        >
-          Seprated link
-        </a>
+        <div className="px-3 py-2.5 text-sm font-semibold text-brand-900">
+          Értesítések
+        </div>
+        {notifications.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
+            <PiCheckCircleLight className="h-7 w-7 text-ink-300" />
+            <p className="text-sm text-ink-400">
+              Nincs új értesítésed. Minden naprakész.
+            </p>
+          </div>
+        ) : (
+          <div className="max-h-72 overflow-y-auto py-1">
+            {notifications.map((n, i) => (
+              <div
+                key={i}
+                className="rounded-xl px-3 py-2 text-sm text-ink-700 hover:bg-brand-50"
+              >
+                {n.text}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </>
   );

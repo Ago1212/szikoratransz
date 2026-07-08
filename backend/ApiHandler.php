@@ -457,6 +457,66 @@ class ApiHandler {
                 }
             }
 
+            // Kamion karbantartás események
+            $query = "
+                    SELECT 
+                        k.rendszam AS leiras_prefix,
+                        kk.log,
+                        kk.datum
+                    FROM kamion_karbantartars kk
+                    INNER JOIN kamion k ON k.id = kk.kamion_id
+                    WHERE k.admin = :id
+                    AND kk.torolt <> 'I'
+                    AND k.torolt <> 'I'
+                ";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            $kamion_karbantartasok = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if ($kamion_karbantartasok) {
+                foreach ($kamion_karbantartasok as $item) {
+                    if ($item['datum']) {
+                        $data[] = [
+                            'start' => $item['datum'],
+                            'end'   => $item['datum'],
+                            'title' => $item['leiras_prefix'] . ' – ' . $item['log']
+                        ];
+                    }
+                }
+            }
+
+            // Pótkocsi karbantartás események
+            $query = "
+                    SELECT 
+                        p.rendszam AS leiras_prefix,
+                        pk.log,
+                        pk.datum
+                    FROM potkocsi_karbantartars pk
+                    INNER JOIN potkocsi p ON p.id = pk.potkocsi_id
+                    WHERE p.admin = :id
+                    AND pk.torolt <> 'I'
+                    AND p.torolt <> 'I'
+                ";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            $potkocsi_karbantartasok = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if ($potkocsi_karbantartasok) {
+                foreach ($potkocsi_karbantartasok as $item) {
+                    if ($item['datum']) {
+                        $data[] = [
+                            'start' => $item['datum'],
+                            'end'   => $item['datum'],
+                            'title' => $item['leiras_prefix'] . ' – ' . $item['log']
+                        ];
+                    }
+                }
+            }
+
+
+
             return ['success' => true, 'data' => $data];
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];

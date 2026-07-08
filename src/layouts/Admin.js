@@ -1,7 +1,6 @@
 import React from "react";
 import { Switch, Route, Redirect } from "react-router-dom";
 import Sidebar from "components/Sidebar/Sidebar.js";
-import FooterAdmin from "components/Footers/FooterAdmin.js";
 
 // Import views
 import Dashboard from "views/admin/Dashboard.js";
@@ -35,9 +34,22 @@ export default function Admin() {
   return (
     <>
       <Sidebar />
-      <div className="relative md:ml-64 bg-gray-50 min-h-screen">
-        {/* Main Content */}
-        <div className="px-4 md:px-8 mx-auto w-full py-6">
+
+      {/* Háttér — fix réteg, nem görgethető, a Sidebar-hoz igazítva */}
+      <div className="fixed inset-y-0 right-0 left-0 overflow-hidden bg-sand-50 md:left-72">
+        <div
+          className="absolute inset-0 opacity-60"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 12% -10%, rgba(47,77,224,0.08), transparent 45%), radial-gradient(circle at 90% 110%, rgba(47,77,224,0.06), transparent 40%)",
+          }}
+        />
+        <div className="grain-overlay" />
+      </div>
+
+      {/* Tartalom — fix magasságú, csak ez görgethető, a böngészőoldal maga nem */}
+      <div className="fixed inset-y-0 right-0 left-0 overflow-y-auto md:left-72">
+        <div className="mx-auto h-full w-full px-4 py-8 md:px-10">
           <Switch>
             <PrivateRoute path="/admin/dashboard" exact component={Dashboard} />
             <PrivateRoute path="/admin/settings" exact component={Settings} />

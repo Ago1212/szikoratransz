@@ -1,7 +1,57 @@
 import React, { useEffect, useState } from "react";
-import { FiDownload, FiTrash2, FiUpload, FiFile } from "react-icons/fi";
+import {
+  PiDownloadSimpleLight,
+  PiTrashLight,
+  PiUploadSimpleLight,
+  PiFileLight,
+  PiFilePdfLight,
+  PiFileXlsLight,
+  PiFileImageLight,
+} from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { downloadFileAction } from "utils/downloadFileAction";
+
+import DataTable, { ActionIcon } from "components/UI/DataTable.js";
+
+const getFileIcon = (filename) => {
+  const ext = filename.split(".").pop().toLowerCase();
+
+  switch (ext) {
+    case "pdf":
+      return <PiFilePdfLight className="h-5 w-5 text-red-600" />;
+    case "xls":
+    case "xlsx":
+    case "csv":
+      return <PiFileXlsLight className="h-5 w-5 text-emerald-600" />;
+    case "jpg":
+    case "jpeg":
+    case "png":
+    case "gif":
+    case "webp":
+      return <PiFileImageLight className="h-5 w-5 text-violet-600" />;
+    default:
+      return <PiFileLight className="h-5 w-5 text-brand-600" />;
+  }
+};
+
+const formatFileSize = (bytes) => {
+  if (bytes === 0) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat(bytes / Math.pow(k, i)).toFixed(1) + " " + sizes[i];
+};
+
+const formatDate = (dateString) => {
+  const options = {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  };
+  return new Date(dateString).toLocaleDateString("hu-HU", options);
+};
 
 export default function CardTableForFajlok({ id, tabla }) {
   const [files, setFiles] = useState([]);
@@ -28,6 +78,7 @@ export default function CardTableForFajlok({ id, tabla }) {
 
   useEffect(() => {
     fetchFiles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const handleFileDelete = async (file_id) => {
@@ -51,7 +102,6 @@ export default function CardTableForFajlok({ id, tabla }) {
     if (!file) return;
 
     if (file.size > 10 * 1024 * 1024) {
-      // 10MB limit
       alert("A fájl mérete túl nagy! Maximális megengedett méret: 10MB");
       return;
     }
@@ -92,40 +142,70 @@ export default function CardTableForFajlok({ id, tabla }) {
     reader.readAsDataURL(file);
   };
 
-  const handleFileDownload = async (id, filename) => {
+  const handleFileDownload = async (fileId, filename) => {
     try {
-      await downloadFileAction(id, filename);
+      await downloadFileAction(fileId, filename);
     } catch (error) {
       console.error("Letöltési hiba:", error);
       alert("A fájl letöltése sikertelen.");
     }
   };
 
-  const formatFileSize = (bytes) => {
-    if (bytes === 0) return "0 B";
-    const k = 1024;
-    const sizes = ["B", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat(bytes / Math.pow(k, i)).toFixed(1) + " " + sizes[i];
-  };
-
-  const formatDate = (dateString) => {
-    const options = {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    };
-    return new Date(dateString).toLocaleDateString("hu-HU", options);
-  };
+  const columns = [
+    {
+      key: "filename",
+      label: "Fájlnév",
+      render: (row) => (
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-sand-100">
+            {getFileIcon(row.filename)}
+          </div>
+          <div className="max-w-xs truncate text-sm font-medium text-brand-900">
+            {row.filename}
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "filesize",
+      label: "Méret",
+      className: "text-ink-500",
+      render: (row) => formatFileSize(row.filesize),
+    },
+    {
+      key: "feltoltve",
+      label: "Feltöltve",
+      className: "text-ink-500",
+      render: (row) => formatDate(row.feltoltve),
+    },
+    {
+      key: "actions",
+      label: "Műveletek",
+      align: "right",
+      render: (row) => (
+        <div className="flex justify-end gap-1">
+          <ActionIcon
+            icon={<PiDownloadSimpleLight />}
+            onClick={() => handleFileDownload(row.sorszam, row.filename)}
+            title="Letöltés"
+          />
+          <ActionIcon
+            icon={<PiTrashLight />}
+            danger
+            onClick={() => handleFileDelete(row.sorszam)}
+            title="Törlés"
+          />
+        </div>
+      ),
+    },
+  ];
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden w-full">
-      <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-        <h3 className="text-xl font-semibold text-gray-800">Fájlok kezelése</h3>
-        <label className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors cursor-pointer">
-          <FiUpload className="mr-2" />
+    <DataTable
+      title="Fájlok kezelése"
+      headerAction={
+        <label className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-all duration-300 ease-fluid hover:bg-brand-700">
+          <PiUploadSimpleLight className="h-4 w-4" />
           Új fájl feltöltése
           <input
             type="file"
@@ -134,83 +214,17 @@ export default function CardTableForFajlok({ id, tabla }) {
             disabled={isLoading}
           />
         </label>
-      </div>
-
-      {isLoading ? (
-        <div className="p-8 flex justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      }
+      columns={columns}
+      rows={files}
+      rowKey={(row, index) => row.sorszam ?? index}
+      loading={isLoading}
+      emptyState={
+        <div className="p-10 text-center text-ink-400">
+          <PiFileLight className="mx-auto h-10 w-10 text-ink-300" />
+          <p className="mt-2 text-sm">Nincsenek feltöltött fájlok</p>
         </div>
-      ) : files.length === 0 ? (
-        <div className="p-8 text-center text-gray-500">
-          <FiFile className="mx-auto h-12 w-12 text-gray-400" />
-          <p className="mt-2">Nincsenek feltöltött fájlok</p>
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Fájlnév
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Méret
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Feltöltve
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Műveletek
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {files.map((file, index) => (
-                <tr key={index} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-md flex items-center justify-center">
-                        <FiFile className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900 truncate max-w-xs">
-                          {file.filename}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatFileSize(file.filesize)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatDate(file.feltoltve)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleFileDownload(file.sorszam, file.filename)
-                      }
-                      className="text-blue-600 hover:text-blue-900 mr-4 transition-colors"
-                      title="Letöltés"
-                    >
-                      <FiDownload className="inline-block" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleFileDelete(file.sorszam)}
-                      className="text-red-600 hover:text-red-900 transition-colors"
-                      title="Törlés"
-                    >
-                      <FiTrash2 className="inline-block" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+      }
+    />
   );
 }

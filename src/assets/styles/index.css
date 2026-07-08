@@ -3,3 +3,54 @@
 @tailwind components;
 
 @tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-sand-25 text-brand-900 antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display tracking-tight;
+    text-wrap: balance;
+  }
+
+  ::selection {
+    @apply bg-ember-300/40 text-brand-900;
+  }
+
+  *:focus-visible {
+    outline: 2px solid theme("colors.ember.400");
+    outline-offset: 2px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-brand-200 rounded-full;
+  }
+
+  .tabular-data {
+    font-variant-numeric: tabular-nums;
+    @apply font-mono;
+  }
+}
+
+@layer components {
+  /* Fixed, pointer-events-none grain overlay. Only ever attach to fixed layers, never scrolling containers. */
+  .grain-overlay {
+    @apply pointer-events-none fixed inset-0 bg-grain opacity-[0.035] mix-blend-overlay;
+  }
+}

@@ -49,30 +49,24 @@ export default function Bejelentesek() {
 
   return (
     <>
-      <div className="flex flex-wrap mt-0">
-        <div className="w-full mb-12 px-4">
-          <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded bg-white">
-            <div className="rounded-t mb-0 px-4 py-3 border-0">
-              <div className="flex flex-wrap items-center">
-                <div className="relative w-full px-4 max-w-full flex-grow flex-1">
-                  <h3 className="font-semibold text-lg text-blueGray-700">
-                    Kamion kiválasztása
-                  </h3>
-                  <select
-                    className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-                    value={selectedKamion}
-                    onChange={handleKamionChange}
-                  >
-                    <option value="">Válassz kamiont...</option>
-                    {kamionok.map((kamion) => (
-                      <option key={kamion.id} value={kamion.id}>
-                        {kamion.rendszam}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
+      <div className="mx-auto w-full max-w-7xl">
+        <div className="w-full">
+          <div className="mb-6 rounded-3xl bg-white p-6 shadow-soft ring-1 ring-ink-100">
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-400">
+              Kamion kiválasztása
+            </h3>
+            <select
+              className="w-full rounded-xl border border-ink-100 bg-sand-50 px-4 py-3 text-sm text-brand-900 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100"
+              value={selectedKamion}
+              onChange={handleKamionChange}
+            >
+              <option value="">Válassz kamiont...</option>
+              {kamionok.map((kamion) => (
+                <option key={kamion.id} value={kamion.id}>
+                  {kamion.rendszam}
+                </option>
+              ))}
+            </select>
           </div>
 
           {selectedKamion && (
