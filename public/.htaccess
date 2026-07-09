@@ -12,12 +12,16 @@
 # tartalmuk sose változik hash-váltás nélkül — de az index.html,
 # a service worker és a manifest MINDIG friss kell legyen, különben a
 # böngésző/proxy a régi verziót szolgálja ki új deploy után is.
+# `no-store` szándékosan NINCS itt (csak `no-cache, must-revalidate`):
+# a `no-store` letiltaná a böngésző back/forward-cache-ét (lassabb
+# "vissza" navigáció mindenhol), miközben a `no-cache` önmagában is
+# minden betöltéskor kikényszeríti a friss verzió ellenőrzését.
 <IfModule mod_headers.c>
   <FilesMatch "\.(js|css)$">
     Header set Cache-Control "public, max-age=31536000, immutable"
   </FilesMatch>
   <FilesMatch "^(index\.html|service-worker\.js|manifest\.json|asset-manifest\.json)$">
-    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Cache-Control "no-cache, must-revalidate"
   </FilesMatch>
 </IfModule>
 

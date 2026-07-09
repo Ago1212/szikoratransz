@@ -1,8 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { PiUserCircleLight, PiArrowRightLight } from "react-icons/pi";
+import useNoIndex from "utils/useNoIndex";
 
 export default function Profile() {
+  useNoIndex();
   let user = null;
   try {
     user = JSON.parse(sessionStorage.getItem("user"));

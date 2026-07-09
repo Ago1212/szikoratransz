@@ -1,4 +1,5 @@
 import React from "react";
+import { PiEnvelopeLight, PiPhoneLight, PiMapPinLight } from "react-icons/pi";
 
 export default function Footer() {
   return (
@@ -20,30 +21,30 @@ export default function Footer() {
             <ul className="space-y-4 text-base text-white/70">
               <li className="flex items-center gap-3">
                 <span className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0">
-                  <i className="fas fa-envelope text-[#2F4DE0]"></i>
+                  <PiEnvelopeLight className="text-[#2F4DE0]" />
                 </span>
                 <a
                   href="mailto:szikoratransz@gmail.com"
-                  className="hover:text-white transition-colors duration-300"
+                  className="underline decoration-white/25 hover:decoration-white/70 hover:text-white transition-colors duration-300"
                 >
                   szikoratransz@gmail.com
                 </a>
               </li>
               <li className="flex items-center gap-3">
                 <span className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0">
-                  <i className="fas fa-phone text-[#2F4DE0]"></i>
+                  <PiPhoneLight className="text-[#2F4DE0]" />
                 </span>
                 <span>
                   <a
                     href="tel:+36308115776"
-                    className="hover:text-white transition-colors duration-300"
+                    className="underline decoration-white/25 hover:decoration-white/70 hover:text-white transition-colors duration-300"
                   >
                     +36 30 811 5776
                   </a>
                   {" / "}
                   <a
                     href="tel:+36202433368"
-                    className="hover:text-white transition-colors duration-300"
+                    className="underline decoration-white/25 hover:decoration-white/70 hover:text-white transition-colors duration-300"
                   >
                     +36 20 243 3368
                   </a>
@@ -51,33 +52,11 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-3">
                 <span className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0">
-                  <i className="fas fa-map-marker-alt text-[#2F4DE0]"></i>
+                  <PiMapPinLight className="text-[#2F4DE0]" />
                 </span>
                 2518 Leányvár, Bécsi út 86
               </li>
             </ul>
-
-            <div className="mt-10">
-              <h3 className="font-[Overpass] font-semibold text-sm uppercase tracking-wide text-white/40 mb-3">
-                Kövess minket
-              </h3>
-              <div className="flex gap-3">
-                <a
-                  href="#"
-                  aria-label="Facebook"
-                  className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/70 hover:bg-[#2F4DE0] hover:text-white transition-colors duration-300 text-lg"
-                >
-                  <i className="fab fa-facebook-f"></i>
-                </a>
-                <a
-                  href="#"
-                  aria-label="Instagram"
-                  className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/70 hover:bg-[#2F4DE0] hover:text-white transition-colors duration-300 text-lg"
-                >
-                  <i className="fab fa-instagram"></i>
-                </a>
-              </div>
-            </div>
           </div>
 
           {/* Térkép */}

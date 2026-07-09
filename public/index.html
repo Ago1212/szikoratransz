@@ -1,12 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hu">
   <head>
     <!-- Az index.html sose cache-elődjön a böngészőben/proxy-ban — enélkül
          egy új deploy után az emberek a régi, elavult verziót láthatják
          (ez a .htaccess-ben lévő Cache-Control fejléc kliensoldali,
          meta-tages tartaléka, arra az esetre, ha a szerver fejléc valamiért
-         nem érvényesül). -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+         nem érvényesül). `no-store` szándékosan NINCS itt: az letiltaná a
+         böngésző back/forward-cache-ét (lassabb "vissza" navigáció),
+         miközben a `no-cache, must-revalidate` önmagában is minden
+         betöltéskor friss verziót kényszerít ki. -->
+    <meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     <link rel="manifest" href="/manifest.json" />
@@ -25,8 +28,7 @@
       rel="stylesheet"
     />
     <title>Szikora Transz Kft. | Profi áruszállítás és logisztika</title>
-    <meta name="description" content="A Szikora Transz Kft. országos áruszállítást, és logisztikai megoldásokat kínál."/>
-    <meta name="keywords" content="szállítás, áruszállítás, Szikora Transz,Szikora, kamion,sofőr,állás, logisztika,Leányvár,Esztergom,Budapest"/>
+    <meta name="description" content="Országos és nemzetközi áruszállítás, raktározás és logisztika 2010 óta. Kérjen ingyenes árajánlatot 24 órán belül — Szikora Transz Kft."/>
     <link rel="canonical" href="https://szikora-transz.hu"/>
     <meta name="theme-color" content="#2F4DE0" />
     <link rel="apple-touch-icon" href="/logo.png" />
@@ -35,21 +37,33 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Szikora Transz" />
-    <meta property="og:title" content="Szikora Transz Kft. | Szállítási megoldások"/>
-    <meta property="og:description" content="Professzionális áruszállítás és logisztika Magyarországon."/>
+    <meta property="og:title" content="Szikora Transz Kft. | Profi áruszállítás és logisztika"/>
+    <meta property="og:description" content="Országos és nemzetközi áruszállítás, raktározás és logisztika 2010 óta. Kérjen ingyenes árajánlatot 24 órán belül."/>
     <meta property="og:type" content="website"/>
     <meta property="og:url" content="https://szikora-transz.hu"/>
-    <meta property="og:image" content="https://szikora-transz.hu/logo2.svg"/> 
+    <meta property="og:image" content="https://szikora-transz.hu/og-image.jpg"/>
+    <meta property="og:image:width" content="1200"/>
+    <meta property="og:image:height" content="630"/>
+    <meta property="og:locale" content="hu_HU"/>
+    <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:title" content="Szikora Transz Kft. | Profi áruszállítás és logisztika"/>
+    <meta name="twitter:description" content="Országos és nemzetközi áruszállítás, raktározás és logisztika 2010 óta. Kérjen ingyenes árajánlatot 24 órán belül."/>
+    <meta name="twitter:image" content="https://szikora-transz.hu/og-image.jpg"/>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "LocalBusiness",
         "name": "Szikora Transz Kft.",
-        "image": "https://szikora-transz.hu/logo2.svg",
-        "telephone": "+36-30-382-8537",
+        "url": "https://szikora-transz.hu",
+        "image": "https://szikora-transz.hu/og-image.jpg",
+        "telephone": "+36-30-811-5776",
+        "email": "szikoratransz@gmail.com",
+        "priceRange": "Egyedi árajánlat",
+        "areaServed": ["HU", "EU"],
         "address": {
-          "@type": "2518",
+          "@type": "PostalAddress",
           "streetAddress": "Bécsi út 86",
+          "postalCode": "2518",
           "addressLocality": "Leányvár",
           "addressCountry": "HU"
         }

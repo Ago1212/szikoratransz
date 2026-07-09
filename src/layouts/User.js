@@ -2,6 +2,7 @@ import React from "react";
 import { Switch, Route, Redirect } from "react-router-dom";
 
 import UserDashboard from "views/user/Dashboard.js";
+import useNoIndex from "utils/useNoIndex";
 
 const PrivateRoute = ({ component: Component, ...rest }) => {
   const isAuthenticated = sessionStorage.getItem("user") !== null;
@@ -16,6 +17,7 @@ const PrivateRoute = ({ component: Component, ...rest }) => {
 };
 
 export default function User() {
+  useNoIndex();
   return (
     <>
       <div className="relative min-h-screen bg-sand-50">

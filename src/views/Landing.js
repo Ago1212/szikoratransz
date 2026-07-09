@@ -10,6 +10,20 @@ import { Link } from "react-router-dom";
 import Footer from "components/Footers/Footer.js";
 import { fetchAction } from "utils/fetchAction";
 import HungaryMapBackground from "components/UI/HungaryMapBackground.js";
+import {
+  PiTruckLight,
+  PiArrowRightLight,
+  PiCheckLight,
+  PiUserCircleLight,
+  PiQuotesLight,
+  PiCaretDownLight,
+  PiEnvelopeLight,
+  PiGlobeLight,
+  PiShieldCheckLight,
+  PiWarehouseLight,
+  PiLightningLight,
+  PiFileTextLight,
+} from "react-icons/pi";
 
 // ---------------------------------------------------------------------------
 // Design tokens (Tailwind arbitrary values — nem igényel config módosítást)
@@ -43,7 +57,7 @@ function RouteDivider({ dark = false }) {
               : "bg-[#F2F3F5] border-[#23262B]/10"
           }`}
         >
-          <i className="fas fa-truck text-xs text-[#1E3AA8]"></i>
+          <PiTruckLight className="text-xs text-[#1E3AA8]" />
         </div>
       </div>
     </div>
@@ -164,32 +178,32 @@ const TESTIMONIALS = [
 
 const FEATURES = [
   {
-    icon: "fa-truck",
+    icon: PiTruckLight,
     title: "Belföldi fuvarozás",
     desc: "Gyors és megbízható áruszállítás Magyarország egész területén, rugalmas árazással és pontos határidőkkel.",
   },
   {
-    icon: "fa-globe-europe",
+    icon: PiGlobeLight,
     title: "Nemzetközi szállítás",
     desc: "Határon átnyúló fuvarozási szolgáltatás Európa-szerte, teljes körű vámügyintézéssel és okmányolással.",
   },
   {
-    icon: "fa-shield-alt",
+    icon: PiShieldCheckLight,
     title: "Biztosított szállítás",
     desc: "Minden fuvarunk teljes biztosítási fedezettel történik — az árukészlete nálunk biztos kezekben van.",
   },
   {
-    icon: "fa-warehouse",
+    icon: PiWarehouseLight,
     title: "Raktározás és logisztika",
     desc: "Rövid és hosszú távú tárolási kapacitás, áru-átcsomagolás és teljes körű logisztikai koordináció.",
   },
   {
-    icon: "fa-bolt",
+    icon: PiLightningLight,
     title: "Expressz szállítás",
     desc: "Sürgős fuvarok soron kívüli kezelése, garantált kiszállítási idővel, ha az idő a legfontosabb tényező.",
   },
   {
-    icon: "fa-file-invoice",
+    icon: PiFileTextLight,
     title: "Egyedi árajánlat",
     desc: "Minden megrendelést egyedileg árazunk az útvonal, az áru jellege és a határidő alapján — gyors, személyre szabott ajánlattal.",
   },
@@ -394,7 +408,7 @@ export default function Landing() {
                     className={`${
                       activeSection === item.id
                         ? "text-[#1E3AA8] border-b-2 border-[#1E3AA8]"
-                        : "text-[#23262B]/60 hover:text-[#23262B] border-b-2 border-transparent"
+                        : "text-[#23262B]/70 hover:text-[#23262B] border-b-2 border-transparent"
                     } px-1 py-2 text-sm font-medium transition-colors duration-300`}
                   >
                     {item.label}
@@ -414,7 +428,7 @@ export default function Landing() {
               <button
                 type="button"
                 onClick={toggleMobileMenu}
-                className="inline-flex items-center justify-center p-2 rounded-xl text-[#23262B]/60 hover:text-[#23262B] hover:bg-[#23262B]/5 focus:outline-none"
+                className="inline-flex items-center justify-center p-2 rounded-xl text-[#23262B]/70 hover:text-[#23262B] hover:bg-[#23262B]/5 focus:outline-none"
                 aria-controls="mobile-menu"
                 aria-expanded="false"
               >
@@ -469,7 +483,7 @@ export default function Landing() {
                 className={`${
                   activeSection === item.id
                     ? "bg-[#23262B]/5 text-[#1E3AA8]"
-                    : "text-[#23262B]/60 hover:bg-[#23262B]/5 hover:text-[#23262B]"
+                    : "text-[#23262B]/70 hover:bg-[#23262B]/5 hover:text-[#23262B]"
                 } block px-3 py-2 rounded-xl text-base font-medium w-full text-left`}
               >
                 {item.label}
@@ -536,6 +550,11 @@ export default function Landing() {
                 </Reveal>
 
                 <h1 className="font-[Overpass] font-extrabold text-5xl md:text-7xl leading-[1.05] text-[#23262B] tracking-tight">
+                  {/* Szóköz minden sor-span között: a `.hero-line-mask` maga
+                      display:block-kel vizuálisan úgyis külön sorra töri
+                      ezeket, de szóköz nélkül a nyers DOM-szöveg (amit pl.
+                      a JS-t nem futtató keresőrobotok/AI-crawlerek látnak)
+                      egybefolyna: "Szállítás, amirepercre pontosan...". */}
                   <span className="hero-line-mask">
                     <span
                       className="hero-line-inner"
@@ -543,7 +562,7 @@ export default function Landing() {
                     >
                       Szállítás, amire
                     </span>
-                  </span>
+                  </span>{" "}
                   <span className="hero-line-mask">
                     <span
                       className="hero-line-inner text-[#1E3AA8]"
@@ -551,7 +570,7 @@ export default function Landing() {
                     >
                       percre pontosan
                     </span>
-                  </span>
+                  </span>{" "}
                   <span className="hero-line-mask">
                     <span
                       className="hero-line-inner"
@@ -572,10 +591,10 @@ export default function Landing() {
                 <Reveal delay={780}>
                   <button
                     onClick={() => smoothScroll("services")}
-                    className="mt-6 inline-flex items-center gap-2 text-[#23262B]/60 hover:text-[#23262B] text-sm font-[Overpass] font-semibold transition-colors duration-300"
+                    className="mt-6 inline-flex items-center gap-2 text-[#23262B]/70 hover:text-[#23262B] text-sm font-[Overpass] font-semibold transition-colors duration-300"
                   >
                     Szolgáltatásaink megismerése
-                    <i className="fas fa-arrow-right text-xs"></i>
+                    <PiArrowRightLight className="text-xs" />
                   </button>
                 </Reveal>
               </div>
@@ -609,7 +628,7 @@ export default function Landing() {
                       className="flex items-center gap-3 text-sm text-white/70"
                     >
                       <span className="w-5 h-5 rounded-full bg-[#2F4DE0]/15 text-[#7C93FF] flex items-center justify-center flex-shrink-0">
-                        <i className="fas fa-check text-[10px]"></i>
+                        <PiCheckLight className="text-[10px]" />
                       </span>
                       {item}
                     </div>
@@ -623,7 +642,7 @@ export default function Landing() {
                   Ingyenes ajánlatot kérek
                 </button>
 
-                <p className="text-center text-xs text-white/40 mt-5">
+                <p className="text-center text-xs text-white/55 mt-5">
                   vagy hívjon közvetlenül:{" "}
                   <a
                     href="tel:+36308115776"
@@ -649,7 +668,7 @@ export default function Landing() {
               <h2 className="font-[Overpass] font-extrabold text-3xl md:text-4xl text-[#23262B] mt-3">
                 Így jut el az árujuk A-ból B-be
               </h2>
-              <p className="text-[#23262B]/60 mt-4 text-lg">
+              <p className="text-[#23262B]/70 mt-4 text-lg">
                 Négy lépés, amely minden fuvarra érvényes — a megrendeléstől a
                 visszaigazolt kézbesítésig.
               </p>
@@ -665,7 +684,7 @@ export default function Landing() {
                   <h3 className="font-[Overpass] font-bold text-lg text-[#23262B] mb-2">
                     {step.title}
                   </h3>
-                  <p className="text-[#23262B]/60 text-sm leading-relaxed">
+                  <p className="text-[#23262B]/70 text-sm leading-relaxed">
                     {step.desc}
                   </p>
                 </Reveal>
@@ -686,7 +705,7 @@ export default function Landing() {
               <h2 className="font-[Overpass] font-extrabold text-3xl md:text-4xl text-[#23262B] mt-3">
                 Szolgáltatásaink
               </h2>
-              <p className="text-[#23262B]/60 mt-4 text-lg">
+              <p className="text-[#23262B]/70 mt-4 text-lg">
                 Teljes körű fuvarozási megoldások, amelyek kielégítik ügyfeleink
                 egyedi igényeit — belföldön és külföldön egyaránt.
               </p>
@@ -697,12 +716,12 @@ export default function Landing() {
                 <Reveal key={feature.title} delay={index * 80}>
                   <div className="bg-white border border-[#23262B]/10 rounded-xl p-8 h-full transition-all duration-300 hover:border-[#1E3AA8]/50 hover:shadow-xl hover:-translate-y-1">
                     <div className="w-12 h-12 bg-[#1E3AA8]/10 text-[#1E3AA8] rounded-xl flex items-center justify-center mb-6">
-                      <i className={`fas ${feature.icon} text-lg`}></i>
+                      <feature.icon className="text-lg" />
                     </div>
                     <h3 className="font-[Overpass] font-bold text-xl text-[#23262B] mb-2">
                       {feature.title}
                     </h3>
-                    <p className="text-[#23262B]/60 leading-relaxed">
+                    <p className="text-[#23262B]/70 leading-relaxed">
                       {feature.desc}
                     </p>
                   </div>
@@ -719,7 +738,7 @@ export default function Landing() {
                 <h3 className="font-[Overpass] font-extrabold text-3xl text-[#23262B] mt-3 mb-6">
                   Miért válasszon minket?
                 </h3>
-                <p className="text-lg text-[#23262B]/60 mb-8">
+                <p className="text-lg text-[#23262B]/70 mb-8">
                   10+ éves tapasztalattal rendelkezünk a fuvarozási iparágban.
                   Flottánk állandóan karban van tartva, sofőreink képzettek és
                   megbízhatóak.
@@ -749,7 +768,7 @@ export default function Landing() {
                           <h4 className="font-[Overpass] font-bold text-[#23262B]">
                             {item.title}
                           </h4>
-                          <p className="text-[#23262B]/60 text-sm mt-1">
+                          <p className="text-[#23262B]/70 text-sm mt-1">
                             {item.desc}
                           </p>
                         </div>
@@ -762,6 +781,7 @@ export default function Landing() {
                 <img
                   src="/flotta-1.jpg"
                   alt="Szikora Transz kamion"
+                  loading="lazy"
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#23262B] via-transparent to-transparent"></div>
@@ -791,6 +811,7 @@ export default function Landing() {
                 <img
                   src="/flotta-3.jpg"
                   alt="Szikora Transz kamion borult égbolt alatt"
+                  loading="lazy"
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-[#23262B]/20"></div>
@@ -802,7 +823,7 @@ export default function Landing() {
                 <h2 className="font-[Overpass] font-extrabold text-3xl md:text-4xl text-[#23262B] mt-3 mb-6">
                   Cégtörténetünk
                 </h2>
-                <p className="text-lg text-[#23262B]/60 mb-8">
+                <p className="text-lg text-[#23262B]/70 mb-8">
                   Szikora Transz Kft 2010-ben alakult kis családi
                   vállalkozásként. Azóta folyamatosan bővült flottánk és
                   szolgáltatási körünk, de megtartottuk személyes hangvételünket
@@ -811,13 +832,13 @@ export default function Landing() {
                 <div className="space-y-4">
                   <div className="flex items-center gap-4 border border-[#23262B]/10 rounded-xl p-4">
                     <div className="w-11 h-11 rounded-xl bg-[#1E3AA8]/10 text-[#1E3AA8] flex items-center justify-center flex-shrink-0">
-                      <i className="fas fa-truck-moving"></i>
+                      <PiTruckLight />
                     </div>
                     <div>
-                      <h4 className="font-[Overpass] font-semibold text-[#23262B]">
+                      <h3 className="font-[Overpass] font-semibold text-[#23262B]">
                         Modern flotta
-                      </h4>
-                      <p className="text-[#23262B]/60 text-sm">
+                      </h3>
+                      <p className="text-[#23262B]/70 text-sm">
                         Több modern kamionból álló, állandóan karbantartott
                         flotta.
                       </p>
@@ -825,13 +846,13 @@ export default function Landing() {
                   </div>
                   <div className="flex items-center gap-4 border border-[#23262B]/10 rounded-xl p-4">
                     <div className="w-11 h-11 rounded-xl bg-[#1E3AA8]/10 text-[#1E3AA8] flex items-center justify-center flex-shrink-0">
-                      <i className="fas fa-user-tie"></i>
+                      <PiUserCircleLight />
                     </div>
                     <div>
-                      <h4 className="font-[Overpass] font-semibold text-[#23262B]">
+                      <h3 className="font-[Overpass] font-semibold text-[#23262B]">
                         Tapasztalt sofőrök
-                      </h4>
-                      <p className="text-[#23262B]/60 text-sm">
+                      </h3>
+                      <p className="text-[#23262B]/70 text-sm">
                         Több tapasztalt, hosszú távú sofőr alkotja csapatunkat.
                       </p>
                     </div>
@@ -860,7 +881,7 @@ export default function Landing() {
               {TESTIMONIALS.map((t, index) => (
                 <Reveal key={t.name} delay={index * 100}>
                   <div className="bg-white border border-[#23262B]/10 rounded-xl p-8 flex flex-col h-full">
-                    <i className="fas fa-quote-left text-[#1E3AA8]/30 text-2xl mb-4"></i>
+                    <PiQuotesLight className="text-[#1E3AA8]/30 text-2xl mb-4" />
                     <p className="text-[#23262B]/75 leading-relaxed mb-6 flex-grow">
                       {t.quote}
                     </p>
@@ -894,6 +915,24 @@ export default function Landing() {
         {/* ---------------------------------------------------------- */}
         {/* GYIK                                                        */}
         {/* ---------------------------------------------------------- */}
+        {/* FAQPage strukturált adat — a lenti FAQ_ITEMS-ből generálva, hogy
+            sose fusson szét a látható tartalomtól. Ez teszi jogosulttá az
+            oldalt a Google FAQ rich resultjára, és könnyebben idézhetővé
+            AI-összefoglalók számára. */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: FAQ_ITEMS.map((item) => ({
+              "@type": "Question",
+              name: item.q,
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: item.a,
+              },
+            })),
+          })}
+        </script>
         <section id="gyik" className="py-24 bg-white">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="mb-12">
@@ -917,14 +956,14 @@ export default function Landing() {
                       <span className="font-[Overpass] font-semibold text-[#23262B] text-lg">
                         {item.q}
                       </span>
-                      <i
-                        className={`fas fa-chevron-down text-[#1E3AA8] text-sm flex-shrink-0 transition-transform duration-300 ${
+                      <PiCaretDownLight
+                        className={`text-[#1E3AA8] text-sm flex-shrink-0 transition-transform duration-300 ${
                           isOpen ? "rotate-180" : ""
                         }`}
-                      ></i>
+                      />
                     </button>
                     {isOpen && (
-                      <p className="text-[#23262B]/60 leading-relaxed pb-6 pr-8">
+                      <p className="text-[#23262B]/70 leading-relaxed pb-6 pr-8">
                         {item.a}
                       </p>
                     )}
@@ -947,7 +986,7 @@ export default function Landing() {
               <h2 className="font-[Overpass] font-extrabold text-3xl md:text-4xl text-[#23262B] mt-3">
                 Kapcsolatfelvétel
               </h2>
-              <p className="text-[#23262B]/60 mt-4 text-lg">
+              <p className="text-[#23262B]/70 mt-4 text-lg">
                 Kérjük töltse ki az alábbi űrlapot — gyors, ingyenes és
                 semmilyen kötöttséggel nem jár.
               </p>
@@ -971,7 +1010,7 @@ export default function Landing() {
                 <div className="p-8 md:p-10">
                   <div className="flex items-center gap-4 mb-2">
                     <div className="w-12 h-12 bg-[#2E3239]/15 text-white rounded-xl flex items-center justify-center flex-shrink-0">
-                      <i className="fas fa-envelope text-lg"></i>
+                      <PiEnvelopeLight className="text-lg" />
                     </div>
                     <h3 className="font-[Overpass] font-bold text-2xl text-white">
                       Ingyenes ajánlatkérés
@@ -985,7 +1024,7 @@ export default function Landing() {
                   <form onSubmit={submitQuoteRequest}>
                     <div className="space-y-5">
                       <div>
-                        <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/40 mb-2">
+                        <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/55 mb-2">
                           Teljes név
                         </label>
                         <input
@@ -1001,7 +1040,7 @@ export default function Landing() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
-                          <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/40 mb-2">
+                          <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/55 mb-2">
                             Telefonszám
                           </label>
                           <input
@@ -1016,7 +1055,7 @@ export default function Landing() {
                         </div>
 
                         <div>
-                          <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/40 mb-2">
+                          <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/55 mb-2">
                             Email cím
                           </label>
                           <input
@@ -1032,7 +1071,7 @@ export default function Landing() {
                       </div>
 
                       <div>
-                        <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/40 mb-2">
+                        <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/55 mb-2">
                           Üzenet
                         </label>
                         <textarea
@@ -1089,7 +1128,7 @@ export default function Landing() {
                 <div className="p-8">
                   <div className="flex items-center gap-4 mb-2">
                     <div className="w-12 h-12 bg-[#1E3AA8]/10 text-[#1E3AA8] rounded-full flex items-center justify-center flex-shrink-0">
-                      <i className="fas fa-truck text-lg"></i>
+                      <PiTruckLight className="text-lg" />
                     </div>
                     <h3 className="font-[Overpass] font-bold text-xl text-[#23262B]">
                       Sofőr jelentkezés

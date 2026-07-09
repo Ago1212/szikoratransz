@@ -1,2 +1,7 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
+Disallow: /admin/
+Disallow: /user/
+Disallow: /profile
+
+Sitemap: https://szikora-transz.hu/sitemap.xml

@@ -1,6 +1,7 @@
 import React from "react";
 import { Switch, Route, Redirect } from "react-router-dom";
 import Sidebar from "components/Sidebar/Sidebar.js";
+import useNoIndex from "utils/useNoIndex";
 
 // Import views
 import Dashboard from "views/admin/Dashboard.js";
@@ -31,6 +32,7 @@ const PrivateRoute = ({ component: Component, ...rest }) => {
 };
 
 export default function Admin() {
+  useNoIndex();
   return (
     <>
       <Sidebar />
