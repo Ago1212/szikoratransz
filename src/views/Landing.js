@@ -9,6 +9,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import Footer from "components/Footers/Footer.js";
 import { fetchAction } from "utils/fetchAction";
+import HungaryMapBackground from "components/UI/HungaryMapBackground.js";
 
 // ---------------------------------------------------------------------------
 // Design tokens (Tailwind arbitrary values — nem igényel config módosítást)
@@ -495,25 +496,6 @@ export default function Landing() {
         >
           <div className="absolute inset-0 overflow-hidden bg-[#F2F3F5]">
             <style>{`
-              @keyframes routeFlow {
-                to { stroke-dashoffset: -200; }
-              }
-              @keyframes waypointPulse {
-                0%, 100% { opacity: 0.45; transform: scale(1); }
-                50% { opacity: 0.85; transform: scale(1.3); }
-              }
-              @keyframes heroMapIn {
-                from { opacity: 0; transform: scale(1.06); filter: blur(14px); }
-                to { opacity: 1; transform: scale(1); filter: blur(0); }
-              }
-              @keyframes orbFloat {
-                0%, 100% { transform: translate(0, 0); }
-                50% { transform: translate(-14px, 22px); }
-              }
-              @keyframes orbFloatDelay {
-                0%, 100% { transform: translate(0, 0); }
-                50% { transform: translate(18px, -18px); }
-              }
               @keyframes lineReveal {
                 from { opacity: 0; transform: translateY(112%); }
                 to { opacity: 1; transform: translateY(0); }
@@ -522,18 +504,6 @@ export default function Landing() {
                 0% { background-position: 160% 0; }
                 35%, 100% { background-position: -60% 0; }
               }
-              .route-flow-1 { animation: routeFlow 14s linear infinite; }
-              .route-flow-2 { animation: routeFlow 22s linear infinite reverse; }
-              .route-flow-3 { animation: routeFlow 18s linear infinite; }
-              .waypoint-pulse {
-                transform-box: fill-box;
-                transform-origin: center;
-                animation: waypointPulse 4s ease-in-out infinite;
-              }
-              .waypoint-pulse-delay { animation-delay: 1.8s; }
-              .hero-map-in { animation: heroMapIn 1.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
-              .hero-orb-1 { animation: orbFloat 9s ease-in-out infinite; }
-              .hero-orb-2 { animation: orbFloatDelay 11s ease-in-out infinite; }
               .hero-line-mask { display: block; overflow: hidden; }
               .hero-line-inner {
                 display: inline-block;
@@ -546,95 +516,18 @@ export default function Landing() {
                 animation-delay: 1.6s;
               }
               @media (prefers-reduced-motion: reduce) {
-                .route-flow-1, .route-flow-2, .route-flow-3, .waypoint-pulse,
-                .hero-map-in, .hero-orb-1, .hero-orb-2, .hero-line-inner, .hero-cta-shimmer {
+                .hero-line-inner, .hero-cta-shimmer {
                   animation: none;
                 }
               }
             `}</style>
-            <div className="absolute inset-0 hero-map-in">
-              <div
-                className="absolute inset-0"
-                style={{
-                  background:
-                    "radial-gradient(ellipse 900px 550px at 85% -10%, rgba(30,58,168,0.10), transparent 60%)",
-                }}
-              ></div>
-              <svg
-                viewBox="0 0 1440 900"
-                preserveAspectRatio="none"
-                className="absolute inset-0 w-full h-full"
-              >
-                <path
-                  className="route-flow-1"
-                  d="M-50,620 C 250,260 470,300 760,440 C 1020,230 1260,400 1520,160"
-                  stroke="#1E3AA8"
-                  strokeWidth="2"
-                  strokeDasharray="10 12"
-                  fill="none"
-                  opacity="0.3"
-                />
-                <path
-                  className="route-flow-2"
-                  d="M-80,180 C 220,340 520,140 820,360 C 1100,560 1320,300 1560,480"
-                  stroke="#23262B"
-                  strokeWidth="1.5"
-                  strokeDasharray="6 10"
-                  fill="none"
-                  opacity="0.12"
-                />
-                <path
-                  className="route-flow-3"
-                  d="M120,900 C 420,680 600,840 900,580 C 1140,380 1300,580 1520,360"
-                  stroke="#1E3AA8"
-                  strokeWidth="2"
-                  strokeDasharray="10 12"
-                  fill="none"
-                  opacity="0.18"
-                />
-                <circle
-                  className="waypoint-pulse"
-                  cx="760"
-                  cy="440"
-                  r="5"
-                  fill="#1E3AA8"
-                  opacity="0.6"
-                />
-                <circle
-                  cx="760"
-                  cy="440"
-                  r="14"
-                  stroke="#1E3AA8"
-                  fill="none"
-                  opacity="0.25"
-                />
-                <circle
-                  className="waypoint-pulse waypoint-pulse-delay"
-                  cx="900"
-                  cy="580"
-                  r="5"
-                  fill="#1E3AA8"
-                  opacity="0.5"
-                />
-                <circle
-                  cx="1520"
-                  cy="160"
-                  r="4"
-                  fill="#23262B"
-                  opacity="0.25"
-                />
-                <circle cx="-50" cy="620" r="4" fill="#23262B" opacity="0.2" />
-              </svg>
-            </div>
-            <div className="hero-orb-1 absolute -top-24 -right-16 w-[28rem] h-[28rem] rounded-full bg-[#1E3AA8]/15 blur-3xl pointer-events-none"></div>
-            <div className="hero-orb-2 absolute bottom-0 left-1/4 w-80 h-80 rounded-full bg-[#1E3AA8]/10 blur-3xl pointer-events-none"></div>
-            <div className="absolute inset-0 bg-grain opacity-[0.05] mix-blend-overlay pointer-events-none"></div>
+            <HungaryMapBackground />
           </div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
             <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-16 items-center">
               {/* Bal oszlop — fő üzenet */}
-              <div>
+              <div className="relative lg:self-start lg:-mt-20">
                 <Reveal delay={0}>
                   <span className="inline-flex items-center gap-2 text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-[#1E3AA8] mb-6">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#1E3AA8] animate-pulse"></span>
@@ -672,13 +565,12 @@ export default function Landing() {
                 <Reveal delay={520}>
                   <p className="text-lg text-[#23262B]/70 max-w-xl mt-6 text-balance">
                     Szikora Transz Kft — belföldi és nemzetközi fuvarozás 2010
-                    óta. Modern flotta, teljes körű biztosítás, és egy csapat,
-                    amely minden fuvart úgy kezel, mintha a saját árujuk lenne.
+                    óta, modern flottával és teljes körű biztosítással.
                   </p>
                 </Reveal>
 
                 <Reveal delay={650}>
-                  <div className="flex flex-wrap gap-x-8 gap-y-3 mt-10">
+                  <div className="flex flex-wrap gap-x-8 gap-y-3 mt-8 max-w-sm lg:max-w-md">
                     {[
                       "Saját flotta",
                       "EU-szerte",
@@ -699,7 +591,7 @@ export default function Landing() {
                 <Reveal delay={780}>
                   <button
                     onClick={() => smoothScroll("services")}
-                    className="mt-10 inline-flex items-center gap-2 text-[#23262B]/60 hover:text-[#23262B] text-sm font-[Overpass] font-semibold transition-colors duration-300"
+                    className="mt-6 inline-flex items-center gap-2 text-[#23262B]/60 hover:text-[#23262B] text-sm font-[Overpass] font-semibold transition-colors duration-300"
                   >
                     Szolgáltatásaink megismerése
                     <i className="fas fa-arrow-right text-xs"></i>
@@ -783,7 +675,7 @@ export default function Landing() {
             </div>
 
             <div className="relative grid md:grid-cols-4 gap-12 md:gap-8">
-              <div className="hidden md:block absolute left-0 right-0 top-7 border-t-2 border-dashed border-[#23262B]/15"></div>
+              <div className="hidden md:block absolute left-7 right-[calc(25%-3.25rem)] top-7 border-t-2 border-dashed border-[#23262B]/15"></div>
               {PROCESS_STEPS.map((step, index) => (
                 <Reveal key={step.n} delay={index * 100} className="relative">
                   <div className="relative z-10 w-14 h-14 rounded-full bg-[#1E3AA8] text-white flex items-center justify-center font-[Overpass_Mono] font-bold border-4 border-[#F2F3F5] mb-5">

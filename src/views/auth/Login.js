@@ -2,6 +2,7 @@ import { React, useState } from "react";
 import { useHistory } from "react-router-dom";
 import { useMediaQuery } from "react-responsive";
 import { fetchAction } from "utils/fetchAction";
+import HungaryMapBackground from "components/UI/HungaryMapBackground.js";
 
 // ---------------------------------------------------------------------------
 // Apró, függőségmentes ikonok (inline SVG) — ugyanazt a stroke-stílust
@@ -347,11 +348,9 @@ export default function Bejelentkezes() {
   // ---------------------------------------------------------------------
   return (
     <div className="fixed inset-0 z-[9999] overflow-y-auto bg-[#F2F3F5] font-sans">
-      {/* Halvány, lebegő gradiens foltok — ugyanaz a hero-motívum, mint a Landing oldalon */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-24 -right-16 w-[28rem] h-[28rem] rounded-full bg-[#1E3AA8]/15 blur-3xl"></div>
-        <div className="absolute bottom-0 left-1/4 w-80 h-80 rounded-full bg-[#1E3AA8]/10 blur-3xl"></div>
-      </div>
+      {/* Ugyanaz az animált Magyarország-térkép háttér, mint a Landing hero-ban —
+          mobilon nem jelenik meg (a HungaryMapBackground alapból hidden md:block). */}
+      <HungaryMapBackground />
 
       <div className="relative z-10 min-h-screen flex items-center justify-center px-4 py-16 sm:px-6 lg:px-8">
         <div className="w-full max-w-5xl grid lg:grid-cols-[1.05fr_0.95fr] gap-12 items-center">

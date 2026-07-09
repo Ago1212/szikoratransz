@@ -955,6 +955,10 @@ h1,
   left: 1rem;
 }
 
+.left-7 {
+  left: 1.75rem;
+}
+
 .right-0 {
   right: 0px;
 }
@@ -973,6 +977,10 @@ h1,
 
 .right-4 {
   right: 1rem;
+}
+
+.right-\[calc\(25\%-3\.25rem\)\] {
+  right: calc(25% - 3.25rem);
 }
 
 .top-0 {
@@ -1334,6 +1342,10 @@ h1,
 
 .h-5 {
   height: 1.25rem;
+}
+
+.h-56 {
+  height: 14rem;
 }
 
 .h-6 {
@@ -2960,6 +2972,10 @@ h1,
   text-transform: none;
 }
 
+.italic {
+  font-style: italic;
+}
+
 .tabular-nums {
   --tw-numeric-spacing: tabular-nums;
   font-variant-numeric: var(--tw-ordinal) var(--tw-slashed-zero) var(--tw-numeric-figure) var(--tw-numeric-spacing) var(--tw-numeric-fraction);
@@ -4340,6 +4356,10 @@ h1,
     margin-left: -4rem;
   }
 
+  .lg\:-mt-20 {
+    margin-top: -5rem;
+  }
+
   .lg\:mb-0 {
     margin-bottom: 0px;
   }
@@ -4380,6 +4400,10 @@ h1,
     width: auto;
   }
 
+  .lg\:max-w-md {
+    max-width: 28rem;
+  }
+
   .lg\:grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -4414,6 +4438,10 @@ h1,
 
   .lg\:justify-start {
     justify-content: flex-start;
+  }
+
+  .lg\:self-start {
+    align-self: flex-start;
   }
 
   .lg\:bg-opacity-0 {
