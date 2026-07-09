@@ -378,7 +378,7 @@ export default function Landing() {
                 }}
               >
                 <img
-                  src="/logo.png"
+                  src="/logo2.svg"
                   alt="Szikora Transz Kft"
                   className="h-9 md:h-10 w-auto"
                 />
@@ -525,9 +525,9 @@ export default function Landing() {
           </div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
-            <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-16 items-center">
+            <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-16 items-start">
               {/* Bal oszlop — fő üzenet */}
-              <div className="relative lg:self-start lg:-mt-20">
+              <div className="relative">
                 <Reveal delay={0}>
                   <span className="inline-flex items-center gap-2 text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-[#1E3AA8] mb-6">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#1E3AA8] animate-pulse"></span>
@@ -563,29 +563,10 @@ export default function Landing() {
                 </h1>
 
                 <Reveal delay={520}>
-                  <p className="text-lg text-[#23262B]/70 max-w-xl mt-6 text-balance">
+                  <p className="text-lg text-[#23262B]/70 max-w-xl text-balance">
                     Szikora Transz Kft — belföldi és nemzetközi fuvarozás 2010
                     óta, modern flottával és teljes körű biztosítással.
                   </p>
-                </Reveal>
-
-                <Reveal delay={650}>
-                  <div className="flex flex-wrap gap-x-8 gap-y-3 mt-8 max-w-sm lg:max-w-md">
-                    {[
-                      "Saját flotta",
-                      "EU-szerte",
-                      "100% biztosított",
-                      "Nincs rejtett költség",
-                    ].map((item) => (
-                      <span
-                        key={item}
-                        className="flex items-center gap-2 text-xs font-[Overpass_Mono] uppercase tracking-wide text-[#23262B]/60"
-                      >
-                        <i className="fas fa-check text-[#1E3AA8]"></i>
-                        {item}
-                      </span>
-                    ))}
-                  </div>
                 </Reveal>
 
                 <Reveal delay={780}>

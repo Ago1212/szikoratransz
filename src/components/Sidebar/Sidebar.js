@@ -142,7 +142,7 @@ export default function Sidebar() {
         <div className="flex flex-shrink-0 items-center justify-between gap-2 border-b border-ink-100 px-5 py-4">
           <Link to="/admin/dashboard" className="flex items-center gap-2.5">
             <img
-              src="/logo.png"
+              src="/logo2.svg"
               alt="Szikora Transz Kft"
               className="h-8 w-auto"
             />

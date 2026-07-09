@@ -353,7 +353,7 @@ export default function Bejelentkezes() {
       <HungaryMapBackground />
 
       <div className="relative z-10 min-h-screen flex items-center justify-center px-4 py-16 sm:px-6 lg:px-8">
-        <div className="w-full max-w-5xl grid lg:grid-cols-[1.05fr_0.95fr] gap-12 items-center">
+        <div className="w-full max-w-5xl grid lg:grid-cols-[1.05fr_0.95fr] gap-12 items-start">
           {/* Bal oszlop — branding, világos háttér (csak lg-től) */}
           <div className="hidden lg:block">
             <h1 className="font-[Overpass] font-extrabold text-4xl xl:text-5xl leading-[1.1] text-[#23262B] tracking-tight mb-5">

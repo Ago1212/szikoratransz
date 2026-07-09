@@ -4356,10 +4356,6 @@ h1,
     margin-left: -4rem;
   }
 
-  .lg\:-mt-20 {
-    margin-top: -5rem;
-  }
-
   .lg\:mb-0 {
     margin-bottom: 0px;
   }
@@ -4438,10 +4434,6 @@ h1,
 
   .lg\:justify-start {
     justify-content: flex-start;
-  }
-
-  .lg\:self-start {
-    align-self: flex-start;
   }
 
   .lg\:bg-opacity-0 {
