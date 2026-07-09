@@ -131,12 +131,24 @@ const FAQ_ITEMS = [
     a: "Általában 24 órán belül felvesszük Önnel a kapcsolatot egy részletes, az útvonalra és az áru jellegére szabott árajánlattal.",
   },
   {
+    q: "Mitől függ egy fuvar ára?",
+    a: "Elsősorban a távolság, a szállítandó áru mérete, súlya és jellege, valamint a vállalt határidő határozza meg az árat. Nincs egységes, fix díjszabásunk — minden ajánlatkérést egyedileg, tételesen árazunk, hogy a végösszeg pontosan tükrözze az adott fuvar valós igényeit.",
+  },
+  {
+    q: "Milyen járművekkel dolgoznak?",
+    a: "Modern, rendszeresen karbantartott kamionflottánkat a szállítandó áru jellegéhez igazítjuk. A fuvarhoz legmegfelelőbb jármű kiválasztása az ajánlatkérés során, az Ön igényei alapján történik.",
+  },
+  {
     q: "Biztosított a szállított áru?",
     a: "Igen, minden fuvarunk teljes körű biztosítási fedezettel történik, a felvételtől a kiszállításig.",
   },
   {
+    q: "Mi történik, ha kár keletkezik szállítás közben?",
+    a: "Ilyen esetben haladéktalanul jelezze felénk telefonon vagy e-mailben. Mivel minden fuvar biztosítási fedezet mellett zajlik, csapatunk a biztosítóval egyeztetve intézi a kárrendezés ügyintézését.",
+  },
+  {
     q: "Vállalnak nemzetközi szállítást?",
-    a: "Igen, Európa-szerte végzünk nemzetközi fuvarozást, a szükséges vámügyintézés és okmányolás teljes körű intézésével.",
+    a: "Igen, Európa-szerte végzünk nemzetközi fuvarozást, a szükséges vámügyintézés és okmányolás teljes körű intézésével. A pontos útvonalat és határidőt minden esetben egyeztetjük az ajánlatkérés során.",
   },
   {
     q: "Kérhetek egyedi árajánlatot speciális igényekhez?",
@@ -148,7 +160,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Hogyan jelentkezhetek sofőrként?",
-    a: "Töltse ki az alábbi jelentkezési űrlapot a végzettségével és tapasztalatával, csapatunk hamarosan felveszi Önnel a kapcsolatot.",
+    a: "Töltse ki az alábbi jelentkezési űrlapot a végzettségével és tapasztalatával. Amennyiben rendelkezik a szükséges jogosítvány-kategóriával, csapatunk hamarosan felveszi Önnel a kapcsolatot, és a pontos feltételekről személyesen egyeztetünk.",
   },
 ];
 
@@ -180,32 +192,32 @@ const FEATURES = [
   {
     icon: PiTruckLight,
     title: "Belföldi fuvarozás",
-    desc: "Gyors és megbízható áruszállítás Magyarország egész területén, rugalmas árazással és pontos határidőkkel.",
+    desc: "Gyors és megbízható áruszállítás Magyarország egész területén, rugalmas árazással és pontos határidőkkel. Egyaránt vállalunk egyszeri megbízásokat és rendszeres, ismétlődő fuvarokat.",
   },
   {
     icon: PiGlobeLight,
     title: "Nemzetközi szállítás",
-    desc: "Határon átnyúló fuvarozási szolgáltatás Európa-szerte, teljes körű vámügyintézéssel és okmányolással.",
+    desc: "Határon átnyúló fuvarozási szolgáltatás Európa-szerte, teljes körű vámügyintézéssel és okmányolással. Az útvonalat és a határidőt minden esetben az adott fuvarhoz igazítjuk.",
   },
   {
     icon: PiShieldCheckLight,
     title: "Biztosított szállítás",
-    desc: "Minden fuvarunk teljes biztosítási fedezettel történik — az árukészlete nálunk biztos kezekben van.",
+    desc: "Minden fuvarunk teljes biztosítási fedezettel történik — az árukészlete nálunk biztos kezekben van. Esetleges kár esetén csapatunk intézi a biztosítóval a kárrendezést.",
   },
   {
     icon: PiWarehouseLight,
     title: "Raktározás és logisztika",
-    desc: "Rövid és hosszú távú tárolási kapacitás, áru-átcsomagolás és teljes körű logisztikai koordináció.",
+    desc: "Rövid és hosszú távú tárolási kapacitás, áru-átcsomagolás és teljes körű logisztikai koordináció. Igény szerint a szállítási folyamat egészét kézben tartjuk, a felvételtől a kiszállításig.",
   },
   {
     icon: PiLightningLight,
     title: "Expressz szállítás",
-    desc: "Sürgős fuvarok soron kívüli kezelése, garantált kiszállítási idővel, ha az idő a legfontosabb tényező.",
+    desc: "Sürgős fuvarok soron kívüli kezelése, garantált kiszállítási idővel, ha az idő a legfontosabb tényező. Vegye fel velünk a kapcsolatot, és soron kívül egyeztetjük a részleteket.",
   },
   {
     icon: PiFileTextLight,
     title: "Egyedi árajánlat",
-    desc: "Minden megrendelést egyedileg árazunk az útvonal, az áru jellege és a határidő alapján — gyors, személyre szabott ajánlattal.",
+    desc: "Minden megrendelést egyedileg árazunk az útvonal, az áru jellege és a határidő alapján — gyors, személyre szabott ajánlattal. Nincs rejtett költség, az ajánlatban minden tétel átlátható.",
   },
 ];
 
@@ -823,11 +835,18 @@ export default function Landing() {
                 <h2 className="font-[Overpass] font-extrabold text-3xl md:text-4xl text-[#23262B] mt-3 mb-6">
                   Cégtörténetünk
                 </h2>
-                <p className="text-lg text-[#23262B]/70 mb-8">
+                <p className="text-lg text-[#23262B]/70 mb-4">
                   Szikora Transz Kft 2010-ben alakult kis családi
                   vállalkozásként. Azóta folyamatosan bővült flottánk és
                   szolgáltatási körünk, de megtartottuk személyes hangvételünket
                   és ügyfélközpontú hozzáállásunkat.
+                </p>
+                <p className="text-lg text-[#23262B]/70 mb-8">
+                  Mára belföldi és nemzetközi fuvarokat egyaránt vállalunk,
+                  a rövid távú, sürgős megbízásoktól a rendszeres,
+                  hosszú távú partnerségekig. Minden ügyfelünket úgy
+                  szolgáljuk ki, mintha a saját árujuk lenne — legyen szó
+                  egyszeri fuvarról vagy folyamatos együttműködésről.
                 </p>
                 <div className="space-y-4">
                   <div className="flex items-center gap-4 border border-[#23262B]/10 rounded-xl p-4">
