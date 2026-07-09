@@ -36,7 +36,7 @@ export default function Admin() {
       <Sidebar />
 
       {/* Háttér — fix réteg, nem görgethető, a Sidebar-hoz igazítva */}
-      <div className="fixed inset-y-0 right-0 left-0 overflow-hidden bg-sand-50 md:left-72">
+      <div className="fixed inset-y-0 right-0 left-0 overflow-hidden bg-slate-50 md:left-72">
         <div
           className="absolute inset-0 opacity-60"
           style={{
@@ -49,7 +49,7 @@ export default function Admin() {
 
       {/* Tartalom — fix magasságú, csak ez görgethető, a böngészőoldal maga nem */}
       <div className="fixed inset-y-0 right-0 left-0 overflow-y-auto md:left-72">
-        <div className="mx-auto h-full w-full px-4 py-8 md:px-10">
+        <div className="mx-auto h-full w-full px-4 pt-8 pb-16 md:px-10 md:pb-8">
           <Switch>
             <PrivateRoute path="/admin/dashboard" exact component={Dashboard} />
             <PrivateRoute path="/admin/settings" exact component={Settings} />
@@ -87,6 +87,16 @@ export default function Admin() {
             <Route path="/login" exact component={LoginPage} />
             <Redirect from="/admin" to="/admin/dashboard" />
           </Switch>
+          {/* Garantált térköz a mobil alsó navigáció alatt — valódi blokk-magasság,
+              nem padding/margin, mert azt a böngésző figyelmen kívül hagyja a
+              görgethető terület számításánál, ha a tartalom egy `h-full`
+              (border-box) ősnél magasabbra nő. Enélkül hosszabb formoknál
+              (pl. KamionForm) a mentés gomb a navsáv mögé csúszhat. */}
+          <div
+            className="h-20 w-full flex-shrink-0 md:hidden"
+            style={{ height: "calc(5rem + env(safe-area-inset-bottom))" }}
+            aria-hidden="true"
+          />
         </div>
       </div>
     </>

@@ -108,7 +108,8 @@ export default function Dashboard() {
         </h1>
       </div>
 
-      <div className="mb-6 flex-shrink-0 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+      {/* Statisztikák — mobilon nincs rájuk szükség, csak a naptár számít ott */}
+      <div className="hidden flex-shrink-0 grid-cols-2 gap-5 md:mb-6 md:grid xl:grid-cols-4">
         {cards.map((card) => (
           <CardStats
             key={card.title}
@@ -120,9 +121,9 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div className="flex min-h-[420px] flex-1 flex-col overflow-hidden rounded-3xl border border-ink-100 bg-white shadow-soft">
-        <div className="flex-shrink-0 border-b border-ink-100 px-6 py-4">
-          <h3 className="font-display text-lg font-semibold text-brand-900">
+      <div className="flex flex-col rounded-3xl border border-ink-100 bg-white shadow-soft md:min-h-[420px] md:flex-1 md:overflow-hidden">
+        <div className="flex-shrink-0 border-b border-ink-100 px-4 py-3 md:px-6 md:py-4">
+          <h3 className="font-display text-base font-semibold text-brand-900 md:text-lg">
             Eseménynaptár
           </h3>
         </div>
@@ -130,6 +131,14 @@ export default function Dashboard() {
           <CardCalender />
         </div>
       </div>
+
+      {/* Valódi (nem margin) térköz mobilon — ez a lap gyökere `h-full`, így
+          egy ezen kívüli testvér-spacer (pl. Admin.js layout szinten) nem
+          tolódna el a naptár esetleges túlcsordulásától (pl. sok esemény
+          egy napon); csak egy ide, EZEN A DOBOZON BELÜL rakott valódi
+          blokk-magasság garantálja, hogy a mobil alsó navigáció sose
+          takarja el a nap-lista utolsó elemét. */}
+      <div className="h-20 w-full flex-shrink-0 md:hidden" aria-hidden="true" />
     </div>
   );
 }

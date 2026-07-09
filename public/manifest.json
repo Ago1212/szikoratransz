@@ -1,20 +1,38 @@
 {
   "short_name": "Szikora Transz",
-  "name": "Szikora Transz Kft.",
+  "name": "Szikora Transz Kft. Flottakezelő",
+  "description": "Szikora Transz Kft. flottakezelő rendszere: kamionok, pótkocsik, karbantartások és sofőrök egy helyen.",
   "icons": [
     {
-      "src": "logo.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
+      "src": "favicon.ico",
+      "sizes": "16x16",
       "type": "image/x-icon"
     },
     {
-      "src": "logo.png",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
+  "id": "/admin/dashboard",
   "start_url": "/auth/login",
+  "scope": "/",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "orientation": "portrait-primary",
+  "theme_color": "#2F4DE0",
+  "background_color": "#2E3239",
+  "lang": "hu"
 }

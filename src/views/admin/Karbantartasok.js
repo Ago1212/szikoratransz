@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { useMediaQuery } from "react-responsive";
 import {
   PiFunnelLight,
+  PiFunnelFill,
   PiPencilSimpleLight,
   PiTrashLight,
   PiXLight,
@@ -30,7 +32,10 @@ const emptyKarbantartas = (adminId) => ({
 });
 
 const Karbantartasok = () => {
-  const [filtersOpen, setFiltersOpen] = useState(true);
+  const isMobile = useMediaQuery({ maxWidth: 767 });
+  // Mobilon alapból zárva (helyet spórolunk), asztali nézeten viszont
+  // változatlanul mindig nyitva indul, ahogy eddig is.
+  const [filtersOpen, setFiltersOpen] = useState(!isMobile);
   const [karbantartasok, setKarbantartasok] = useState([]);
   const [kamionok, setKamionok] = useState([]);
   const [potkocsik, setPotkocsik] = useState([]);
@@ -332,16 +337,47 @@ const Karbantartasok = () => {
     },
   ];
 
+  const activeFilterCount = Object.values(filter).filter(Boolean).length;
+
   return (
     <div className="mx-auto flex h-full w-full max-w-7xl flex-col">
       <div className="flex-shrink-0">
-        <PageHeader title="Karbantartások kezelése" />
+        <PageHeader
+          title="Karbantartások kezelése"
+          action={
+            <button
+              type="button"
+              onClick={() => setFiltersOpen(!filtersOpen)}
+              className={`relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border transition-colors duration-200 md:hidden ${
+                filtersOpen
+                  ? "border-brand-200 bg-brand-50 text-brand-600"
+                  : "border-ink-200 bg-white text-ink-500"
+              }`}
+              title="Szűrők"
+            >
+              {filtersOpen ? (
+                <PiFunnelFill className="h-4 w-4" />
+              ) : (
+                <PiFunnelLight className="h-4 w-4" />
+              )}
+              {activeFilterCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-600 text-[9px] font-bold text-white">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+          }
+        />
       </div>
 
-      <div className="mb-6 flex-shrink-0 rounded-3xl bg-white p-6 shadow-soft ring-1 ring-ink-100">
+      <div
+        className={`mb-6 flex-shrink-0 rounded-3xl bg-white p-6 shadow-soft ring-1 ring-ink-100 ${
+          filtersOpen ? "" : "hidden md:block"
+        }`}
+      >
         <button
           type="button"
-          className="flex w-full items-center gap-2 text-ink-600"
+          className="hidden w-full items-center gap-2 text-ink-600 md:flex"
           onClick={() => setFiltersOpen(!filtersOpen)}
         >
           <PiFunnelLight className="h-4 w-4 text-brand-500" />

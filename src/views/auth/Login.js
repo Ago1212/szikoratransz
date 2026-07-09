@@ -1,5 +1,6 @@
 import { React, useState } from "react";
 import { useHistory } from "react-router-dom";
+import { useMediaQuery } from "react-responsive";
 import { fetchAction } from "utils/fetchAction";
 
 // ---------------------------------------------------------------------------
@@ -171,6 +172,11 @@ export default function Bejelentkezes() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const history = useHistory();
+  // Csak a `lg` töréspont alatt (ugyanott, ahol a brandingoszlop is
+  // eltűnt eredetileg) váltunk a teljes képernyős, sötét, egykártyás
+  // mobil nézetre — laptopon/desktopon az eredeti kétoszlopos, világos
+  // hátterű elrendezés marad változatlanul.
+  const isMobile = useMediaQuery({ maxWidth: 1023 });
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -214,6 +220,131 @@ export default function Bejelentkezes() {
     history.push("/");
   };
 
+  const errorBox = error && (
+    <div
+      role="alert"
+      aria-live="polite"
+      className="flex items-start gap-3 mb-6 p-4 rounded-xl text-sm bg-red-500/10 border border-red-500/30 text-red-300"
+    >
+      <span className="flex-shrink-0 mt-0.5">
+        <AlertIcon />
+      </span>
+      <span>{error}</span>
+    </div>
+  );
+
+  const formFields = (
+    <div className="space-y-5">
+      <div>
+        <label
+          htmlFor="email"
+          className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/40 mb-2"
+        >
+          Email cím
+        </label>
+        <div className="relative">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none">
+            <MailIcon />
+          </span>
+          <input
+            type="email"
+            id="email"
+            placeholder="email@pelda.hu"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-[#2F4DE0] focus:border-[#2F4DE0] transition duration-300"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label
+          htmlFor="password"
+          className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/40 mb-2"
+        >
+          Jelszó
+        </label>
+        <div className="relative">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none">
+            <LockIcon />
+          </span>
+          <input
+            type="password"
+            id="password"
+            placeholder="••••••••"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-[#2F4DE0] focus:border-[#2F4DE0] transition duration-300"
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  const submitButton = (
+    <button
+      type="button"
+      onClick={handleLogin}
+      disabled={isLoading}
+      className="w-full mt-7 px-8 py-4 bg-[#1E3AA8] hover:bg-[#172E86] text-white font-[Overpass] font-bold rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-xl disabled:opacity-50 disabled:hover:scale-100 disabled:hover:shadow-none flex items-center justify-center gap-3"
+    >
+      {isLoading ? (
+        <>
+          <Spinner />
+          Bejelentkezés...
+        </>
+      ) : (
+        "Bejelentkezés"
+      )}
+    </button>
+  );
+
+  // ---------------------------------------------------------------------
+  // Mobil (< lg): csak a sötét kártya, teljes képernyőn, semmi más.
+  // ---------------------------------------------------------------------
+  if (isMobile) {
+    return (
+      <div className="fixed inset-0 z-[9999] h-full w-full overflow-y-auto bg-[#2E3239] font-sans">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-24 -right-16 w-[28rem] h-[28rem] rounded-full bg-[#1E3AA8]/15 blur-3xl"></div>
+          <div className="absolute bottom-0 left-1/4 w-80 h-80 rounded-full bg-[#1E3AA8]/10 blur-3xl"></div>
+        </div>
+
+        <div className="relative z-10 flex min-h-full w-full items-center justify-center px-4 py-16">
+          <div className="relative w-full max-w-md border border-white/10 rounded-xl p-8 shadow-2xl overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1E3AA8] to-[#172E86]"></div>
+
+            <div className="flex items-center justify-center mb-6">
+              <img
+                src="/logo2.png"
+                alt="Szikora Transz Kft"
+                className="h-8 w-auto"
+              />
+            </div>
+            <h2 className="font-[Overpass] font-extrabold text-2xl text-white mt-3 mb-3">
+              Bejelentkezés
+            </h2>
+            <p className="text-white/60 mb-8">
+              Kérjük adja meg belépési adatait a fiókja eléréséhez.
+            </p>
+
+            {errorBox}
+            {formFields}
+            {submitButton}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ---------------------------------------------------------------------
+  // Laptop/desktop (>= lg): eredeti kétoszlopos, világos hátterű nézet —
+  // változatlan.
+  // ---------------------------------------------------------------------
   return (
     <div className="fixed inset-0 z-[9999] overflow-y-auto bg-[#F2F3F5] font-sans">
       {/* Halvány, lebegő gradiens foltok — ugyanaz a hero-motívum, mint a Landing oldalon */}
@@ -271,9 +402,6 @@ export default function Bejelentkezes() {
               </button>
             </div>
 
-            <span className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-[#7C93FF]">
-              Belépés
-            </span>
             <h2 className="font-[Overpass] font-extrabold text-2xl md:text-3xl text-white mt-3 mb-3">
               Bejelentkezés
             </h2>
@@ -281,84 +409,9 @@ export default function Bejelentkezes() {
               Kérjük adja meg belépési adatait a fiókja eléréséhez.
             </p>
 
-            {error && (
-              <div
-                role="alert"
-                aria-live="polite"
-                className="flex items-start gap-3 mb-6 p-4 rounded-xl text-sm bg-red-500/10 border border-red-500/30 text-red-300"
-              >
-                <span className="flex-shrink-0 mt-0.5">
-                  <AlertIcon />
-                </span>
-                <span>{error}</span>
-              </div>
-            )}
-
-            <div className="space-y-5">
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/40 mb-2"
-                >
-                  Email cím
-                </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none">
-                    <MailIcon />
-                  </span>
-                  <input
-                    type="email"
-                    id="email"
-                    placeholder="email@pelda.hu"
-                    required
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-[#2F4DE0] focus:border-[#2F4DE0] transition duration-300"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="password"
-                  className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/40 mb-2"
-                >
-                  Jelszó
-                </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none">
-                    <LockIcon />
-                  </span>
-                  <input
-                    type="password"
-                    id="password"
-                    placeholder="••••••••"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-[#2F4DE0] focus:border-[#2F4DE0] transition duration-300"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleLogin}
-              disabled={isLoading}
-              className="w-full mt-7 px-8 py-4 bg-[#1E3AA8] hover:bg-[#172E86] text-white font-[Overpass] font-bold rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-xl disabled:opacity-50 disabled:hover:scale-100 disabled:hover:shadow-none flex items-center justify-center gap-3"
-            >
-              {isLoading ? (
-                <>
-                  <Spinner />
-                  Bejelentkezés...
-                </>
-              ) : (
-                "Bejelentkezés"
-              )}
-            </button>
+            {errorBox}
+            {formFields}
+            {submitButton}
           </div>
         </div>
       </div>

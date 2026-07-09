@@ -70,7 +70,7 @@ export default function DataTable({
 
   return (
     <div
-      className={`relative flex min-w-0 flex-col overflow-hidden rounded-3xl bg-white shadow-soft ring-1 ring-ink-100 ${
+      className={`relative -mx-4 flex min-w-0 flex-col overflow-hidden bg-white shadow-none ring-0 md:mx-0 md:rounded-3xl md:shadow-soft md:ring-1 md:ring-ink-100 ${
         fill ? "h-full" : ""
       } ${className}`}
     >

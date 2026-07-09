@@ -7,7 +7,7 @@ export default function Navbar() {
     <nav className="absolute top-0 z-50 flex w-full flex-wrap items-center justify-between px-4 py-5 md:px-8">
       <Link to="/landing" className="flex items-center gap-2.5">
         <img
-          src="/logo.svg"
+          src="/logo.png"
           alt="Szikora Transz Kft"
           className="h-10 w-auto mb-8"
         />

@@ -26,7 +26,7 @@ export default function Kamionok() {
   return (
     <>
       <div className="flex flex-wrap mt-0">
-        <div className="w-full mb-12 px-4">
+        <div className="w-full mb-12 px-0 md:px-4">
           <CardTable kamionok={kamionok} />
         </div>
       </div>

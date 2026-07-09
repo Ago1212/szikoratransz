@@ -16,6 +16,8 @@ import Auth from "layouts/Auth.js";
 import Landing from "views/Landing.js";
 import Profile from "views/Profile.js";
 
+import InstallPrompt from "components/PWA/InstallPrompt.js";
+
 serviceWorkerRegistration.register();
 
 ReactDOM.render(
@@ -32,6 +34,7 @@ ReactDOM.render(
       {/* add redirect for first page */}
       <Redirect from="*" to="/" />
     </Switch>
+    <InstallPrompt />
   </BrowserRouter>,
   document.getElementById("root")
 );

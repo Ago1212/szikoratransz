@@ -377,7 +377,7 @@ export default function Landing() {
                 }}
               >
                 <img
-                  src="/logo.svg"
+                  src="/logo.png"
                   alt="Szikora Transz Kft"
                   className="h-9 md:h-10 w-auto"
                 />

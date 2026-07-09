@@ -36,7 +36,13 @@ export default function Auth() {
             }}
           />
           <div className="grain-overlay" />
-          <div className="relative z-10">
+          {/* Nincs saját z-index: ha lenne, új stacking contextet nyitna,
+              és abba "csapdázná" a Login oldal saját fixed z-[9999]
+              overlayjét — attól kezdve a fenti AuthNavbar (z-50) mindig
+              átlátszana rajta, mert a stacking context szintjén csak ennek
+              a div-nek a (jóval kisebb) z-indexe számítana, nem a benne
+              lévő Login elemé. */}
+          <div className="relative">
             <Switch>
               <Route path="/auth/login" exact component={Login} />
               <Route path="/auth/register" exact component={Register} />

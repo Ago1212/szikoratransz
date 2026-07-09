@@ -12,6 +12,11 @@
   height: 100%;
 }
 
+.calendar-container--mobile,
+.calendar-card--mobile {
+  height: auto;
+}
+
 /* Modal stílusok */
 .modal-overlay {
   position: fixed;
@@ -206,4 +211,71 @@
 
 .rbc-toolbar button.rbc-active:hover {
   background-color: #1e3aa8;
+}
+
+/* Mobil nézet — kompaktabb naptár, hogy az adatok rendesen elférjenek */
+@media (max-width: 767px) {
+  .calendar-card {
+    padding: 8px;
+  }
+
+  .rbc-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .rbc-toolbar .rbc-btn-group {
+    display: flex;
+    justify-content: center;
+  }
+
+  .rbc-toolbar-label {
+    font-size: 0.9rem;
+    order: -1;
+  }
+
+  .rbc-toolbar button {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+
+  .rbc-month-row {
+    min-height: 56px;
+  }
+
+  .rbc-date-cell {
+    padding: 2px 4px;
+    font-size: 0.75rem;
+  }
+
+  .rbc-header {
+    padding: 6px 0;
+    font-size: 0.7rem;
+  }
+
+  .rbc-event {
+    font-size: 0.65rem;
+    padding: 1px 3px;
+  }
+
+  .rbc-agenda-view table.rbc-agenda-table {
+    font-size: 0.8rem;
+  }
+
+  .rbc-month-view .rbc-day-bg,
+  .rbc-month-view .rbc-date-cell {
+    cursor: pointer;
+  }
+
+  .rbc-day-selected {
+    background-color: #eef1fd;
+    box-shadow: inset 0 0 0 2px #2f4de0;
+  }
+
+  .rbc-day-selected .rbc-button-link {
+    color: #1e3aa8;
+    font-weight: 700;
+  }
 }

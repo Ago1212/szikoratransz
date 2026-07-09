@@ -10,7 +10,7 @@ export default function SoforForm() {
   return (
     <>
       <div className="flex flex-wrap">
-        <div className="w-full lg:w-12/12 px-4">
+        <div className="w-full px-0 lg:w-12/12 md:px-4">
           <CardSoforok initSofor={data} />
         </div>
       </div>

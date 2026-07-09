@@ -10,8 +10,6 @@ import {
   PiChatCircleTextLight,
   PiFilesLight,
   PiCalendarBlankLight,
-  PiListLight,
-  PiXLight,
   PiSignOutLight,
 } from "react-icons/pi";
 
@@ -27,8 +25,60 @@ const initials = (name) =>
     .join("")
     .toUpperCase() || "U";
 
+const mobileDirectLinks = [
+  { to: "/admin/dashboard", icon: PiSquaresFourLight, text: "Főmenü" },
+  { to: "/admin/settings", icon: PiGearLight, text: "Saját adatok" },
+];
+
+const mobileGroups = [
+  {
+    key: "jarmuvek",
+    label: "Járművek",
+    icon: PiTruckLight,
+    items: [
+      { to: "/admin/kamionok", icon: PiTruckLight, text: "Kamionok" },
+      {
+        to: "/admin/potkocsi",
+        icon: PiTruckTrailerLight,
+        text: "Pótkocsik",
+      },
+      {
+        to: "/admin/karbantartasok",
+        icon: PiWrenchLight,
+        text: "Karbantartások",
+      },
+    ],
+  },
+  {
+    key: "alkalmazottak",
+    label: "Alkalmazottak",
+    icon: PiUsersLight,
+    items: [
+      { to: "/admin/soforok", icon: PiUsersLight, text: "Sofőrök" },
+      {
+        to: "/admin/bejelentesek",
+        icon: PiChatCircleTextLight,
+        text: "Bejelentések",
+      },
+    ],
+  },
+  {
+    key: "egyeb",
+    label: "Egyéb",
+    icon: PiFilesLight,
+    items: [
+      { to: "/admin/fajlok", icon: PiFilesLight, text: "Fájlok" },
+      {
+        to: "/admin/esemenyek",
+        icon: PiCalendarBlankLight,
+        text: "Események",
+      },
+    ],
+  },
+];
+
 export default function Sidebar() {
-  const [isMobileOpen, setIsMobileOpen] = React.useState(false);
+  const [openGroup, setOpenGroup] = React.useState(null);
   const location = useLocation();
   const history = useHistory();
 
@@ -62,7 +112,6 @@ export default function Sidebar() {
               : "text-ink-500 hover:translate-x-0.5 hover:bg-sand-100 hover:text-ink-800"
           }`}
           to={to}
-          onClick={() => setIsMobileOpen(false)}
         >
           {active && (
             <span className="absolute left-0 top-1/2 h-4 w-1 -translate-y-1/2 rounded-r-full bg-brand-500" />
@@ -88,44 +137,17 @@ export default function Sidebar() {
 
   return (
     <>
-      {isMobileOpen && (
-        <div
-          className="fixed inset-0 z-20 bg-ink-950/40 backdrop-blur-sm md:hidden"
-          onClick={() => setIsMobileOpen(false)}
-        />
-      )}
-
-      <nav
-        className={`fixed inset-y-0 left-0 z-30 flex w-72 transform flex-col border-r border-ink-100 bg-white transition-transform duration-300 ease-fluid md:translate-x-0 ${
-          isMobileOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
+      <nav className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col border-r border-ink-100 bg-white md:flex">
         {/* Fejléc — logó + név, mindig fixen fent */}
         <div className="flex flex-shrink-0 items-center justify-between gap-2 border-b border-ink-100 px-5 py-4">
-          <Link
-            to="/admin/dashboard"
-            className="flex items-center gap-2.5"
-            onClick={() => setIsMobileOpen(false)}
-          >
+          <Link to="/admin/dashboard" className="flex items-center gap-2.5">
             <img
-              src="/logo.svg"
+              src="/logo.png"
               alt="Szikora Transz Kft"
               className="h-8 w-auto"
             />
           </Link>
-          <div className="flex items-center gap-1">
-            <NotificationDropdown />
-            <button
-              className="text-ink-400 hover:text-ink-700 md:hidden"
-              onClick={() => setIsMobileOpen(!isMobileOpen)}
-            >
-              {isMobileOpen ? (
-                <PiXLight className="h-6 w-6" />
-              ) : (
-                <PiListLight className="h-6 w-6" />
-              )}
-            </button>
-          </div>
+          <NotificationDropdown />
         </div>
 
         {/* Navigáció — ha nem fér ki, ez a rész görgethető */}
@@ -205,13 +227,94 @@ export default function Sidebar() {
         </div>
       </nav>
 
-      {/* Mobil menü nyitógomb */}
-      <button
-        className="fixed bottom-5 left-5 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-brand-600 text-white shadow-soft-lg transition-transform duration-300 ease-fluid active:scale-95 md:hidden"
-        onClick={() => setIsMobileOpen(true)}
-      >
-        <PiListLight className="h-5 w-5" />
-      </button>
+      {/* Háttér — a nyitott csoport listája alatt, kattintásra bezár */}
+      {openGroup && (
+        <div
+          className="fixed inset-0 z-30 bg-ink-950/30 md:hidden"
+          onClick={() => setOpenGroup(null)}
+        />
+      )}
+
+      {/* Mobil alsó navigáció — a fő csoportok mindig lent, kompakt sávban */}
+      <div className="fixed inset-x-0 bottom-0 z-40 md:hidden">
+        {/* Csoport lista — felfelé nyílik, a sáv fölött */}
+        <div
+          className={`overflow-hidden rounded-t-2xl border-t border-ink-100 bg-white shadow-soft-lg transition-all duration-300 ease-fluid ${
+            openGroup ? "max-h-64" : "max-h-0"
+          }`}
+        >
+          {mobileGroups
+            .filter((group) => group.key === openGroup)
+            .map((group) => (
+              <ul key={group.key} className="px-2 py-1.5">
+                {group.items.map((item) => {
+                  const active = isActive(item.to);
+                  return (
+                    <li key={item.to}>
+                      <Link
+                        to={item.to}
+                        className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium ${
+                          active
+                            ? "bg-brand-50 text-brand-700"
+                            : "text-ink-600 hover:bg-sand-100"
+                        }`}
+                        onClick={() => setOpenGroup(null)}
+                      >
+                        <item.icon className="h-4 w-4 flex-shrink-0" />
+                        {item.text}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            ))}
+        </div>
+
+        {/* Fő linkek + csoport fülek + kompakt kilépés gomb */}
+        <nav className="flex border-t border-ink-100 bg-white pb-[env(safe-area-inset-bottom)]">
+          {mobileDirectLinks.map((item) => {
+            const active = isActive(item.to);
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={`flex flex-1 flex-col items-center gap-0.5 py-1.5 text-[10px] font-medium leading-none ${
+                  active ? "text-brand-600" : "text-ink-400"
+                }`}
+                onClick={() => setOpenGroup(null)}
+              >
+                <item.icon className="h-4 w-4" />
+                {item.text}
+              </Link>
+            );
+          })}
+          {mobileGroups.map((group) => {
+            const active =
+              openGroup === group.key ||
+              group.items.some((item) => isActive(item.to));
+            return (
+              <button
+                key={group.key}
+                className={`flex flex-1 flex-col items-center gap-0.5 py-1.5 text-[10px] font-medium leading-none ${
+                  active ? "text-brand-600" : "text-ink-400"
+                }`}
+                onClick={() =>
+                  setOpenGroup(openGroup === group.key ? null : group.key)
+                }
+              >
+                <group.icon className="h-4 w-4" />
+                {group.label}
+              </button>
+            );
+          })}
+          <button
+            className="flex w-10 flex-shrink-0 flex-col items-center justify-center py-1.5 text-red-500"
+            onClick={handleLogout}
+          >
+            <PiSignOutLight className="h-4 w-4" />
+          </button>
+        </nav>
+      </div>
     </>
   );
 }
