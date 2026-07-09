@@ -112,6 +112,7 @@ export default function CustomCalendar() {
     time: "Idő",
     event: "Esemény",
     noEventsInRange: "Nincs esemény az adott időszakban.",
+    showMore: (total) => `+${total} további`,
   };
 
   if (isMobile) {
@@ -131,10 +132,13 @@ export default function CustomCalendar() {
             onSelectSlot={handleSelectSlot}
             onDrillDown={handleDrillDown}
             dayPropGetter={dayPropGetter}
-            onSelectEvent={handleEventClick}
+            onSelectEvent={(event) => setSelectedDate(event.start)}
             messages={calendarMessages}
           />
 
+          {/* Mobilon nincs felugró részletező form — a kiválasztott nap
+              eseményeit kizárólag ez az alsó lista mutatja, akár a
+              naptárban egy eseményre, akár egy napra koppintunk. */}
           <div className="mt-3 border-t border-ink-100 pt-3">
             <h4 className="mb-2 text-sm font-semibold text-brand-900">
               {moment(selectedDate).format("YYYY. MMMM D. (dddd)")}
@@ -146,25 +150,20 @@ export default function CustomCalendar() {
             ) : (
               <ul className="space-y-2">
                 {dayEvents.map((event, idx) => (
-                  <li key={idx}>
-                    <button
-                      type="button"
-                      onClick={() => handleEventClick(event)}
-                      className="flex w-full items-center gap-2.5 rounded-xl bg-sand-50 px-3 py-2.5 text-left transition-colors duration-200 hover:bg-brand-50"
-                    >
-                      <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-brand-500" />
-                      <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink-700">
-                        {event.title}
-                      </span>
-                    </button>
+                  <li
+                    key={idx}
+                    className="flex items-center gap-2.5 rounded-xl bg-sand-50 px-3 py-2.5"
+                  >
+                    <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-brand-500" />
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink-700">
+                      {event.title}
+                    </span>
                   </li>
                 ))}
               </ul>
             )}
           </div>
         </div>
-
-        {isOpen && <EventModal event={selectedEvent} onClose={handleClose} />}
       </div>
     );
   }

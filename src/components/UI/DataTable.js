@@ -68,6 +68,16 @@ export default function DataTable({
   const bodyMaxHeight = fill ? undefined : maxBodyHeight;
   const bodyFillClass = fill ? "min-h-0 flex-1" : "";
 
+  // Alapértelmezett üres-állapot — a táblázat saját fejléc-ikonját
+  // (nagyobban, halványan) használja, hogy azonnal lásd, milyen típusú
+  // adat hiányzik, nem csak egy sima szöveg lóg a semmiben.
+  const EmptyContent = () => (
+    <div className="flex flex-col items-center gap-2.5 py-4">
+      {icon && React.createElement(icon, { className: "h-8 w-8 text-ink-200" })}
+      <span>{emptyLabel}</span>
+    </div>
+  );
+
   return (
     <div
       className={`relative -mx-4 flex min-w-0 flex-col overflow-hidden bg-white shadow-none ring-0 md:mx-0 md:rounded-3xl md:shadow-soft md:ring-1 md:ring-ink-100 ${
@@ -142,9 +152,9 @@ export default function DataTable({
                 ))}
               </div>
             ) : (
-              <p className="px-6 py-10 text-center text-sm text-ink-400">
-                {emptyLabel}
-              </p>
+              <div className="px-6 py-10 text-center text-sm text-ink-400">
+                <EmptyContent />
+              </div>
             )}
           </div>
 
@@ -197,7 +207,7 @@ export default function DataTable({
                       colSpan={columns.length}
                       className="px-6 py-10 text-center text-sm text-ink-400"
                     >
-                      {emptyLabel}
+                      <EmptyContent />
                     </td>
                   </tr>
                 )}

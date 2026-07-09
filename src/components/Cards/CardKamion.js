@@ -10,6 +10,7 @@ import CardJarmuAdatokForm from "./CardJarmuAdatokForm";
 import CardJarmuEsemenyekForm from "./CardJarmuEsemenyekForm";
 import CardJarmuFajlok from "./CardJarmuFajlok";
 import { fetchAction } from "utils/fetchAction";
+import { toast } from "utils/toast";
 import PageCard from "components/UI/PageCard.js";
 import TabButton from "components/UI/TabButton.js";
 
@@ -51,17 +52,17 @@ export default function CardKamion({ initialKamion }) {
 
       if (result?.success) {
         if (action === "newKamion") {
-          alert("Új kamion rögzítése sikeres!");
+          toast.success("Új kamion rögzítése sikeres!");
           setKamion(result.kamion);
           setFormData({ ...formData, id: result.kamion.id });
         } else {
-          alert("Mentés sikeres!");
+          toast.success("Mentés sikeres!");
         }
       } else {
         throw new Error(result?.message || "Mentés sikertelen");
       }
     } catch (error) {
-      alert(error.message);
+      toast.error(error.message);
     }
   };
 

@@ -1,5 +1,6 @@
 import { useHistory } from "react-router-dom";
 import { fetchAction } from "utils/fetchAction";
+import { toast } from "utils/toast";
 
 // A törlés-megerősítés + fetchAction + hibakezelés + (opcionális) lista-
 // frissítés mintát korábban minden entitás-táblázat (kamion, sofőr,
@@ -23,13 +24,13 @@ export function useConfirmDelete({ action, confirmMessage, successMessage, listP
           history.push("/admin");
           setTimeout(() => history.replace(listPath), 0);
         }
-        if (successMessage) alert(successMessage);
+        if (successMessage) toast.success(successMessage);
       } else {
-        alert(result?.message || "Hiba történt a törlés során.");
+        toast.error(result?.message || "Hiba történt a törlés során.");
       }
     } catch (error) {
       console.error("Hiba történt a törlés során:", error);
-      alert("Hiba történt a törlés során.");
+      toast.error("Hiba történt a törlés során.");
     }
   };
 }

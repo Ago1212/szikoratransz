@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import {
-  FaCar,
-  FaShieldAlt,
-  FaCalendarAlt,
-  FaMoneyBillWave,
-  FaBuilding,
-  FaIdCard,
-  FaFireExtinguisher,
-  FaTruck,
-  FaTrailer,
-  FaRuler,
-} from "react-icons/fa";
+  PiCarLight,
+  PiShieldCheckLight,
+  PiCalendarBlankLight,
+  PiMoneyLight,
+  PiBuildingsLight,
+  PiIdentificationCardLight,
+  PiFireExtinguisherLight,
+  PiTruckLight,
+  PiTruckTrailerLight,
+  PiRulerLight,
+} from "react-icons/pi";
 import FormField, { FormSection } from "components/UI/FormField.js";
 import SaveButton from "components/UI/SaveButton.js";
 
@@ -200,9 +200,9 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <FormSection id="fo-adatok" title="Fő adatok" icon={FaCar} columns={4}>
+      <FormSection id="fo-adatok" title="Fő adatok" icon={PiCarLight} columns={4}>
         <FormField
-          icon={FaIdCard}
+          icon={PiIdentificationCardLight}
           label="Rendszám"
           id="rendszam"
           value={kamion.rendszam}
@@ -210,7 +210,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
           required
         />
         <FormField
-          icon={FaTruck}
+          icon={PiTruckLight}
           label="Típus"
           id="tipus"
           value={kamion.tipus || ""}
@@ -219,7 +219,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
         />
         <FormField
           as="select"
-          icon={FaRuler}
+          icon={PiRulerLight}
           label="Méret"
           id="meret"
           value={kamion.meret || ""}
@@ -233,7 +233,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
           <option value="24T">24T</option>
         </FormField>
         <FormField
-          icon={FaTrailer}
+          icon={PiTruckTrailerLight}
           label="Pótkocsi"
           id="kamion"
           value={kamion.kamion}
@@ -241,10 +241,10 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
         />
       </FormSection>
 
-      <FormSection id="lejaratok" title="Lejárati dátumok" icon={FaCalendarAlt} columns={3}>
+      <FormSection id="lejaratok" title="Lejárati dátumok" icon={PiCalendarBlankLight} columns={3}>
         <FormField
           type="date"
-          icon={FaCar}
+          icon={PiCarLight}
           label="Műszaki"
           id="muszaki_lejarat"
           value={kamion.muszaki_lejarat}
@@ -252,7 +252,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
         />
         <FormField
           type="date"
-          icon={FaShieldAlt}
+          icon={PiShieldCheckLight}
           label="Adr"
           id="adr_lejarat"
           value={kamion.adr_lejarat}
@@ -260,7 +260,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
         />
         <FormField
           type="date"
-          icon={FaIdCard}
+          icon={PiIdentificationCardLight}
           label="Taográf illesztés"
           id="taograf_illesztes"
           value={kamion.taograf_illesztes}
@@ -268,7 +268,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
         />
         <FormField
           type="date"
-          icon={FaTruck}
+          icon={PiTruckLight}
           label="Emelő hátfal"
           id="emelohatfal_vizsga"
           value={kamion.emelohatfal_vizsga}
@@ -276,7 +276,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
         />
         <FormField
           type="date"
-          icon={FaFireExtinguisher}
+          icon={PiFireExtinguisherLight}
           label="Poroltó #1"
           id="porolto_lejarat"
           value={kamion.porolto_lejarat}
@@ -284,7 +284,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
         />
         <FormField
           type="date"
-          icon={FaFireExtinguisher}
+          icon={PiFireExtinguisherLight}
           label="Poroltó #2"
           id="porolto_lejarat_2"
           value={kamion.porolto_lejarat_2}
@@ -293,10 +293,10 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
       </FormSection>
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-      <FormSection id="kotelezo-biztositas" title="Kötelező biztosítás" icon={FaShieldAlt} columns={3}>
+      <FormSection id="kotelezo-biztositas" title="Kötelező biztosítás" icon={PiShieldCheckLight} columns={3}>
         <FormField
           as="select"
-          icon={FaCalendarAlt}
+          icon={PiCalendarBlankLight}
           label="Ütem"
           id="kot_biz_utem"
           value={kamion.kot_biz_utem || ""}
@@ -310,7 +310,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
         </FormField>
         <FormField
           type="date"
-          icon={FaCalendarAlt}
+          icon={PiCalendarBlankLight}
           label="Kezdő dátum"
           id="kot_biztositas"
           value={kamion.kot_biztositas || ""}
@@ -318,7 +318,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
         />
         <div className="relative">
           <FormField
-            icon={FaMoneyBillWave}
+            icon={PiMoneyLight}
             label="Éves díj"
             value={editKotBizDij ? kotBizDijValue : formatNumber(kamion.kot_biz_dij)}
             onChange={(e) => handleCurrencyChange(e, "kot_biz_dij")}
@@ -332,7 +332,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
           )}
         </div>
         <FormField
-          icon={FaBuilding}
+          icon={PiBuildingsLight}
           label="Biztosító neve"
           id="kot_biz_nev"
           value={kamion.kot_biz_nev || ""}
@@ -341,22 +341,22 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
         />
         <FormField
           as="info"
-          icon={FaCalendarAlt}
+          icon={PiCalendarBlankLight}
           label="Következő fizetés dátuma"
           value={nextKotBizInfo.date}
         />
         <FormField
           as="info"
-          icon={FaMoneyBillWave}
+          icon={PiMoneyLight}
           label="Következő fizetés összege"
           value={nextKotBizInfo.amount}
         />
       </FormSection>
 
-      <FormSection id="kaszko-biztositas" title="Kaszkó biztosítás" icon={FaShieldAlt} columns={3}>
+      <FormSection id="kaszko-biztositas" title="Kaszkó biztosítás" icon={PiShieldCheckLight} columns={3}>
         <FormField
           as="select"
-          icon={FaCalendarAlt}
+          icon={PiCalendarBlankLight}
           label="Ütem"
           id="kaszko_fizetesi_utem"
           value={kamion.kaszko_fizetesi_utem || ""}
@@ -370,7 +370,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
         </FormField>
         <FormField
           type="date"
-          icon={FaCalendarAlt}
+          icon={PiCalendarBlankLight}
           label="Kezdő dátum"
           id="kaszko_biztositas"
           value={kamion.kaszko_biztositas || ""}
@@ -378,7 +378,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
         />
         <div className="relative">
           <FormField
-            icon={FaMoneyBillWave}
+            icon={PiMoneyLight}
             label="Éves díj"
             value={editKaszkoDij ? kaszkoDijValue : formatNumber(kamion.kaszko_dij)}
             onChange={(e) => handleCurrencyChange(e, "kaszko_dij")}
@@ -392,7 +392,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
           )}
         </div>
         <FormField
-          icon={FaBuilding}
+          icon={PiBuildingsLight}
           label="Biztosító neve"
           id="kaszko_nev"
           value={kamion.kaszko_nev || ""}
@@ -401,13 +401,13 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
         />
         <FormField
           as="info"
-          icon={FaCalendarAlt}
+          icon={PiCalendarBlankLight}
           label="Következő fizetés dátuma"
           value={nextKaszkoInfo.date}
         />
         <FormField
           as="info"
-          icon={FaMoneyBillWave}
+          icon={PiMoneyLight}
           label="Következő fizetés összege"
           value={nextKaszkoInfo.amount}
         />

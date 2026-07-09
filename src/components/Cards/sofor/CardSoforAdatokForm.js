@@ -1,18 +1,18 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 import {
-  FaUser,
-  FaEnvelope,
-  FaPhone,
-  FaBirthdayCake,
-  FaIdCard,
-  FaCity,
-  FaHome,
-  FaFileAlt,
-  FaCar,
-  FaShieldAlt,
-  FaTruck,
-} from "react-icons/fa";
+  PiUserLight,
+  PiEnvelopeSimpleLight,
+  PiPhoneLight,
+  PiCakeLight,
+  PiIdentificationCardLight,
+  PiCityLight,
+  PiHouseLineLight,
+  PiFileTextLight,
+  PiCarLight,
+  PiShieldCheckLight,
+  PiTruckLight,
+} from "react-icons/pi";
 import FormField, { FormSection } from "components/UI/FormField.js";
 import SaveButton from "components/UI/SaveButton.js";
 
@@ -38,7 +38,7 @@ const CardSoforAdatokForm = ({ sofor, setFormData, handleSave }) => {
     <form onSubmit={handleSubmit} className="space-y-5">
       <FormSection id="felhasznalo-adatok" title="Felhasználó adatok" columns={4}>
         <FormField
-          icon={FaUser}
+          icon={PiUserLight}
           label="Név"
           name="name"
           value={sofor.name || ""}
@@ -47,7 +47,7 @@ const CardSoforAdatokForm = ({ sofor, setFormData, handleSave }) => {
           className="md:col-span-2"
         />
         <FormField
-          icon={FaEnvelope}
+          icon={PiEnvelopeSimpleLight}
           label="Email cím"
           type="email"
           name="email"
@@ -56,7 +56,7 @@ const CardSoforAdatokForm = ({ sofor, setFormData, handleSave }) => {
           className="md:col-span-2"
         />
         <FormField
-          icon={FaPhone}
+          icon={PiPhoneLight}
           label="Telefonszám"
           type="tel"
           name="phone"
@@ -64,7 +64,7 @@ const CardSoforAdatokForm = ({ sofor, setFormData, handleSave }) => {
           onChange={handleInputChange}
         />
         <FormField
-          icon={FaBirthdayCake}
+          icon={PiCakeLight}
           label="Születési dátum"
           type="date"
           name="szul_datum"
@@ -72,7 +72,7 @@ const CardSoforAdatokForm = ({ sofor, setFormData, handleSave }) => {
           onChange={handleInputChange}
         />
         <FormField
-          icon={FaIdCard}
+          icon={PiIdentificationCardLight}
           label="Személyigazolvány szám"
           name="szemelyi"
           value={sofor.szemelyi || ""}
@@ -82,21 +82,21 @@ const CardSoforAdatokForm = ({ sofor, setFormData, handleSave }) => {
 
       <FormSection id="kapcsolat" title="Kapcsolat" columns={3}>
         <FormField
-          icon={FaCity}
+          icon={PiCityLight}
           label="Város"
           name="varos"
           value={sofor.varos || ""}
           onChange={handleInputChange}
         />
         <FormField
-          icon={FaFileAlt}
+          icon={PiFileTextLight}
           label="IRSZ"
           name="irsz"
           value={sofor.irsz || ""}
           onChange={handleInputChange}
         />
         <FormField
-          icon={FaHome}
+          icon={PiHouseLineLight}
           label="Cím"
           name="cim"
           value={sofor.cim || ""}
@@ -106,7 +106,7 @@ const CardSoforAdatokForm = ({ sofor, setFormData, handleSave }) => {
 
       <FormSection id="dokumentumok" title="Dokumentumok lejárati dátumai" columns={4}>
         <FormField
-          icon={FaIdCard}
+          icon={PiIdentificationCardLight}
           label="Személyi lejárat"
           type="date"
           name="szemelyi_lejarat"
@@ -114,7 +114,7 @@ const CardSoforAdatokForm = ({ sofor, setFormData, handleSave }) => {
           onChange={handleInputChange}
         />
         <FormField
-          icon={FaCar}
+          icon={PiCarLight}
           label="Jogosítvány lejárat"
           type="date"
           name="jogsi_lejarat"
@@ -122,7 +122,7 @@ const CardSoforAdatokForm = ({ sofor, setFormData, handleSave }) => {
           onChange={handleInputChange}
         />
         <FormField
-          icon={FaShieldAlt}
+          icon={PiShieldCheckLight}
           label="GKI lejárat"
           type="date"
           name="gki_lejarat"
@@ -130,7 +130,7 @@ const CardSoforAdatokForm = ({ sofor, setFormData, handleSave }) => {
           onChange={handleInputChange}
         />
         <FormField
-          icon={FaTruck}
+          icon={PiTruckLight}
           label="ADR lejárat"
           type="date"
           name="adr_lejarat"

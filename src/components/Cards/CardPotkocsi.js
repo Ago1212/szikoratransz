@@ -7,6 +7,7 @@ import {
   PiFolderLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
+import { toast } from "utils/toast";
 import CardPotkocsiAdatokForm from "./CardPotkocsiAdatokForm";
 import CardPotkocsiEsemenyekForm from "./CardPotkocsiEsemenyekForm";
 import CardPotkocsiFajlok from "./CardPotkocsiFajlok";
@@ -73,17 +74,17 @@ const CardPotkocsi = ({ initialPotkocsi }) => {
 
       if (result?.success) {
         if (action === "newPotkocsi") {
-          alert("Új pótkocsi rögzítése sikeres!");
+          toast.success("Új pótkocsi rögzítése sikeres!");
           setPotkocsi(result.potkocsi);
           setFormData({ ...formData, id: result.potkocsi.id });
         } else {
-          alert("Mentés sikeres!");
+          toast.success("Mentés sikeres!");
         }
       } else {
         throw new Error(result?.message || "Mentés sikertelen");
       }
     } catch (error) {
-      alert(error.message);
+      toast.error(error.message);
     }
   };
 

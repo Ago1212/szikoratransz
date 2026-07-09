@@ -1,34 +1,31 @@
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 import { fetchAction } from "utils/fetchAction";
+import { toast } from "utils/toast";
 import {
-  FaUser,
-  FaTruck,
-  FaExclamationCircle,
-  FaCalendarAlt,
-  FaFileUpload,
-  FaSignOutAlt,
-  FaEdit,
-  FaSave,
-  FaTimes,
-  FaSearch,
-  FaFilter,
-  FaPlus,
-  FaImage,
-  FaFilePdf,
-  FaCar,
-  FaIdCard,
-  FaEnvelope,
-  FaPhone,
-  FaHome,
-  FaBirthdayCake,
-  FaCalendar,
-  FaKey,
-  FaTrash,
-  FaTrailer,
-  FaChevronUp,
-  FaChevronDown,
-} from "react-icons/fa";
+  PiUserLight,
+  PiTruckLight,
+  PiWarningCircleLight,
+  PiUploadSimpleLight,
+  PiSignOutLight,
+  PiPencilSimpleLight,
+  PiFloppyDiskLight,
+  PiXLight,
+  PiMagnifyingGlassLight,
+  PiPlusLight,
+  PiImageLight,
+  PiFilePdfLight,
+  PiIdentificationCardLight,
+  PiPhoneLight,
+  PiHouseLineLight,
+  PiCakeLight,
+  PiCalendarBlankLight,
+  PiKeyLight,
+  PiTrashLight,
+  PiTruckTrailerLight,
+  PiCaretUpLight,
+  PiCaretDownLight,
+} from "react-icons/pi";
 
 export default function UserDashboard() {
   const history = useHistory();
@@ -199,13 +196,13 @@ export default function UserDashboard() {
       if (result?.success) {
         sessionStorage.setItem("user", JSON.stringify(result.user));
         setUser(result.user);
-        alert("Adatok sikeresen mentve!");
+        toast.success("Adatok sikeresen mentve!");
         setIsEditing(false);
       } else {
         throw new Error(result?.message || "Mentés sikertelen");
       }
     } catch (error) {
-      alert(error.message);
+      toast.error(error.message);
     } finally {
       setIsSaving(false);
     }
@@ -243,7 +240,7 @@ export default function UserDashboard() {
             }
           } catch (error) {
             console.error("Fájl feltöltési hiba:", error);
-            alert(`Hiba a(z) ${file.name} fájl feltöltésekor`);
+            toast.error(`Hiba a(z) ${file.name} fájl feltöltésekor`);
           }
           resolve();
         };
@@ -258,12 +255,12 @@ export default function UserDashboard() {
   // Új bejelentés elküldése
   const handleSubmitReport = async () => {
     if (!newReport.title.trim() || !newReport.description.trim()) {
-      alert("Kérjük töltse ki a cím és leírás mezőket!");
+      toast.error("Kérjük töltse ki a cím és leírás mezőket!");
       return;
     }
 
     if (!selectedTruck) {
-      alert("Nincs kiválasztva kamion!");
+      toast.error("Nincs kiválasztva kamion!");
       return;
     }
 
@@ -284,7 +281,7 @@ export default function UserDashboard() {
       const result = await fetchAction("newBejelentes", reportData);
 
       if (result?.success) {
-        alert("Bejelentés sikeresen elküldve!");
+        toast.success("Bejelentés sikeresen elküldve!");
         setShowNewReportModal(false);
         setNewReport({
           title: "",
@@ -299,7 +296,7 @@ export default function UserDashboard() {
         throw new Error(result?.message || "Bejelentés elküldése sikertelen");
       }
     } catch (error) {
-      alert(error.message);
+      toast.error(error.message);
     }
   };
 
@@ -444,7 +441,7 @@ export default function UserDashboard() {
                 className="flex items-center rounded-xl border border-ink-100 px-3 py-1.5 text-sm text-ink-600 transition-all duration-300 ease-fluid hover:border-red-200 hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-brand-300"
                 title="Kijelentkezés"
               >
-                <FaSignOutAlt className="h-4 w-4" />
+                <PiSignOutLight className="h-4 w-4" />
                 <span className="ml-2 hidden sm:inline">Kijelentkezés</span>
               </button>
             </div>
@@ -461,7 +458,7 @@ export default function UserDashboard() {
               <div className="px-5 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-gray-50">
                 <div className="flex items-center">
                   <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                    <FaUser className="h-5 w-5 text-blue-600" />
+                    <PiUserLight className="h-5 w-5 text-blue-600" />
                   </div>
                   <div className="ml-3">
                     <h2 className="text-base font-semibold text-gray-900">
@@ -478,7 +475,7 @@ export default function UserDashboard() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <div className="flex items-center text-sm text-gray-500 mb-1">
-                          <FaPhone className="h-3 w-3 mr-1" />
+                          <PiPhoneLight className="h-3 w-3 mr-1" />
                           Telefon
                         </div>
                         <p className="text-gray-900">{userData.phone || "-"}</p>
@@ -486,7 +483,7 @@ export default function UserDashboard() {
 
                       <div>
                         <div className="flex items-center text-sm text-gray-500 mb-1">
-                          <FaHome className="h-3 w-3 mr-1" />
+                          <PiHouseLineLight className="h-3 w-3 mr-1" />
                           Lakcím
                         </div>
                         <p className="text-gray-900 text-sm">
@@ -497,7 +494,7 @@ export default function UserDashboard() {
 
                     <div>
                       <div className="flex items-center text-sm text-gray-500 mb-1">
-                        <FaBirthdayCake className="h-3 w-3 mr-1" />
+                        <PiCakeLight className="h-3 w-3 mr-1" />
                         Születési dátum
                       </div>
                       <p className="text-gray-900">
@@ -508,7 +505,7 @@ export default function UserDashboard() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <div className="flex items-center text-sm text-gray-500 mb-1">
-                          <FaIdCard className="h-3 w-3 mr-1" />
+                          <PiIdentificationCardLight className="h-3 w-3 mr-1" />
                           Személyi
                         </div>
                         <div className="flex items-center">
@@ -529,7 +526,7 @@ export default function UserDashboard() {
 
                       <div>
                         <div className="flex items-center text-sm text-gray-500 mb-1">
-                          <FaKey className="h-3 w-3 mr-1" />
+                          <PiKeyLight className="h-3 w-3 mr-1" />
                           Jogsi
                         </div>
                         <div className="flex items-center">
@@ -551,7 +548,7 @@ export default function UserDashboard() {
                       onClick={() => setIsEditing(true)}
                       className="w-full mt-4 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500"
                     >
-                      <FaEdit className="inline mr-2 h-3 w-3" />
+                      <PiPencilSimpleLight className="inline mr-2 h-3 w-3" />
                       Adatok szerkesztése
                     </button>
                   </div>
@@ -672,7 +669,7 @@ export default function UserDashboard() {
                         disabled={isSaving}
                         className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500 disabled:opacity-50"
                       >
-                        <FaSave className="h-3 w-3 mr-1" />
+                        <PiFloppyDiskLight className="h-3 w-3 mr-1" />
                         {isSaving ? "Mentés..." : "Mentés"}
                       </button>
 
@@ -683,7 +680,7 @@ export default function UserDashboard() {
                         }}
                         className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-500"
                       >
-                        <FaTimes className="h-3 w-3 mr-1" />
+                        <PiXLight className="h-3 w-3 mr-1" />
                         Mégse
                       </button>
                     </div>
@@ -696,7 +693,7 @@ export default function UserDashboard() {
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
               <div className="px-5 py-3 border-b border-gray-200 flex justify-between items-center">
                 <h3 className="text-sm font-semibold text-gray-900 flex items-center">
-                  <FaTruck className="h-4 w-4 mr-2 text-gray-500" />
+                  <PiTruckLight className="h-4 w-4 mr-2 text-gray-500" />
                   Kamionok ({trucks.length})
                 </h3>
                 {trucks.length > 2 && (
@@ -710,7 +707,7 @@ export default function UserDashboard() {
                           : "text-gray-600 hover:bg-gray-100"
                       }`}
                     >
-                      <FaChevronUp className="h-3 w-3" />
+                      <PiCaretUpLight className="h-3 w-3" />
                     </button>
                     <button
                       onClick={() => handleTruckScroll("down")}
@@ -721,7 +718,7 @@ export default function UserDashboard() {
                           : "text-gray-600 hover:bg-gray-100"
                       }`}
                     >
-                      <FaChevronDown className="h-3 w-3" />
+                      <PiCaretDownLight className="h-3 w-3" />
                     </button>
                   </div>
                 )}
@@ -759,7 +756,7 @@ export default function UserDashboard() {
 
                       {truck.sofor && (
                         <div className="mt-2 text-xs text-gray-600">
-                          <FaUser className="inline h-3 w-3 mr-1" />
+                          <PiUserLight className="inline h-3 w-3 mr-1" />
                           {truck.sofor}
                         </div>
                       )}
@@ -773,7 +770,7 @@ export default function UserDashboard() {
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
               <div className="px-5 py-3 border-b border-gray-200 flex justify-between items-center">
                 <h3 className="text-sm font-semibold text-gray-900 flex items-center">
-                  <FaTrailer className="h-4 w-4 mr-2 text-gray-500" />
+                  <PiTruckTrailerLight className="h-4 w-4 mr-2 text-gray-500" />
                   Pótkocsik ({porkocsi.length})
                 </h3>
                 {porkocsi.length > 2 && (
@@ -787,7 +784,7 @@ export default function UserDashboard() {
                           : "text-gray-600 hover:bg-gray-100"
                       }`}
                     >
-                      <FaChevronUp className="h-3 w-3" />
+                      <PiCaretUpLight className="h-3 w-3" />
                     </button>
                     <button
                       onClick={() => handleTrailerScroll("down")}
@@ -798,7 +795,7 @@ export default function UserDashboard() {
                           : "text-gray-600 hover:bg-gray-100"
                       }`}
                     >
-                      <FaChevronDown className="h-3 w-3" />
+                      <PiCaretDownLight className="h-3 w-3" />
                     </button>
                   </div>
                 )}
@@ -850,7 +847,7 @@ export default function UserDashboard() {
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                       <div className="flex items-center">
-                        <FaTruck className="h-5 w-5 text-blue-600 mr-3" />
+                        <PiTruckLight className="h-5 w-5 text-blue-600 mr-3" />
                         <div>
                           <h2 className="text-xl font-bold text-gray-900">
                             {selectedTruck.rendszam}
@@ -878,7 +875,7 @@ export default function UserDashboard() {
                       onClick={() => setShowNewReportModal(true)}
                       className="flex items-center justify-center px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-green-500 transition-colors"
                     >
-                      <FaPlus className="h-4 w-4 mr-2" />
+                      <PiPlusLight className="h-4 w-4 mr-2" />
                       Új bejelentés
                     </button>
                   </div>
@@ -902,7 +899,7 @@ export default function UserDashboard() {
                         onClick={clearFilters}
                         className="flex items-center text-sm text-gray-600 hover:text-gray-900"
                       >
-                        <FaTrash className="h-3 w-3 mr-1" />
+                        <PiTrashLight className="h-3 w-3 mr-1" />
                         Szűrők törlése
                       </button>
                     )}
@@ -914,7 +911,7 @@ export default function UserDashboard() {
                         Szöveg
                       </label>
                       <div className="relative">
-                        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                        <PiMagnifyingGlassLight className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                         <input
                           type="text"
                           placeholder="Keresés bejelentésekben..."
@@ -974,7 +971,7 @@ export default function UserDashboard() {
                 <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex-1 overflow-y-auto">
                   {filteredReports.length === 0 ? (
                     <div className="text-center py-12 px-4">
-                      <FaExclamationCircle className="mx-auto h-10 w-10 text-gray-300" />
+                      <PiWarningCircleLight className="mx-auto h-10 w-10 text-gray-300" />
                       <p className="mt-3 text-gray-500">
                         Nincs megjeleníthető bejelentés.
                       </p>
@@ -1004,7 +1001,7 @@ export default function UserDashboard() {
                                       : "bg-gray-100"
                                   }`}
                                 >
-                                  <FaUser
+                                  <PiUserLight
                                     className={`h-4 w-4 ${
                                       report.userId === user?.id
                                         ? "text-blue-600"
@@ -1048,7 +1045,7 @@ export default function UserDashboard() {
 
                                   <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
                                     <span className="flex items-center">
-                                      <FaUser className="h-3 w-3 mr-1" />
+                                      <PiUserLight className="h-3 w-3 mr-1" />
                                       {report.userName || "Ismeretlen"}
                                       {report.userId === user?.id && (
                                         <span className="ml-1 px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded text-[10px]">
@@ -1057,7 +1054,7 @@ export default function UserDashboard() {
                                       )}
                                     </span>
                                     <span className="flex items-center">
-                                      <FaCalendar className="h-3 w-3 mr-1" />
+                                      <PiCalendarBlankLight className="h-3 w-3 mr-1" />
                                       {formatDate(report.date)}{" "}
                                       {report.time && `• ${report.time}`}
                                     </span>
@@ -1079,9 +1076,9 @@ export default function UserDashboard() {
                                                 {attachment.type?.startsWith(
                                                   "image/",
                                                 ) ? (
-                                                  <FaImage className="h-3 w-3 mr-1.5" />
+                                                  <PiImageLight className="h-3 w-3 mr-1.5" />
                                                 ) : (
-                                                  <FaFilePdf className="h-3 w-3 mr-1.5" />
+                                                  <PiFilePdfLight className="h-3 w-3 mr-1.5" />
                                                 )}
                                                 {attachment.name}
                                               </a>
@@ -1104,7 +1101,7 @@ export default function UserDashboard() {
               /* Ha nincs kamion kiválasztva */
               <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-8 text-center flex-1 flex items-center justify-center">
                 <div>
-                  <FaTruck className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+                  <PiTruckLight className="mx-auto h-12 w-12 text-gray-300 mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
                     Nincs kiválasztott kamion
                   </h3>
@@ -1145,7 +1142,7 @@ export default function UserDashboard() {
                   onClick={() => setShowNewReportModal(false)}
                   className="text-gray-400 hover:text-gray-600 transition-colors"
                 >
-                  <FaTimes className="h-6 w-6" />
+                  <PiXLight className="h-6 w-6" />
                 </button>
               </div>
             </div>
@@ -1233,7 +1230,7 @@ export default function UserDashboard() {
                         disabled={uploadingFiles}
                       />
                       <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        <FaFileUpload className="h-5 w-5 text-gray-400" />
+                        <PiUploadSimpleLight className="h-5 w-5 text-gray-400" />
                       </div>
                     </div>
                     <p className="mt-1.5 text-xs text-gray-500">
@@ -1255,9 +1252,9 @@ export default function UserDashboard() {
                         >
                           <div className="flex items-center">
                             {file.type?.startsWith("image/") ? (
-                              <FaImage className="h-4 w-4 text-blue-600 mr-3" />
+                              <PiImageLight className="h-4 w-4 text-blue-600 mr-3" />
                             ) : (
-                              <FaFilePdf className="h-4 w-4 text-red-600 mr-3" />
+                              <PiFilePdfLight className="h-4 w-4 text-red-600 mr-3" />
                             )}
                             <div>
                               <p className="text-sm font-medium text-gray-900">
@@ -1280,7 +1277,7 @@ export default function UserDashboard() {
                             }}
                             className="text-gray-400 hover:text-red-500 transition-colors"
                           >
-                            <FaTimes className="h-4 w-4" />
+                            <PiXLight className="h-4 w-4" />
                           </button>
                         </div>
                       ))}

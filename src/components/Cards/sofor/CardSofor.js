@@ -8,6 +8,7 @@ import {
   PiFolderLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
+import { toast } from "utils/toast";
 import CardSoforAdatokForm from "./CardSoforAdatokForm";
 import CardSoforFajlok from "./CardSoforFajlok";
 import PageCard from "components/UI/PageCard.js";
@@ -44,17 +45,17 @@ export default function CardSoforok({ initSofor }) {
 
       if (result?.success) {
         if (action === "newSofor") {
-          alert("Új sofőr rögzítése sikeres!");
+          toast.success("Új sofőr rögzítése sikeres!");
           setSofor(result.sofor);
           setFormData({ ...formData, id: result.sofor.id });
         } else {
-          alert("Mentés sikeres!");
+          toast.success("Mentés sikeres!");
         }
       } else {
         throw new Error(result?.message || "Mentés sikertelen.");
       }
     } catch (error) {
-      alert(error.message);
+      toast.error(error.message);
     }
   };
 

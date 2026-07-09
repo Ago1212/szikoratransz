@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   format,
   startOfMonth,
@@ -20,6 +21,11 @@ import {
 } from "react-icons/pi";
 
 const WEEKDAYS = ["H", "K", "Sze", "Cs", "P", "Szo", "V"];
+const PANEL_WIDTH = 288; // w-72
+// A naptár-panel becsült magassága (fejléc + 6 heti sor + lábléc) — ennyi
+// hely kell fölötte/alatta, különben a másik irányba nyílik inkább.
+const ESTIMATED_PANEL_HEIGHT = 380;
+const VIEWPORT_MARGIN = 16;
 
 function parseValue(value) {
   if (!value) return null;
@@ -40,19 +46,57 @@ export default function DatePicker({
   className = "",
 }) {
   const [open, setOpen] = useState(false);
+  const [coords, setCoords] = useState(null);
   const selected = parseValue(value);
   const [viewMonth, setViewMonth] = useState(selected || new Date());
   const wrapperRef = useRef(null);
+  const panelRef = useRef(null);
 
   useEffect(() => {
     if (selected) setViewMonth(selected);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
+  // A panel egy portálon keresztül a body aljára kerül, `position: fixed`-del —
+  // így sosem vágja le egy görgethető (overflow-y-auto) vagy kerekített sarkú
+  // szülő (Modal, form-kártya), és mindig a legfelső rétegben úszik, nem a
+  // form/gombok fölött/alatt "belógva" takarja el őket.
+  const updatePosition = () => {
+    if (!wrapperRef.current) return;
+    const rect = wrapperRef.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    const openUpward =
+      spaceBelow < ESTIMATED_PANEL_HEIGHT && spaceAbove > spaceBelow;
+
+    const left = Math.min(
+      Math.max(rect.left, VIEWPORT_MARGIN),
+      window.innerWidth - PANEL_WIDTH - VIEWPORT_MARGIN
+    );
+
+    setCoords({
+      left,
+      top: openUpward ? undefined : rect.bottom + 8,
+      bottom: openUpward ? window.innerHeight - rect.top + 8 : undefined,
+    });
+  };
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    updatePosition();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
+
     const handleClick = (e) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(e.target) &&
+        panelRef.current &&
+        !panelRef.current.contains(e.target)
+      ) {
         setOpen(false);
       }
     };
@@ -82,87 +126,94 @@ export default function DatePicker({
         </span>
       </button>
 
-      {open && (
-        <div className="absolute z-30 mt-2 w-72 rounded-2xl border border-ink-100 bg-white p-4 shadow-soft-xl">
-          <div className="mb-3 flex items-center justify-between">
-            <button
-              type="button"
-              onClick={() => setViewMonth((m) => subMonths(m, 1))}
-              className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-400 transition-colors duration-150 hover:bg-sand-100 hover:text-ink-700"
-            >
-              <PiCaretLeftLight className="h-4 w-4" />
-            </button>
-            <span className="text-sm font-semibold capitalize text-brand-900">
-              {format(viewMonth, "yyyy. MMMM", { locale: hu })}
-            </span>
-            <button
-              type="button"
-              onClick={() => setViewMonth((m) => addMonths(m, 1))}
-              className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-400 transition-colors duration-150 hover:bg-sand-100 hover:text-ink-700"
-            >
-              <PiCaretRightLight className="h-4 w-4" />
-            </button>
-          </div>
+      {open &&
+        coords &&
+        createPortal(
+          <div
+            ref={panelRef}
+            className="fixed z-[9999] w-72 rounded-2xl border border-ink-100 bg-white p-4 shadow-soft-xl"
+            style={{ left: coords.left, top: coords.top, bottom: coords.bottom }}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setViewMonth((m) => subMonths(m, 1))}
+                className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-400 transition-colors duration-150 hover:bg-sand-100 hover:text-ink-700"
+              >
+                <PiCaretLeftLight className="h-4 w-4" />
+              </button>
+              <span className="text-sm font-semibold capitalize text-brand-900">
+                {format(viewMonth, "yyyy. MMMM", { locale: hu })}
+              </span>
+              <button
+                type="button"
+                onClick={() => setViewMonth((m) => addMonths(m, 1))}
+                className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-400 transition-colors duration-150 hover:bg-sand-100 hover:text-ink-700"
+              >
+                <PiCaretRightLight className="h-4 w-4" />
+              </button>
+            </div>
 
-          <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold uppercase text-ink-400">
-            {WEEKDAYS.map((d) => (
-              <div key={d}>{d}</div>
-            ))}
-          </div>
-          <div className="mt-1 grid grid-cols-7 gap-1">
-            {days.map((day) => {
-              const inMonth = isSameMonth(day, viewMonth);
-              const isSelected = selected && isSameDay(day, selected);
-              return (
-                <button
-                  key={day.toISOString()}
-                  type="button"
-                  onClick={() => {
-                    emitChange(day);
-                    setOpen(false);
-                  }}
-                  className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm transition-colors duration-150 ${
-                    isSelected
-                      ? "bg-brand-600 font-semibold text-white"
-                      : isToday(day)
-                        ? "bg-brand-50 font-semibold text-brand-700"
-                        : inMonth
-                          ? "text-ink-700 hover:bg-sand-100"
-                          : "text-ink-300 hover:bg-sand-50"
-                  }`}
-                >
-                  {format(day, "d")}
-                </button>
-              );
-            })}
-          </div>
+            <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold uppercase text-ink-400">
+              {WEEKDAYS.map((d) => (
+                <div key={d}>{d}</div>
+              ))}
+            </div>
+            <div className="mt-1 grid grid-cols-7 gap-1">
+              {days.map((day) => {
+                const inMonth = isSameMonth(day, viewMonth);
+                const isSelected = selected && isSameDay(day, selected);
+                return (
+                  <button
+                    key={day.toISOString()}
+                    type="button"
+                    onClick={() => {
+                      emitChange(day);
+                      setOpen(false);
+                    }}
+                    className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm transition-colors duration-150 ${
+                      isSelected
+                        ? "bg-brand-600 font-semibold text-white"
+                        : isToday(day)
+                          ? "bg-brand-50 font-semibold text-brand-700"
+                          : inMonth
+                            ? "text-ink-700 hover:bg-sand-100"
+                            : "text-ink-300 hover:bg-sand-50"
+                    }`}
+                  >
+                    {format(day, "d")}
+                  </button>
+                );
+              })}
+            </div>
 
-          <div className="mt-3 flex items-center justify-between border-t border-ink-100 pt-3">
-            <button
-              type="button"
-              onClick={() => {
-                emitChange(new Date());
-                setOpen(false);
-              }}
-              className="text-xs font-semibold text-brand-600 hover:text-brand-800"
-            >
-              Ma
-            </button>
-            {!required && (
+            <div className="mt-3 flex items-center justify-between border-t border-ink-100 pt-3">
               <button
                 type="button"
                 onClick={() => {
-                  emitChange(null);
+                  emitChange(new Date());
                   setOpen(false);
                 }}
-                className="text-xs font-medium text-ink-400 hover:text-ink-700"
+                className="text-xs font-semibold text-brand-600 hover:text-brand-800"
               >
-                Törlés
+                Ma
               </button>
-            )}
-          </div>
-        </div>
-      )}
+              {!required && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    emitChange(null);
+                    setOpen(false);
+                  }}
+                  className="text-xs font-medium text-ink-400 hover:text-ink-700"
+                >
+                  Törlés
+                </button>
+              )}
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

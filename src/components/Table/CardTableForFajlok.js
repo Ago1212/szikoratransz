@@ -10,6 +10,7 @@ import {
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { downloadFileAction } from "utils/downloadFileAction";
+import { toast } from "utils/toast";
 
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 
@@ -66,11 +67,11 @@ export default function CardTableForFajlok({ id, tabla }) {
       if (result?.success) {
         setFiles(result.files);
       } else {
-        alert(result?.message || "Fájlok betöltése sikertelen.");
+        toast.error(result?.message || "Fájlok betöltése sikertelen.");
       }
     } catch (error) {
       console.error("Hiba történt a fájlok betöltésekor:", error);
-      alert("Hiba történt a fájlok betöltésekor.");
+      toast.error("Hiba történt a fájlok betöltésekor.");
     } finally {
       setIsLoading(false);
     }
@@ -89,11 +90,11 @@ export default function CardTableForFajlok({ id, tabla }) {
       if (result?.success) {
         fetchFiles();
       } else {
-        alert(result?.message || "Hiba történt a törlés során");
+        toast.error(result?.message || "Hiba történt a törlés során");
       }
     } catch (error) {
       console.error("Hiba történt a törlés során:", error);
-      alert("Hiba történt a törlés során.");
+      toast.error("Hiba történt a törlés során.");
     }
   };
 
@@ -102,7 +103,7 @@ export default function CardTableForFajlok({ id, tabla }) {
     if (!file) return;
 
     if (file.size > 10 * 1024 * 1024) {
-      alert("A fájl mérete túl nagy! Maximális megengedett méret: 10MB");
+      toast.error("A fájl mérete túl nagy! Maximális megengedett méret: 10MB");
       return;
     }
 
@@ -124,11 +125,11 @@ export default function CardTableForFajlok({ id, tabla }) {
         if (result?.success) {
           fetchFiles();
         } else {
-          alert(result?.message || "Fájl feltöltési hiba!");
+          toast.error(result?.message || "Fájl feltöltési hiba!");
         }
       } catch (error) {
         console.error("Fájl feltöltési hiba:", error);
-        alert("Fájl feltöltése sikertelen.");
+        toast.error("Fájl feltöltése sikertelen.");
       } finally {
         setIsLoading(false);
       }
@@ -136,7 +137,7 @@ export default function CardTableForFajlok({ id, tabla }) {
 
     reader.onerror = () => {
       setIsLoading(false);
-      alert("Hiba történt a fájl olvasása során.");
+      toast.error("Hiba történt a fájl olvasása során.");
     };
 
     reader.readAsDataURL(file);
@@ -147,7 +148,7 @@ export default function CardTableForFajlok({ id, tabla }) {
       await downloadFileAction(fileId, filename);
     } catch (error) {
       console.error("Letöltési hiba:", error);
-      alert("A fájl letöltése sikertelen.");
+      toast.error("A fájl letöltése sikertelen.");
     }
   };
 
@@ -202,6 +203,7 @@ export default function CardTableForFajlok({ id, tabla }) {
 
   return (
     <DataTable
+      icon={PiFileLight}
       title="Fájlok kezelése"
       headerAction={
         <label className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-all duration-300 ease-fluid hover:bg-brand-700">

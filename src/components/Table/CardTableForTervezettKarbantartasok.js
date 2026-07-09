@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { PiPencilSimpleLight, PiTrashLight, PiArrowRightLight, PiWrenchLight } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
+import { toast } from "utils/toast";
 
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import Modal from "components/UI/Modal.js";
@@ -21,7 +22,7 @@ const CardTableForTervezettKarbantartasok = ({ kamion_id, refresh, onRefresh }) 
     if (result?.success) {
       setKarbantartasok(result.karbantartas);
     } else {
-      alert(result?.message || "Karbantartások betöltése sikertelen.");
+      toast.error(result?.message || "Karbantartások betöltése sikertelen.");
     }
   };
 
@@ -50,7 +51,7 @@ const CardTableForTervezettKarbantartasok = ({ kamion_id, refresh, onRefresh }) 
       await fetchKarbantartasok();
       onRefresh?.();
     } else {
-      alert(result?.message || "Hiba történt a státusz frissítésekor.");
+      toast.error(result?.message || "Hiba történt a státusz frissítésekor.");
     }
   };
 
@@ -61,14 +62,14 @@ const CardTableForTervezettKarbantartasok = ({ kamion_id, refresh, onRefresh }) 
       const result = await fetchAction("deleteKarbantartas", { id });
 
       if (result?.success) {
-        alert("A karbantartás sikeresen törölve.");
+        toast.success("A karbantartás sikeresen törölve.");
         await fetchKarbantartasok();
       } else {
-        alert(result?.message || "Hiba történt a törlés során.");
+        toast.error(result?.message || "Hiba történt a törlés során.");
       }
     } catch (error) {
       console.error("Hiba történt a törlés során:", error);
-      alert("Hiba történt a törlés során.");
+      toast.error("Hiba történt a törlés során.");
     }
   };
 
@@ -88,7 +89,7 @@ const CardTableForTervezettKarbantartasok = ({ kamion_id, refresh, onRefresh }) 
       await fetchKarbantartasok();
       setOpenDialog(false);
     } else {
-      alert(result?.message || "Módosítás sikertelen.");
+      toast.error(result?.message || "Módosítás sikertelen.");
     }
   };
 

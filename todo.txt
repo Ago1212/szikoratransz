@@ -8,3 +8,10 @@ php8.2 -S localhost:8000
 
 //adatbázis user létrehozása
 grant select,insert,update,delete,lock tables, ALTER on kamion.* to kamion@localhost identified by 'VW4h2gzwm6vzA05xYGdWoNXFzHhSCdNQ';
+
+Hátralévőfeladatok:
+.még mindig rossz a dátum választó ha a form-ról kilógan akkor eltakarja az alját 
+.Landing-en a hero sectionben a háttér vonalak nem néznek ki túl jól mobilon
+
+
+.Lehetne generálni egy magyarország térképet ahonnan külföldre és belföldön is ilyen vonalak jelennek meg városok között mintha az áru fuvarozást szimulálná. Alapból szürke színnel lehetne jelölni a magyarország határait . Ezt kéne a landing page-n a hero section hátterének beállítani úgy hogy belelvadjon a háttérbe 

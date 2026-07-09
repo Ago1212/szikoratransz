@@ -14,6 +14,7 @@ import {
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { downloadFileAction } from "utils/downloadFileAction";
+import { toast } from "utils/toast";
 
 import PageHeader from "components/UI/PageHeader.js";
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
@@ -74,7 +75,7 @@ const Karbantartasok = () => {
 
     const oversizedFiles = selectedFiles.filter((file) => file.size > 10 * 1024 * 1024);
     if (oversizedFiles.length > 0) {
-      alert("Néhány fájl mérete túl nagy! Maximális megengedett méret: 10MB");
+      toast.error("Néhány fájl mérete túl nagy! Maximális megengedett méret: 10MB");
       return;
     }
 
@@ -105,11 +106,11 @@ const Karbantartasok = () => {
       if (results.every(Boolean)) {
         await fetchFilesForKarbantartas(karbantartasId);
       } else {
-        alert("Néhány fájl feltöltése sikertelen volt.");
+        toast.error("Néhány fájl feltöltése sikertelen volt.");
       }
     } catch (error) {
       console.error("Fájl feltöltési hiba:", error);
-      alert("Hiba történt a fájlok feltöltése során.");
+      toast.error("Hiba történt a fájlok feltöltése során.");
     } finally {
       setIsFileUploading(false);
     }
@@ -125,7 +126,7 @@ const Karbantartasok = () => {
       }
     } catch (error) {
       console.error("Hiba történt a törlés során:", error);
-      alert("Hiba történt a törlés során.");
+      toast.error("Hiba történt a törlés során.");
     }
   };
 
@@ -232,7 +233,8 @@ const Karbantartasok = () => {
   const getJarmuRendszam = (id, isPotkocsi = false) => {
     const jarmuLista = isPotkocsi ? potkocsik : kamionok;
     const jarmu = jarmuLista.find((j) => j.id === id);
-    return jarmu ? `${jarmu.rendszam} (${jarmu.tipus})` : "Ismeretlen";
+    if (!jarmu) return "Ismeretlen";
+    return jarmu.tipus ? `${jarmu.rendszam} (${jarmu.tipus})` : jarmu.rendszam;
   };
 
   const getStatus = (karb) => {
@@ -400,7 +402,7 @@ const Karbantartasok = () => {
                 <option value="">Összes kamion</option>
                 {kamionok.map((kamion) => (
                   <option key={kamion.id} value={kamion.id}>
-                    {kamion.rendszam} ({kamion.tipus})
+                    {kamion.tipus ? `${kamion.rendszam} (${kamion.tipus})` : kamion.rendszam}
                   </option>
                 ))}
               </FormField>
@@ -414,7 +416,7 @@ const Karbantartasok = () => {
                 <option value="">Összes pótkocsi</option>
                 {potkocsik.map((potkocsi) => (
                   <option key={potkocsi.id} value={potkocsi.id}>
-                    {potkocsi.rendszam} ({potkocsi.tipus})
+                    {potkocsi.tipus ? `${potkocsi.rendszam} (${potkocsi.tipus})` : potkocsi.rendszam}
                   </option>
                 ))}
               </FormField>
@@ -539,7 +541,7 @@ const Karbantartasok = () => {
               <option value="">Válassz kamiont</option>
               {kamionok.map((kamion) => (
                 <option key={kamion.id} value={kamion.id}>
-                  {kamion.rendszam} ({kamion.tipus})
+                  {kamion.tipus ? `${kamion.rendszam} (${kamion.tipus})` : kamion.rendszam}
                 </option>
               ))}
             </FormField>
@@ -555,7 +557,7 @@ const Karbantartasok = () => {
               <option value="">Válassz pótkocsit</option>
               {potkocsik.map((potkocsi) => (
                 <option key={potkocsi.id} value={potkocsi.id}>
-                  {potkocsi.rendszam} ({potkocsi.tipus})
+                  {potkocsi.tipus ? `${potkocsi.rendszam} (${potkocsi.tipus})` : potkocsi.rendszam}
                 </option>
               ))}
             </FormField>

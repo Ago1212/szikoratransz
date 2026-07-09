@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { PiPencilSimpleLight, PiTrashLight, PiCalendarBlankLight } from "react-icons/pi";
 import { format } from "date-fns";
 import { fetchAction } from "utils/fetchAction";
+import { toast } from "utils/toast";
 
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import Modal from "components/UI/Modal.js";
@@ -24,7 +25,7 @@ const CardTableForEsemenyek = ({ id }) => {
     if (result?.success) {
       setEsemenyek(result.esemenyek);
     } else {
-      alert(result?.message || "Események betöltése sikertelen.");
+      toast.error(result?.message || "Események betöltése sikertelen.");
     }
   };
 
@@ -40,7 +41,7 @@ const CardTableForEsemenyek = ({ id }) => {
     if (result?.success) {
       await fetchEsemenyek();
     } else {
-      alert(result?.message || "Hiba történt a törlés során");
+      toast.error(result?.message || "Hiba történt a törlés során");
     }
   };
 
@@ -61,7 +62,7 @@ const CardTableForEsemenyek = ({ id }) => {
       await fetchEsemenyek();
       resetForm();
     } else {
-      alert(result?.message || "Hiba történt a művelet során");
+      toast.error(result?.message || "Hiba történt a művelet során");
     }
   };
 
@@ -78,12 +79,14 @@ const CardTableForEsemenyek = ({ id }) => {
   };
 
   const columns = [
+    { key: "leiras", label: "Esemény" },
+    { key: "datum", label: "Dátum" },
     {
       key: "actions",
       label: "Műveletek",
-      align: "center",
+      align: "right",
       render: (row) => (
-        <div className="flex justify-center gap-1">
+        <div className="flex justify-end gap-1">
           <ActionIcon
             icon={<PiPencilSimpleLight />}
             onClick={() => openEditDialog(row)}
@@ -98,8 +101,6 @@ const CardTableForEsemenyek = ({ id }) => {
         </div>
       ),
     },
-    { key: "leiras", label: "Esemény" },
-    { key: "datum", label: "Dátum" },
   ];
 
   return (

@@ -99,15 +99,6 @@ export default function Dashboard() {
 
   return (
     <div className="mx-auto flex h-full w-full max-w-7xl flex-col">
-      <div className="mb-6 flex-shrink-0">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-500">
-          Áttekintés
-        </p>
-        <h1 className="mt-1 font-display text-2xl font-bold text-brand-900">
-          Főmenü
-        </h1>
-      </div>
-
       {/* Statisztikák — mobilon nincs rájuk szükség, csak a naptár számít ott */}
       <div className="hidden flex-shrink-0 grid-cols-2 gap-5 md:mb-6 md:grid xl:grid-cols-4">
         {cards.map((card) => (

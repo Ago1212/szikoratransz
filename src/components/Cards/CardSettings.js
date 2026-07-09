@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { fetchAction } from "utils/fetchAction";
+import { toast } from "utils/toast";
 import {
   PiUserLight,
   PiEnvelopeSimpleLight,
@@ -38,12 +39,12 @@ export default function CardSettings() {
 
       if (result?.success) {
         sessionStorage.setItem("user", JSON.stringify(result.user));
-        alert("Adatok sikeresen mentve!");
+        toast.success("Adatok sikeresen mentve!");
       } else {
         throw new Error(result?.message || "Mentés sikertelen");
       }
     } catch (error) {
-      alert(error.message);
+      toast.error(error.message);
     } finally {
       setIsSaving(false);
     }

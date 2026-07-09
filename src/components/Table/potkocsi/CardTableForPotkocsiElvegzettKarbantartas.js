@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { PiTrashLight, PiArrowLeftLight, PiWrenchLight } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
+import { toast } from "utils/toast";
 
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 
@@ -17,7 +18,7 @@ const CardTableForPotkocsiElvegzettKarbantartas = ({ potkocsi_id, refresh, onRef
     if (result?.success) {
       setKarbantartasok(result.karbantartas);
     } else {
-      alert(result?.message || "Karbantartások betöltése sikertelen.");
+      toast.error(result?.message || "Karbantartások betöltése sikertelen.");
     }
   };
 
@@ -36,7 +37,7 @@ const CardTableForPotkocsiElvegzettKarbantartas = ({ potkocsi_id, refresh, onRef
       await fetchKarbantartasok();
       onRefresh?.();
     } else {
-      alert(result?.message || "Hiba történt a státusz frissítésekor.");
+      toast.error(result?.message || "Hiba történt a státusz frissítésekor.");
     }
   };
 
@@ -47,14 +48,14 @@ const CardTableForPotkocsiElvegzettKarbantartas = ({ potkocsi_id, refresh, onRef
       const result = await fetchAction("deletePotkocsiKarbantartas", { id });
 
       if (result?.success) {
-        alert("A karbantartás sikeresen törölve.");
+        toast.success("A karbantartás sikeresen törölve.");
         await fetchKarbantartasok();
       } else {
-        alert(result?.message || "Hiba történt a törlés során.");
+        toast.error(result?.message || "Hiba történt a törlés során.");
       }
     } catch (error) {
       console.error("Hiba történt a törlés során:", error);
-      alert("Hiba történt a törlés során.");
+      toast.error("Hiba történt a törlés során.");
     }
   };
 

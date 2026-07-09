@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { PiTruckLight } from "react-icons/pi";
 // components
 import { fetchAction } from "utils/fetchAction";
 import CardTable from "components/Table/CardTableForBejelentesek.js";
@@ -69,12 +70,19 @@ export default function Bejelentesek() {
             </select>
           </div>
 
-          {selectedKamion && (
+          {selectedKamion ? (
             <CardTable
               bejelentesek={bejelentesek}
               isLoading={isLoading}
               selectedKamion={selectedKamion}
             />
+          ) : (
+            <div className="flex flex-col items-center gap-2.5 rounded-3xl bg-white px-6 py-16 text-center shadow-soft ring-1 ring-ink-100">
+              <PiTruckLight className="h-8 w-8 text-ink-200" />
+              <p className="text-sm text-ink-400">
+                Válassz egy kamiont a bejelentések megtekintéséhez.
+              </p>
+            </div>
           )}
         </div>
       </div>

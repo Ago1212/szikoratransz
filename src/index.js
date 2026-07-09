@@ -16,7 +16,7 @@ import Auth from "layouts/Auth.js";
 import Landing from "views/Landing.js";
 import Profile from "views/Profile.js";
 
-import InstallPrompt from "components/PWA/InstallPrompt.js";
+import ToastContainer from "components/UI/ToastContainer.js";
 
 serviceWorkerRegistration.register();
 
@@ -34,7 +34,7 @@ ReactDOM.render(
       {/* add redirect for first page */}
       <Redirect from="*" to="/" />
     </Switch>
-    <InstallPrompt />
+    <ToastContainer />
   </BrowserRouter>,
-  document.getElementById("root")
+  document.getElementById("root"),
 );
