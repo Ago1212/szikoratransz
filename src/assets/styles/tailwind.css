@@ -873,6 +873,10 @@ h1,
   pointer-events: none;
 }
 
+.pointer-events-auto {
+  pointer-events: auto;
+}
+
 .visible {
   visibility: visible;
 }
@@ -1803,10 +1807,6 @@ h1,
 
 .gap-x-4 {
   column-gap: 1rem;
-}
-
-.gap-x-8 {
-  column-gap: 2rem;
 }
 
 .gap-y-3 {
@@ -4394,10 +4394,6 @@ h1,
 
   .lg\:w-auto {
     width: auto;
-  }
-
-  .lg\:max-w-md {
-    max-width: 28rem;
   }
 
   .lg\:grid-cols-2 {

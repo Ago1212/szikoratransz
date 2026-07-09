@@ -106,16 +106,8 @@ export default function HungaryMapBackground({
           50% { opacity: 0.85; transform: scale(1.3); }
         }
         @keyframes heroMapIn {
-          from { opacity: 0; transform: scale(1.06); filter: blur(14px); }
-          to { opacity: 1; transform: scale(1); filter: blur(0); }
-        }
-        @keyframes orbFloat {
-          0%, 100% { transform: translate(0, 0); }
-          50% { transform: translate(-14px, 22px); }
-        }
-        @keyframes orbFloatDelay {
-          0%, 100% { transform: translate(0, 0); }
-          50% { transform: translate(18px, -18px); }
+          from { opacity: 0; transform: scale(1.06); }
+          to { opacity: 1; transform: scale(1); }
         }
         .route-flow-1 { animation: routeFlow 14s linear infinite; }
         .route-flow-2 { animation: routeFlow 22s linear infinite reverse; }
@@ -128,12 +120,10 @@ export default function HungaryMapBackground({
           animation: waypointPulse 4s ease-in-out infinite;
         }
         .waypoint-pulse-delay { animation-delay: 1.8s; }
-        .hero-map-in { animation: heroMapIn 1.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
-        .hero-map-orb-1 { animation: orbFloat 9s ease-in-out infinite; }
-        .hero-map-orb-2 { animation: orbFloatDelay 11s ease-in-out infinite; }
+        .hero-map-in { animation: heroMapIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
         @media (prefers-reduced-motion: reduce) {
           .route-flow-1, .route-flow-2, .route-flow-3, .route-flow-4, .route-flow-5, .waypoint-pulse,
-          .hero-map-in, .hero-map-orb-1, .hero-map-orb-2 {
+          .hero-map-in {
             animation: none;
           }
         }
@@ -173,11 +163,14 @@ export default function HungaryMapBackground({
           strokeWidth="1.5"
           strokeOpacity="0.16"
         />
-        {/* Fuvarutak — hazai városok között és az országhatáron túl */}
+        {/* Fuvarutak — hazai városok között és az országhatáron túl.
+            Csak a fő (kék) útvonalak animáltak — a másodlagos (halvány
+            szürke) vonalak statikusak, hogy ne fusson egyszerre 14
+            stroke-dashoffset animáció (ez volt az oldal akadásának oka). */}
         {HERO_ROUTES.map((route, i) => (
           <path
             key={i}
-            className={route.speed}
+            className={route.color === "#1E3AA8" ? route.speed : ""}
             d={route.d}
             stroke={route.color}
             strokeWidth={route.color === "#1E3AA8" ? 2 : 1.5}
@@ -246,11 +239,8 @@ export default function HungaryMapBackground({
           </text>
         ))}
       </svg>
-      <div className="hero-map-orb-1 absolute -top-24 -right-16 w-[28rem] h-[28rem] rounded-full bg-[#1E3AA8]/15 blur-3xl pointer-events-none"></div>
-      <div className="hero-map-orb-2 absolute bottom-0 left-1/4 w-80 h-80 rounded-full bg-[#1E3AA8]/10 blur-3xl pointer-events-none"></div>
-      <div
-        className="absolute inset-0 bg-grain opacity-[0.05] mix-blend-overlay pointer-events-none"
-      ></div>
+      <div className="absolute -top-24 -right-16 w-[28rem] h-[28rem] rounded-full bg-[#1E3AA8]/15 blur-3xl pointer-events-none"></div>
+      <div className="absolute bottom-0 left-1/4 w-80 h-80 rounded-full bg-[#1E3AA8]/10 blur-3xl pointer-events-none"></div>
       {showBottomFade && (
         <div
           className="absolute inset-x-0 bottom-0 h-56 pointer-events-none"

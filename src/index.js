@@ -17,8 +17,16 @@ import Landing from "views/Landing.js";
 import Profile from "views/Profile.js";
 
 import ToastContainer from "components/UI/ToastContainer.js";
+import UpdateBanner from "components/PWA/UpdateBanner.js";
+import { notifySwUpdate } from "utils/swUpdate";
 
-serviceWorkerRegistration.register();
+// `onUpdate` nélkül a service worker új verziója csendben "waiting"
+// állapotban ragad, amíg minden fület be nem zárnak — emiatt tűnt úgy,
+// hogy a friss deploy után az emberek a régi, cache-elt oldalt látják.
+// Az <UpdateBanner /> jelzi ezt egy "Frissítés" gombbal.
+serviceWorkerRegistration.register({
+  onUpdate: (registration) => notifySwUpdate(registration),
+});
 
 ReactDOM.render(
   <BrowserRouter>
@@ -35,6 +43,7 @@ ReactDOM.render(
       <Redirect from="*" to="/" />
     </Switch>
     <ToastContainer />
+    <UpdateBanner />
   </BrowserRouter>,
   document.getElementById("root"),
 );
