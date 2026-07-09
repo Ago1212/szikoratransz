@@ -14,8 +14,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- `display=optional` (nem `swap`): a böngésző csak akkor vált a
+         betöltött Overpass fontra, ha az ~100ms-en belül elkészül,
+         különben megtartja a rendszer-betűtípust az egész oldalbetöltés
+         alatt — ez szünteti meg azt a látható "ugrást", amit a késleltetett
+         font-csere okozott (a bejelentkező kártya és a szöveg újratördelése
+         a fallback és az Overpass eltérő betűméretei miatt). -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;500;600;700;800&family=Overpass+Mono:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;500;600;700;800&family=Overpass+Mono:wght@400;500;600;700&display=optional"
       rel="stylesheet"
     />
     <title>Szikora Transz Kft. | Profi áruszállítás és logisztika</title>

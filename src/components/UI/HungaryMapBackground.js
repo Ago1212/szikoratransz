@@ -106,8 +106,8 @@ export default function HungaryMapBackground({
           50% { opacity: 0.85; transform: scale(1.3); }
         }
         @keyframes heroMapIn {
-          from { opacity: 0; transform: scale(1.06); }
-          to { opacity: 1; transform: scale(1); }
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
         .route-flow-1 { animation: routeFlow 14s linear infinite; }
         .route-flow-2 { animation: routeFlow 22s linear infinite reverse; }
