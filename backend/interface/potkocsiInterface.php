@@ -26,11 +26,13 @@ class PotkocsiInterface {
     public function savePotkocsiData($data) {
         try {
             // SQL lekérdezés előkészítése az adatok frissítéséhez
-            $query = "UPDATE potkocsi 
-                      SET rendszam = :rendszam, 
-                          muszaki_lejarat = :muszaki_lejarat, 
-                          tipus = :tipus, 
-                          adr_lejarat = :adr_lejarat, 
+            $query = "UPDATE potkocsi
+                      SET rendszam = :rendszam,
+                          muszaki_lejarat = :muszaki_lejarat,
+                          tipus = :tipus,
+                          allapot = :allapot,
+                          aktualis_km = :aktualis_km,
+                          adr_lejarat = :adr_lejarat,
                           taograf_illesztes = :taograf_illesztes, 
                           emelohatfal_vizsga = :emelohatfal_vizsga, 
                           porolto_lejarat = :porolto_lejarat, 
@@ -50,6 +52,8 @@ class PotkocsiInterface {
             // Paraméterek kötése
             $stmt->bindParam(':rendszam', $data['rendszam'], PDO::PARAM_STR);
             $stmt->bindParam(':tipus', $data['tipus'], PDO::PARAM_STR);
+            $stmt->bindValue(':allapot', empty($data['allapot']) ? 'szabad' : $data['allapot']);
+            $stmt->bindValue(':aktualis_km', empty($data['aktualis_km']) ? null : $data['aktualis_km']);
             $stmt->bindParam(':muszaki_lejarat', $data['muszaki_lejarat'], PDO::PARAM_STR);
             $stmt->bindParam(':adr_lejarat', $data['adr_lejarat'], PDO::PARAM_STR);
             $stmt->bindParam(':taograf_illesztes', $data['taograf_illesztes'], PDO::PARAM_STR);
@@ -76,9 +80,9 @@ class PotkocsiInterface {
     public function newPotkocsi($data) {
         try {
             // SQL lekérdezés előkészítése az adatok beszúrásához
-            $query = "INSERT INTO potkocsi 
-                      (admin,rendszam,tipus, muszaki_lejarat, adr_lejarat, taograf_illesztes, emelohatfal_vizsga, porolto_lejarat, porolto_lejarat_2, kot_biztositas,kot_biz_nev, kot_biz_dij, kot_biz_utem, kaszko_biztositas, kaszko_nev,kaszko_dij, kaszko_fizetesi_utem) 
-                      VALUES (:admin,:rendszam,:tipus, :muszaki_lejarat, :adr_lejarat, :taograf_illesztes, :emelohatfal_vizsga, :porolto_lejarat, :porolto_lejarat_2, :kot_biztositas,:kot_biz_nev, :kot_biz_dij, :kot_biz_utem, :kaszko_biztositas,  :kaszko_nev,:kaszko_dij, :kaszko_fizetesi_utem)";
+            $query = "INSERT INTO potkocsi
+                      (admin, rendszam, tipus, allapot, aktualis_km, muszaki_lejarat, adr_lejarat, taograf_illesztes, emelohatfal_vizsga, porolto_lejarat, porolto_lejarat_2, kot_biztositas, kot_biz_nev, kot_biz_dij, kot_biz_utem, kaszko_biztositas, kaszko_nev, kaszko_dij, kaszko_fizetesi_utem)
+                      VALUES (:admin, :rendszam, :tipus, :allapot, :aktualis_km, :muszaki_lejarat, :adr_lejarat, :taograf_illesztes, :emelohatfal_vizsga, :porolto_lejarat, :porolto_lejarat_2, :kot_biztositas, :kot_biz_nev, :kot_biz_dij, :kot_biz_utem, :kaszko_biztositas, :kaszko_nev, :kaszko_dij, :kaszko_fizetesi_utem)";
 
             $stmt = $this->db->prepare($query);
 
@@ -86,6 +90,8 @@ class PotkocsiInterface {
             $stmt->bindParam(':admin', $data['admin'], PDO::PARAM_STR);
             $stmt->bindParam(':tipus', $data['tipus'], PDO::PARAM_STR);
             $stmt->bindParam(':rendszam', $data['rendszam'], PDO::PARAM_STR);
+            $stmt->bindValue(':allapot', empty($data['allapot']) ? 'szabad' : $data['allapot']);
+            $stmt->bindValue(':aktualis_km', empty($data['aktualis_km']) ? null : $data['aktualis_km']);
             $stmt->bindParam(':muszaki_lejarat', $data['muszaki_lejarat'], PDO::PARAM_STR);
             $stmt->bindParam(':adr_lejarat', $data['adr_lejarat'], PDO::PARAM_STR);
             $stmt->bindParam(':taograf_illesztes', $data['taograf_illesztes'], PDO::PARAM_STR);

@@ -11,6 +11,9 @@ import {
   PiFilesLight,
   PiCalendarBlankLight,
   PiSignOutLight,
+  PiListMagnifyingGlassLight,
+  PiBuildingsLight,
+  PiUsersFourLight,
 } from "react-icons/pi";
 
 import NotificationDropdown from "components/Dropdowns/NotificationDropdown.js";
@@ -28,6 +31,7 @@ const initials = (name) =>
 const mobileDirectLinks = [
   { to: "/admin/dashboard", icon: PiSquaresFourLight, text: "Főmenü" },
   { to: "/admin/settings", icon: PiGearLight, text: "Saját adatok" },
+  { to: "/admin/felhasznalok", icon: PiUsersFourLight, text: "Felhasználók" },
 ];
 
 const mobileGroups = [
@@ -60,6 +64,11 @@ const mobileGroups = [
         icon: PiChatCircleTextLight,
         text: "Bejelentések",
       },
+      {
+        to: "/admin/szabadsagok",
+        icon: PiCalendarBlankLight,
+        text: "Szabadságok",
+      },
     ],
   },
   {
@@ -67,7 +76,9 @@ const mobileGroups = [
     label: "Egyéb",
     icon: PiFilesLight,
     items: [
+      { to: "/admin/ugyfelek", icon: PiBuildingsLight, text: "Ügyfelek" },
       { to: "/admin/fajlok", icon: PiFilesLight, text: "Fájlok" },
+      { to: "/admin/naplo", icon: PiListMagnifyingGlassLight, text: "Napló" },
       {
         to: "/admin/esemenyek",
         icon: PiCalendarBlankLight,
@@ -77,8 +88,11 @@ const mobileGroups = [
   },
 ];
 
+const TIPUS_LABEL = { kamion: "kamiont", potkocsi: "pótkocsit" };
+
 export default function Sidebar() {
   const [openGroup, setOpenGroup] = React.useState(null);
+  const [kerelmek, setKerelmek] = React.useState([]);
   const location = useLocation();
   const history = useHistory();
 
@@ -90,6 +104,35 @@ export default function Sidebar() {
   } catch (e) {
     user = null;
   }
+
+  const loadKerelmek = React.useCallback(() => {
+    if (!user?.ceg_id) return;
+    fetchAction("getFuggoJarmuValtasok", { id: user.ceg_id }).then((result) => {
+      if (result?.success) setKerelmek(result.kerelmek || []);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.ceg_id]);
+
+  React.useEffect(() => {
+    loadKerelmek();
+  }, [loadKerelmek]);
+
+  const handleElbiral = async (id, allapot) => {
+    const result = await fetchAction("elbiralJarmuValtas", { id, allapot, admin: user.ceg_id });
+    if (result?.success) {
+      loadKerelmek();
+    }
+  };
+
+  const kerelemNotifications = kerelmek.map((k) => ({
+    id: k.id,
+    text: `${k.sofor_nev || "Egy sofőr"} másik ${TIPUS_LABEL[k.tipus] || "járművet"} kér: ${k.jarmu_rendszam || "?"}`,
+    meta: k.indoklas || null,
+    actions: [
+      { label: "Jóváhagyás", onClick: () => handleElbiral(k.id, "jovahagyva") },
+      { label: "Elutasítás", tone: "danger", onClick: () => handleElbiral(k.id, "elutasitva") },
+    ],
+  }));
 
   const handleLogout = async () => {
     const result = await fetchAction("logoutUser", { id: user?.id });
@@ -147,7 +190,7 @@ export default function Sidebar() {
               className="h-8 w-auto"
             />
           </Link>
-          <NotificationDropdown />
+          <NotificationDropdown notifications={kerelemNotifications} />
         </div>
 
         {/* Navigáció — ha nem fér ki, ez a rész görgethető */}
@@ -163,6 +206,11 @@ export default function Sidebar() {
               to="/admin/settings"
               icon={PiGearLight}
               text="Saját adatok"
+            />
+            <NavItem
+              to="/admin/felhasznalok"
+              icon={PiUsersFourLight}
+              text="Felhasználók"
             />
           </ul>
 
@@ -189,11 +237,22 @@ export default function Sidebar() {
               icon={PiChatCircleTextLight}
               text="Bejelentések"
             />
+            <NavItem
+              to="/admin/szabadsagok"
+              icon={PiCalendarBlankLight}
+              text="Szabadságok"
+            />
           </ul>
 
           <SectionHeader>Egyéb</SectionHeader>
           <ul className="space-y-0.5">
+            <NavItem to="/admin/ugyfelek" icon={PiBuildingsLight} text="Ügyfelek" />
             <NavItem to="/admin/fajlok" icon={PiFilesLight} text="Fájlok" />
+            <NavItem
+              to="/admin/naplo"
+              icon={PiListMagnifyingGlassLight}
+              text="Napló"
+            />
             <NavItem
               to="/admin/esemenyek"
               icon={PiCalendarBlankLight}
@@ -253,14 +312,14 @@ export default function Sidebar() {
                     <li key={item.to}>
                       <Link
                         to={item.to}
-                        className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium ${
+                        className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[15px] font-medium ${
                           active
                             ? "bg-brand-50 text-brand-700"
                             : "text-ink-600 hover:bg-sand-100"
                         }`}
                         onClick={() => setOpenGroup(null)}
                       >
-                        <item.icon className="h-4 w-4 flex-shrink-0" />
+                        <item.icon className="h-[18px] w-[18px] flex-shrink-0" />
                         {item.text}
                       </Link>
                     </li>
@@ -270,7 +329,9 @@ export default function Sidebar() {
             ))}
         </div>
 
-        {/* Fő linkek + csoport fülek + kompakt kilépés gomb */}
+        {/* Fő linkek + csoport fülek + kompakt kilépés gomb — a korábbi
+            py-1.5/h-4 ikon/text-[10px] kombináció a felhasználó szerint túl
+            kicsi volt; nagyobb ikon, betűméret és érintési terület. */}
         <nav className="flex border-t border-ink-100 bg-white pb-[env(safe-area-inset-bottom)]">
           {mobileDirectLinks.map((item) => {
             const active = isActive(item.to);
@@ -278,12 +339,12 @@ export default function Sidebar() {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`flex flex-1 flex-col items-center gap-0.5 py-1.5 text-[10px] font-medium leading-none ${
+                className={`flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium leading-none ${
                   active ? "text-brand-600" : "text-ink-400"
                 }`}
                 onClick={() => setOpenGroup(null)}
               >
-                <item.icon className="h-4 w-4" />
+                <item.icon className="h-5 w-5" />
                 {item.text}
               </Link>
             );
@@ -295,23 +356,23 @@ export default function Sidebar() {
             return (
               <button
                 key={group.key}
-                className={`flex flex-1 flex-col items-center gap-0.5 py-1.5 text-[10px] font-medium leading-none ${
+                className={`flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium leading-none ${
                   active ? "text-brand-600" : "text-ink-400"
                 }`}
                 onClick={() =>
                   setOpenGroup(openGroup === group.key ? null : group.key)
                 }
               >
-                <group.icon className="h-4 w-4" />
+                <group.icon className="h-5 w-5" />
                 {group.label}
               </button>
             );
           })}
           <button
-            className="flex w-10 flex-shrink-0 flex-col items-center justify-center py-1.5 text-red-500"
+            className="flex w-12 flex-shrink-0 flex-col items-center justify-center py-2.5 text-red-500"
             onClick={handleLogout}
           >
-            <PiSignOutLight className="h-4 w-4" />
+            <PiSignOutLight className="h-5 w-5" />
           </button>
         </nav>
       </div>

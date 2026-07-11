@@ -11,7 +11,7 @@ export default function Kamionok() {
   useEffect(() => {
     const fetchData = async () => {
       const user = JSON.parse(sessionStorage.getItem("user"));
-      const result = await fetchAction("getKamionok", { id: user.id });
+      const result = await fetchAction("getKamionok", { id: user.ceg_id });
       if (result.success) {
         setKamionok(result.kamionok || []);
       } else {

@@ -10,7 +10,7 @@ export default function Fajlok() {
     <>
       <div className="flex flex-wrap mt-0">
         <div className="w-full mb-12 px-0 md:px-4">
-          <CardTableForFajlok id={initialUserData.id} tabla={"admin"} />
+          <CardTableForFajlok id={initialUserData.ceg_id} tabla={"admin"} />
         </div>
       </div>
     </>

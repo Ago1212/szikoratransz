@@ -7,6 +7,11 @@ require 'interface/filesInterface.php';
 require 'interface/emailInterface.php';
 require 'interface/bejelentesekInterface.php';
 require 'interface/karbantartasokInterface.php';
+require 'interface/szabadsagInterface.php';
+require 'interface/tankolasInterface.php';
+require 'interface/jarmuValtasInterface.php';
+require 'interface/ugyfelInterface.php';
+require 'interface/csapatInterface.php';
 class ApiHandler {
     protected string $auth_hash;
     protected array $actions = [];
@@ -49,11 +54,52 @@ class ApiHandler {
             'getKarbantartasok' => ['id', 'kamion_id', 'potkocsi_id',  'datumTol', 'datumIg', 'elvegezte'],
 
             'getSoforok' => ['id'],
+            'getSajatSofor' => ['id'],
             'newSofor' => ['name', 'email'],
             'saveSoforData' => ['id'],
             'deleteSofor' => ['id'],
 
             'getBejelentesek' => ['kamion'],
+            'getBejelentesekSofor' => ['sofor_id'],
+            'newBejelentes' => ['cim', 'leiras'],
+            'saveBejelentesData' => ['id'],
+            'deleteBejelentes' => ['id'],
+
+            'requestJarmuValtas' => ['admin', 'sofor_id', 'tipus', 'jarmu_id'],
+            'visszavonJarmuValtas' => ['id'],
+            'getSajatJarmuValtasKerelmek' => ['sofor_id'],
+            'getFuggoJarmuValtasok' => ['id'],
+            'elbiralJarmuValtas' => ['id', 'allapot'],
+
+            'newTankolas' => ['admin', 'sofor_id', 'liter'],
+            'getTankolasok' => ['sofor_id'],
+
+            'getAdminElerhetoseg' => ['id'],
+
+            'getUgyfelek' => ['id'],
+            'getUgyfelValaszto' => ['id'],
+            'newUgyfel' => ['admin', 'nev'],
+            'saveUgyfelData' => ['id'],
+            'deleteUgyfel' => ['id'],
+
+            'getCsapattagok' => ['id'],
+            'newCsapattag' => ['ceg_id', 'name', 'email', 'password'],
+            'updateCsapattagSzerepkor' => ['id', 'ceg_id', 'szerepkor'],
+            'deleteCsapattag' => ['id', 'ceg_id'],
+
+            'getAjanlatkeresek' => [],
+            'updateAjanlatkeresStatusz' => ['id', 'statusz'],
+
+            'getSzabadsagok' => ['id'],
+            'newSzabadsag' => ['admin', 'sofor_id', 'datum_tol', 'datum_ig'],
+            'deleteSzabadsag' => ['id'],
+
+            'getAuditLog' => ['id'],
+
+            'generateKarbantartasFromBejelentes' => ['id'],
+
+            'requestPasswordReset' => ['email'],
+            'resetPassword' => ['token', 'password'],
 
             'getFiles' => ['id', 'tabla'],
             'fileUpload' => ['admin', 'id', 'tabla', 'file', 'name', 'size'],
@@ -99,7 +145,7 @@ class ApiHandler {
     }
 
     public function process(?array $request) {
-        global $kamionInterface, $potkocsiInterface, $soforokInterface, $filesInterface, $emailInterface, $bejelentesekInterface, $karbantartasInterface;
+        global $kamionInterface, $potkocsiInterface, $soforokInterface, $filesInterface, $emailInterface, $bejelentesekInterface, $karbantartasInterface, $szabadsagInterface, $tankolasInterface, $jarmuValtasInterface, $ugyfelInterface, $csapatInterface;
         try {
             $this->validation($request);
             $action = $request['action'];
@@ -118,10 +164,18 @@ class ApiHandler {
                     echo json_encode($this->logoutUser($request['id']));
                     return;
                 case 'saveKamionData':
-                    echo json_encode($kamionInterface->saveKamionData($request));
+                    $result = $kamionInterface->saveKamionData($request);
+                    if ($result['success']) {
+                        $this->logAudit($request['admin'] ?? null, 'kamion', $request['id'], 'modositas', $request['rendszam'] ?? null);
+                    }
+                    echo json_encode($result);
                     return;
                 case 'newKamion':
-                    echo json_encode($kamionInterface->newKamion($request));
+                    $result = $kamionInterface->newKamion($request);
+                    if ($result['success']) {
+                        $this->logAudit($request['admin'] ?? null, 'kamion', $result['kamion']['id'] ?? null, 'letrehozas', $request['rendszam'] ?? null);
+                    }
+                    echo json_encode($result);
                     return;
                 case 'getKamionok':
                     echo json_encode($kamionInterface->getKamionok($request['id']));
@@ -133,25 +187,43 @@ class ApiHandler {
                     echo json_encode($kamionInterface->getKamionRendszamok($request['id']));
                     return;
                 case 'deleteKamion':
-                    echo json_encode($kamionInterface->deleteKamion($request['id']));
+                    $ownerAdmin = $this->resolveOwnerAdmin('kamion', $request['id']);
+                    $result = $kamionInterface->deleteKamion($request['id']);
+                    if ($result['success']) {
+                        $this->logAudit($ownerAdmin, 'kamion', $request['id'], 'torles');
+                    }
+                    echo json_encode($result);
                     return;
                 case 'getKarbantartas':
                     echo json_encode($karbantartasInterface->getKamionKarbantartas($request['kamion_id']));
                     return;
                 case 'updateKarbantartas':
-                    echo json_encode($karbantartasInterface->updateKamionKarbantartas(isset($request['id']) ? $request['id'] : 0, $request['admin'], $request['kamion_id'], $request['datum'], $request['log'], empty($request['km_oraallas']) ? null : $request['km_oraallas'], $request['elvegezte'], $request['kovetkezo_karbantartas']));
+                    echo json_encode($karbantartasInterface->updateKamionKarbantartas(isset($request['id']) ? $request['id'] : 0, $request['admin'], $request['kamion_id'], $request['datum'], $request['log'], empty($request['km_oraallas']) ? null : $request['km_oraallas'], $request['elvegezte'], $request['kovetkezo_karbantartas'], $request['koltseg'] ?? null));
                     return;
                 case 'deleteKarbantartas':
                     echo json_encode($karbantartasInterface->deleteKamionKarbantartas($request['id']));
                     return;
                 case 'savePotkocsiData':
-                    echo json_encode($potkocsiInterface->savePotkocsiData($request));
+                    $result = $potkocsiInterface->savePotkocsiData($request);
+                    if ($result['success']) {
+                        $this->logAudit($request['admin'] ?? null, 'potkocsi', $request['id'], 'modositas', $request['rendszam'] ?? null);
+                    }
+                    echo json_encode($result);
                     return;
                 case 'newPotkocsi':
-                    echo json_encode($potkocsiInterface->newPotkocsi($request));
+                    $result = $potkocsiInterface->newPotkocsi($request);
+                    if ($result['success']) {
+                        $this->logAudit($request['admin'] ?? null, 'potkocsi', $result['potkocsi']['id'] ?? null, 'letrehozas', $request['rendszam'] ?? null);
+                    }
+                    echo json_encode($result);
                     return;
                 case 'deletePotkocsi':
-                    echo json_encode($potkocsiInterface->deletePotkocsi($request['id']));
+                    $ownerAdmin = $this->resolveOwnerAdmin('potkocsi', $request['id']);
+                    $result = $potkocsiInterface->deletePotkocsi($request['id']);
+                    if ($result['success']) {
+                        $this->logAudit($ownerAdmin, 'potkocsi', $request['id'], 'torles');
+                    }
+                    echo json_encode($result);
                     return;
                 case 'getPotkocsik':
                     echo json_encode($potkocsiInterface->getPotkocsik($request['id']));
@@ -163,7 +235,7 @@ class ApiHandler {
                     echo json_encode($karbantartasInterface->getPotkocsiKarbantartas($request['potkocsi_id']));
                     return;
                 case 'updatePotkocsiKarbantartas':
-                    echo json_encode($karbantartasInterface->updatePotkocsiKarbantartas(isset($request['id']) ? $request['id'] : 0, $request['admin'], $request['potkocsi_id'], $request['datum'], $request['log'], empty($request['km_oraallas']) ? null : $request['km_oraallas'], $request['elvegezte'], $request['kovetkezo_karbantartas']));
+                    echo json_encode($karbantartasInterface->updatePotkocsiKarbantartas(isset($request['id']) ? $request['id'] : 0, $request['admin'], $request['potkocsi_id'], $request['datum'], $request['log'], empty($request['km_oraallas']) ? null : $request['km_oraallas'], $request['elvegezte'], $request['kovetkezo_karbantartas'], $request['koltseg'] ?? null));
                     return;
                 case 'deletePotkocsiKarbantartas':
                     echo json_encode($karbantartasInterface->deletePotkocsiKarbantartas($request['id']));
@@ -174,33 +246,194 @@ class ApiHandler {
                 case 'getSoforok':
                     echo json_encode($soforokInterface->getSoforok($request['id']));
                     return;
+                case 'getSajatSofor':
+                    echo json_encode($soforokInterface->getSajatSofor($request['id']));
+                    return;
                 case 'newSofor':
-                    echo json_encode($soforokInterface->newSofor($request));
+                    $result = $soforokInterface->newSofor($request);
+                    if ($result['success']) {
+                        $this->logAudit($request['admin'] ?? null, 'user', $result['sofor']['id'] ?? null, 'letrehozas', $request['name'] ?? null);
+                    }
+                    echo json_encode($result);
                     return;
                 case 'saveSoforData':
-                    echo json_encode($soforokInterface->saveSoforData($request));
+                    $result = $soforokInterface->saveSoforData($request);
+                    if ($result['success']) {
+                        $this->logAudit($request['admin'] ?? null, 'user', $request['id'], 'modositas', $request['name'] ?? null);
+                    }
+                    echo json_encode($result);
                     return;
                 case 'deleteSofor':
-                    echo json_encode($soforokInterface->deleteSofor($request['id']));
+                    $ownerAdmin = $this->resolveOwnerAdmin('user', $request['id']);
+                    $result = $soforokInterface->deleteSofor($request['id']);
+                    if ($result['success']) {
+                        $this->logAudit($ownerAdmin, 'user', $request['id'], 'torles');
+                    }
+                    echo json_encode($result);
                     return;
                 case 'getBejelentesek':
                     echo json_encode($bejelentesekInterface->getBejelentesek($request['kamion']));
                     return;
+                case 'getBejelentesekSofor':
+                    echo json_encode($bejelentesekInterface->getBejelentesekSofor($request['sofor_id']));
+                    return;
                 case 'newBejelentes':
-                    echo json_encode($bejelentesekInterface->newBejelentes($request));
+                    $result = $bejelentesekInterface->newBejelentes($request);
+                    if ($result['success']) {
+                        $ownerAdmin = $this->resolveOwnerAdmin('bejelentesek', $result['id']);
+                        $this->logAudit($ownerAdmin, 'bejelentesek', $result['id'], 'letrehozas', $request['cim'] ?? null);
+                    }
+                    echo json_encode($result);
                     return;
                 case 'saveBejelentesData':
-                    echo json_encode($bejelentesekInterface->saveBejelentesData($request));
+                    $ownerAdmin = $this->resolveOwnerAdmin('bejelentesek', $request['id']);
+                    $result = $bejelentesekInterface->saveBejelentesData($request);
+                    if ($result['success']) {
+                        $this->logAudit($ownerAdmin, 'bejelentesek', $request['id'], 'modositas', $request['cim'] ?? null);
+                    }
+                    echo json_encode($result);
                     return;
                 case 'deleteBejelentes':
-                    echo json_encode($bejelentesekInterface->deleteBejelentes($request['id']));
+                    $ownerAdmin = $this->resolveOwnerAdmin('bejelentesek', $request['id']);
+                    $result = $bejelentesekInterface->deleteBejelentes($request['id']);
+                    if ($result['success']) {
+                        $this->logAudit($ownerAdmin, 'bejelentesek', $request['id'], 'torles');
+                    }
+                    echo json_encode($result);
+                    return;
+
+                case 'requestJarmuValtas':
+                    echo json_encode($jarmuValtasInterface->requestJarmuValtas($request));
+                    return;
+                case 'visszavonJarmuValtas':
+                    echo json_encode($jarmuValtasInterface->visszavonJarmuValtas($request['id']));
+                    return;
+                case 'getSajatJarmuValtasKerelmek':
+                    echo json_encode($jarmuValtasInterface->getSajatJarmuValtasKerelmek($request['sofor_id']));
+                    return;
+                case 'getFuggoJarmuValtasok':
+                    echo json_encode($jarmuValtasInterface->getFuggoJarmuValtasok($request['id']));
+                    return;
+                case 'elbiralJarmuValtas':
+                    $result = $jarmuValtasInterface->elbiralJarmuValtas($request['id'], $request['allapot']);
+                    if ($result['success']) {
+                        $this->logAudit($request['admin'] ?? null, 'jarmu_valtas_kerelmek', $request['id'], 'modositas', $request['allapot']);
+                    }
+                    echo json_encode($result);
+                    return;
+
+                case 'newTankolas':
+                    echo json_encode($tankolasInterface->newTankolas($request));
+                    return;
+                case 'getTankolasok':
+                    echo json_encode($tankolasInterface->getTankolasok($request['sofor_id']));
+                    return;
+
+                case 'getAdminElerhetoseg':
+                    echo json_encode($this->getAdminElerhetoseg($request['id']));
+                    return;
+
+                case 'getUgyfelek':
+                    echo json_encode($ugyfelInterface->getUgyfelek($request['id']));
+                    return;
+                case 'getUgyfelValaszto':
+                    echo json_encode($ugyfelInterface->getUgyfelValaszto($request['id']));
+                    return;
+                case 'newUgyfel':
+                    $result = $ugyfelInterface->newUgyfel($request);
+                    if ($result['success']) {
+                        $this->logAudit($request['admin'] ?? null, 'ugyfelek', $result['ugyfel']['id'] ?? null, 'letrehozas', $request['nev'] ?? null);
+                    }
+                    echo json_encode($result);
+                    return;
+                case 'saveUgyfelData':
+                    $result = $ugyfelInterface->saveUgyfelData($request);
+                    if ($result['success']) {
+                        $ownerAdmin = $this->resolveOwnerAdmin('ugyfelek', $request['id']);
+                        $this->logAudit($ownerAdmin, 'ugyfelek', $request['id'], 'modositas', $request['nev'] ?? null);
+                    }
+                    echo json_encode($result);
+                    return;
+                case 'deleteUgyfel':
+                    $ownerAdmin = $this->resolveOwnerAdmin('ugyfelek', $request['id']);
+                    $result = $ugyfelInterface->deleteUgyfel($request['id']);
+                    if ($result['success']) {
+                        $this->logAudit($ownerAdmin, 'ugyfelek', $request['id'], 'torles');
+                    }
+                    echo json_encode($result);
+                    return;
+
+                case 'getCsapattagok':
+                    echo json_encode($csapatInterface->getCsapattagok($request['id']));
+                    return;
+                case 'newCsapattag':
+                    $result = $csapatInterface->newCsapattag($request);
+                    if ($result['success']) {
+                        $this->logAudit($request['ceg_id'], 'admin', $result['id'] ?? null, 'letrehozas', $request['email'] ?? null);
+                    }
+                    echo json_encode($result);
+                    return;
+                case 'updateCsapattagSzerepkor':
+                    $result = $csapatInterface->updateCsapattagSzerepkor($request['id'], $request['ceg_id'], $request['szerepkor']);
+                    if ($result['success']) {
+                        $this->logAudit($request['ceg_id'], 'admin', $request['id'], 'modositas', 'szerepkör: ' . $request['szerepkor']);
+                    }
+                    echo json_encode($result);
+                    return;
+                case 'deleteCsapattag':
+                    $result = $csapatInterface->deleteCsapattag($request['id'], $request['ceg_id']);
+                    if ($result['success']) {
+                        $this->logAudit($request['ceg_id'], 'admin', $request['id'], 'torles');
+                    }
+                    echo json_encode($result);
+                    return;
+
+                case 'getSzabadsagok':
+                    echo json_encode($szabadsagInterface->getSzabadsagok($request['id']));
+                    return;
+                case 'newSzabadsag':
+                    $result = $szabadsagInterface->newSzabadsag($request);
+                    if ($result['success']) {
+                        $this->logAudit($request['admin'] ?? null, 'sofor_szabadsag', $result['id'] ?? null, 'letrehozas');
+                    }
+                    echo json_encode($result);
+                    return;
+                case 'deleteSzabadsag':
+                    $ownerAdmin = $this->resolveOwnerAdmin('sofor_szabadsag', $request['id']);
+                    $result = $szabadsagInterface->deleteSzabadsag($request['id']);
+                    if ($result['success']) {
+                        $this->logAudit($ownerAdmin, 'sofor_szabadsag', $request['id'], 'torles');
+                    }
+                    echo json_encode($result);
+                    return;
+
+                case 'getAuditLog':
+                    echo json_encode($this->getAuditLog($request['id']));
+                    return;
+
+                case 'generateKarbantartasFromBejelentes':
+                    echo json_encode($bejelentesekInterface->generateKarbantartasFromBejelentes($request['id']));
+                    return;
+
+                case 'getAjanlatkeresek':
+                    echo json_encode($this->getAjanlatkeresek());
+                    return;
+                case 'updateAjanlatkeresStatusz':
+                    echo json_encode($this->updateAjanlatkeresStatusz($request['id'], $request['statusz']));
+                    return;
+
+                case 'requestPasswordReset':
+                    echo json_encode($this->requestPasswordReset($request['email']));
+                    return;
+                case 'resetPassword':
+                    echo json_encode($this->resetPassword($request['token'], $request['password']));
                     return;
 
                 case 'getFiles':
                     echo json_encode($filesInterface->getFiles($request['tabla'], $request['id']));
                     return;
                 case 'fileUpload':
-                    echo json_encode($filesInterface->fileUpload($request['admin'], $request['tabla'], $request['id'], $request['file'], $request['name'], $request['size']));
+                    echo json_encode($filesInterface->fileUpload($request['admin'], $request['tabla'], $request['id'], $request['file'], $request['name'], $request['size'], $request['kategoria'] ?? null));
                     return;
                 case 'downloadFile':
                     echo json_encode($filesInterface->downloadFile($request['id']));
@@ -224,9 +457,11 @@ class ApiHandler {
                     echo json_encode($this->getEsemenyek($request['id']));
                     return;
                 case 'sendAjanlatkeres':
+                    $this->saveAjanlatkeres('ajanlatkeres', $request['name'], $request['email'], $request['phone'], $request['message']);
                     echo json_encode($emailInterface->sendAjanlatkeres($request['name'], $request['email'], $request['phone'], $request['message']));
                     return;
                 case 'sendJelentkezes':
+                    $this->saveAjanlatkeres('jelentkezes', $request['name'], $request['email'], $request['phone'], $request['message']);
                     echo json_encode($emailInterface->sendJelentkezes($request['name'], $request['email'], $request['phone'], $request['message']));
                     return;
                 case 'saveAdminData':
@@ -243,7 +478,8 @@ class ApiHandler {
                         $request['szemelyi_lejarat'],
                         $request['jogsi_lejarat'],
                         $request['gki_lejarat'],
-                        $request['adr_lejarat']
+                        $request['adr_lejarat'],
+                        $request['szerepkor'] ?? 'admin'
                     ));
 
                     return;
@@ -606,6 +842,24 @@ class ApiHandler {
         }
         return $formattedEvents;
     }
+    // Diszpécser gyorshívó gombhoz — csak a név+telefon, semmi más
+    // admin-adat nem kell a sofőr oldalára.
+    private function getAdminElerhetoseg($id) {
+        try {
+            $query = "SELECT name, phone FROM admin WHERE id = :id AND torolt <> 'I'";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            $admin = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$admin) {
+                return ['success' => false, 'message' => 'Nem található admin.'];
+            }
+            return ['success' => true, 'name' => $admin['name'], 'phone' => $admin['phone']];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
     private function getSum($id) {
         try {
             $query = "SELECT IFNULL(COUNT(id),0) as id FROM user WHERE admin = :id AND torolt <> 'I'";
@@ -690,21 +944,27 @@ class ApiHandler {
         return ['success' => true, 'message' => 'Successfully logged out.'];
     }
 
-    private function saveAdminData($id, $name, $email, $phone, $szul_datum, $szemelyi, $varos, $irsz, $cim, $szemelyi_lejarat, $jogsi_lejarat, $gki_lejarat, $adr_lejarat) {
+    // A `szerepkor` mező szándékosan tisztán tájékoztató jellegű — nem
+    // korlátoz semmilyen menüpontot vagy műveletet. Egy céghez több
+    // admin-fiók is tartozhat (ld. backend/sql/6.sql, CsapatInterface),
+    // de közöttük nincs jogosultsági különbségtétel: mindenki, aki egy
+    // céghez tartozik, ugyanazt látja/szerkeszti.
+    private function saveAdminData($id, $name, $email, $phone, $szul_datum, $szemelyi, $varos, $irsz, $cim, $szemelyi_lejarat, $jogsi_lejarat, $gki_lejarat, $adr_lejarat, $szerepkor = 'admin') {
         try {
-            $query = "UPDATE admin 
-                      SET name = :name, 
-                          email = :email, 
-                          phone = :phone, 
-                          szul_datum = :szul_datum, 
-                          szemelyi = :szemelyi, 
-                          varos = :varos, 
-                          irsz = :irsz, 
-                          cim = :cim, 
-                          szemelyi_lejarat = :szemelyi_lejarat, 
-                          jogsi_lejarat = :jogsi_lejarat, 
-                          gki_lejarat = :gki_lejarat, 
-                          adr_lejarat = :adr_lejarat 
+            $query = "UPDATE admin
+                      SET name = :name,
+                          email = :email,
+                          phone = :phone,
+                          szul_datum = :szul_datum,
+                          szemelyi = :szemelyi,
+                          varos = :varos,
+                          irsz = :irsz,
+                          cim = :cim,
+                          szemelyi_lejarat = :szemelyi_lejarat,
+                          jogsi_lejarat = :jogsi_lejarat,
+                          gki_lejarat = :gki_lejarat,
+                          adr_lejarat = :adr_lejarat,
+                          szerepkor = :szerepkor
                       WHERE id = :id";
 
             $stmt = $this->db->prepare($query);
@@ -723,6 +983,7 @@ class ApiHandler {
             $stmt->bindParam(':jogsi_lejarat', $jogsi_lejarat, PDO::PARAM_STR);
             $stmt->bindParam(':gki_lejarat', $gki_lejarat, PDO::PARAM_STR);
             $stmt->bindParam(':adr_lejarat', $adr_lejarat, PDO::PARAM_STR);
+            $stmt->bindParam(':szerepkor', $szerepkor, PDO::PARAM_STR);
 
             // Lekérdezés végrehajtása
             $stmt->execute();
@@ -770,7 +1031,65 @@ class ApiHandler {
             return $stmt->fetch(PDO::FETCH_ASSOC);
         }
 
+        // Több admin-fiók tartozhat egy céghez (ld. backend/sql/6.sql) —
+        // a flotta-adatok mindig a cég "gyökér" admin id-ja (ceg_id) alá
+        // vannak elmentve, ezt kell a frontendnek használnia `id` helyett
+        // minden lekérdezésnél/létrehozásnál.
+        $user['ceg_id'] = !empty($user['tulajdonos_admin_id']) ? $user['tulajdonos_admin_id'] : $user['id'];
+
         return $user;
+    }
+
+    // Módosítási előzmény / audit log — a séma többi táblájának nincs
+    // semmilyen történeti nyoma (MyISAM, nincs trigger), ez az első
+    // lépés efelé. Csendben elnyeli a hibát, hogy egy naplózási gond
+    // sose akassza meg a tényleges műveletet.
+    private function logAudit($adminId, $tabla, $rowId, $muvelet, $leiras = null) {
+        if (empty($adminId) || empty($rowId)) {
+            return;
+        }
+        try {
+            $query = "INSERT INTO audit_log (admin_id, tabla, rowid, muvelet, leiras) VALUES (:admin_id, :tabla, :rowid, :muvelet, :leiras)";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindValue(':admin_id', $adminId);
+            $stmt->bindValue(':tabla', $tabla);
+            $stmt->bindValue(':rowid', $rowId);
+            $stmt->bindValue(':muvelet', $muvelet);
+            $stmt->bindValue(':leiras', $leiras);
+            $stmt->execute();
+        } catch (Exception $e) {
+            error_log('Audit log mentése sikertelen: ' . $e->getMessage());
+        }
+    }
+
+    // Törlés előtt lekérdezi, melyik admin (tulajdonos cég) sorához
+    // tartozott a rekord — a törlő kérés (`{ id }`) önmagában nem
+    // tartalmazza ezt. `$tabla` mindig a saját `process()` switch-emben
+    // meghatározott, fix string, sosem a kliens kérés tartalma, ezért a
+    // közvetlen behelyettesítés itt biztonságos.
+    private function resolveOwnerAdmin($tabla, $rowId) {
+        try {
+            $stmt = $this->db->prepare("SELECT admin FROM `$tabla` WHERE id = :id");
+            $stmt->bindValue(':id', $rowId);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row ? $row['admin'] : null;
+        } catch (Exception $e) {
+            return null;
+        }
+    }
+
+    private function getAuditLog($id) {
+        try {
+            $query = "SELECT * FROM audit_log WHERE admin_id = :id ORDER BY datum DESC LIMIT 200";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+
+            return ['success' => true, 'naplo' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
     }
 
     private function validateUniqueEmail($email, $id) {
@@ -783,6 +1102,128 @@ class ApiHandler {
 
         if ($count > 0) {
             throw new Exception('The email address is already in use.');
+        }
+    }
+
+    // A weboldali ajánlatkérés/jelentkezés űrlap eddig csak egy e-mailt
+    // küldött és utána nyomtalanul eltűnt — mostantól perzisztálva is van,
+    // hogy legyen egy követhető lead-lista. Szándékosan nem dobunk kivételt
+    // hibánál: az e-mail küldés (a form eredeti, elsődleges funkciója) akkor
+    // is menjen tovább, ha a mentés valamiért nem sikerülne.
+    private function saveAjanlatkeres($tipus, $nev, $email, $telefon, $uzenet) {
+        try {
+            $query = "INSERT INTO ajanlatkeresek (tipus, nev, email, telefon, uzenet) VALUES (:tipus, :nev, :email, :telefon, :uzenet)";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':tipus', $tipus);
+            $stmt->bindParam(':nev', $nev);
+            $stmt->bindParam(':email', $email);
+            $stmt->bindParam(':telefon', $telefon);
+            $stmt->bindParam(':uzenet', $uzenet);
+            $stmt->execute();
+        } catch (Exception $e) {
+            error_log('Ajánlatkérés mentése sikertelen: ' . $e->getMessage());
+        }
+    }
+
+    private function getAjanlatkeresek() {
+        try {
+            $query = "SELECT * FROM ajanlatkeresek WHERE torolt <> 'I' ORDER BY beerkezett DESC";
+            $stmt = $this->db->prepare($query);
+            $stmt->execute();
+
+            return ['success' => true, 'ajanlatkeresek' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    private function updateAjanlatkeresStatusz($id, $statusz) {
+        try {
+            $query = "UPDATE ajanlatkeresek SET statusz = :statusz WHERE id = :id";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':statusz', $statusz);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+
+            return ['success' => true];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    // Jelszó-visszaállítás — ma ez az egyetlen módja annak, hogy egy
+    // admin/sofőr saját maga cserélje a jelszavát; korábban erre
+    // egyáltalán nem volt lehetőség, csak a kódba írt megosztott
+    // authHash védte az API-t.
+    private function requestPasswordReset($email) {
+        global $emailInterface;
+        try {
+            $user = $this->getUser($email);
+            // Szándékosan mindig sikeres választ adunk vissza attól
+            // függetlenül, hogy létezik-e ilyen e-mail cím — így a
+            // felület nem árulja el, mely e-mail címek regisztráltak.
+            if (empty($user)) {
+                return ['success' => true];
+            }
+
+            $token = bin2hex(random_bytes(32));
+
+            // A lejáratot szándékosan a MySQL saját órájával (NOW()) számoljuk
+            // PHP-oldali DateTime helyett — a resetPassword() is a MySQL NOW()-hoz
+            // hasonlítja a lejáratot, és a két folyamat (PHP-CLI/webszerver vs.
+            // DB szerver) órája/időzónája eltérhet, ami PHP-oldali számítással
+            // azonnal "lejárt" tokent eredményezett volna.
+            $query = "INSERT INTO jelszo_visszaallitas (email, token, lejarat) VALUES (:email, :token, DATE_ADD(NOW(), INTERVAL 1 HOUR))";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':email', $email);
+            $stmt->bindParam(':token', $token);
+            $stmt->execute();
+
+            $resetUrl = "https://szikora-transz.hu/auth/jelszo-visszaallitas?token=" . $token;
+            $body = '<div style="font-family:sans-serif;"><p>Jelszó-visszaállítást kért a Szikora Transz flottakezelő rendszerben.</p>'
+                . '<p><a href="' . htmlspecialchars($resetUrl) . '">Kattintson ide az új jelszó beállításához</a></p>'
+                . '<p>A hivatkozás 1 óráig érvényes. Ha nem Ön kérte, hagyja figyelmen kívül ezt az e-mailt.</p></div>';
+            $emailInterface->sendNotification($email, 'Jelszó-visszaállítás — Szikora Transz', $body);
+
+            return ['success' => true];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    private function resetPassword($token, $password) {
+        try {
+            $query = "SELECT * FROM jelszo_visszaallitas WHERE token = :token AND felhasznalva = 'N' AND lejarat >= NOW()";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':token', $token);
+            $stmt->execute();
+            $reset = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (empty($reset)) {
+                return ['success' => false, 'message' => 'A hivatkozás érvénytelen vagy lejárt.'];
+            }
+
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+            $adminStmt = $this->db->prepare("UPDATE admin SET password = :password WHERE email = :email");
+            $adminStmt->bindParam(':password', $hashedPassword);
+            $adminStmt->bindParam(':email', $reset['email']);
+            $adminStmt->execute();
+
+            if ($adminStmt->rowCount() === 0) {
+                $userStmt = $this->db->prepare("UPDATE user SET password = :password WHERE email = :email");
+                $userStmt->bindParam(':password', $hashedPassword);
+                $userStmt->bindParam(':email', $reset['email']);
+                $userStmt->execute();
+            }
+
+            $usedStmt = $this->db->prepare("UPDATE jelszo_visszaallitas SET felhasznalva = 'I' WHERE id = :id");
+            $usedStmt->bindParam(':id', $reset['id'], PDO::PARAM_INT);
+            $usedStmt->execute();
+
+            return ['success' => true];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
         }
     }
 }

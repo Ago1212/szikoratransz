@@ -11,7 +11,10 @@ import {
   PiTruckLight,
   PiTruckTrailerLight,
   PiRulerLight,
+  PiGaugeLight,
+  PiMapPinLight,
 } from "react-icons/pi";
+import { ALLAPOT_OPTIONS } from "components/UI/AllapotBadge.js";
 import FormField, { FormSection } from "components/UI/FormField.js";
 import SaveButton from "components/UI/SaveButton.js";
 
@@ -238,6 +241,29 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
           id="kamion"
           value={kamion.kamion}
           onChange={handleFormChange}
+        />
+        <FormField
+          as="select"
+          icon={PiMapPinLight}
+          label="Állapot"
+          id="allapot"
+          value={kamion.allapot || "szabad"}
+          onChange={handleFormChange}
+        >
+          {ALLAPOT_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </FormField>
+        <FormField
+          type="number"
+          icon={PiGaugeLight}
+          label="Jelenlegi km-óraállás"
+          id="aktualis_km"
+          value={kamion.aktualis_km || ""}
+          onChange={handleFormChange}
+          placeholder="pl. 214500"
         />
       </FormSection>
 

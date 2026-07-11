@@ -58,7 +58,7 @@ export default function CustomCalendar() {
   useEffect(() => {
     const fetchData = async () => {
       const user = JSON.parse(sessionStorage.getItem("user"));
-      const result = await fetchAction("getEsemenyek", { id: user.id });
+      const result = await fetchAction("getEsemenyek", { id: user.ceg_id });
       if (result.success) {
         const formattedEvents = result.data
           .filter(

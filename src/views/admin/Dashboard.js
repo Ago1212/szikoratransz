@@ -28,7 +28,7 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const user = JSON.parse(sessionStorage.getItem("user"));
-        const result = await fetchAction("getSum", { id: user.id });
+        const result = await fetchAction("getSum", { id: user.ceg_id });
 
         if (result.success) {
           setStats({

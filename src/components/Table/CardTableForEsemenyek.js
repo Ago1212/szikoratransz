@@ -142,7 +142,7 @@ const CardTableForEsemenyek = ({ id }) => {
             <button
               type="button"
               onClick={resetForm}
-              className="rounded-xl bg-sand-100 px-4 py-2 text-sm font-medium text-ink-600 transition-colors duration-200 hover:bg-sand-200"
+              className="rounded-xl px-4 py-2 text-sm font-medium text-ink-500 transition-colors duration-200 hover:bg-sand-100 hover:text-ink-800"
             >
               Mégse
             </button>

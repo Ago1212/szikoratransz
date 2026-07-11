@@ -78,7 +78,7 @@ const CardTableForTervezettKarbantartasok = ({ kamion_id, refresh, onRefresh }) 
     e.preventDefault();
 
     const result = await fetchAction("updateKarbantartas", {
-      admin: user.id,
+      admin: user.ceg_id,
       id: selectedKarbantartas?.id,
       datum: selectedKarbantartas?.datum,
       log: selectedKarbantartas?.log,
@@ -168,7 +168,7 @@ const CardTableForTervezettKarbantartasok = ({ kamion_id, refresh, onRefresh }) 
             <button
               type="button"
               onClick={() => setOpenDialog(false)}
-              className="rounded-xl bg-sand-100 px-4 py-2 text-sm font-medium text-ink-600 transition-colors duration-200 hover:bg-sand-200"
+              className="rounded-xl px-4 py-2 text-sm font-medium text-ink-500 transition-colors duration-200 hover:bg-sand-100 hover:text-ink-800"
             >
               Mégse
             </button>

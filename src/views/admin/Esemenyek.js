@@ -10,7 +10,7 @@ export default function Esemenyek() {
     <>
       <div className="flex flex-wrap mt-0">
         <div className="w-full mb-12 px-0 md:px-4">
-          <CardTableForEsemenyek id={initialUserData.id} />
+          <CardTableForEsemenyek id={initialUserData.ceg_id} />
         </div>
       </div>
     </>

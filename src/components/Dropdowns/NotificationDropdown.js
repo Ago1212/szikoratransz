@@ -63,11 +63,27 @@ const NotificationDropdown = ({ notifications = [] }) => {
         ) : (
           <div className="max-h-72 overflow-y-auto py-1">
             {notifications.map((n, i) => (
-              <div
-                key={i}
-                className="rounded-xl px-3 py-2 text-sm text-ink-700 hover:bg-brand-50"
-              >
-                {n.text}
+              <div key={n.id ?? i} className="rounded-xl px-3 py-2 text-sm text-ink-700 hover:bg-brand-50">
+                <p>{n.text}</p>
+                {n.meta && <p className="mt-0.5 text-xs text-ink-400">{n.meta}</p>}
+                {n.actions?.length > 0 && (
+                  <div className="mt-1.5 flex gap-2">
+                    {n.actions.map((action, ai) => (
+                      <button
+                        key={ai}
+                        type="button"
+                        onClick={action.onClick}
+                        className={`rounded-lg px-2.5 py-1 text-xs font-bold ${
+                          action.tone === "danger"
+                            ? "bg-red-50 text-red-600 hover:bg-red-100"
+                            : "bg-brand-600 text-white hover:bg-brand-700"
+                        }`}
+                      >
+                        {action.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>

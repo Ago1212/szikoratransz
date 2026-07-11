@@ -9,9 +9,12 @@ import {
   PiIdentificationCardLight,
   PiFireExtinguisherLight,
   PiTruckTrailerLight,
+  PiGaugeLight,
+  PiMapPinLight,
 } from "react-icons/pi";
 import FormField, { FormSection } from "components/UI/FormField.js";
 import SaveButton from "components/UI/SaveButton.js";
+import { ALLAPOT_OPTIONS } from "components/UI/AllapotBadge.js";
 
 const CardPotkocsiAdatokForm = ({ potkocsi, setFormData, handleSave }) => {
   const [nextKotBizInfo, setNextKotBizInfo] = useState({ date: "", amount: "" });
@@ -214,6 +217,29 @@ const CardPotkocsiAdatokForm = ({ potkocsi, setFormData, handleSave }) => {
           value={potkocsi.tipus || ""}
           onChange={handleFormChange}
           placeholder="Pótkocsi típusa"
+        />
+        <FormField
+          as="select"
+          icon={PiMapPinLight}
+          label="Állapot"
+          id="allapot"
+          value={potkocsi.allapot || "szabad"}
+          onChange={handleFormChange}
+        >
+          {ALLAPOT_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </FormField>
+        <FormField
+          type="number"
+          icon={PiGaugeLight}
+          label="Jelenlegi km-óraállás"
+          id="aktualis_km"
+          value={potkocsi.aktualis_km || ""}
+          onChange={handleFormChange}
+          placeholder="pl. 214500"
         />
       </FormSection>
 

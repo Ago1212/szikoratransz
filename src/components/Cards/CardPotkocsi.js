@@ -23,6 +23,8 @@ const CardPotkocsi = ({ initialPotkocsi }) => {
     id: "",
     rendszam: "",
     tipus: "",
+    allapot: "szabad",
+    aktualis_km: "",
     muszaki_lejarat: "",
     adr_lejarat: "",
     taograf_illesztes: "",
@@ -45,6 +47,8 @@ const CardPotkocsi = ({ initialPotkocsi }) => {
         id: potkocsi.id || "",
         rendszam: potkocsi.rendszam || "",
         tipus: potkocsi.tipus || "",
+        allapot: potkocsi.allapot || "szabad",
+        aktualis_km: potkocsi.aktualis_km || "",
         muszaki_lejarat: potkocsi.muszaki_lejarat || "",
         adr_lejarat: potkocsi.adr_lejarat || "",
         taograf_illesztes: potkocsi.taograf_illesztes || "",
@@ -68,7 +72,7 @@ const CardPotkocsi = ({ initialPotkocsi }) => {
       const storedUserData = JSON.parse(sessionStorage.getItem("user"));
       const action = formData.id ? "savePotkocsiData" : "newPotkocsi";
       const result = await fetchAction(action, {
-        admin: storedUserData.id,
+        admin: storedUserData.ceg_id,
         ...formData,
       });
 
