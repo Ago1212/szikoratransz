@@ -78,6 +78,7 @@ export function ActionIcon({ icon, onClick, title, danger = false }) {
       }`}
       onClick={onClick}
       title={title}
+      aria-label={title}
       type="button"
     >
       {icon}
@@ -194,10 +195,18 @@ export default function DataTable({
         emptyState
       ) : (
         <>
-          {/* Mobil nézet — önálló kártyák, könnyebben kezelhető, mint a görgethető táblázat */}
+          {/* Mobil nézet — önálló kártyák, könnyebben kezelhető, mint a görgethető táblázat.
+              `fill` módban (pl. Karbantartasok, ahol a szülő már `h-full flex-col`, saját
+              overflow NÉLKÜL) ez a doboz jogosan maga görget, mert ő az egyetlen görgethető
+              réteg. Alap (`!fill`) módban viszont az Admin.js layout már maga is
+              `overflow-y-auto` — ha ez a doboz ITT is kap egy saját, fix `max-h`-s
+              overflow-t, az egy beágyazott ("scroll a scrollban") csapdát hoz létre
+              mobilon: a lista nagy részét egy alacsony belső dobozban kellene görgetni,
+              a lapot magát meg csak alig. Ezért mobilon `!fill` esetén NINCS itt saját
+              overflow/max-height — a kártyalista egyszerűen a lap normál folyásába illeszkedik. */}
           <div
-            className={`w-full overflow-y-auto bg-slate-50 md:hidden ${bodyFillClass}`}
-            style={{ maxHeight: bodyMaxHeight }}
+            className={`w-full bg-slate-50 md:hidden ${fill ? `overflow-y-auto ${bodyFillClass}` : ""}`}
+            style={fill ? { maxHeight: bodyMaxHeight } : undefined}
           >
             {rows.length > 0 ? (
               <div className="space-y-3 p-3">

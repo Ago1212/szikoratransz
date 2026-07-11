@@ -106,6 +106,7 @@ const CardSoforAdatokForm = ({ sofor, setFormData, handleSave }) => {
         <FormField
           icon={PiFileTextLight}
           label="IRSZ"
+          inputMode="numeric"
           name="irsz"
           value={sofor.irsz || ""}
           onChange={handleInputChange}

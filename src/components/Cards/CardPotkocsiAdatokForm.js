@@ -322,6 +322,7 @@ const CardPotkocsiAdatokForm = ({ potkocsi, setFormData, handleSave }) => {
           <FormField
             icon={PiMoneyLight}
             label="Éves díj"
+            inputMode="decimal"
             value={editKotBizDij ? kotBizDijValue : formatNumber(potkocsi.kot_biz_dij)}
             onChange={(e) => handleCurrencyChange(e, "kot_biz_dij")}
             onFocus={() => handleCurrencyFocus("kot_biz_dij")}
@@ -382,6 +383,7 @@ const CardPotkocsiAdatokForm = ({ potkocsi, setFormData, handleSave }) => {
           <FormField
             icon={PiMoneyLight}
             label="Éves díj"
+            inputMode="decimal"
             value={editKaszkoDij ? kaszkoDijValue : formatNumber(potkocsi.kaszko_dij)}
             onChange={(e) => handleCurrencyChange(e, "kaszko_dij")}
             onFocus={() => handleCurrencyFocus("kaszko_dij")}

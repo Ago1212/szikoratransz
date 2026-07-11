@@ -29,16 +29,22 @@ const initials = (name) =>
     .join("")
     .toUpperCase() || "U";
 
+// A mobil alsó sávban mind a 6 elem egyenlő, kb. 45px széles oszlopot kap
+// (ld. `min-w-0 flex-1` lent) — ide a Sidebar deszktop-menüjének teljes
+// feliratai ("Saját adatok", "Felhasználók", "Alkalmazottak") nem férnek
+// el, csonkolva jelentek meg. Ezért itt, csak a mobil sávhoz, rövidebb
+// feliratokat használunk; a deszktop Sidebar és a kinyíló almenü-lista
+// (`mobileGroups[].items`) feliratai változatlanok maradnak.
 const mobileDirectLinks = [
-  { to: "/admin/dashboard", icon: PiSquaresFourLight, text: "Főmenü" },
-  { to: "/admin/settings", icon: PiGearLight, text: "Saját adatok" },
-  { to: "/admin/felhasznalok", icon: PiUsersFourLight, text: "Felhasználók" },
+  { to: "/admin/dashboard", icon: PiSquaresFourLight, text: "Menü" },
+  { to: "/admin/settings", icon: PiGearLight, text: "Profil" },
+  { to: "/admin/felhasznalok", icon: PiUsersFourLight, text: "Fiókok" },
 ];
 
 const mobileGroups = [
   {
     key: "jarmuvek",
-    label: "Járművek",
+    label: "Flotta",
     icon: PiTruckLight,
     items: [
       { to: "/admin/kamionok", icon: PiTruckLight, text: "Kamionok" },
@@ -56,7 +62,7 @@ const mobileGroups = [
   },
   {
     key: "alkalmazottak",
-    label: "Alkalmazottak",
+    label: "Csapat",
     icon: PiUsersLight,
     items: [
       { to: "/admin/soforok", icon: PiUsersLight, text: "Sofőrök" },
@@ -151,6 +157,7 @@ export default function Sidebar() {
     return (
       <li>
         <Link
+          aria-current={active ? "page" : undefined}
           className={`group relative flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all duration-300 ease-fluid ${
             active
               ? "bg-brand-50 text-brand-700"
@@ -175,7 +182,7 @@ export default function Sidebar() {
   };
 
   const SectionHeader = ({ children }) => (
-    <h6 className="px-3.5 pb-2 pt-5 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-300">
+    <h6 className="px-3.5 pb-2 pt-5 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-400">
       {children}
     </h6>
   );
@@ -308,13 +315,14 @@ export default function Sidebar() {
           {mobileGroups
             .filter((group) => group.key === openGroup)
             .map((group) => (
-              <ul key={group.key} className="px-2 py-1.5">
+              <ul key={group.key} id={`mobile-group-panel-${group.key}`} className="px-2 py-1.5">
                 {group.items.map((item) => {
                   const active = isActive(item.to);
                   return (
                     <li key={item.to}>
                       <Link
                         to={item.to}
+                        aria-current={active ? "page" : undefined}
                         className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[15px] font-medium ${
                           active
                             ? "bg-brand-50 text-brand-700"
@@ -342,13 +350,14 @@ export default function Sidebar() {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium leading-none ${
+                aria-current={active ? "page" : undefined}
+                className={`flex min-w-0 flex-1 flex-col items-center gap-1 px-0.5 py-2.5 text-[11px] font-medium leading-none ${
                   active ? "text-brand-600" : "text-ink-400"
                 }`}
                 onClick={() => setOpenGroup(null)}
               >
-                <item.icon className="h-5 w-5" />
-                {item.text}
+                <item.icon className="h-5 w-5 flex-shrink-0" />
+                <span className="w-full truncate text-center">{item.text}</span>
               </Link>
             );
           })}
@@ -359,15 +368,18 @@ export default function Sidebar() {
             return (
               <button
                 key={group.key}
-                className={`flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium leading-none ${
+                type="button"
+                aria-expanded={openGroup === group.key}
+                aria-controls={`mobile-group-panel-${group.key}`}
+                className={`flex min-w-0 flex-1 flex-col items-center gap-1 px-0.5 py-2.5 text-[11px] font-medium leading-none ${
                   active ? "text-brand-600" : "text-ink-400"
                 }`}
                 onClick={() =>
                   setOpenGroup(openGroup === group.key ? null : group.key)
                 }
               >
-                <group.icon className="h-5 w-5" />
-                {group.label}
+                <group.icon className="h-5 w-5 flex-shrink-0" />
+                <span className="w-full truncate text-center">{group.label}</span>
               </button>
             );
           })}

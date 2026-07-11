@@ -6,11 +6,13 @@ import { toast } from "utils/toast";
 import {
   PiWarningCircleLight,
   PiArrowLeftLight,
+  PiArrowRightLight,
   PiUploadSimpleLight,
   PiFileLight,
   PiTrashLight,
   PiWrenchLight,
   PiCheckCircleLight,
+  PiInfoLight,
 } from "react-icons/pi";
 import FormField, { FormSection } from "components/UI/FormField.js";
 import PageCard from "components/UI/PageCard.js";
@@ -250,32 +252,59 @@ export default function CardBejelentesek({ initBejelentesek }) {
               />
             </FormSection>
 
+            {/* Korábban a szöveg + gomb egy `justify-between` sorban élt egymás
+                mellett — asztalin még elfért, de mobilon a gomb felirata
+                kilógott a képernyőről, a magyarázó szöveg pedig egy pár tíz
+                pixel széles oszlopba szorulva szavanként tördelődött. Az új
+                elrendezés mindig egymás ALATT áll (ikon+szöveg, majd a
+                gomb/akció), a gomb csak `sm:` felett igazodik jobbra és
+                zsugorodik a tartalma szélességére — így ugyanaz a
+                felépítés működik mobilon és asztalin is, nem két külön eset. */}
             {!isNew && (
               <FormSection title="Karbantartás" columns={1}>
                 {karbantartasId ? (
-                  <div className="flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                    <PiCheckCircleLight className="h-4 w-4 flex-shrink-0" />
-                    Karbantartás létrehozva ebből a bejelentésből (#{karbantartasId}) — részletek a Karbantartások listában.
+                  <div className="flex flex-col gap-3 rounded-xl border border-emerald-100 bg-emerald-50 p-4">
+                    <div className="flex items-start gap-2.5">
+                      <PiCheckCircleLight className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-600" />
+                      <p className="text-sm text-emerald-800">
+                        Karbantartás létrehozva ebből a bejelentésből{" "}
+                        <span className="font-semibold">(#{karbantartasId})</span>.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => history.push("/admin/karbantartasok")}
+                      className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-white px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-emerald-700 shadow-soft ring-1 ring-emerald-200 transition-colors duration-200 hover:bg-emerald-100 sm:w-fit sm:self-end"
+                    >
+                      Megnyitás a Karbantartásoknál
+                      <PiArrowRightLight className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 ) : form.kamion_id ? (
-                  <div className="flex items-start justify-between gap-4 rounded-xl border border-ink-100 bg-slate-50 px-4 py-3">
-                    <p className="text-sm text-ink-500">
-                      Ha a bejelentés valós hibát ír le, itt egy kattintással létrehozhat belőle egy karbantartási rekordot a kijelölt kamionhoz.
-                    </p>
+                  <div className="flex flex-col gap-3 rounded-xl border border-brand-100 bg-brand-50/50 p-4">
+                    <div className="flex items-start gap-2.5">
+                      <PiWrenchLight className="mt-0.5 h-5 w-5 flex-shrink-0 text-brand-600" />
+                      <p className="text-sm text-ink-600">
+                        Ha a bejelentés valós hibát ír le, itt egy kattintással létrehozhat belőle egy karbantartási rekordot a kijelölt kamionhoz.
+                      </p>
+                    </div>
                     <button
                       type="button"
                       onClick={handleGenerateKarbantartas}
                       disabled={isGenerating}
-                      className="flex flex-shrink-0 items-center gap-1.5 rounded-xl bg-brand-600 px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-brand-600 px-3.5 py-2.5 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-fit sm:self-end"
                     >
                       <PiWrenchLight className="h-4 w-4" />
                       {isGenerating ? "Generálás..." : "Karbantartás generálása"}
                     </button>
                   </div>
                 ) : (
-                  <p className="text-sm text-ink-400">
-                    Nincs kamion megadva a bejelentésnél — karbantartás csak kamionhoz rendelt bejelentésből generálható.
-                  </p>
+                  <div className="flex items-start gap-2.5 rounded-xl border border-ink-100 bg-slate-50 p-4">
+                    <PiInfoLight className="mt-0.5 h-5 w-5 flex-shrink-0 text-ink-300" />
+                    <p className="text-sm text-ink-400">
+                      Nincs kamion megadva a bejelentésnél — karbantartás csak kamionhoz rendelt bejelentésből generálható.
+                    </p>
+                  </div>
                 )}
               </FormSection>
             )}

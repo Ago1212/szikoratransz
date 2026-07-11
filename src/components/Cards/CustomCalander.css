@@ -260,6 +260,15 @@
     padding: 1px 3px;
   }
 
+  /* A "+N" (rövidített "+N további") jelzés is csak kb. 45px-es napcellába
+     fér mobilon (7 oszlop egy 320px-es képernyőn) — kisebb betű és nulla
+     vízszintes padding nélkül a szám maga is kilóghatna a cellából. */
+  .rbc-show-more {
+    font-size: 0.6rem;
+    padding: 0 1px;
+    line-height: 1.4;
+  }
+
   .rbc-agenda-view table.rbc-agenda-table {
     font-size: 0.8rem;
   }

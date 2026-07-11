@@ -114,6 +114,7 @@ export default function CardUgyfel({ initialUgyfel }) {
               />
               <FormField
                 label="Irányítószám"
+                inputMode="numeric"
                 name="irsz"
                 value={formData.irsz || ""}
                 onChange={handleChange}

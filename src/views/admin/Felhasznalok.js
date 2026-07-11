@@ -187,7 +187,7 @@ export default function Felhasznalok() {
           {filtered.map((row) => (
             <div
               key={`${row.tipus}-${row.id}`}
-              className="flex items-center gap-3 rounded-2xl border border-ink-100 bg-white p-4 shadow-soft"
+              className="flex flex-wrap items-center gap-3 rounded-2xl border border-ink-100 bg-white p-4 shadow-soft"
             >
               {(() => {
                 const RoleIcon =
@@ -200,7 +200,7 @@ export default function Felhasznalok() {
                   </span>
                 );
               })()}
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1 basis-full sm:basis-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="truncate text-sm font-semibold text-ink-900">{row.name}</p>
                   {row.tipus === "csapattag" && row.isRoot && (
@@ -224,60 +224,65 @@ export default function Felhasznalok() {
                 </p>
               </div>
 
-              {row.tipus === "csapattag" ? (
-                row.isRoot ? (
-                  <span
-                    className="w-44 flex-shrink-0 truncate rounded-lg bg-ink-50 px-3 py-1.5 text-center text-xs font-semibold text-ink-500"
-                    title="A cégtulajdonos szerepköre fixen adminisztrátor, nem módosítható."
-                  >
-                    {SZEREPKOR_LABEL.admin}
-                  </span>
+              {/* Szerepkör-vezérlő + műveletek — mobilon (a fenti basis-full
+                  miatt) mindig saját, teljes szélességű sorba kerül, jobbra
+                  igazítva, hogy ne préselődjön a névvel egy 320px-es sorba. */}
+              <div className="flex w-full items-center justify-end gap-2 sm:w-auto">
+                {row.tipus === "csapattag" ? (
+                  row.isRoot ? (
+                    <span
+                      className="w-44 flex-shrink-0 truncate rounded-lg bg-ink-50 px-3 py-1.5 text-center text-xs font-semibold text-ink-500"
+                      title="A cégtulajdonos szerepköre fixen adminisztrátor, nem módosítható."
+                    >
+                      {SZEREPKOR_LABEL.admin}
+                    </span>
+                  ) : (
+                    <FormField
+                      as="select"
+                      value={row.szerepkor || "admin"}
+                      onChange={(e) => handleSzerepkorChange(row, e.target.value)}
+                      className="w-44 flex-shrink-0"
+                      inputClassName="text-xs py-1.5"
+                    >
+                      {Object.entries(SZEREPKOR_LABEL).map(([value, label]) => (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      ))}
+                    </FormField>
+                  )
                 ) : (
-                  <FormField
-                    as="select"
-                    value={row.szerepkor || "admin"}
-                    onChange={(e) => handleSzerepkorChange(row, e.target.value)}
-                    className="w-44 flex-shrink-0"
-                    inputClassName="text-xs py-1.5"
+                  <button
+                    type="button"
+                    onClick={() => history.push("/admin/soforForm", { data: row.raw })}
+                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-brand-50 hover:text-brand-600"
+                    aria-label="Szerkesztés"
                   >
-                    {Object.entries(SZEREPKOR_LABEL).map(([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ))}
-                  </FormField>
-                )
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => history.push("/admin/soforForm", { data: row.raw })}
-                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-brand-50 hover:text-brand-600"
-                  aria-label="Szerkesztés"
-                >
-                  <PiPencilSimpleLight className="h-5 w-5" />
-                </button>
-              )}
+                    <PiPencilSimpleLight className="h-5 w-5" />
+                  </button>
+                )}
 
-              {row.tipus === "csapattag" && !row.isRoot && (
-                <button
-                  type="button"
-                  onClick={() => handleDeleteCsapattag(row.id)}
-                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-red-50 hover:text-red-600"
-                  aria-label="Törlés"
-                >
-                  <PiTrashLight className="h-5 w-5" />
-                </button>
-              )}
-              {row.tipus === "sofor" && (
-                <button
-                  type="button"
-                  onClick={() => handleDeleteSofor(row.id)}
-                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-red-50 hover:text-red-600"
-                  aria-label="Törlés"
-                >
-                  <PiTrashLight className="h-5 w-5" />
-                </button>
-              )}
+                {row.tipus === "csapattag" && !row.isRoot && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteCsapattag(row.id)}
+                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-red-50 hover:text-red-600"
+                    aria-label="Törlés"
+                  >
+                    <PiTrashLight className="h-5 w-5" />
+                  </button>
+                )}
+                {row.tipus === "sofor" && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteSofor(row.id)}
+                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-red-50 hover:text-red-600"
+                    aria-label="Törlés"
+                  >
+                    <PiTrashLight className="h-5 w-5" />
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>

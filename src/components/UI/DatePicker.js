@@ -21,10 +21,13 @@ import {
 } from "react-icons/pi";
 
 const WEEKDAYS = ["H", "K", "Sze", "Cs", "P", "Szo", "V"];
-const PANEL_WIDTH = 288; // w-72
+// 352px — akkora, hogy a 7 napcella (44×44px minimum érintési méret) kényelmesen
+// elférjen p-3 belső paddinggel és gap-1 réssel (352-24-24=304px / 7 ≈ 43,4px/cella).
+const PANEL_WIDTH = 352;
 // A naptár-panel becsült magassága (fejléc + 6 heti sor + lábléc) — ennyi
-// hely kell fölötte/alatta, különben a másik irányba nyílik inkább.
-const ESTIMATED_PANEL_HEIGHT = 380;
+// hely kell fölötte/alatta, különben a másik irányba nyílik inkább. A 44px-es
+// napcellák miatt magasabb, mint a korábbi (32px-es cellás) verzió volt.
+const ESTIMATED_PANEL_HEIGHT = 440;
 const VIEWPORT_MARGIN = 16;
 
 function parseValue(value) {
@@ -69,13 +72,21 @@ export default function DatePicker({
     const openUpward =
       spaceBelow < ESTIMATED_PANEL_HEIGHT && spaceAbove > spaceBelow;
 
+    // Keskeny (pl. 320px-es) mobil nézetben a fix PANEL_WIDTH (352px, a 44px-es
+    // napcellák miatt) szélesebb lehet magánál a viewportnál — enélkül a panel
+    // bal széle a képernyőn kívülre csúszna. A ténylegesen használt szélesség
+    // ilyenkor a viewportra zsugorodik (a napcellák `w-full`-lal maguktól
+    // követik ezt, csak keskenyebbek lesznek, a 44px-es magasságuk megmarad).
+    const panelWidth = Math.min(PANEL_WIDTH, window.innerWidth - VIEWPORT_MARGIN * 2);
+
     const left = Math.min(
       Math.max(rect.left, VIEWPORT_MARGIN),
-      window.innerWidth - PANEL_WIDTH - VIEWPORT_MARGIN
+      window.innerWidth - panelWidth - VIEWPORT_MARGIN
     );
 
     setCoords({
       left,
+      width: panelWidth,
       top: openUpward ? undefined : rect.bottom + 8,
       bottom: openUpward ? window.innerHeight - rect.top + 8 : undefined,
     });
@@ -131,14 +142,14 @@ export default function DatePicker({
         createPortal(
           <div
             ref={panelRef}
-            className="fixed z-[9999] w-72 rounded-2xl border border-ink-100 bg-white p-4 shadow-soft-xl"
-            style={{ left: coords.left, top: coords.top, bottom: coords.bottom }}
+            className="fixed z-[9999] rounded-2xl border border-ink-100 bg-white p-3 shadow-soft-xl"
+            style={{ left: coords.left, width: coords.width, top: coords.top, bottom: coords.bottom }}
           >
-            <div className="mb-3 flex items-center justify-between">
+            <div className="mb-3 flex items-center justify-between px-1">
               <button
                 type="button"
                 onClick={() => setViewMonth((m) => subMonths(m, 1))}
-                className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-400 transition-colors duration-150 hover:bg-slate-100 hover:text-ink-700"
+                className="flex h-11 w-11 items-center justify-center rounded-lg text-ink-400 transition-colors duration-150 hover:bg-slate-100 hover:text-ink-700"
               >
                 <PiCaretLeftLight className="h-4 w-4" />
               </button>
@@ -148,7 +159,7 @@ export default function DatePicker({
               <button
                 type="button"
                 onClick={() => setViewMonth((m) => addMonths(m, 1))}
-                className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-400 transition-colors duration-150 hover:bg-slate-100 hover:text-ink-700"
+                className="flex h-11 w-11 items-center justify-center rounded-lg text-ink-400 transition-colors duration-150 hover:bg-slate-100 hover:text-ink-700"
               >
                 <PiCaretRightLight className="h-4 w-4" />
               </button>
@@ -171,7 +182,7 @@ export default function DatePicker({
                       emitChange(day);
                       setOpen(false);
                     }}
-                    className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm transition-colors duration-150 ${
+                    className={`flex h-11 w-full items-center justify-center rounded-lg text-sm transition-colors duration-150 ${
                       isSelected
                         ? "bg-brand-600 font-semibold text-white"
                         : isToday(day)

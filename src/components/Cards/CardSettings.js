@@ -123,6 +123,7 @@ export default function CardSettings() {
             <FormField
               icon={PiMailboxLight}
               label="IRSZ"
+              inputMode="numeric"
               name="irsz"
               value={userData.irsz || ""}
               onChange={handleInputChange}

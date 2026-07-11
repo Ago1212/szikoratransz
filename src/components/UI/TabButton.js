@@ -5,7 +5,7 @@ export default function TabButton({ active, onClick, icon: Icon, children }) {
     <button
       type="button"
       onClick={onClick}
-      className={`relative flex items-center gap-2 px-0.5 pb-3 text-sm font-semibold transition-colors duration-200 ease-fluid focus:outline-none ${
+      className={`relative flex items-center gap-2 rounded-lg px-1 py-2.5 text-sm font-semibold transition-colors duration-200 ease-fluid focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 ${
         active ? "text-brand-700" : "text-ink-400 hover:text-ink-700"
       }`}
     >

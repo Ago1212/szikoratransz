@@ -186,7 +186,7 @@ export default function Profil() {
             value={form.varos || ""}
             onChange={handleChange}
           />
-          <FormField label="Irányítószám" name="irsz" value={form.irsz || ""} onChange={handleChange} />
+          <FormField label="Irányítószám" inputMode="numeric" name="irsz" value={form.irsz || ""} onChange={handleChange} />
           <FormField label="Cím" name="cim" value={form.cim || ""} onChange={handleChange} className="md:col-span-2" />
           <FormField
             label="Lakcím"

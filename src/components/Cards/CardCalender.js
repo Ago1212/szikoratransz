@@ -112,7 +112,10 @@ export default function CustomCalendar() {
     time: "Idő",
     event: "Esemény",
     noEventsInRange: "Nincs esemény az adott időszakban.",
-    showMore: (total) => `+${total} további`,
+    // Mobilon egy naptár-nap mindössze ~45px széles (7 oszlop egy 320px-es
+    // képernyőn) — a "+N további" felirat ide sosem fér ki, csonkolva/
+    // kilógva jelent meg. Mobilon ezért csak a rövid "+N" jelenik meg.
+    showMore: (total) => (isMobile ? `+${total}` : `+${total} további`),
   };
 
   if (isMobile) {
