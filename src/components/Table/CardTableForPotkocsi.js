@@ -9,6 +9,7 @@ import {
 
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
+import AllapotBadge from "components/UI/AllapotBadge.js";
 
 const CardTable = ({ potkocsik }) => {
   const history = useHistory();
@@ -31,6 +32,11 @@ const CardTable = ({ potkocsik }) => {
   const columns = [
     { key: "rendszam", label: "Rendszám", className: "font-semibold text-brand-900" },
     { key: "tipus", label: "Típus", render: (row) => row.tipus || "Nincs" },
+    {
+      key: "allapot",
+      label: "Állapot",
+      render: (row) => <AllapotBadge allapot={row.allapot} />,
+    },
     {
       key: "actions",
       label: "Műveletek",
@@ -58,6 +64,7 @@ const CardTable = ({ potkocsik }) => {
       icon={PiTruckTrailerLight}
       title="Pótkocsik"
       onAdd={handleNewPotkocsi}
+      exportFilename="potkocsik"
       columns={columns}
       rows={potkocsik}
       onRowDoubleClick={handleEditClick}

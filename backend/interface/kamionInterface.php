@@ -39,25 +39,27 @@ class KamionInterface {
     public function saveKamionData($data) {
         try {
             // SQL lekérdezés előkészítése az adatok frissítéséhez
-            $query = "UPDATE kamion 
-                      SET rendszam = :rendszam, 
-                          potkocsi = :potkocsi, 
-                          meret = :meret, 
-                          tipus = :tipus, 
-                          muszaki_lejarat = :muszaki_lejarat, 
-                          adr_lejarat = :adr_lejarat, 
-                          taograf_illesztes = :taograf_illesztes, 
-                          emelohatfal_vizsga = :emelohatfal_vizsga, 
-                          porolto_lejarat = :porolto_lejarat, 
-                          porolto_lejarat_2 = :porolto_lejarat_2, 
-                          kot_biztositas = :kot_biztositas, 
-                          kot_biz_nev = :kot_biz_nev, 
-                          kot_biz_dij = :kot_biz_dij, 
-                          kot_biz_utem = :kot_biz_utem, 
-                          kaszko_biztositas = :kaszko_biztositas, 
-                          kaszko_nev = :kaszko_nev, 
-                          kaszko_dij = :kaszko_dij, 
-                          kaszko_fizetesi_utem = :kaszko_fizetesi_utem 
+            $query = "UPDATE kamion
+                      SET rendszam = :rendszam,
+                          potkocsi = :potkocsi,
+                          meret = :meret,
+                          tipus = :tipus,
+                          allapot = :allapot,
+                          aktualis_km = :aktualis_km,
+                          muszaki_lejarat = :muszaki_lejarat,
+                          adr_lejarat = :adr_lejarat,
+                          taograf_illesztes = :taograf_illesztes,
+                          emelohatfal_vizsga = :emelohatfal_vizsga,
+                          porolto_lejarat = :porolto_lejarat,
+                          porolto_lejarat_2 = :porolto_lejarat_2,
+                          kot_biztositas = :kot_biztositas,
+                          kot_biz_nev = :kot_biz_nev,
+                          kot_biz_dij = :kot_biz_dij,
+                          kot_biz_utem = :kot_biz_utem,
+                          kaszko_biztositas = :kaszko_biztositas,
+                          kaszko_nev = :kaszko_nev,
+                          kaszko_dij = :kaszko_dij,
+                          kaszko_fizetesi_utem = :kaszko_fizetesi_utem
                       WHERE id = :id";
 
             $stmt = $this->db->prepare($query);
@@ -67,6 +69,8 @@ class KamionInterface {
             $stmt->bindParam(':potkocsi', $data['potkocsi'], PDO::PARAM_STR);
             $stmt->bindParam(':tipus', $data['tipus'], PDO::PARAM_STR);
             $stmt->bindParam(':meret', $data['meret'], PDO::PARAM_STR);
+            $stmt->bindValue(':allapot', empty($data['allapot']) ? 'szabad' : $data['allapot']);
+            $stmt->bindValue(':aktualis_km', empty($data['aktualis_km']) ? null : $data['aktualis_km']);
             $stmt->bindParam(':muszaki_lejarat', $data['muszaki_lejarat'], PDO::PARAM_STR);
             $stmt->bindParam(':adr_lejarat', $data['adr_lejarat'], PDO::PARAM_STR);
             $stmt->bindParam(':taograf_illesztes', $data['taograf_illesztes'], PDO::PARAM_STR);
@@ -92,10 +96,14 @@ class KamionInterface {
     }
     public function newKamion($data) {
         try {
-            // SQL lekérdezés előkészítése az adatok beszúrásához
-            $query = "INSERT INTO kamion 
-                      (admin,rendszam, potkocsi,meret,tipus, muszaki_lejarat, adr_lejarat, taograf_illesztes, emelohatfal_vizsga, porolto_lejarat, porolto_lejarat_2, kot_biztositas,kot_biz_nev, kot_biz_dij, kot_biz_utem, kaszko_biztositas,kaszko_nev, kaszko_dij, kaszko_fizetesi_utem) 
-                      VALUES (:admin,:rendszam,:meret,:tipus, :potkocsi, :muszaki_lejarat, :adr_lejarat, :taograf_illesztes, :emelohatfal_vizsga, :porolto_lejarat, :porolto_lejarat_2, :kot_biztositas,:kot_biz_nev, :kot_biz_dij, :kot_biz_utem, :kaszko_biztositas, :kaszko_nev,:kaszko_dij, :kaszko_fizetesi_utem)";
+            // SQL lekérdezés előkészítése az adatok beszúrásához.
+            // (A korábbi VALUES-lista sorrendje nem egyezett az oszloplista
+            // sorrendjével — pozicionálisan a `potkocsi`/`meret`/`tipus`
+            // értékek egymás oszlopába kerültek volna beszúráskor. Most a
+            // két lista sorrendje megegyezik.)
+            $query = "INSERT INTO kamion
+                      (admin, rendszam, potkocsi, meret, tipus, allapot, aktualis_km, muszaki_lejarat, adr_lejarat, taograf_illesztes, emelohatfal_vizsga, porolto_lejarat, porolto_lejarat_2, kot_biztositas, kot_biz_nev, kot_biz_dij, kot_biz_utem, kaszko_biztositas, kaszko_nev, kaszko_dij, kaszko_fizetesi_utem)
+                      VALUES (:admin, :rendszam, :potkocsi, :meret, :tipus, :allapot, :aktualis_km, :muszaki_lejarat, :adr_lejarat, :taograf_illesztes, :emelohatfal_vizsga, :porolto_lejarat, :porolto_lejarat_2, :kot_biztositas, :kot_biz_nev, :kot_biz_dij, :kot_biz_utem, :kaszko_biztositas, :kaszko_nev, :kaszko_dij, :kaszko_fizetesi_utem)";
 
             $stmt = $this->db->prepare($query);
 
@@ -105,6 +113,8 @@ class KamionInterface {
             $stmt->bindParam(':potkocsi', $data['potkocsi'], PDO::PARAM_STR);
             $stmt->bindParam(':tipus', $data['tipus'], PDO::PARAM_STR);
             $stmt->bindParam(':meret', $data['meret'], PDO::PARAM_STR);
+            $stmt->bindValue(':allapot', empty($data['allapot']) ? 'szabad' : $data['allapot']);
+            $stmt->bindValue(':aktualis_km', empty($data['aktualis_km']) ? null : $data['aktualis_km']);
             $stmt->bindParam(':muszaki_lejarat', $data['muszaki_lejarat'], PDO::PARAM_STR);
             $stmt->bindParam(':adr_lejarat', $data['adr_lejarat'], PDO::PARAM_STR);
             $stmt->bindParam(':taograf_illesztes', $data['taograf_illesztes'], PDO::PARAM_STR);

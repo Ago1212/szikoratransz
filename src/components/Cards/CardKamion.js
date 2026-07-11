@@ -25,6 +25,8 @@ export default function CardKamion({ initialKamion }) {
     potkocsi: kamion.potkocsi || null,
     meret: kamion.meret || null,
     tipus: kamion.tipus || null,
+    allapot: kamion.allapot || "szabad",
+    aktualis_km: kamion.aktualis_km || null,
     muszaki_lejarat: kamion.muszaki_lejarat || null,
     adr_lejarat: kamion.adr_lejarat || null,
     taograf_illesztes: kamion.taograf_illesztes || null,
@@ -46,7 +48,7 @@ export default function CardKamion({ initialKamion }) {
       const storedUserData = JSON.parse(sessionStorage.getItem("user"));
       const action = formData.id ? "saveKamionData" : "newKamion";
       const result = await fetchAction(action, {
-        admin: storedUserData.id,
+        admin: storedUserData.ceg_id,
         ...formData,
       });
 

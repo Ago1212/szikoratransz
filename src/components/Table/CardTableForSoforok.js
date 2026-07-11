@@ -56,6 +56,7 @@ const CardTable = ({ soforok }) => {
       icon={PiUsersLight}
       title="Sofőrök"
       onAdd={handleNewSofor}
+      exportFilename="soforok"
       columns={columns}
       rows={soforok}
       onRowDoubleClick={handleEditClick}

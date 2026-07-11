@@ -44,6 +44,13 @@ class EmailInterface {
         return $this->sendEmail($email, 'szikoratransz@gmail.com', $subject, $body);
     }
 
+    // Publikus belépési pont a lejárat-emlékeztető cron scriptnek és
+    // más jövőbeli automatikus értesítéseknek — ugyanazt a `mail()`
+    // alapú küldést használja, mint az ajánlatkérés/jelentkezés űrlapok.
+    public function sendNotification(string $to, string $subject, string $body) {
+        return $this->sendEmail($to, $to, $subject, $body);
+    }
+
     protected function sendEmail(string $from, string $to, string $subject, string $body) {
         // Alap e-mail küldési logika
         $headers = [

@@ -28,7 +28,7 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const user = JSON.parse(sessionStorage.getItem("user"));
-        const result = await fetchAction("getSum", { id: user.id });
+        const result = await fetchAction("getSum", { id: user.ceg_id });
 
         if (result.success) {
           setStats({
@@ -99,7 +99,30 @@ export default function Dashboard() {
 
   return (
     <div className="mx-auto flex h-full w-full max-w-7xl flex-col">
-      {/* Statisztikák — mobilon nincs rájuk szükség, csak a naptár számít ott */}
+      {/* Statisztikák — mobilon egy nagyon kompakt, egysoros csík (csak
+          ikon+szám+apró felirat), hogy a "Lejáró határidők" azért egy
+          pillantásra látszódjon anélkül, hogy be kellene lépni az Események
+          menübe, de ne foglalja el a kezdőoldal nagy részét. Asztalin
+          (md+) marad a teljes méretű CardStats-rács, változatlanul. */}
+      <div className="grid grid-cols-4 gap-2 flex-shrink-0 mb-4 md:hidden">
+        {cards.map((card) => (
+          <button
+            key={card.title}
+            type="button"
+            onClick={() => navigateTo(card.path)}
+            className="flex flex-col items-center gap-0.5 rounded-xl bg-white py-2 shadow-soft ring-1 ring-ink-100 transition-transform duration-150 active:scale-95"
+          >
+            <card.icon className="h-4 w-4 flex-shrink-0 text-brand-600" />
+            <span className="font-display text-base font-bold tabular-nums text-brand-900">
+              {card.value}
+            </span>
+            <span className="w-full px-0.5 text-center text-[8px] font-semibold uppercase leading-tight tracking-wide text-ink-400">
+              {card.title}
+            </span>
+          </button>
+        ))}
+      </div>
+
       <div className="hidden flex-shrink-0 grid-cols-2 gap-5 md:mb-6 md:grid xl:grid-cols-4">
         {cards.map((card) => (
           <CardStats

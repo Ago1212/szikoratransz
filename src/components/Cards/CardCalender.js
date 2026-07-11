@@ -58,7 +58,7 @@ export default function CustomCalendar() {
   useEffect(() => {
     const fetchData = async () => {
       const user = JSON.parse(sessionStorage.getItem("user"));
-      const result = await fetchAction("getEsemenyek", { id: user.id });
+      const result = await fetchAction("getEsemenyek", { id: user.ceg_id });
       if (result.success) {
         const formattedEvents = result.data
           .filter(
@@ -112,7 +112,10 @@ export default function CustomCalendar() {
     time: "Idő",
     event: "Esemény",
     noEventsInRange: "Nincs esemény az adott időszakban.",
-    showMore: (total) => `+${total} további`,
+    // Mobilon egy naptár-nap mindössze ~45px széles (7 oszlop egy 320px-es
+    // képernyőn) — a "+N további" felirat ide sosem fér ki, csonkolva/
+    // kilógva jelent meg. Mobilon ezért csak a rövid "+N" jelenik meg.
+    showMore: (total) => (isMobile ? `+${total}` : `+${total} további`),
   };
 
   if (isMobile) {
@@ -144,7 +147,7 @@ export default function CustomCalendar() {
               {moment(selectedDate).format("YYYY. MMMM D. (dddd)")}
             </h4>
             {dayEvents.length === 0 ? (
-              <p className="rounded-xl bg-sand-50 px-3 py-4 text-center text-sm text-ink-400">
+              <p className="rounded-xl bg-slate-50 px-3 py-4 text-center text-sm text-ink-400">
                 Nincs esemény ezen a napon.
               </p>
             ) : (
@@ -152,7 +155,7 @@ export default function CustomCalendar() {
                 {dayEvents.map((event, idx) => (
                   <li
                     key={idx}
-                    className="flex items-center gap-2.5 rounded-xl bg-sand-50 px-3 py-2.5"
+                    className="flex items-center gap-2.5 rounded-xl bg-slate-50 px-3 py-2.5"
                   >
                     <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-brand-500" />
                     <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink-700">

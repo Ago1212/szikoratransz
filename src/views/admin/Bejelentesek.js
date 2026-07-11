@@ -57,7 +57,7 @@ export default function Bejelentesek() {
               Kamion kiválasztása
             </h3>
             <select
-              className="w-full rounded-xl border border-ink-100 bg-sand-50 px-4 py-3 text-sm text-brand-900 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100"
+              className="w-full rounded-xl border border-ink-100 bg-slate-50 px-4 py-3 text-sm text-brand-900 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300"
               value={selectedKamion}
               onChange={handleKamionChange}
             >

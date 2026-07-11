@@ -1,18 +1,84 @@
 import React from "react";
-import { PiPlusLight } from "react-icons/pi";
+import { PiPlusLight, PiDownloadSimpleLight } from "react-icons/pi";
 import { GradientCardHeader } from "components/UI/PageCard.js";
 import Spinner from "components/UI/Spinner.js";
 
+// Excel export — a `render` oszlopok JSX-et adnak vissza (pl. állapot-
+// jelvény, gombok), ezért azoknál a nyers `row[col.key]` értéket
+// exportáljuk, nem a renderelt kimenetet; az "actions" oszlop mindig
+// kimarad.
+//
+// Szándékosan NEM az npm `xlsx` (SheetJS) csomagot használjuk: az onnan
+// telepíthető legfrissebb verzió (0.18.5) ismert, javítatlan sérülékeny-
+// ségeket hordoz (a SheetJS 2023 óta a saját CDN-jén ad ki javított
+// verziókat, nem az npm registry-n). Ehelyett egy natív, függőség nélküli
+// formátumot építünk: a "SpreadsheetML" (Excel 2003 XML) egy egyszerű,
+// jól dokumentált XML-fájl, amit az Excel dupla kattintásra natívan,
+// valódi cellákkal/sorokkal nyit meg — nem csak egy átnevezett CSV.
+function exportRowsToExcel(columns, rows, filename) {
+  const exportCols = columns.filter((col) => col.key !== "actions");
+  const escapeXml = (value) => {
+    const str = value === null || value === undefined ? "" : String(value);
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  };
+  const cell = (value) =>
+    `<Cell><Data ss:Type="String">${escapeXml(value)}</Data></Cell>`;
+
+  const headerRow = `<Row>${exportCols.map((col) => cell(col.label)).join("")}</Row>`;
+  const dataRows = rows
+    .map(
+      (row) =>
+        `<Row>${exportCols.map((col) => cell(row[col.key])).join("")}</Row>`,
+    )
+    .join("");
+
+  const xml = `<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ <Worksheet ss:Name="${escapeXml(filename).slice(0, 31)}">
+  <Table>
+   ${headerRow}
+   ${dataRows}
+  </Table>
+ </Worksheet>
+</Workbook>`;
+
+  const blob = new Blob([xml], {
+    type: "application/vnd.ms-excel;charset=utf-8;",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${filename}.xlsx`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+// A gomb látható mérete változatlan (h-8/32px — sűrű asztali táblázathoz
+// illő), de az érinthető terület mobilon 44×44px-re nő (Apple/Google
+// minimum érintési célterület ajánlása) — az utóbbi a sűrű mobil
+// kártyanézetben számít, ahol a szerkesztés/törlés gombok egymás
+// mellett, ujjal érintve könnyen összecserélhetők lennének.
 export function ActionIcon({ icon, onClick, title, danger = false }) {
   return (
     <button
-      className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border transition-all duration-200 ease-fluid hover:scale-105 active:scale-95 ${
+      className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg border transition-all duration-200 ease-fluid hover:scale-105 active:scale-95 md:h-8 md:w-8 ${
         danger
           ? "border-red-100 bg-red-50 text-red-600 hover:bg-red-100"
           : "border-ink-200 bg-white text-ink-500 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-600"
       }`}
       onClick={onClick}
       title={title}
+      aria-label={title}
       type="button"
     >
       {icon}
@@ -40,6 +106,9 @@ export default function DataTable({
   className = "",
   maxBodyHeight = "min(80vh, 760px)",
   mobileTitleKey,
+  // Ha meg van adva, a fejlécben megjelenik egy "Excel export" gomb, ami a
+  // jelenleg megjelenített (szűrt) sorokat tölti le ezzel a fájlnévvel.
+  exportFilename,
   // Ha true: a táblázat a szülő flex-konténer rendelkezésre álló
   // magasságát tölti ki (nem egy fix vh-értéket) — így egy olyan oldalon,
   // ahol felette még van cím/szűrő sáv is, a táblázat sosem lóghat túl a
@@ -53,16 +122,32 @@ export default function DataTable({
     (mobileTitleKey && fieldCols.find((col) => col.key === mobileTitleKey)) ||
     fieldCols[0];
   const secondaryCols = fieldCols.filter((col) => col.key !== primaryCol?.key);
+  const exportButton = exportFilename && (
+    <button
+      className="flex items-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-ink-500 shadow-soft transition-all duration-300 ease-fluid hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 active:scale-95"
+      type="button"
+      title="Táblázat exportálása Excelbe"
+      onClick={() => exportRowsToExcel(columns, rows, exportFilename)}
+    >
+      <PiDownloadSimpleLight className="h-4 w-4" /> Excel
+    </button>
+  );
+
   const resolvedHeaderAction =
     headerAction ??
-    (onAdd ? (
-      <button
-        className="flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-all duration-300 ease-fluid hover:bg-brand-700 active:scale-95"
-        type="button"
-        onClick={onAdd}
-      >
-        <PiPlusLight className="h-4 w-4" /> {addLabel}
-      </button>
+    (onAdd || exportButton ? (
+      <div className="flex items-center gap-2">
+        {exportButton}
+        {onAdd && (
+          <button
+            className="flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-all duration-300 ease-fluid hover:bg-brand-700 active:scale-95"
+            type="button"
+            onClick={onAdd}
+          >
+            <PiPlusLight className="h-4 w-4" /> {addLabel}
+          </button>
+        )}
+      </div>
     ) : null);
 
   const bodyMaxHeight = fill ? undefined : maxBodyHeight;
@@ -70,11 +155,23 @@ export default function DataTable({
 
   // Alapértelmezett üres-állapot — a táblázat saját fejléc-ikonját
   // (nagyobban, halványan) használja, hogy azonnal lásd, milyen típusú
-  // adat hiányzik, nem csak egy sima szöveg lóg a semmiben.
+  // adat hiányzik, nem csak egy sima szöveg lóg a semmiben. Ha van
+  // hozzáadás-akció, egy közvetlen "+ Új" gomb is megjelenik itt, hogy
+  // egy üres listánál (pl. friss fiók) ne kelljen felgörgetni a fejléc
+  // gombjáig a következő lépéshez.
   const EmptyContent = () => (
-    <div className="flex flex-col items-center gap-2.5 py-4">
+    <div className="flex flex-col items-center gap-3 py-4">
       {icon && React.createElement(icon, { className: "h-8 w-8 text-ink-200" })}
       <span>{emptyLabel}</span>
+      {onAdd && (
+        <button
+          type="button"
+          onClick={onAdd}
+          className="mt-1 flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-all duration-300 ease-fluid hover:bg-brand-700 active:scale-95"
+        >
+          <PiPlusLight className="h-4 w-4" /> {addLabel}
+        </button>
+      )}
     </div>
   );
 
@@ -98,10 +195,18 @@ export default function DataTable({
         emptyState
       ) : (
         <>
-          {/* Mobil nézet — önálló kártyák, könnyebben kezelhető, mint a görgethető táblázat */}
+          {/* Mobil nézet — önálló kártyák, könnyebben kezelhető, mint a görgethető táblázat.
+              `fill` módban (pl. Karbantartasok, ahol a szülő már `h-full flex-col`, saját
+              overflow NÉLKÜL) ez a doboz jogosan maga görget, mert ő az egyetlen görgethető
+              réteg. Alap (`!fill`) módban viszont az Admin.js layout már maga is
+              `overflow-y-auto` — ha ez a doboz ITT is kap egy saját, fix `max-h`-s
+              overflow-t, az egy beágyazott ("scroll a scrollban") csapdát hoz létre
+              mobilon: a lista nagy részét egy alacsony belső dobozban kellene görgetni,
+              a lapot magát meg csak alig. Ezért mobilon `!fill` esetén NINCS itt saját
+              overflow/max-height — a kártyalista egyszerűen a lap normál folyásába illeszkedik. */}
           <div
-            className={`w-full overflow-y-auto bg-sand-50 md:hidden ${bodyFillClass}`}
-            style={{ maxHeight: bodyMaxHeight }}
+            className={`w-full bg-slate-50 md:hidden ${fill ? `overflow-y-auto ${bodyFillClass}` : ""}`}
+            style={fill ? { maxHeight: bodyMaxHeight } : undefined}
           >
             {rows.length > 0 ? (
               <div className="space-y-3 p-3">
@@ -142,7 +247,9 @@ export default function DataTable({
                               {col.label}
                             </div>
                             <div className="mt-0.5 truncate text-sm text-ink-700">
-                              {col.render ? col.render(row, index) : row[col.key]}
+                              {col.render
+                                ? col.render(row, index)
+                                : row[col.key]}
                             </div>
                           </div>
                         ))}
@@ -185,9 +292,13 @@ export default function DataTable({
                       key={rowKey(row, index)}
                       className="border-b border-ink-100 transition-colors duration-200 last:border-0 hover:bg-brand-50/40"
                       onDoubleClick={
-                        onRowDoubleClick ? () => onRowDoubleClick(row) : undefined
+                        onRowDoubleClick
+                          ? () => onRowDoubleClick(row)
+                          : undefined
                       }
-                      style={{ cursor: onRowDoubleClick ? "pointer" : "default" }}
+                      style={{
+                        cursor: onRowDoubleClick ? "pointer" : "default",
+                      }}
                     >
                       {columns.map((col) => (
                         <td

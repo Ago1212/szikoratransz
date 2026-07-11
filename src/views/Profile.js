@@ -14,7 +14,7 @@ export default function Profile() {
   const settingsPath = user?.admin ? "/admin/settings" : "/user/dashboard";
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-sand-50 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-md rounded-3xl bg-white p-10 text-center shadow-soft ring-1 ring-ink-100">
         <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
           <PiUserCircleLight className="h-7 w-7" />

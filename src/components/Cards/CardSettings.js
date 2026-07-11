@@ -13,10 +13,16 @@ import {
   PiCarLight,
   PiShieldCheckLight,
   PiTruckLight,
+  PiIdentificationBadgeLight,
 } from "react-icons/pi";
 import PageCard from "components/UI/PageCard.js";
 import SaveButton from "components/UI/SaveButton.js";
 import FormField, { FormSection } from "components/UI/FormField.js";
+
+const SZEREPKOR_LABEL = {
+  admin: "Adminisztrátor",
+  fuvarszervezo: "Fuvarszervező",
+};
 
 export default function CardSettings() {
   const storedUserData = sessionStorage.getItem("user");
@@ -81,6 +87,12 @@ export default function CardSettings() {
               onChange={handleInputChange}
             />
             <FormField
+              as="info"
+              icon={PiIdentificationBadgeLight}
+              label="Szerepkör"
+              value={SZEREPKOR_LABEL[userData.szerepkor] || SZEREPKOR_LABEL.admin}
+            />
+            <FormField
               icon={PiCakeLight}
               label="Születési dátum"
               type="date"
@@ -96,6 +108,9 @@ export default function CardSettings() {
               onChange={handleInputChange}
             />
           </FormSection>
+          <p className="-mt-2 text-xs text-ink-400">
+            A szerepkör itt csak megtekinthető — módosítani a Felhasználók listáján lehet.
+          </p>
 
           <FormSection id="kapcsolat" title="Kapcsolat" columns={3}>
             <FormField
@@ -108,6 +123,7 @@ export default function CardSettings() {
             <FormField
               icon={PiMailboxLight}
               label="IRSZ"
+              inputMode="numeric"
               name="irsz"
               value={userData.irsz || ""}
               onChange={handleInputChange}

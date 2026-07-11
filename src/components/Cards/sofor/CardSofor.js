@@ -32,6 +32,8 @@ export default function CardSoforok({ initSofor }) {
     jogsi_lejarat: sofor.jogsi_lejarat || "",
     gki_lejarat: sofor.gki_lejarat || "",
     adr_lejarat: sofor.adr_lejarat || "",
+    kamion: sofor.kamion || "",
+    aktiv_potkocsi: sofor.aktiv_potkocsi || "",
   });
 
   const handleSave = async () => {
@@ -39,7 +41,7 @@ export default function CardSoforok({ initSofor }) {
       const storedUserData = JSON.parse(sessionStorage.getItem("user"));
       const action = formData.id ? "saveSoforData" : "newSofor";
       const result = await fetchAction(action, {
-        admin: storedUserData.id,
+        admin: storedUserData.ceg_id,
         ...formData,
       });
 

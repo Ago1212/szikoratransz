@@ -82,11 +82,12 @@ class FilesInterface {
         ]);
     }
 
-    function fileToDatabase($admin, $tabla, $rowid, $hely, $name, $size) {
-        $query = "INSERT INTO fajlok (admin,tabla,rowid, hely, filename, filesize,feltoltve) VALUES (:admin,:tabla,:id, :hely, :filename, :filesize,NOW())";
+    function fileToDatabase($admin, $tabla, $rowid, $hely, $name, $size, $kategoria = null) {
+        $query = "INSERT INTO fajlok (admin,tabla,kategoria,rowid, hely, filename, filesize,feltoltve) VALUES (:admin,:tabla,:kategoria,:id, :hely, :filename, :filesize,NOW())";
         $stmt = $this->db->prepare($query);
         $stmt->bindParam(':admin', $admin);
         $stmt->bindParam(':tabla', $tabla);
+        $stmt->bindParam(':kategoria', $kategoria);
         $stmt->bindParam(':id', $rowid);
         $stmt->bindParam(':hely', $hely);
         $stmt->bindParam(':filename', $name);
@@ -99,7 +100,7 @@ class FilesInterface {
         return $result;
     }
 
-    function fileUpload($admin, $tabla, $rowid, $base64File, $name, $size) {
+    function fileUpload($admin, $tabla, $rowid, $base64File, $name, $size, $kategoria = null) {
         $baseDirectory =  __DIR__ . '/../files';
         if (!is_dir($baseDirectory)) {
             if (!mkdir($baseDirectory, 0755, true)) {
@@ -116,8 +117,8 @@ class FilesInterface {
         }
 
         if (file_put_contents($filePath, $fileData) !== false) {
-            if ($this->fileToDatabase($admin, $tabla, $rowid, $filePath, $safeName, $size)) {
-                return ['success' => true, 'message' => 'A fájl mentve'];
+            if ($this->fileToDatabase($admin, $tabla, $rowid, $filePath, $safeName, $size, $kategoria)) {
+                return ['success' => true, 'message' => 'A fájl mentve', 'id' => $this->db->lastInsertId()];
             } else {
                 return ['success' => false, 'message' => 'Hiba a fájl mentésénél az adatbázisba'];
                 unlink($filePath);

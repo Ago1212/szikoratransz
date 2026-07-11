@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import {
   PiUserLight,
@@ -12,12 +12,27 @@ import {
   PiCarLight,
   PiShieldCheckLight,
   PiTruckLight,
+  PiTruckTrailerLight,
 } from "react-icons/pi";
+import { fetchAction } from "utils/fetchAction";
 import FormField, { FormSection } from "components/UI/FormField.js";
 import SaveButton from "components/UI/SaveButton.js";
 
 const CardSoforAdatokForm = ({ sofor, setFormData, handleSave }) => {
   const [isSaving, setIsSaving] = useState(false);
+  const [kamionok, setKamionok] = useState([]);
+  const [potkocsik, setPotkocsik] = useState([]);
+
+  useEffect(() => {
+    const admin = JSON.parse(sessionStorage.getItem("user") || "null");
+    if (!admin) return;
+    fetchAction("getKamionRendszamok", { id: admin.ceg_id }).then((result) => {
+      if (result?.success) setKamionok(result.kamionok || []);
+    });
+    fetchAction("getPotkocsiRendszamok", { id: admin.ceg_id }).then((result) => {
+      if (result?.success) setPotkocsik(result.potkocsik || []);
+    });
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -91,6 +106,7 @@ const CardSoforAdatokForm = ({ sofor, setFormData, handleSave }) => {
         <FormField
           icon={PiFileTextLight}
           label="IRSZ"
+          inputMode="numeric"
           name="irsz"
           value={sofor.irsz || ""}
           onChange={handleInputChange}
@@ -138,6 +154,45 @@ const CardSoforAdatokForm = ({ sofor, setFormData, handleSave }) => {
           onChange={handleInputChange}
         />
       </FormSection>
+
+      {sofor.id && (
+        <FormSection id="jarmu-hozzarendeles" title="Jármű hozzárendelés" columns={2}>
+          <FormField
+            as="select"
+            icon={PiTruckLight}
+            label="Elsődleges kamion"
+            name="kamion"
+            value={sofor.kamion || ""}
+            onChange={handleInputChange}
+          >
+            <option value="">Nincs hozzárendelve</option>
+            {kamionok.map((k) => (
+              <option key={k.id} value={k.id}>
+                {k.tipus ? `${k.rendszam} (${k.tipus})` : k.rendszam}
+              </option>
+            ))}
+          </FormField>
+          <FormField
+            as="select"
+            icon={PiTruckTrailerLight}
+            label="Elsődleges pótkocsi"
+            name="aktiv_potkocsi"
+            value={sofor.aktiv_potkocsi || ""}
+            onChange={handleInputChange}
+          >
+            <option value="">Nincs hozzárendelve</option>
+            {potkocsik.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.tipus ? `${p.rendszam} (${p.tipus})` : p.rendszam}
+              </option>
+            ))}
+          </FormField>
+          <p className="md:col-span-2 text-xs text-ink-500">
+            A sofőr innentől ezt látja aktív járműként — más kamionra/pótkocsira csak kérést küldhet,
+            amit itt, a jármű-váltási kérések között hagyhatsz jóvá.
+          </p>
+        </FormSection>
+      )}
 
       <div className="flex justify-end border-t border-ink-100 pt-4">
         <SaveButton

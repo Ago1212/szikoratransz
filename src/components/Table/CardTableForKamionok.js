@@ -5,6 +5,7 @@ import { PiPencilSimpleLight, PiTrashLight, PiTruckLight } from "react-icons/pi"
 
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
+import AllapotBadge from "components/UI/AllapotBadge.js";
 
 const CardTable = ({ kamionok }) => {
   const history = useHistory();
@@ -29,6 +30,11 @@ const CardTable = ({ kamionok }) => {
     { key: "tipus", label: "Típus", render: (row) => row.tipus || "Nincs" },
     { key: "meret", label: "Méret", render: (row) => row.meret || "Nincs" },
     { key: "potkocsi", label: "Pótkocsi", render: (row) => row.potkocsi || "Nincs" },
+    {
+      key: "allapot",
+      label: "Állapot",
+      render: (row) => <AllapotBadge allapot={row.allapot} />,
+    },
     {
       key: "actions",
       label: "Műveletek",
@@ -56,6 +62,7 @@ const CardTable = ({ kamionok }) => {
       icon={PiTruckLight}
       title="Kamionok"
       onAdd={handleNewKamion}
+      exportFilename="kamionok"
       columns={columns}
       rows={kamionok}
       onRowDoubleClick={handleEditClick}

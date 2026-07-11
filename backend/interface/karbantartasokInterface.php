@@ -26,7 +26,7 @@ class KarbantartasInterface {
             $whereClauses = [];
 
             // Kamion karbantartások
-            $kamionQuery = "SELECT 'kamion' as tipus, id, kamion_id,null as potkocsi_id,kamion_id as jarmuId, datum, log,km_oraallas,elvegezte, torolt FROM kamion_karbantartars WHERE torolt = 'N'";
+            $kamionQuery = "SELECT 'kamion' as tipus, id, kamion_id,null as potkocsi_id,kamion_id as jarmuId, datum, log,km_oraallas,elvegezte,koltseg, torolt FROM kamion_karbantartars WHERE torolt = 'N'";
             if (!empty($id)) {
                 $kamionQuery .= " AND admin = :id";
                 $params[':id'] = $id;
@@ -52,7 +52,7 @@ class KarbantartasInterface {
             }
 
             // Potkocsi karbantartások
-            $potkocsiQuery = "SELECT 'potkocsi' as tipus, id, null as kamion_id, potkocsi_id, potkocsi_id as jarmuId, datum, log,km_oraallas,elvegezte, torolt FROM potkocsi_karbantartars WHERE torolt = 'N'";
+            $potkocsiQuery = "SELECT 'potkocsi' as tipus, id, null as kamion_id, potkocsi_id, potkocsi_id as jarmuId, datum, log,km_oraallas,elvegezte,koltseg, torolt FROM potkocsi_karbantartars WHERE torolt = 'N'";
             if (!empty($id)) {
                 $potkocsiQuery .= " AND admin = :id";
             }
@@ -133,11 +133,11 @@ class KarbantartasInterface {
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
-    public function updateKamionKarbantartas($id, $admin, $kamion_id, $datum, $log, $km_oraallas, $elvegezte, $kovetkezo_karbantartas) {
+    public function updateKamionKarbantartas($id, $admin, $kamion_id, $datum, $log, $km_oraallas, $elvegezte, $kovetkezo_karbantartas, $koltseg = null) {
         try {
             if ($id === 0) {
                 // Beszúrási lekérdezés
-                $query = "INSERT INTO kamion_karbantartars (kamion_id,admin,datum, log, torolt, km_oraallas, elvegezte) VALUES (:kamion_id,:admin,:datum, :log, 'N', :km_oraallas, :elvegezte)";
+                $query = "INSERT INTO kamion_karbantartars (kamion_id,admin,datum, log, torolt, km_oraallas, elvegezte, koltseg) VALUES (:kamion_id,:admin,:datum, :log, 'N', :km_oraallas, :elvegezte, :koltseg)";
 
                 // Lekérdezés előkészítése
                 $stmt = $this->db->prepare($query);
@@ -149,6 +149,7 @@ class KarbantartasInterface {
                 $stmt->bindParam(':log', $log);
                 $stmt->bindParam(':km_oraallas', $km_oraallas);
                 $stmt->bindParam(':elvegezte', $elvegezte);
+                $stmt->bindValue(':koltseg', $koltseg === '' || $koltseg === null ? null : $koltseg);
 
                 // Lekérdezés végrehajtása
                 $stmt->execute();
@@ -171,7 +172,7 @@ class KarbantartasInterface {
                 }
             } else {
                 // Frissítési lekérdezés
-                $query = "UPDATE kamion_karbantartars SET datum = :datum, log = :log, km_oraallas = :km_oraallas, elvegezte = :elvegezte WHERE id = :id AND torolt = 'N'";
+                $query = "UPDATE kamion_karbantartars SET datum = :datum, log = :log, km_oraallas = :km_oraallas, elvegezte = :elvegezte, koltseg = :koltseg WHERE id = :id AND torolt = 'N'";
 
                 // Lekérdezés előkészítése
                 $stmt = $this->db->prepare($query);
@@ -181,6 +182,7 @@ class KarbantartasInterface {
                 $stmt->bindParam(':log', $log);
                 $stmt->bindParam(':km_oraallas', $km_oraallas);
                 $stmt->bindParam(':elvegezte', $elvegezte);
+                $stmt->bindValue(':koltseg', $koltseg === '' || $koltseg === null ? null : $koltseg);
                 $stmt->bindParam(':id', $id, PDO::PARAM_INT);
 
                 // Lekérdezés végrehajtása
@@ -189,7 +191,7 @@ class KarbantartasInterface {
                 // Ellenőrzés, hogy történt-e frissítés
                 if ($stmt->execute()) {
                     if (!empty($kovetkezo_karbantartas) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $kovetkezo_karbantartas)) {
-                        $nextQuery = "INSERT INTO kamion_karbantartars (kamion_id, admin, datum, log, torolt, km_oraallas, elvegezte) 
+                        $nextQuery = "INSERT INTO kamion_karbantartars (kamion_id, admin, datum, log, torolt, km_oraallas, elvegezte)
                                   VALUES (:kamion_id, :admin, :datum, :log, 'N', NULL, NULL)";
                         $nextStmt = $this->db->prepare($nextQuery);
                         $nextStmt->bindParam(':kamion_id', $kamion_id);
@@ -252,11 +254,11 @@ class KarbantartasInterface {
         }
     }
 
-    public function updatePotkocsiKarbantartas($id, $admin, $potkocsi_id, $datum, $log, $km_oraallas, $elvegezte, $kovetkezo_karbantartas) {
+    public function updatePotkocsiKarbantartas($id, $admin, $potkocsi_id, $datum, $log, $km_oraallas, $elvegezte, $kovetkezo_karbantartas, $koltseg = null) {
         try {
             if ($id === 0) {
                 // Beszúrási lekérdezés
-                $query = "INSERT INTO potkocsi_karbantartars (potkocsi_id,admin,datum, log, torolt, km_oraallas, elvegezte) VALUES (:potkocsi_id,:admin,:datum, :log, 'N', :km_oraallas, :elvegezte)";
+                $query = "INSERT INTO potkocsi_karbantartars (potkocsi_id,admin,datum, log, torolt, km_oraallas, elvegezte, koltseg) VALUES (:potkocsi_id,:admin,:datum, :log, 'N', :km_oraallas, :elvegezte, :koltseg)";
 
                 // Lekérdezés előkészítése
                 $stmt = $this->db->prepare($query);
@@ -268,6 +270,7 @@ class KarbantartasInterface {
                 $stmt->bindParam(':log', $log);
                 $stmt->bindParam(':km_oraallas', $km_oraallas);
                 $stmt->bindParam(':elvegezte', $elvegezte);
+                $stmt->bindValue(':koltseg', $koltseg === '' || $koltseg === null ? null : $koltseg);
 
                 // Lekérdezés végrehajtása
                 $stmt->execute();
@@ -291,7 +294,7 @@ class KarbantartasInterface {
                 }
             } else {
                 // Frissítési lekérdezés
-                $query = "UPDATE potkocsi_karbantartars SET datum = :datum, log = :log, km_oraallas = :km_oraallas, elvegezte = :elvegezte WHERE id = :id AND torolt = 'N'";
+                $query = "UPDATE potkocsi_karbantartars SET datum = :datum, log = :log, km_oraallas = :km_oraallas, elvegezte = :elvegezte, koltseg = :koltseg WHERE id = :id AND torolt = 'N'";
 
                 // Lekérdezés előkészítése
                 $stmt = $this->db->prepare($query);
@@ -301,6 +304,7 @@ class KarbantartasInterface {
                 $stmt->bindParam(':log', $log);
                 $stmt->bindParam(':km_oraallas', $km_oraallas);
                 $stmt->bindParam(':elvegezte', $elvegezte);
+                $stmt->bindValue(':koltseg', $koltseg === '' || $koltseg === null ? null : $koltseg);
                 $stmt->bindParam(':id', $id, PDO::PARAM_INT);
 
                 // Lekérdezés végrehajtása
@@ -308,7 +312,7 @@ class KarbantartasInterface {
                 // Ellenőrzés, hogy történt-e frissítés
                 if ($stmt->execute()) {
                     if (!empty($kovetkezo_karbantartas) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $kovetkezo_karbantartas)) {
-                        $nextQuery = "INSERT INTO potkocsi_karbantartars (potkocsi_id, admin, datum, log, torolt, km_oraallas, elvegezte) 
+                        $nextQuery = "INSERT INTO potkocsi_karbantartars (potkocsi_id, admin, datum, log, torolt, km_oraallas, elvegezte)
                                   VALUES (:potkocsi_id, :admin, :datum, :log, 'N', NULL, NULL)";
                         $nextStmt = $this->db->prepare($nextQuery);
                         $nextStmt->bindParam(':potkocsi_id', $potkocsi_id);

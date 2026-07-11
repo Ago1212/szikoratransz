@@ -30,7 +30,15 @@ const emptyKarbantartas = (adminId) => ({
   km_oraallas: "",
   elvegezte: "",
   kovetkezo_karbantartas: "",
+  koltseg: "",
 });
+
+const formatHuf = (value) =>
+  new Intl.NumberFormat("hu-HU", {
+    style: "currency",
+    currency: "HUF",
+    maximumFractionDigits: 0,
+  }).format(value || 0);
 
 const Karbantartasok = () => {
   const isMobile = useMediaQuery({ maxWidth: 767 });
@@ -50,7 +58,7 @@ const Karbantartasok = () => {
   const user = JSON.parse(sessionStorage.getItem("user"));
   const [openDialog, setOpenDialog] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [newKarbantartas, setNewKarbantartas] = useState(emptyKarbantartas(user.id));
+  const [newKarbantartas, setNewKarbantartas] = useState(emptyKarbantartas(user.ceg_id));
   const [jarmuTipus, setJarmuTipus] = useState("kamion");
   const [files, setFiles] = useState({});
   const [isFileUploading, setIsFileUploading] = useState(false);
@@ -89,7 +97,7 @@ const Karbantartasok = () => {
             reader.onloadend = async () => {
               const base64File = reader.result.split(",")[1];
               const result = await fetchAction("fileUpload", {
-                admin: user.id,
+                admin: user.ceg_id,
                 id: karbantartasId,
                 tabla: "karbantartasok",
                 file: base64File,
@@ -132,12 +140,12 @@ const Karbantartasok = () => {
 
   useEffect(() => {
     const fetchJarmuvek = async () => {
-      const kamionResult = await fetchAction("getKamionRendszamok", { id: user.id });
+      const kamionResult = await fetchAction("getKamionRendszamok", { id: user.ceg_id });
       if (kamionResult?.success) {
         setKamionok(kamionResult.kamionok);
       }
 
-      const potkocsiResult = await fetchAction("getPotkocsiRendszamok", { id: user.id });
+      const potkocsiResult = await fetchAction("getPotkocsiRendszamok", { id: user.ceg_id });
       if (potkocsiResult?.success) {
         setPotkocsik(potkocsiResult.potkocsik);
       }
@@ -145,11 +153,11 @@ const Karbantartasok = () => {
 
     fetchJarmuvek();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user.id]);
+  }, [user.ceg_id]);
 
   useEffect(() => {
     const fetchKarbantartasok = async () => {
-      const result = await fetchAction("getKarbantartasok", { id: user.id, ...filter });
+      const result = await fetchAction("getKarbantartasok", { id: user.ceg_id, ...filter });
       if (result?.success) {
         setKarbantartasok(result.karbantartasok);
         result.karbantartasok.forEach((karb) => {
@@ -159,7 +167,7 @@ const Karbantartasok = () => {
     };
     fetchKarbantartasok();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter, user.id]);
+  }, [filter, user.ceg_id]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -172,7 +180,7 @@ const Karbantartasok = () => {
   };
 
   const resetForm = () => {
-    setNewKarbantartas(emptyKarbantartas(user.id));
+    setNewKarbantartas(emptyKarbantartas(user.ceg_id));
     setEditingId(null);
     setJarmuTipus("kamion");
   };
@@ -186,7 +194,7 @@ const Karbantartasok = () => {
     setEditingId(karb.id);
     setJarmuTipus(karb.potkocsi_id ? "potkocsi" : "kamion");
     setNewKarbantartas({
-      admin: user.id,
+      admin: user.ceg_id,
       kamion_id: karb.kamion_id || "",
       potkocsi_id: karb.potkocsi_id || "",
       datum: karb.datum,
@@ -194,12 +202,13 @@ const Karbantartasok = () => {
       km_oraallas: karb.km_oraallas || "",
       elvegezte: karb.elvegezte || "",
       kovetkezo_karbantartas: karb.kovetkezo_karbantartas || "",
+      koltseg: karb.koltseg || "",
     });
     setOpenDialog(true);
   };
 
   const refreshList = async () => {
-    const updatedResult = await fetchAction("getKarbantartasok", { id: user.id, ...filter });
+    const updatedResult = await fetchAction("getKarbantartasok", { id: user.ceg_id, ...filter });
     if (updatedResult?.success) {
       setKarbantartasok(updatedResult.karbantartasok);
     }
@@ -245,7 +254,7 @@ const Karbantartasok = () => {
   };
 
   const renderFileUpload = (karbantartasId) => (
-    <div className="rounded-xl border border-ink-100 bg-sand-50 p-3">
+    <div className="rounded-xl border border-ink-100 bg-slate-50 p-3">
       <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-ink-600 shadow-soft transition-colors duration-200 hover:bg-brand-50 hover:text-brand-700">
         <PiUploadSimpleLight className="h-4 w-4" />
         Fájlok feltöltése
@@ -304,6 +313,11 @@ const Karbantartasok = () => {
     { key: "km_oraallas", label: "Km óraállás" },
     { key: "elvegezte", label: "Elvégezte" },
     {
+      key: "koltseg",
+      label: "Költség",
+      render: (row) => (row.koltseg ? formatHuf(row.koltseg) : "—"),
+    },
+    {
       key: "status",
       label: "Státusz",
       render: (row) => {
@@ -340,6 +354,10 @@ const Karbantartasok = () => {
   ];
 
   const activeFilterCount = Object.values(filter).filter(Boolean).length;
+  const osszesKoltseg = karbantartasok.reduce(
+    (sum, karb) => sum + (parseFloat(karb.koltseg) || 0),
+    0
+  );
 
   return (
     <div className="mx-auto flex h-full w-full max-w-7xl flex-col">
@@ -371,6 +389,17 @@ const Karbantartasok = () => {
           }
         />
       </div>
+
+      {osszesKoltseg > 0 && (
+        <div className="mb-4 flex flex-shrink-0 items-center gap-2 rounded-2xl border border-ink-100 bg-white px-4 py-3 text-sm">
+          <span className="font-semibold uppercase tracking-wide text-ink-400">
+            Szűrt összes költség
+          </span>
+          <span className="font-display text-base font-bold text-brand-900">
+            {formatHuf(osszesKoltseg)}
+          </span>
+        </div>
+      )}
 
       <div
         className={`mb-6 flex-shrink-0 rounded-3xl bg-white p-6 shadow-soft ring-1 ring-ink-100 ${
@@ -470,6 +499,7 @@ const Karbantartasok = () => {
             setOpenDialog(true);
           }}
           addLabel="Új karbantartás"
+          exportFilename="karbantartasok"
           columns={columns}
           rows={karbantartasok}
           mobileTitleKey="rendszam"
@@ -594,6 +624,14 @@ const Karbantartasok = () => {
             onChange={handleNewKarbantartasChange}
           />
           <FormField
+            type="number"
+            label="Költség (Ft)"
+            name="koltseg"
+            value={newKarbantartas.koltseg}
+            onChange={handleNewKarbantartasChange}
+            placeholder="pl. 45000"
+          />
+          <FormField
             type="date"
             label="Következő karbantartás dátuma"
             name="kovetkezo_karbantartas"
@@ -607,7 +645,7 @@ const Karbantartasok = () => {
             <button
               type="button"
               onClick={closeDialog}
-              className="rounded-xl bg-sand-100 px-4 py-2 text-sm font-medium text-ink-600 transition-colors duration-200 hover:bg-sand-200"
+              className="rounded-xl px-4 py-2 text-sm font-medium text-ink-500 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-800"
             >
               Mégse
             </button>

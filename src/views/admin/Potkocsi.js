@@ -10,7 +10,7 @@ export default function Potkocsi() {
   useEffect(() => {
     const fetchData = async () => {
       const user = JSON.parse(sessionStorage.getItem("user"));
-      const result = await fetchAction("getPotkocsik", { id: user.id });
+      const result = await fetchAction("getPotkocsik", { id: user.ceg_id });
       if (result.success) {
         setPotkocsik(result.potkocsik || []);
       } else {
