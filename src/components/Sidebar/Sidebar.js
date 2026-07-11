@@ -14,6 +14,7 @@ import {
   PiListMagnifyingGlassLight,
   PiBuildingsLight,
   PiUsersFourLight,
+  PiMapPinLight,
 } from "react-icons/pi";
 
 import NotificationDropdown from "components/Dropdowns/NotificationDropdown.js";
@@ -77,6 +78,7 @@ const mobileGroups = [
     icon: PiFilesLight,
     items: [
       { to: "/admin/ugyfelek", icon: PiBuildingsLight, text: "Ügyfelek" },
+      { to: "/admin/helyszinek", icon: PiMapPinLight, text: "Helyszínek" },
       { to: "/admin/fajlok", icon: PiFilesLight, text: "Fájlok" },
       { to: "/admin/naplo", icon: PiListMagnifyingGlassLight, text: "Napló" },
       {
@@ -152,7 +154,7 @@ export default function Sidebar() {
           className={`group relative flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all duration-300 ease-fluid ${
             active
               ? "bg-brand-50 text-brand-700"
-              : "text-ink-500 hover:translate-x-0.5 hover:bg-sand-100 hover:text-ink-800"
+              : "text-ink-500 hover:translate-x-0.5 hover:bg-slate-100 hover:text-ink-800"
           }`}
           to={to}
         >
@@ -247,6 +249,7 @@ export default function Sidebar() {
           <SectionHeader>Egyéb</SectionHeader>
           <ul className="space-y-0.5">
             <NavItem to="/admin/ugyfelek" icon={PiBuildingsLight} text="Ügyfelek" />
+            <NavItem to="/admin/helyszinek" icon={PiMapPinLight} text="Helyszínek" />
             <NavItem to="/admin/fajlok" icon={PiFilesLight} text="Fájlok" />
             <NavItem
               to="/admin/naplo"
@@ -315,7 +318,7 @@ export default function Sidebar() {
                         className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[15px] font-medium ${
                           active
                             ? "bg-brand-50 text-brand-700"
-                            : "text-ink-600 hover:bg-sand-100"
+                            : "text-ink-600 hover:bg-slate-100"
                         }`}
                         onClick={() => setOpenGroup(null)}
                       >

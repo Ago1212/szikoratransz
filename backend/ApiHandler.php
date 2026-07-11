@@ -12,6 +12,7 @@ require 'interface/tankolasInterface.php';
 require 'interface/jarmuValtasInterface.php';
 require 'interface/ugyfelInterface.php';
 require 'interface/csapatInterface.php';
+require 'interface/helyszinInterface.php';
 class ApiHandler {
     protected string $auth_hash;
     protected array $actions = [];
@@ -87,6 +88,15 @@ class ApiHandler {
             'updateCsapattagSzerepkor' => ['id', 'ceg_id', 'szerepkor'],
             'deleteCsapattag' => ['id', 'ceg_id'],
 
+            'getHelyszinek' => ['id'],
+            'getHelyszin' => ['id'],
+            'newHelyszin' => ['admin', 'nev'],
+            'saveHelyszinData' => ['id', 'nev'],
+            'deleteHelyszin' => ['id'],
+            'getHelyszinMegjegyzesek' => ['helyszin_id'],
+            'newHelyszinMegjegyzes' => ['helyszin_id', 'szerzo_tipus', 'szerzo_id', 'szerzo_nev', 'szoveg'],
+            'deleteHelyszinMegjegyzes' => ['id'],
+
             'getAjanlatkeresek' => [],
             'updateAjanlatkeresStatusz' => ['id', 'statusz'],
 
@@ -145,7 +155,7 @@ class ApiHandler {
     }
 
     public function process(?array $request) {
-        global $kamionInterface, $potkocsiInterface, $soforokInterface, $filesInterface, $emailInterface, $bejelentesekInterface, $karbantartasInterface, $szabadsagInterface, $tankolasInterface, $jarmuValtasInterface, $ugyfelInterface, $csapatInterface;
+        global $kamionInterface, $potkocsiInterface, $soforokInterface, $filesInterface, $emailInterface, $bejelentesekInterface, $karbantartasInterface, $szabadsagInterface, $tankolasInterface, $jarmuValtasInterface, $ugyfelInterface, $csapatInterface, $helyszinInterface;
         try {
             $this->validation($request);
             $action = $request['action'];
@@ -386,6 +396,45 @@ class ApiHandler {
                         $this->logAudit($request['ceg_id'], 'admin', $request['id'], 'torles');
                     }
                     echo json_encode($result);
+                    return;
+
+                case 'getHelyszinek':
+                    echo json_encode($helyszinInterface->getHelyszinek($request['id']));
+                    return;
+                case 'getHelyszin':
+                    echo json_encode($helyszinInterface->getHelyszin($request['id']));
+                    return;
+                case 'newHelyszin':
+                    $result = $helyszinInterface->newHelyszin($request);
+                    if ($result['success']) {
+                        $this->logAudit($request['admin'] ?? null, 'helyszinek', $result['helyszin']['id'] ?? null, 'letrehozas', $request['nev'] ?? null);
+                    }
+                    echo json_encode($result);
+                    return;
+                case 'saveHelyszinData':
+                    $result = $helyszinInterface->saveHelyszinData($request);
+                    if ($result['success']) {
+                        $ownerAdmin = $this->resolveOwnerAdmin('helyszinek', $request['id']);
+                        $this->logAudit($ownerAdmin, 'helyszinek', $request['id'], 'modositas', $request['nev'] ?? null);
+                    }
+                    echo json_encode($result);
+                    return;
+                case 'deleteHelyszin':
+                    $ownerAdmin = $this->resolveOwnerAdmin('helyszinek', $request['id']);
+                    $result = $helyszinInterface->deleteHelyszin($request['id']);
+                    if ($result['success']) {
+                        $this->logAudit($ownerAdmin, 'helyszinek', $request['id'], 'torles');
+                    }
+                    echo json_encode($result);
+                    return;
+                case 'getHelyszinMegjegyzesek':
+                    echo json_encode($helyszinInterface->getHelyszinMegjegyzesek($request['helyszin_id']));
+                    return;
+                case 'newHelyszinMegjegyzes':
+                    echo json_encode($helyszinInterface->newHelyszinMegjegyzes($request));
+                    return;
+                case 'deleteHelyszinMegjegyzes':
+                    echo json_encode($helyszinInterface->deleteHelyszinMegjegyzes($request['id']));
                     return;
 
                 case 'getSzabadsagok':

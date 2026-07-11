@@ -95,7 +95,7 @@
 .description p {
   margin-top: 8px;
   padding: 10px 12px;
-  background: #faf8f4;
+  background: #f8fafc;
   border-radius: 0.75rem;
 }
 
@@ -145,7 +145,7 @@
 }
 
 .rbc-off-range-bg {
-  background: #faf8f4;
+  background: #f8fafc;
 }
 
 .rbc-header {
@@ -187,7 +187,7 @@
 
 .rbc-toolbar button {
   color: #4a4c52;
-  border: 1px solid #e7e0d2;
+  border: 1px solid #e2e8f0;
   background: none;
   padding: 7px 14px;
   border-radius: 0.6rem;

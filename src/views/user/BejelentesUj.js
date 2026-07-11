@@ -229,17 +229,17 @@ export default function BejelentesUj() {
       {(photo || video || audioBlob) && (
         <div className="-mt-2 flex flex-wrap gap-2">
           {photo && (
-            <span className="flex items-center gap-1 rounded-full bg-sand-100 px-2.5 py-1 text-[11px] text-ink-600">
+            <span className="flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] text-ink-600">
               {photo.name} <button type="button" onClick={() => setPhoto(null)}><PiXLight className="h-3 w-3" /></button>
             </span>
           )}
           {video && (
-            <span className="flex items-center gap-1 rounded-full bg-sand-100 px-2.5 py-1 text-[11px] text-ink-600">
+            <span className="flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] text-ink-600">
               {video.name} <button type="button" onClick={() => setVideo(null)}><PiXLight className="h-3 w-3" /></button>
             </span>
           )}
           {audioBlob && (
-            <span className="flex items-center gap-1 rounded-full bg-sand-100 px-2.5 py-1 text-[11px] text-ink-600">
+            <span className="flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] text-ink-600">
               Hangfelvétel <button type="button" onClick={() => setAudioBlob(null)}><PiXLight className="h-3 w-3" /></button>
             </span>
           )}

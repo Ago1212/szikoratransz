@@ -171,7 +171,7 @@ export default function JarmuValaszto() {
                   active ? "border-brand-300 ring-1 ring-brand-200" : requested ? "border-amber-300" : "border-ink-100"
                 }`}
               >
-                <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-sand-100 text-ink-500">
+                <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 text-ink-500">
                   <PiTruckLight className="h-5 w-5" />
                 </span>
                 <span className="min-w-0 flex-1">

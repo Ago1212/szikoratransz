@@ -24,6 +24,8 @@ const Bejelentesek = React.lazy(() => import("views/user/Bejelentesek.js"));
 const Tankolas = React.lazy(() => import("views/user/Tankolas.js"));
 const Profil = React.lazy(() => import("views/user/Profil.js"));
 const Ertesitesek = React.lazy(() => import("views/user/Ertesitesek.js"));
+const Helyszinek = React.lazy(() => import("views/user/Helyszinek.js"));
+const HelyszinReszletek = React.lazy(() => import("views/user/HelyszinReszletek.js"));
 
 const PrivateRoute = ({ component: Component, ...rest }) => {
   const isAuthenticated = sessionStorage.getItem("user") !== null;
@@ -40,6 +42,7 @@ const PrivateRoute = ({ component: Component, ...rest }) => {
 const desktopLinks = [
   { to: "/user/dashboard", label: "Kezdőlap" },
   { to: "/user/bejelentesek", label: "Bejelentéseim" },
+  { to: "/user/helyszinek", label: "Helyszínek" },
   { to: "/user/tankolas", label: "Tankolás" },
   { to: "/user/profil", label: "Profil" },
 ];
@@ -83,7 +86,7 @@ function DesktopNav() {
               className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150 ${
                 isActive(link.to)
                   ? "bg-brand-50 text-brand-700"
-                  : "text-ink-500 hover:bg-sand-100 hover:text-ink-800"
+                  : "text-ink-500 hover:bg-slate-100 hover:text-ink-800"
               }`}
             >
               {link.label}
@@ -97,7 +100,7 @@ function DesktopNav() {
             className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors duration-150 ${
               isActive("/user/ertesitesek")
                 ? "bg-brand-50 text-brand-600"
-                : "text-ink-400 hover:bg-sand-100"
+                : "text-ink-400 hover:bg-slate-100"
             }`}
             aria-label="Értesítések"
           >
@@ -164,6 +167,12 @@ export default function User() {
               path="/user/ertesitesek"
               exact
               component={Ertesitesek}
+            />
+            <PrivateRoute path="/user/helyszinek" exact component={Helyszinek} />
+            <PrivateRoute
+              path="/user/helyszin-reszletek"
+              exact
+              component={HelyszinReszletek}
             />
             <Redirect from="/user" to="/user/dashboard" />
           </Switch>

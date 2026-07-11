@@ -10,7 +10,7 @@
   }
 
   body {
-    @apply bg-sand-25 text-brand-900 antialiased;
+    @apply bg-slate-50 text-brand-900 antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 

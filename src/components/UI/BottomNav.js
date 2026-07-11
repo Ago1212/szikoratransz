@@ -3,6 +3,8 @@ import { Link, useLocation } from "react-router-dom";
 import {
   PiSquaresFourLight,
   PiSquaresFourFill,
+  PiMapPinLight,
+  PiMapPinFill,
   PiWarningCircleLight,
   PiWarningCircleFill,
   PiUserLight,
@@ -15,9 +17,12 @@ import {
 // egy kézzel, gondolkodás nélkül kell elérni). A jármű-kiválasztás,
 // dokumentumok, tankolás és értesítések szándékosan nincsenek itt —
 // azok a Kezdőlap gyorsműveletein keresztül érhetők el, hogy a sáv ne
-// zsúfolódjon túl (ld. a sofőr UX terv 01. pontját).
+// zsúfolódjon túl (ld. a sofőr UX terv 01. pontját). A Helyszínek viszont
+// elég gyakran kellő eligazodási segédlet ahhoz, hogy önálló, mindig
+// elérhető sávelem legyen, ne csak a Kezdőlap gyorsműveletei közt.
 const items = [
   { to: "/user/dashboard", label: "Kezdőlap", icon: PiSquaresFourLight, activeIcon: PiSquaresFourFill },
+  { to: "/user/helyszinek", label: "Helyszínek", icon: PiMapPinLight, activeIcon: PiMapPinFill },
   { to: "/user/bejelentes/uj", label: "Bejelentés", icon: PiWarningCircleLight, activeIcon: PiWarningCircleFill, fab: true },
   { to: "/user/profil", label: "Profil", icon: PiUserLight, activeIcon: PiUserFill },
 ];

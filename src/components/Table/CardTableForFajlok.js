@@ -158,7 +158,7 @@ export default function CardTableForFajlok({ id, tabla }) {
       label: "Fájlnév",
       render: (row) => (
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-sand-100">
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100">
             {getFileIcon(row.filename)}
           </div>
           <div className="max-w-xs truncate text-sm font-medium text-brand-900">

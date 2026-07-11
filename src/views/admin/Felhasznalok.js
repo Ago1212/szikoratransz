@@ -1,12 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useHistory } from "react-router-dom";
 import {
-  PiUsersFourLight,
   PiPlusLight,
   PiTrashLight,
   PiCrownSimpleLight,
   PiPencilSimpleLight,
   PiMagnifyingGlassLight,
+  PiUserGearLight,
+  PiMapTrifoldLight,
+  PiSteeringWheelLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
@@ -17,6 +19,14 @@ import Spinner from "components/UI/Spinner.js";
 const SZEREPKOR_LABEL = {
   admin: "Adminisztrátor",
   fuvarszervezo: "Fuvarszervező",
+};
+
+// Ugyanazok az ikonok, mint az UjFelhasznalo.js szerepkör-választójában —
+// itt a listában a felhasználó szerepköréhez kötve jelennek meg soronként.
+const ROLE_ICON = {
+  admin: PiUserGearLight,
+  fuvarszervezo: PiMapTrifoldLight,
+  sofor: PiSteeringWheelLight,
 };
 
 const FILTERS = [
@@ -179,9 +189,17 @@ export default function Felhasznalok() {
               key={`${row.tipus}-${row.id}`}
               className="flex items-center gap-3 rounded-2xl border border-ink-100 bg-white p-4 shadow-soft"
             >
-              <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600">
-                <PiUsersFourLight className="h-5 w-5" />
-              </span>
+              {(() => {
+                const RoleIcon =
+                  row.tipus === "sofor"
+                    ? ROLE_ICON.sofor
+                    : ROLE_ICON[row.szerepkor] || ROLE_ICON.admin;
+                return (
+                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600">
+                    <RoleIcon className="h-5 w-5" />
+                  </span>
+                );
+              })()}
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="truncate text-sm font-semibold text-ink-900">{row.name}</p>
@@ -207,19 +225,28 @@ export default function Felhasznalok() {
               </div>
 
               {row.tipus === "csapattag" ? (
-                <FormField
-                  as="select"
-                  value={row.szerepkor || "admin"}
-                  onChange={(e) => handleSzerepkorChange(row, e.target.value)}
-                  className="w-44 flex-shrink-0"
-                  inputClassName="text-xs py-1.5"
-                >
-                  {Object.entries(SZEREPKOR_LABEL).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </FormField>
+                row.isRoot ? (
+                  <span
+                    className="w-44 flex-shrink-0 truncate rounded-lg bg-ink-50 px-3 py-1.5 text-center text-xs font-semibold text-ink-500"
+                    title="A cégtulajdonos szerepköre fixen adminisztrátor, nem módosítható."
+                  >
+                    {SZEREPKOR_LABEL.admin}
+                  </span>
+                ) : (
+                  <FormField
+                    as="select"
+                    value={row.szerepkor || "admin"}
+                    onChange={(e) => handleSzerepkorChange(row, e.target.value)}
+                    className="w-44 flex-shrink-0"
+                    inputClassName="text-xs py-1.5"
+                  >
+                    {Object.entries(SZEREPKOR_LABEL).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </FormField>
+                )
               ) : (
                 <button
                   type="button"

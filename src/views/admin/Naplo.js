@@ -12,6 +12,8 @@ const TABLA_LABEL = {
   bejelentesek: "Bejelentés",
   sofor_szabadsag: "Szabadság",
   ugyfelek: "Ügyfél",
+  helyszinek: "Helyszín",
+  admin: "Csapattag",
 };
 
 const MUVELET_TONE = {

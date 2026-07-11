@@ -32,7 +32,7 @@ export default function Modal({ open, onClose, title, children, maxWidth = "max-
             <button
               type="button"
               onClick={onClose}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-400 transition-colors duration-200 hover:bg-sand-100 hover:text-ink-700"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-400 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-700"
             >
               <PiXLight className="h-4 w-4" />
             </button>
@@ -65,7 +65,7 @@ export default function Modal({ open, onClose, title, children, maxWidth = "max-
             <button
               type="button"
               onClick={onClose}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-400 transition-colors duration-200 hover:bg-sand-100 hover:text-ink-700"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-400 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-700"
             >
               <PiXLight className="h-4 w-4" />
             </button>

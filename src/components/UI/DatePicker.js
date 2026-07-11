@@ -138,7 +138,7 @@ export default function DatePicker({
               <button
                 type="button"
                 onClick={() => setViewMonth((m) => subMonths(m, 1))}
-                className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-400 transition-colors duration-150 hover:bg-sand-100 hover:text-ink-700"
+                className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-400 transition-colors duration-150 hover:bg-slate-100 hover:text-ink-700"
               >
                 <PiCaretLeftLight className="h-4 w-4" />
               </button>
@@ -148,7 +148,7 @@ export default function DatePicker({
               <button
                 type="button"
                 onClick={() => setViewMonth((m) => addMonths(m, 1))}
-                className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-400 transition-colors duration-150 hover:bg-sand-100 hover:text-ink-700"
+                className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-400 transition-colors duration-150 hover:bg-slate-100 hover:text-ink-700"
               >
                 <PiCaretRightLight className="h-4 w-4" />
               </button>
@@ -177,8 +177,8 @@ export default function DatePicker({
                         : isToday(day)
                           ? "bg-brand-50 font-semibold text-brand-700"
                           : inMonth
-                            ? "text-ink-700 hover:bg-sand-100"
-                            : "text-ink-300 hover:bg-sand-50"
+                            ? "text-ink-700 hover:bg-slate-100"
+                            : "text-ink-300 hover:bg-slate-50"
                     }`}
                   >
                     {format(day, "d")}

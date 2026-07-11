@@ -8,6 +8,7 @@ import {
   PiGasPumpLight,
   PiPhoneLight,
   PiCaretRightLight,
+  PiMapPinLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import StatusBadge from "components/UI/StatusBadge.js";
@@ -22,6 +23,7 @@ const quickActions = [
   { to: "/user/bejelentes/uj", icon: PiWarningCircleLight, label: "Bejelentés", tone: "danger" },
   { to: "/user/jarmu-valaszto", icon: PiTruckLight, label: "Kamion", tone: "brand" },
   { to: "/user/potkocsi-valaszto", icon: PiTruckTrailerLight, label: "Pótkocsi", tone: "brand" },
+  { to: "/user/helyszinek", icon: PiMapPinLight, label: "Helyszínek", tone: "brand" },
   { to: "/user/tankolas", icon: PiGasPumpLight, label: "Tankolás", tone: "brand" },
 ];
 

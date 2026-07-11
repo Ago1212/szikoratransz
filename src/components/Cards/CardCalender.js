@@ -144,7 +144,7 @@ export default function CustomCalendar() {
               {moment(selectedDate).format("YYYY. MMMM D. (dddd)")}
             </h4>
             {dayEvents.length === 0 ? (
-              <p className="rounded-xl bg-sand-50 px-3 py-4 text-center text-sm text-ink-400">
+              <p className="rounded-xl bg-slate-50 px-3 py-4 text-center text-sm text-ink-400">
                 Nincs esemény ezen a napon.
               </p>
             ) : (
@@ -152,7 +152,7 @@ export default function CustomCalendar() {
                 {dayEvents.map((event, idx) => (
                   <li
                     key={idx}
-                    className="flex items-center gap-2.5 rounded-xl bg-sand-50 px-3 py-2.5"
+                    className="flex items-center gap-2.5 rounded-xl bg-slate-50 px-3 py-2.5"
                   >
                     <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-brand-500" />
                     <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink-700">

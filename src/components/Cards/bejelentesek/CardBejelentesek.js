@@ -258,7 +258,7 @@ export default function CardBejelentesek({ initBejelentesek }) {
                     Karbantartás létrehozva ebből a bejelentésből (#{karbantartasId}) — részletek a Karbantartások listában.
                   </div>
                 ) : form.kamion_id ? (
-                  <div className="flex items-start justify-between gap-4 rounded-xl border border-ink-100 bg-sand-50 px-4 py-3">
+                  <div className="flex items-start justify-between gap-4 rounded-xl border border-ink-100 bg-slate-50 px-4 py-3">
                     <p className="text-sm text-ink-500">
                       Ha a bejelentés valós hibát ír le, itt egy kattintással létrehozhat belőle egy karbantartási rekordot a kijelölt kamionhoz.
                     </p>
@@ -282,7 +282,7 @@ export default function CardBejelentesek({ initBejelentesek }) {
 
             {!isNew && (
               <FormSection title="Csatolt fájlok" columns={1}>
-                <div className="rounded-xl border border-ink-100 bg-sand-50 p-3">
+                <div className="rounded-xl border border-ink-100 bg-slate-50 p-3">
                   <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-ink-600 shadow-soft transition-colors duration-200 hover:bg-brand-50 hover:text-brand-700">
                     <PiUploadSimpleLight className="h-4 w-4" />
                     Fájlok feltöltése

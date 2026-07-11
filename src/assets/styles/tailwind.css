@@ -735,7 +735,7 @@ html {
 
 body {
   --tw-bg-opacity: 1;
-  background-color: rgb(253 252 250 / var(--tw-bg-opacity, 1));
+  background-color: rgb(248 250 252 / var(--tw-bg-opacity, 1));
   --tw-text-opacity: 1;
   color: rgb(19 31 92 / var(--tw-text-opacity, 1));
   -webkit-font-smoothing: antialiased;
@@ -1280,6 +1280,10 @@ h1,
   aspect-ratio: 4/3;
 }
 
+.aspect-square {
+  aspect-ratio: 1 / 1;
+}
+
 .h-0 {
   height: 0px;
 }
@@ -1402,6 +1406,10 @@ h1,
 
 .max-h-\[85vh\] {
   max-height: 85vh;
+}
+
+.max-h-full {
+  max-height: 100%;
 }
 
 .min-h-0 {
@@ -1886,6 +1894,10 @@ h1,
   white-space: nowrap;
 }
 
+.whitespace-pre-wrap {
+  white-space: pre-wrap;
+}
+
 .text-balance {
   text-wrap: balance;
 }
@@ -2230,6 +2242,10 @@ h1,
   background-color: rgb(0 0 0 / var(--tw-bg-opacity, 1));
 }
 
+.bg-black\/60 {
+  background-color: rgb(0 0 0 / 0.6);
+}
+
 .bg-blueGray-50 {
   --tw-bg-opacity: 1;
   background-color: rgb(244 244 245 / var(--tw-bg-opacity, 1));
@@ -2294,9 +2310,18 @@ h1,
   background-color: rgb(229 229 231 / var(--tw-bg-opacity, 1));
 }
 
+.bg-ink-50 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(244 244 245 / var(--tw-bg-opacity, 1));
+}
+
 .bg-ink-900 {
   --tw-bg-opacity: 1;
   background-color: rgb(26 28 31 / var(--tw-bg-opacity, 1));
+}
+
+.bg-ink-900\/90 {
+  background-color: rgb(26 28 31 / 0.9);
 }
 
 .bg-ink-950\/30 {
@@ -2356,16 +2381,6 @@ h1,
   background-color: rgb(220 38 38 / var(--tw-bg-opacity, 1));
 }
 
-.bg-sand-100 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(244 240 232 / var(--tw-bg-opacity, 1));
-}
-
-.bg-sand-50 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(250 248 244 / var(--tw-bg-opacity, 1));
-}
-
 .bg-slate-100 {
   --tw-bg-opacity: 1;
   background-color: rgb(241 245 249 / var(--tw-bg-opacity, 1));
@@ -2399,6 +2414,10 @@ h1,
 
 .bg-white\/60 {
   background-color: rgb(255 255 255 / 0.6);
+}
+
+.bg-white\/90 {
+  background-color: rgb(255 255 255 / 0.9);
 }
 
 .bg-white\/95 {
@@ -2458,6 +2477,10 @@ h1,
 
 .bg-center {
   background-position: center;
+}
+
+.object-contain {
+  object-fit: contain;
 }
 
 .object-cover {
@@ -3523,14 +3546,14 @@ h1,
   background-color: rgb(185 28 28 / var(--tw-bg-opacity, 1));
 }
 
-.hover\:bg-sand-100:hover {
+.hover\:bg-slate-100:hover {
   --tw-bg-opacity: 1;
-  background-color: rgb(244 240 232 / var(--tw-bg-opacity, 1));
+  background-color: rgb(241 245 249 / var(--tw-bg-opacity, 1));
 }
 
-.hover\:bg-sand-50:hover {
+.hover\:bg-slate-50:hover {
   --tw-bg-opacity: 1;
-  background-color: rgb(250 248 244 / var(--tw-bg-opacity, 1));
+  background-color: rgb(248 250 252 / var(--tw-bg-opacity, 1));
 }
 
 .hover\:bg-white:hover {

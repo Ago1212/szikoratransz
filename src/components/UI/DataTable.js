@@ -196,7 +196,7 @@ export default function DataTable({
         <>
           {/* Mobil nézet — önálló kártyák, könnyebben kezelhető, mint a görgethető táblázat */}
           <div
-            className={`w-full overflow-y-auto bg-sand-50 md:hidden ${bodyFillClass}`}
+            className={`w-full overflow-y-auto bg-slate-50 md:hidden ${bodyFillClass}`}
             style={{ maxHeight: bodyMaxHeight }}
           >
             {rows.length > 0 ? (
