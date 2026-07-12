@@ -8,6 +8,7 @@ import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
 
 const CardTable = ({ ugyfelek }) => {
   const history = useHistory();
+  const user = JSON.parse(sessionStorage.getItem("user"));
 
   const handleNewUgyfel = () => {
     history.push("/admin/ugyfelForm", { data: {} });
@@ -22,6 +23,7 @@ const CardTable = ({ ugyfelek }) => {
     confirmMessage: "Biztosan törölni szeretnéd az ügyfelet?",
     successMessage: "Az ügyfél sikeresen törölve.",
     listPath: "/admin/ugyfelek",
+    extraParams: { kerelmezo_id: user.id },
   });
 
   const columns = [

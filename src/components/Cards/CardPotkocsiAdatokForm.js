@@ -14,9 +14,11 @@ import {
 } from "react-icons/pi";
 import FormField, { FormSection } from "components/UI/FormField.js";
 import SaveButton from "components/UI/SaveButton.js";
-import { ALLAPOT_OPTIONS } from "components/UI/AllapotBadge.js";
+import { useListaElemek } from "utils/useListaElemek.js";
 
 const CardPotkocsiAdatokForm = ({ potkocsi, setFormData, handleSave }) => {
+  const { elemek: allapotOptions } = useListaElemek("jarmu_allapot");
+  const { elemek: utemOptions } = useListaElemek("biztositas_utem");
   const [nextKotBizInfo, setNextKotBizInfo] = useState({ date: "", amount: "" });
   const [nextKaszkoInfo, setNextKaszkoInfo] = useState({ date: "", amount: "" });
   const [editKotBizDij, setEditKotBizDij] = useState(false);
@@ -226,9 +228,9 @@ const CardPotkocsiAdatokForm = ({ potkocsi, setFormData, handleSave }) => {
           value={potkocsi.allapot || "szabad"}
           onChange={handleFormChange}
         >
-          {ALLAPOT_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
+          {allapotOptions.map((o) => (
+            <option key={o.kulcs} value={o.kulcs}>
+              {o.nev}
             </option>
           ))}
         </FormField>
@@ -305,10 +307,11 @@ const CardPotkocsiAdatokForm = ({ potkocsi, setFormData, handleSave }) => {
           onChange={handleFormChange}
         >
           <option value="">Válassz...</option>
-          <option value="Nincs">Nincs</option>
-          <option value="Negyed év">Negyed év</option>
-          <option value="Fél év">Fél év</option>
-          <option value="Éves">Éves</option>
+          {utemOptions.map((o) => (
+            <option key={o.kulcs} value={o.kulcs}>
+              {o.nev}
+            </option>
+          ))}
         </FormField>
         <FormField
           type="date"
@@ -366,10 +369,11 @@ const CardPotkocsiAdatokForm = ({ potkocsi, setFormData, handleSave }) => {
           onChange={handleFormChange}
         >
           <option value="">Válassz...</option>
-          <option value="Nincs">Nincs</option>
-          <option value="Negyed év">Negyed év</option>
-          <option value="Fél év">Fél év</option>
-          <option value="Éves">Éves</option>
+          {utemOptions.map((o) => (
+            <option key={o.kulcs} value={o.kulcs}>
+              {o.nev}
+            </option>
+          ))}
         </FormField>
         <FormField
           type="date"

@@ -14,11 +14,14 @@ import {
   PiGaugeLight,
   PiMapPinLight,
 } from "react-icons/pi";
-import { ALLAPOT_OPTIONS } from "components/UI/AllapotBadge.js";
 import FormField, { FormSection } from "components/UI/FormField.js";
 import SaveButton from "components/UI/SaveButton.js";
+import { useListaElemek } from "utils/useListaElemek.js";
 
 const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
+  const { elemek: meretOptions } = useListaElemek("kamion_meret");
+  const { elemek: allapotOptions } = useListaElemek("jarmu_allapot");
+  const { elemek: utemOptions } = useListaElemek("biztositas_utem");
   const [nextKotBizInfo, setNextKotBizInfo] = useState({ date: "", amount: "" });
   const [nextKaszkoInfo, setNextKaszkoInfo] = useState({ date: "", amount: "" });
   const [editKotBizDij, setEditKotBizDij] = useState(false);
@@ -229,11 +232,11 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
           onChange={handleFormChange}
         >
           <option value="">Válassz...</option>
-          <option value="3.5T">3.5T</option>
-          <option value="7.5T">7.5T</option>
-          <option value="12T">12T</option>
-          <option value="18T">18T</option>
-          <option value="24T">24T</option>
+          {meretOptions.map((o) => (
+            <option key={o.kulcs} value={o.kulcs}>
+              {o.nev}
+            </option>
+          ))}
         </FormField>
         <FormField
           icon={PiTruckTrailerLight}
@@ -250,9 +253,9 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
           value={kamion.allapot || "szabad"}
           onChange={handleFormChange}
         >
-          {ALLAPOT_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
+          {allapotOptions.map((o) => (
+            <option key={o.kulcs} value={o.kulcs}>
+              {o.nev}
             </option>
           ))}
         </FormField>
@@ -329,10 +332,11 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
           onChange={handleFormChange}
         >
           <option value="">Válassz...</option>
-          <option value="Nincs">Nincs</option>
-          <option value="Negyed év">Negyed év</option>
-          <option value="Fél év">Fél év</option>
-          <option value="Éves">Éves</option>
+          {utemOptions.map((o) => (
+            <option key={o.kulcs} value={o.kulcs}>
+              {o.nev}
+            </option>
+          ))}
         </FormField>
         <FormField
           type="date"
@@ -390,10 +394,11 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
           onChange={handleFormChange}
         >
           <option value="">Válassz...</option>
-          <option value="Nincs">Nincs</option>
-          <option value="Negyed év">Negyed év</option>
-          <option value="Fél év">Fél év</option>
-          <option value="Éves">Éves</option>
+          {utemOptions.map((o) => (
+            <option key={o.kulcs} value={o.kulcs}>
+              {o.nev}
+            </option>
+          ))}
         </FormField>
         <FormField
           type="date"

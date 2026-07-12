@@ -27,8 +27,10 @@ export default function Bejelentesek() {
     if (selectedKamion) {
       const fetchData = async () => {
         setIsLoading(true);
+        const user = JSON.parse(sessionStorage.getItem("user"));
         const result = await fetchAction("getBejelentesek", {
           kamion: selectedKamion,
+          kerelmezo_id: user.id,
         });
         if (result.success) {
           setBejelentesek(result.bejelentesek || []);

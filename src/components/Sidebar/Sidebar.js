@@ -15,6 +15,8 @@ import {
   PiBuildingsLight,
   PiUsersFourLight,
   PiMapPinLight,
+  PiShieldCheckLight,
+  PiListBulletsLight,
 } from "react-icons/pi";
 
 import NotificationDropdown from "components/Dropdowns/NotificationDropdown.js";
@@ -92,6 +94,24 @@ const mobileGroups = [
         icon: PiCalendarBlankLight,
         text: "Események",
       },
+      // Csak adminisztrátor szerepkörnek jelenik meg — ő állíthatja be a
+      // fuvarszervező jogosultságait, a fuvarszervezőnek maga a beállítás
+      // sem lenne elérhető (a mentés akció is admin-only a backendben).
+      {
+        to: "/admin/jogosultsagok",
+        icon: PiShieldCheckLight,
+        text: "Jogosultságok",
+        adminOnly: true,
+      },
+      // Kamionméret, jármű-állapot, bejelentés-/szabadság-típus stb.
+      // egyéni bővítése — szintén csak adminisztrátornak (a szerkesztő
+      // akciók is admin-only a backendben).
+      {
+        to: "/admin/listak",
+        icon: PiListBulletsLight,
+        text: "Listák",
+        adminOnly: true,
+      },
     ],
   },
 ];
@@ -112,6 +132,9 @@ export default function Sidebar() {
   } catch (e) {
     user = null;
   }
+  // A gyökér (cégtulajdonos) szerepköre mindig fixen 'admin' (ld.
+  // Felhasznalok.js), tehát ez a feltétel a root fiókot is helyesen lefedi.
+  const isAdmin = user?.szerepkor === "admin";
 
   const loadKerelmek = React.useCallback(() => {
     if (!user?.ceg_id) return;
@@ -124,6 +147,45 @@ export default function Sidebar() {
   React.useEffect(() => {
     loadKerelmek();
   }, [loadKerelmek]);
+
+  // A menüpontok elrejtéséhez a fuvarszervező a SAJÁT jogosultságait kéri le
+  // (nem a admin-only `getJogosultsagok`-ot) — ld. ApiHandler `getSajatJogosultsagok`
+  // komment. Amíg nem admin/root, `null` marad, és minden menüpont látszik
+  // (nincs "felvillanás, majd eltűnés" a betöltés alatt); adminnak/gyökérnek
+  // sosem kell lekérni, ő mindig mindent lát.
+  const [modulHozzaferes, setModulHozzaferes] = React.useState(null);
+  React.useEffect(() => {
+    if (isAdmin || !user?.id) return;
+    fetchAction("getSajatJogosultsagok", { kerelmezo_id: user.id }).then((result) => {
+      if (result?.success) {
+        const map = {};
+        (result.jogosultsagok || []).forEach((row) => {
+          map[row.modul] = row.hozzaferes === "I";
+        });
+        setModulHozzaferes(map);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin, user?.id]);
+
+  const MODUL_PATH = {
+    "/admin/kamionok": "kamionok",
+    "/admin/potkocsi": "potkocsik",
+    "/admin/karbantartasok": "karbantartasok",
+    "/admin/soforok": "soforok",
+    "/admin/bejelentesek": "bejelentesek",
+    "/admin/szabadsagok": "szabadsagok",
+    "/admin/ugyfelek": "ugyfelek",
+    "/admin/naplo": "naplo",
+  };
+  // Helyszínek/Fájlok/Események szándékosan nincs a fenti térképben — ezeket
+  // a backend (megosztott sofőr-hozzáférés miatt) nem korlátozza, ld.
+  // ApiHandler::MODULE_PERMISSION_MAP komment, tehát a Sidebar se rejtse el.
+  const hasAccess = (to) => {
+    const modul = MODUL_PATH[to];
+    if (!modul || isAdmin || !modulHozzaferes) return true;
+    return modulHozzaferes[modul] !== false;
+  };
 
   const handleElbiral = async (id, allapot) => {
     const result = await fetchAction("elbiralJarmuValtas", { id, allapot, admin: user.ceg_id });
@@ -153,6 +215,7 @@ export default function Sidebar() {
   };
 
   const NavItem = ({ to, icon: Icon, text, subPath }) => {
+    if (!hasAccess(to)) return null;
     const active = isActive(subPath || to);
     return (
       <li>
@@ -221,6 +284,20 @@ export default function Sidebar() {
               icon={PiUsersFourLight}
               text="Felhasználók"
             />
+            {isAdmin && (
+              <NavItem
+                to="/admin/jogosultsagok"
+                icon={PiShieldCheckLight}
+                text="Jogosultságok"
+              />
+            )}
+            {isAdmin && (
+              <NavItem
+                to="/admin/listak"
+                icon={PiListBulletsLight}
+                text="Listák"
+              />
+            )}
           </ul>
 
           <SectionHeader>Járművek</SectionHeader>
@@ -316,7 +393,7 @@ export default function Sidebar() {
             .filter((group) => group.key === openGroup)
             .map((group) => (
               <ul key={group.key} id={`mobile-group-panel-${group.key}`} className="px-2 py-1.5">
-                {group.items.map((item) => {
+                {group.items.filter((item) => (!item.adminOnly || isAdmin) && hasAccess(item.to)).map((item) => {
                   const active = isActive(item.to);
                   return (
                     <li key={item.to}>

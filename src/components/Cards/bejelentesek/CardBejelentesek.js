@@ -50,7 +50,7 @@ export default function CardBejelentesek({ initBejelentesek }) {
       const kamionResult = await fetchAction("getKamionRendszamok", { id: user.ceg_id });
       if (kamionResult?.success) setKamionok(kamionResult.kamionok);
 
-      const soforResult = await fetchAction("getSoforok", { id: user.ceg_id });
+      const soforResult = await fetchAction("getSoforok", { id: user.ceg_id, kerelmezo_id: user.id });
       if (soforResult?.success) setSoforok(soforResult.soforok);
     };
     fetchOptions();
@@ -86,7 +86,7 @@ export default function CardBejelentesek({ initBejelentesek }) {
           toast.error(result?.message || "Mentés sikertelen.");
         }
       } else {
-        const result = await fetchAction("saveBejelentesData", { id: initBejelentesek.id, ...form });
+        const result = await fetchAction("saveBejelentesData", { id: initBejelentesek.id, ...form, kerelmezo_id: user.id });
         if (result?.success) {
           toast.success("Bejelentés frissítve.");
         } else {
@@ -101,7 +101,7 @@ export default function CardBejelentesek({ initBejelentesek }) {
   const handleGenerateKarbantartas = async () => {
     setIsGenerating(true);
     try {
-      const result = await fetchAction("generateKarbantartasFromBejelentes", { id: initBejelentesek.id });
+      const result = await fetchAction("generateKarbantartasFromBejelentes", { id: initBejelentesek.id, kerelmezo_id: user.id });
       if (result?.success) {
         toast.success("Karbantartás létrehozva a bejelentésből.");
         setKarbantartasId(result.karbantartas_id);

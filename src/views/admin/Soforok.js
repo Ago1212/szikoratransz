@@ -11,7 +11,7 @@ export default function Soforok() {
   useEffect(() => {
     const fetchData = async () => {
       const user = JSON.parse(sessionStorage.getItem("user"));
-      const result = await fetchAction("getSoforok", { id: user.ceg_id });
+      const result = await fetchAction("getSoforok", { id: user.ceg_id, kerelmezo_id: user.id });
       if (result.success) {
         setSoforok(result.soforok || []);
       } else {

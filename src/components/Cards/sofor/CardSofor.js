@@ -43,6 +43,11 @@ export default function CardSoforok({ initSofor }) {
       const result = await fetchAction(action, {
         admin: storedUserData.ceg_id,
         ...formData,
+        // Csak a "newSofor" (új sofőr létrehozása) akciónál kötelező és
+        // ellenőrzött — a "saveSoforData" a sofőr saját "Profil" oldaláról
+        // is hívódik (más azonosító-táblával), ott a backend nem kéri/nézi
+        // ezt a mezőt, ártalmatlanul figyelmen kívül marad.
+        kerelmezo_id: storedUserData.id,
       });
 
       if (result?.success) {

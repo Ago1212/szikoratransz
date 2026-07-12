@@ -13,10 +13,90 @@ require 'interface/jarmuValtasInterface.php';
 require 'interface/ugyfelInterface.php';
 require 'interface/csapatInterface.php';
 require 'interface/helyszinInterface.php';
+require 'interface/jogosultsagInterface.php';
+require 'interface/szerepkorInterface.php';
+require 'interface/listaInterface.php';
 class ApiHandler {
     protected string $auth_hash;
     protected array $actions = [];
     protected $db;
+
+    // Azok az akciók, amik csapattagok jogosultságát/tagságát módosítják —
+    // a legvilágosabb privilégium-eszkalációs kockázat, ha bárki (nem csak
+    // adminisztrátor szerepkörű csapattag) meghívhatná őket. Korábban a
+    // `szerepkor` mező szándékosan tisztán tájékoztató jellegű volt (ld.
+    // CsapatInterface komment) — ez a lista + a validation()-ban lévő
+    // ellenőrzés az első lépés afelé, hogy tényleg kényszerítve legyen.
+    // A jogosultsag-mátrix megtekintése/mentése is ide tartozik: ezt is
+    // csak adminisztrátor szerepkörű csapattag konfigurálhatja.
+    // `getSzerepkorok` szándékosan NINCS itt — a szerepkörök neveinek
+    // listázása bárkinek szükséges lehet (pl. a Felhasznalok.js lista minden
+    // sornál megjeleníti a szerepkör-címkét), ez önmagában nem érzékeny
+    // művelet. A tényleges létrehozás/törlés viszont admin-only.
+    // `getListaElemek` szándékosan NINCS itt — a sofőr (user tábla) is
+    // lekéri (pl. bejelentés típusának legördülőjéhez), csak a szerkesztés/
+    // létrehozás/törlés admin-only.
+    const ADMIN_ONLY_ACTIONS = ['newCsapattag', 'updateCsapattagSzerepkor', 'deleteCsapattag', 'getJogosultsagok', 'saveJogosultsagok', 'newSzerepkor', 'deleteSzerepkor', 'newListaElem', 'updateListaElemNev', 'deleteListaElem'];
+
+    // Akció → [modul, jogtípus] térkép a konfigurálható modul-jogosultságokhoz
+    // (ld. JogosultsagInterface::MODULOK). Csak a moduloknak megfelelő
+    // "önálló lista/CRUD" akciók szerepelnek itt — a kereszt-moduluk közötti
+    // lookup/választó akciók (pl. getKamionRendszamok, amit a Bejelentés
+    // form kamion-legördülője is használ) szándékosan NINCSENEK gate-elve,
+    // mert azok más modulok saját funkciójának részei, nem a "Kamionok"
+    // oldal megtekintése. Hasonlóan az Események modul sincs itt: a
+    // getEsemenyek ugyanaz az akció, amit a Dashboard mindenki számára
+    // elérhető naptár-widgetje is használ, ezt gate-elni a Dashboardot
+    // törné el egy korlátozott fuvarszervezőnek.
+    // FONTOS: `getKamionok`/`getPotkocsik` (a sofőr is lekéri jármű-váltáshoz
+    // és a Dashboardhoz), `newBejelentes` (a sofőr saját maga is küld
+    // bejelentést) és `saveSoforData` (a sofőr a saját "Profil" oldalán
+    // ugyanezt az akciót hívja) SZÁNDÉKOSAN NINCSENEK ebben a térképben —
+    // ezek az akciók a sofőr (user tábla, nem admin tábla) oldaláról is
+    // hívódnak, egy `kerelmezo_id`-t megkövetelő admin-szerepkör-ellenőrzés
+    // itt eltörné a sofőr-alkalmazást. A Helyszínek és a generikus Fájlok
+    // modul (fajlok tábla, `getFiles`/`fileUpload`/`deleteFile`) ugyanezért
+    // egyáltalán nem szerepel itt — mindkettő a sofőr oldalról is aktívan
+    // használt/szerkeszthető, a jelenlegi, csak admin-táblás szerepkör-
+    // ellenőrzés nélkülük biztonságosan nem vezethető be. A Jogosultsagok
+    // felületen ennek ellenére megjelennek (admin számára látható/
+    // beállítható a jövőbeli bővítéshez), de a szerver ma nem kényszeríti ki
+    // őket — ld. a felhasználónak adott végső összefoglalót.
+    const MODULE_PERMISSION_MAP = [
+        'newKamion' => ['kamionok', 'szerkesztes'],
+        'saveKamionData' => ['kamionok', 'szerkesztes'],
+        'deleteKamion' => ['kamionok', 'torles'],
+
+        'newPotkocsi' => ['potkocsik', 'szerkesztes'],
+        'savePotkocsiData' => ['potkocsik', 'szerkesztes'],
+        'deletePotkocsi' => ['potkocsik', 'torles'],
+
+        'getKarbantartasok' => ['karbantartasok', 'hozzaferes'],
+        'updateKarbantartas' => ['karbantartasok', 'szerkesztes'],
+        'deleteKarbantartas' => ['karbantartasok', 'torles'],
+        'updatePotkocsiKarbantartas' => ['karbantartasok', 'szerkesztes'],
+        'deletePotkocsiKarbantartas' => ['karbantartasok', 'torles'],
+
+        'getSoforok' => ['soforok', 'hozzaferes'],
+        'newSofor' => ['soforok', 'szerkesztes'],
+        'deleteSofor' => ['soforok', 'torles'],
+
+        'getBejelentesek' => ['bejelentesek', 'hozzaferes'],
+        'saveBejelentesData' => ['bejelentesek', 'szerkesztes'],
+        'deleteBejelentes' => ['bejelentesek', 'torles'],
+        'generateKarbantartasFromBejelentes' => ['bejelentesek', 'szerkesztes'],
+
+        'getSzabadsagok' => ['szabadsagok', 'hozzaferes'],
+        'newSzabadsag' => ['szabadsagok', 'szerkesztes'],
+        'deleteSzabadsag' => ['szabadsagok', 'torles'],
+
+        'getUgyfelek' => ['ugyfelek', 'hozzaferes'],
+        'newUgyfel' => ['ugyfelek', 'szerkesztes'],
+        'saveUgyfelData' => ['ugyfelek', 'szerkesztes'],
+        'deleteUgyfel' => ['ugyfelek', 'torles'],
+
+        'getAuditLog' => ['naplo', 'hozzaferes'],
+    ];
 
     public function __construct(string $auth_hash) {
         $this->auth_hash = $auth_hash;
@@ -33,38 +113,38 @@ class ApiHandler {
             'getEsemenyek' => ['id'],
             'saveAdminData' => ['id'],
 
-            'newKamion' => ['rendszam'],
-            'saveKamionData' => ['id'],
+            'newKamion' => ['rendszam', 'kerelmezo_id'],
+            'saveKamionData' => ['id', 'kerelmezo_id'],
             'getKamionok' => ['id'],
             'getKamionValaszto' => ['user'],
-            'deleteKamion' => ['id'],
+            'deleteKamion' => ['id', 'kerelmezo_id'],
             'getKamionRendszamok' => ['id'],
 
-            'newPotkocsi' => ['rendszam'],
-            'savePotkocsiData' => ['id'],
+            'newPotkocsi' => ['rendszam', 'kerelmezo_id'],
+            'savePotkocsiData' => ['id', 'kerelmezo_id'],
             'getPotkocsik' => ['id'],
-            'deletePotkocsi' => ['id'],
+            'deletePotkocsi' => ['id', 'kerelmezo_id'],
             'getPotkocsiRendszamok' => ['id'],
 
-            'deleteKarbantartas' => ['id'],
-            'updateKarbantartas' => ['admin', 'log', 'kamion_id', 'datum', 'km_oraallas', 'elvegezte'],
+            'deleteKarbantartas' => ['id', 'kerelmezo_id'],
+            'updateKarbantartas' => ['admin', 'log', 'kamion_id', 'datum', 'km_oraallas', 'elvegezte', 'kerelmezo_id'],
             'getKarbantartas' => ['kamion_id'],
-            'deletePotkocsiKarbantartas' => ['id'],
-            'updatePotkocsiKarbantartas' => ['admin', 'log', 'potkocsi_id', 'datum', 'km_oraallas', 'elvegezte'],
+            'deletePotkocsiKarbantartas' => ['id', 'kerelmezo_id'],
+            'updatePotkocsiKarbantartas' => ['admin', 'log', 'potkocsi_id', 'datum', 'km_oraallas', 'elvegezte', 'kerelmezo_id'],
             'getPotkocsiKarbantartas' => ['potkocsi_id'],
-            'getKarbantartasok' => ['id', 'kamion_id', 'potkocsi_id',  'datumTol', 'datumIg', 'elvegezte'],
+            'getKarbantartasok' => ['id', 'kamion_id', 'potkocsi_id',  'datumTol', 'datumIg', 'elvegezte', 'kerelmezo_id'],
 
-            'getSoforok' => ['id'],
+            'getSoforok' => ['id', 'kerelmezo_id'],
             'getSajatSofor' => ['id'],
-            'newSofor' => ['name', 'email'],
+            'newSofor' => ['name', 'email', 'kerelmezo_id'],
             'saveSoforData' => ['id'],
-            'deleteSofor' => ['id'],
+            'deleteSofor' => ['id', 'kerelmezo_id'],
 
-            'getBejelentesek' => ['kamion'],
+            'getBejelentesek' => ['kamion', 'kerelmezo_id'],
             'getBejelentesekSofor' => ['sofor_id'],
             'newBejelentes' => ['cim', 'leiras'],
-            'saveBejelentesData' => ['id'],
-            'deleteBejelentes' => ['id'],
+            'saveBejelentesData' => ['id', 'kerelmezo_id'],
+            'deleteBejelentes' => ['id', 'kerelmezo_id'],
 
             'requestJarmuValtas' => ['admin', 'sofor_id', 'tipus', 'jarmu_id'],
             'visszavonJarmuValtas' => ['id'],
@@ -77,16 +157,16 @@ class ApiHandler {
 
             'getAdminElerhetoseg' => ['id'],
 
-            'getUgyfelek' => ['id'],
+            'getUgyfelek' => ['id', 'kerelmezo_id'],
             'getUgyfelValaszto' => ['id'],
-            'newUgyfel' => ['admin', 'nev'],
-            'saveUgyfelData' => ['id'],
-            'deleteUgyfel' => ['id'],
+            'newUgyfel' => ['admin', 'nev', 'kerelmezo_id'],
+            'saveUgyfelData' => ['id', 'kerelmezo_id'],
+            'deleteUgyfel' => ['id', 'kerelmezo_id'],
 
             'getCsapattagok' => ['id'],
-            'newCsapattag' => ['ceg_id', 'name', 'email', 'password'],
-            'updateCsapattagSzerepkor' => ['id', 'ceg_id', 'szerepkor'],
-            'deleteCsapattag' => ['id', 'ceg_id'],
+            'newCsapattag' => ['ceg_id', 'name', 'email', 'password', 'kerelmezo_id'],
+            'updateCsapattagSzerepkor' => ['id', 'ceg_id', 'szerepkor', 'kerelmezo_id'],
+            'deleteCsapattag' => ['id', 'ceg_id', 'kerelmezo_id'],
 
             'getHelyszinek' => ['id'],
             'getHelyszin' => ['id'],
@@ -100,13 +180,26 @@ class ApiHandler {
             'getAjanlatkeresek' => [],
             'updateAjanlatkeresStatusz' => ['id', 'statusz'],
 
-            'getSzabadsagok' => ['id'],
-            'newSzabadsag' => ['admin', 'sofor_id', 'datum_tol', 'datum_ig'],
-            'deleteSzabadsag' => ['id'],
+            'getSzabadsagok' => ['id', 'kerelmezo_id'],
+            'newSzabadsag' => ['admin', 'sofor_id', 'datum_tol', 'datum_ig', 'kerelmezo_id'],
+            'deleteSzabadsag' => ['id', 'kerelmezo_id'],
 
-            'getAuditLog' => ['id'],
+            'getAuditLog' => ['id', 'kerelmezo_id'],
 
-            'generateKarbantartasFromBejelentes' => ['id'],
+            'generateKarbantartasFromBejelentes' => ['id', 'kerelmezo_id'],
+
+            'getJogosultsagok' => ['ceg_id', 'szerepkor', 'kerelmezo_id'],
+            'saveJogosultsagok' => ['ceg_id', 'szerepkor', 'jogosultsagok', 'kerelmezo_id'],
+            'getSajatJogosultsagok' => ['kerelmezo_id'],
+
+            'getSzerepkorok' => ['id'],
+            'newSzerepkor' => ['ceg_id', 'kulcs', 'nev', 'kerelmezo_id'],
+            'deleteSzerepkor' => ['id', 'ceg_id', 'kerelmezo_id'],
+
+            'getListaElemek' => ['id', 'tipus'],
+            'newListaElem' => ['ceg_id', 'tipus', 'kulcs', 'nev', 'kerelmezo_id'],
+            'updateListaElemNev' => ['id', 'ceg_id', 'nev', 'kerelmezo_id'],
+            'deleteListaElem' => ['id', 'ceg_id', 'kerelmezo_id'],
 
             'requestPasswordReset' => ['email'],
             'resetPassword' => ['token', 'password'],
@@ -152,10 +245,91 @@ class ApiHandler {
         if (isset($request['email']) && isset($request['id'])) {
             $this->validateUniqueEmail($request['email'], $request['id']);
         }
+
+        if (in_array($request['action'], self::ADMIN_ONLY_ACTIONS, true)) {
+            $this->requireAdminRole($request);
+        } elseif (array_key_exists($request['action'], self::MODULE_PERMISSION_MAP)) {
+            [$modul, $tipus] = self::MODULE_PERMISSION_MAP[$request['action']];
+            $this->requirePermission($request, $modul, $tipus);
+        }
+    }
+
+    // Feloldja, hogy ki a kérelmező (`kerelmezo_id`), és visszaadja a
+    // tényleges, adatbázisban tárolt szerepkörét + a saját cégét (ceg_id) —
+    // `requireAdminRole()` és `requirePermission()` is ezt használja, hogy
+    // a lekérdezés/ellenőrzés logikája egy helyen éljen.
+    //
+    // Fontos korlát: a rendszernek nincs szerver-oldali munkamenete
+    // (session/JWT) — a `kerelmezo_id`-t is a kliens küldi, akárcsak
+    // minden más azonosítót ebben az API-ban. Ez tehát nem cserélhetetlen
+    // hitelesítés, de a tényleges, adatbázisban tárolt szerepkört
+    // kényszeríti ki a korábbi, semmit nem ellenőrző állapothoz képest —
+    // egy fuvarszervező szerepkörű, valódi bejelentkezéssel rendelkező
+    // felhasználó a saját kliensén keresztül sem tudja megkerülni.
+    private function resolveKerelmezo(array $request): array {
+        $kerelmezoId = $request['kerelmezo_id'] ?? null;
+        if (empty($kerelmezoId)) {
+            throw new Exception('Hiányzó kérelmező azonosító.');
+        }
+
+        $stmt = $this->db->prepare("SELECT id, szerepkor, tulajdonos_admin_id FROM admin WHERE id = :id AND torolt <> 'I'");
+        $stmt->bindValue(':id', $kerelmezoId);
+        $stmt->execute();
+        $kerelmezo = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$kerelmezo) {
+            throw new Exception('A kérelmező fiók nem található.');
+        }
+
+        $kerelmezo['is_root'] = empty($kerelmezo['tulajdonos_admin_id']);
+        $kerelmezo['ceg_id'] = $kerelmezo['is_root'] ? $kerelmezo['id'] : $kerelmezo['tulajdonos_admin_id'];
+
+        // Emellett azt is ellenőrizzük, hogy a kérelmező tényleg ahhoz a
+        // céghez tartozik-e, amelyikre a kérés vonatkozik (`ceg_id`) —
+        // enélkül egy másik cég csapattagja is beküldhetne egy tetszőleges
+        // `kerelmezo_id`-t.
+        if (isset($request['ceg_id']) && (string) $kerelmezo['ceg_id'] !== (string) $request['ceg_id']) {
+            throw new Exception('A kérelmező nem ehhez a céghez tartozik.');
+        }
+
+        return $kerelmezo;
+    }
+
+    private function requireAdminRole(array $request) {
+        $kerelmezo = $this->resolveKerelmezo($request);
+        if (!$kerelmezo['is_root'] && $kerelmezo['szerepkor'] !== 'admin') {
+            throw new Exception('Ehhez a művelethez adminisztrátori jogosultság szükséges.');
+        }
+    }
+
+    // Konfigurálható modul-jogosultság ellenőrzése (Jogosultsagok oldal) —
+    // admin/gyökér mindig mindent tud, más szerepkörnél az adatbázisban
+    // tárolt beállítást nézzük; hiányzó sor = alapértelmezett teljes
+    // hozzáférés (ld. JogosultsagInterface::getJogosultsagok komment).
+    private function requirePermission(array $request, string $modul, string $tipus) {
+        $kerelmezo = $this->resolveKerelmezo($request);
+        if ($kerelmezo['is_root'] || $kerelmezo['szerepkor'] === 'admin') {
+            return;
+        }
+
+        if (!in_array($tipus, ['hozzaferes', 'szerkesztes', 'torles'], true)) {
+            throw new Exception('Ismeretlen jogosultság-típus.');
+        }
+
+        $stmt = $this->db->prepare("SELECT $tipus AS ertek FROM jogosultsagok WHERE admin = :ceg_id AND szerepkor = :szerepkor AND modul = :modul");
+        $stmt->bindValue(':ceg_id', $kerelmezo['ceg_id']);
+        $stmt->bindValue(':szerepkor', $kerelmezo['szerepkor']);
+        $stmt->bindValue(':modul', $modul);
+        $stmt->execute();
+        $sor = $stmt->fetch(PDO::FETCH_ASSOC);
+        $ertek = $sor['ertek'] ?? 'I';
+
+        if ($ertek !== 'I') {
+            throw new Exception('Nincs jogosultságod ehhez a művelethez.');
+        }
     }
 
     public function process(?array $request) {
-        global $kamionInterface, $potkocsiInterface, $soforokInterface, $filesInterface, $emailInterface, $bejelentesekInterface, $karbantartasInterface, $szabadsagInterface, $tankolasInterface, $jarmuValtasInterface, $ugyfelInterface, $csapatInterface, $helyszinInterface;
+        global $kamionInterface, $potkocsiInterface, $soforokInterface, $filesInterface, $emailInterface, $bejelentesekInterface, $karbantartasInterface, $szabadsagInterface, $tankolasInterface, $jarmuValtasInterface, $ugyfelInterface, $csapatInterface, $helyszinInterface, $jogosultsagInterface, $szerepkorInterface, $listaInterface;
         try {
             $this->validation($request);
             $action = $request['action'];
@@ -394,6 +568,71 @@ class ApiHandler {
                     $result = $csapatInterface->deleteCsapattag($request['id'], $request['ceg_id']);
                     if ($result['success']) {
                         $this->logAudit($request['ceg_id'], 'admin', $request['id'], 'torles');
+                    }
+                    echo json_encode($result);
+                    return;
+
+                case 'getJogosultsagok':
+                    echo json_encode($jogosultsagInterface->getJogosultsagok($request['ceg_id'], $request['szerepkor']));
+                    return;
+                case 'saveJogosultsagok':
+                    $result = $jogosultsagInterface->saveJogosultsagok($request['ceg_id'], $request['szerepkor'], $request['jogosultsagok']);
+                    if ($result['success']) {
+                        $this->logAudit($request['ceg_id'], 'jogosultsagok', $request['ceg_id'], 'modositas', 'szerepkör: ' . $request['szerepkor']);
+                    }
+                    echo json_encode($result);
+                    return;
+
+                // Önkiszolgáló lekérdezés — bárki (nem csak admin) lekérheti a
+                // SAJÁT szerepköréhez tartozó jogosultságokat (a Sidebar ez
+                // alapján rejti el a hozzá nem férhető menüpontokat). Admin/
+                // gyökér hívónál ez mindig teljes hozzáférést ad vissza, mivel
+                // a `jogosultsagok` táblában sosem szerepel 'admin' szerepkörű
+                // sor — a hiányzó sor pedig alapértelmezetten teljes hozzáférés.
+                case 'getSajatJogosultsagok':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($jogosultsagInterface->getJogosultsagok($kerelmezo['ceg_id'], $kerelmezo['szerepkor']));
+                    return;
+
+                case 'getSzerepkorok':
+                    echo json_encode($szerepkorInterface->getSzerepkorok($request['id']));
+                    return;
+                case 'newSzerepkor':
+                    $result = $szerepkorInterface->newSzerepkor($request['ceg_id'], $request['kulcs'], $request['nev']);
+                    if ($result['success']) {
+                        $this->logAudit($request['ceg_id'], 'szerepkorok', $result['szerepkor']['id'] ?? null, 'letrehozas', $request['nev'] ?? null);
+                    }
+                    echo json_encode($result);
+                    return;
+                case 'deleteSzerepkor':
+                    $result = $szerepkorInterface->deleteSzerepkor($request['id'], $request['ceg_id']);
+                    if ($result['success']) {
+                        $this->logAudit($request['ceg_id'], 'szerepkorok', $request['id'], 'torles');
+                    }
+                    echo json_encode($result);
+                    return;
+
+                case 'getListaElemek':
+                    echo json_encode($listaInterface->getListaElemek($request['id'], $request['tipus']));
+                    return;
+                case 'newListaElem':
+                    $result = $listaInterface->newListaElem($request['ceg_id'], $request['tipus'], $request['kulcs'], $request['nev']);
+                    if ($result['success']) {
+                        $this->logAudit($request['ceg_id'], 'listaelemek', $result['elem']['id'] ?? null, 'letrehozas', $request['tipus'] . ': ' . $request['nev']);
+                    }
+                    echo json_encode($result);
+                    return;
+                case 'updateListaElemNev':
+                    $result = $listaInterface->updateListaElemNev($request['id'], $request['ceg_id'], $request['nev']);
+                    if ($result['success']) {
+                        $this->logAudit($request['ceg_id'], 'listaelemek', $request['id'], 'modositas', $request['nev']);
+                    }
+                    echo json_encode($result);
+                    return;
+                case 'deleteListaElem':
+                    $result = $listaInterface->deleteListaElem($request['id'], $request['ceg_id']);
+                    if ($result['success']) {
+                        $this->logAudit($request['ceg_id'], 'listaelemek', $request['id'], 'torles');
                     }
                     echo json_encode($result);
                     return;

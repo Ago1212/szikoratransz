@@ -13,6 +13,7 @@ import AllapotBadge from "components/UI/AllapotBadge.js";
 
 const CardTable = ({ potkocsik }) => {
   const history = useHistory();
+  const user = JSON.parse(sessionStorage.getItem("user"));
 
   const handleNewPotkocsi = () => {
     history.push("/admin/potkocsiForm", { data: {} });
@@ -27,6 +28,7 @@ const CardTable = ({ potkocsik }) => {
     confirmMessage: "Biztosan törölni szeretnéd a pótkocsit?",
     successMessage: "A pótkocsi sikeresen törölve.",
     listPath: "/admin/potkocsi",
+    extraParams: { kerelmezo_id: user.id },
   });
 
   const columns = [

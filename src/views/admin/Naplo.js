@@ -14,6 +14,9 @@ const TABLA_LABEL = {
   ugyfelek: "Ügyfél",
   helyszinek: "Helyszín",
   admin: "Csapattag",
+  jogosultsagok: "Jogosultságok",
+  szerepkorok: "Szerepkörök",
+  listaelemek: "Listaelem",
 };
 
 const MUVELET_TONE = {
@@ -33,7 +36,7 @@ export default function Naplo() {
 
   useEffect(() => {
     const user = JSON.parse(sessionStorage.getItem("user"));
-    fetchAction("getAuditLog", { id: user.ceg_id })
+    fetchAction("getAuditLog", { id: user.ceg_id, kerelmezo_id: user.id })
       .then((result) => {
         if (result?.success) setNaplo(result.naplo || []);
       })

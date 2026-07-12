@@ -26,6 +26,8 @@ import Felhasznalok from "views/admin/Felhasznalok.js";
 import UjFelhasznalo from "views/admin/UjFelhasznalo.js";
 import Helyszinek from "views/admin/Helyszinek.js";
 import HelyszinForm from "views/admin/HelyszinForm.js";
+import Jogosultsagok from "views/admin/Jogosultsagok.js";
+import Listak from "views/admin/Listak.js";
 
 const PrivateRoute = ({ component: Component, ...rest }) => {
   const isAuthenticated = sessionStorage.getItem("user") !== null;
@@ -100,6 +102,8 @@ export default function Admin() {
             <PrivateRoute path="/admin/ugyfelForm" exact component={UgyfelForm} />
             <PrivateRoute path="/admin/felhasznalok" exact component={Felhasznalok} />
             <PrivateRoute path="/admin/felhasznalok/uj" exact component={UjFelhasznalo} />
+            <PrivateRoute path="/admin/jogosultsagok" exact component={Jogosultsagok} />
+            <PrivateRoute path="/admin/listak" exact component={Listak} />
             <PrivateRoute path="/admin/helyszinek" exact component={Helyszinek} />
             <PrivateRoute path="/admin/helyszinForm" exact component={HelyszinForm} />
             <Route path="/login" exact component={LoginPage} />

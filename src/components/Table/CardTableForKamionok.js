@@ -9,6 +9,7 @@ import AllapotBadge from "components/UI/AllapotBadge.js";
 
 const CardTable = ({ kamionok }) => {
   const history = useHistory();
+  const user = JSON.parse(sessionStorage.getItem("user"));
 
   const handleNewKamion = () => {
     history.push("/admin/kamionForm", { data: {} });
@@ -23,6 +24,7 @@ const CardTable = ({ kamionok }) => {
     confirmMessage: "Biztosan törölni szeretnéd a kamiont?",
     successMessage: "A kamion sikeresen törölve.",
     listPath: "/admin/kamionok",
+    extraParams: { kerelmezo_id: user.id },
   });
 
   const columns = [

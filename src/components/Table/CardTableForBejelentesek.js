@@ -15,6 +15,7 @@ const STATUSZ_LABEL = { uj: "Új", folyamatban: "Folyamatban", lezart: "Lezárt"
 
 export default function CardTable({ bejelentesek, isLoading, selectedKamion }) {
   const history = useHistory();
+  const user = JSON.parse(sessionStorage.getItem("user"));
 
   const handleNewBejelentes = () => {
     history.push("/admin/bejelentesForm", { data: { kamion_id: selectedKamion || "" } });
@@ -28,6 +29,7 @@ export default function CardTable({ bejelentesek, isLoading, selectedKamion }) {
     confirmMessage: "Biztosan törölni szeretnéd a bejelentést?",
     successMessage: "A bejelentés sikeresen törölve.",
     listPath: "/admin/bejelentesek",
+    extraParams: { kerelmezo_id: user.id },
   });
 
   const columns = [

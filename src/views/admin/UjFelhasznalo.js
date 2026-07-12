@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 import {
   PiArrowLeftLight,
   PiUserGearLight,
-  PiMapTrifoldLight,
+  PiIdentificationBadgeLight,
   PiSteeringWheelLight,
   PiCheckCircleFill,
 } from "react-icons/pi";
@@ -13,25 +13,36 @@ import PageHeader from "components/UI/PageHeader.js";
 import PageCard from "components/UI/PageCard.js";
 import FormField, { FormSection } from "components/UI/FormField.js";
 import SaveButton from "components/UI/SaveButton.js";
+import Spinner from "components/UI/Spinner.js";
 
 // Egyetlen belépési pont minden új embernek — korábban a Csapat és a
 // Sofőrök menüpont két külön, egymástól független formot mutatott.
 // Itt a szerepkör-választás történik ELSŐKÉNT, ez dönti el, hogy a
 // meglévő csapattag- vagy sofőr-létrehozó folyamat veszi-e át (ld. a
 // felhasználókezelés-elemzés 08. pontját).
-const ROLES = [
-  { key: "admin", label: "Adminisztrátor", desc: "Teljes hozzáférés minden menüponthoz.", icon: PiUserGearLight },
-  { key: "fuvarszervezo", label: "Fuvarszervező", desc: "Csapattag — ma ugyanaz a hozzáférése, mint az adminnak.", icon: PiMapTrifoldLight },
-];
-
+//
+// A szerepkörök listája mostantól cégenként egyénileg bővíthető (ld.
+// Jogosultsagok.js) — az 'admin' szerepkör mindig fix ikont kap, minden
+// egyéb (egyénileg létrehozott) szerepkör ugyanazt az általános ikont
+// használja, mivel a rendszer nem tud előre kitalálni hozzá egyedit.
 const emptyForm = { name: "", email: "", phone: "", password: "" };
 
 export default function UjFelhasznalo() {
   const history = useHistory();
   const user = JSON.parse(sessionStorage.getItem("user"));
+  const [szerepkorok, setSzerepkorok] = useState([]);
+  const [loadingSzerepkorok, setLoadingSzerepkorok] = useState(true);
   const [selectedRole, setSelectedRole] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    fetchAction("getSzerepkorok", { id: user.ceg_id }).then((result) => {
+      if (result?.success) setSzerepkorok(result.szerepkorok || []);
+      setLoadingSzerepkorok(false);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSelectSofor = () => {
     history.push("/admin/soforForm", { data: {} });
@@ -49,6 +60,7 @@ export default function UjFelhasznalo() {
       const result = await fetchAction("newCsapattag", {
         ceg_id: user.ceg_id,
         szerepkor: selectedRole,
+        kerelmezo_id: user.id,
         ...form,
       });
       if (result?.success) {
@@ -62,7 +74,7 @@ export default function UjFelhasznalo() {
     }
   };
 
-  const roleInfo = ROLES.find((r) => r.key === selectedRole);
+  const roleInfo = szerepkorok.find((r) => r.kulcs === selectedRole);
 
   return (
     <div className="mx-auto w-full max-w-3xl">
@@ -78,43 +90,54 @@ export default function UjFelhasznalo() {
       {!selectedRole ? (
         <>
           <PageHeader eyebrow="Új felhasználó" title="Milyen szerepkörben dolgozik?" className="mb-6" />
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {ROLES.map((role) => (
+          {loadingSzerepkorok ? (
+            <Spinner wrapperClassName="flex justify-center py-16" />
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {szerepkorok.map((role) => {
+                const Icon = role.kulcs === "admin" ? PiUserGearLight : PiIdentificationBadgeLight;
+                return (
+                  <button
+                    key={role.kulcs}
+                    type="button"
+                    onClick={() => setSelectedRole(role.kulcs)}
+                    className="flex items-start gap-3 rounded-2xl border border-ink-100 bg-white p-4 text-left shadow-soft transition-colors duration-150 hover:border-brand-300 hover:bg-brand-50/40"
+                  >
+                    <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <span>
+                      <span className="block text-sm font-semibold text-ink-900">{role.nev}</span>
+                      <span className="block text-xs text-ink-500">
+                        {role.kulcs === "admin"
+                          ? "Teljes hozzáférés minden menüponthoz."
+                          : "A pontos hozzáférése a Jogosultságok oldalon állítható be."}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
               <button
-                key={role.key}
                 type="button"
-                onClick={() => setSelectedRole(role.key)}
-                className="flex items-start gap-3 rounded-2xl border border-ink-100 bg-white p-4 text-left shadow-soft transition-colors duration-150 hover:border-brand-300 hover:bg-brand-50/40"
+                onClick={handleSelectSofor}
+                className="flex items-start gap-3 rounded-2xl border border-ink-100 bg-white p-4 text-left shadow-soft transition-colors duration-150 hover:border-brand-300 hover:bg-brand-50/40 sm:col-span-2"
               >
-                <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
-                  <role.icon className="h-5 w-5" />
+                <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                  <PiSteeringWheelLight className="h-5 w-5" />
                 </span>
                 <span>
-                  <span className="block text-sm font-semibold text-ink-900">{role.label}</span>
-                  <span className="block text-xs text-ink-500">{role.desc}</span>
+                  <span className="block text-sm font-semibold text-ink-900">Sofőr</span>
+                  <span className="block text-xs text-ink-500">
+                    Saját mobil felület — jármű-hozzárendelés, bejelentések, dokumentum-lejáratok. A
+                    meglévő sofőr-felvevő űrlapra visz tovább.
+                  </span>
                 </span>
               </button>
-            ))}
-            <button
-              type="button"
-              onClick={handleSelectSofor}
-              className="flex items-start gap-3 rounded-2xl border border-ink-100 bg-white p-4 text-left shadow-soft transition-colors duration-150 hover:border-brand-300 hover:bg-brand-50/40 sm:col-span-2"
-            >
-              <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                <PiSteeringWheelLight className="h-5 w-5" />
-              </span>
-              <span>
-                <span className="block text-sm font-semibold text-ink-900">Sofőr</span>
-                <span className="block text-xs text-ink-500">
-                  Saját mobil felület — jármű-hozzárendelés, bejelentések, dokumentum-lejáratok. A
-                  meglévő sofőr-felvevő űrlapra visz tovább.
-                </span>
-              </span>
-            </button>
-          </div>
+            </div>
+          )}
         </>
       ) : (
-        <PageCard icon={roleInfo.icon} title={`Új csapattag — ${roleInfo.label}`}>
+        <PageCard icon={roleInfo?.kulcs === "admin" ? PiUserGearLight : PiIdentificationBadgeLight} title={`Új csapattag — ${roleInfo?.nev || selectedRole}`}>
           <div className="px-4 py-4 lg:px-6">
             <form onSubmit={handleSave} className="space-y-5">
               <FormSection columns={2}>

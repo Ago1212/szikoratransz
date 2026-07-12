@@ -8,6 +8,7 @@ import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
 
 const CardTable = ({ soforok }) => {
   const history = useHistory();
+  const user = JSON.parse(sessionStorage.getItem("user"));
 
   const handleNewSofor = () => {
     history.push("/admin/soforForm", { data: {} });
@@ -22,6 +23,7 @@ const CardTable = ({ soforok }) => {
     confirmMessage: "Biztosan törölni szeretnéd a sofőrt?",
     successMessage: "A sofőr sikeresen törölve.",
     listPath: "/admin/soforok",
+    extraParams: { kerelmezo_id: user.id },
   });
 
   const columns = [

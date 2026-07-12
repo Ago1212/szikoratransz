@@ -19,19 +19,23 @@ import {
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
 import { fileToBase64 } from "utils/fileToBase64.js";
+import { useListaElemek } from "utils/useListaElemek.js";
 import MobileHeader from "components/UI/MobileHeader.js";
 import SaveButton from "components/UI/SaveButton.js";
 
-const TYPES = [
-  { key: "muszaki", label: "Műszaki hiba", icon: PiWrenchLight },
-  { key: "serules", label: "Sérülés", icon: PiFirstAidLight },
-  { key: "baleset", label: "Baleset", icon: PiWarningLight },
-  { key: "gumi", label: "Gumiprobléma", icon: PiTireLight },
-  { key: "szerviz", label: "Szerviz igény", icon: PiWrenchLight },
-  { key: "felszereles", label: "Hiányzó felszerelés", icon: PiToolboxLight },
-  { key: "rakomany", label: "Rakomány probléma", icon: PiPackageLight },
-  { key: "egyeb", label: "Egyéb", icon: PiDotsThreeLight },
-];
+// Az eredeti 8 típushoz tartozó ikonok megmaradnak, egy admin által
+// hozzáadott egyéni típus pedig az általános PiDotsThreeLight ikont kapja
+// (ld. views/admin/Listak.js — a típusok listája mostantól bővíthető).
+const TYPE_ICONS = {
+  muszaki: PiWrenchLight,
+  serules: PiFirstAidLight,
+  baleset: PiWarningLight,
+  gumi: PiTireLight,
+  szerviz: PiWrenchLight,
+  felszereles: PiToolboxLight,
+  rakomany: PiPackageLight,
+  egyeb: PiDotsThreeLight,
+};
 
 const PRIORITIES = [
   { key: "alacsony", label: "Alacsony" },
@@ -93,6 +97,7 @@ export default function BejelentesUj() {
   const [location, setLocation] = useState(null);
   const [locating, setLocating] = useState(false);
   const [sending, setSending] = useState(false);
+  const { elemek: TYPES } = useListaElemek("bejelentes_tipus");
 
   const captureLocation = () => {
     if (!navigator.geolocation) {
@@ -134,7 +139,7 @@ export default function BejelentesUj() {
     const user = JSON.parse(sessionStorage.getItem("user"));
     setSending(true);
     try {
-      const typeLabel = TYPES.find((t) => t.key === tipus)?.label || "Bejelentés";
+      const typeLabel = TYPES.find((t) => t.kulcs === tipus)?.nev || "Bejelentés";
       const result = await fetchAction("newBejelentes", {
         admin: user.admin,
         sofor_id: user.id,
@@ -175,18 +180,19 @@ export default function BejelentesUj() {
         <h2 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-ink-400">Mi történt?</h2>
         <div className="grid grid-cols-4 gap-1.5">
           {TYPES.map((t) => {
-            const active = tipus === t.key;
+            const active = tipus === t.kulcs;
+            const Icon = TYPE_ICONS[t.kulcs] || PiDotsThreeLight;
             return (
               <button
-                key={t.key}
+                key={t.kulcs}
                 type="button"
-                onClick={() => setTipus(t.key)}
+                onClick={() => setTipus(t.kulcs)}
                 className={`flex flex-col items-center gap-1 rounded-xl border p-2 text-center text-[10px] font-semibold leading-tight ${
                   active ? "border-brand-400 bg-brand-50 text-brand-700" : "border-ink-100 bg-white text-ink-600"
                 }`}
               >
-                <t.icon className="h-4 w-4" />
-                {t.label}
+                <Icon className="h-4 w-4" />
+                {t.nev}
               </button>
             );
           })}

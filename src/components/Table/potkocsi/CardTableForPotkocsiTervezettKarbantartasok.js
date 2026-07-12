@@ -12,6 +12,7 @@ const CardTableForPotkocsiTervezettKarbantartasok = ({ potkocsi_id, refresh, onR
   const [openDialog, setOpenDialog] = useState(false);
   const [karbantartasok, setKarbantartasok] = useState([]);
   const [selectedKarbantartas, setSelectedKarbantartas] = useState(null);
+  const user = JSON.parse(sessionStorage.getItem("user"));
 
   const fetchKarbantartasok = async () => {
     const result = await fetchAction("getPotkocsiKarbantartas", {
@@ -59,7 +60,7 @@ const CardTableForPotkocsiTervezettKarbantartasok = ({ potkocsi_id, refresh, onR
     if (!window.confirm("Biztosan törölni szeretnéd a karbantartást?")) return;
 
     try {
-      const result = await fetchAction("deletePotkocsiKarbantartas", { id });
+      const result = await fetchAction("deletePotkocsiKarbantartas", { id, kerelmezo_id: user.id });
 
       if (result?.success) {
         toast.success("A karbantartás sikeresen törölve.");
@@ -73,7 +74,6 @@ const CardTableForPotkocsiTervezettKarbantartasok = ({ potkocsi_id, refresh, onR
     }
   };
 
-  const user = JSON.parse(sessionStorage.getItem("user"));
   const handleSave = async (e) => {
     e.preventDefault();
 
@@ -83,6 +83,7 @@ const CardTableForPotkocsiTervezettKarbantartasok = ({ potkocsi_id, refresh, onR
       datum: selectedKarbantartas?.datum,
       log: selectedKarbantartas?.log,
       potkocsi_id: potkocsi_id,
+      kerelmezo_id: user.id,
     });
 
     if (result?.success) {

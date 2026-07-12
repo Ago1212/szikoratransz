@@ -8,14 +8,14 @@ import { toast } from "utils/toast";
 // A szöveget (megerősítő kérdés, siker-üzenet) a hívó adja át, mert a
 // magyar tárgyeset ("a kamiont", "a sofőrt", "a pótkocsit", ...)
 // szavanként eltér, azt nem lehet automatikusan generálni.
-export function useConfirmDelete({ action, confirmMessage, successMessage, listPath, onSuccess }) {
+export function useConfirmDelete({ action, confirmMessage, successMessage, listPath, onSuccess, extraParams = {} }) {
   const history = useHistory();
 
   return async (id) => {
     if (!window.confirm(confirmMessage)) return;
 
     try {
-      const result = await fetchAction(action, { id });
+      const result = await fetchAction(action, { id, ...extraParams });
 
       if (result?.success) {
         if (onSuccess) {

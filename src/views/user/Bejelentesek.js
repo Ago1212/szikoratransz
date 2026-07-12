@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { PiWarningCircleLight } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
+import { useListaElemek } from "utils/useListaElemek.js";
 import MobileHeader from "components/UI/MobileHeader.js";
 import StatusBadge from "components/UI/StatusBadge.js";
 import Spinner from "components/UI/Spinner.js";
@@ -9,20 +10,11 @@ const PRIORITAS_TONE = { magas: "danger", kozepes: "warning", alacsony: "neutral
 const PRIORITAS_LABEL = { magas: "Sürgős", kozepes: "Közepes", alacsony: "Alacsony" };
 const STATUSZ_TONE = { uj: "warning", folyamatban: "info", lezart: "success" };
 const STATUSZ_LABEL = { uj: "Új", folyamatban: "Folyamatban", lezart: "Lezárva" };
-const TIPUS_LABEL = {
-  muszaki: "Műszaki hiba",
-  serules: "Sérülés",
-  baleset: "Baleset",
-  gumi: "Gumiprobléma",
-  szerviz: "Szerviz igény",
-  felszereles: "Hiányzó felszerelés",
-  rakomany: "Rakomány probléma",
-  egyeb: "Egyéb",
-};
 
 export default function Bejelentesek() {
   const [bejelentesek, setBejelentesek] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { elemek: tipusok } = useListaElemek("bejelentes_tipus");
 
   useEffect(() => {
     const user = JSON.parse(sessionStorage.getItem("user"));
@@ -51,7 +43,7 @@ export default function Bejelentesek() {
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-ink-900">{b.cim}</p>
                   <p className="mt-0.5 text-xs text-ink-400">
-                    {TIPUS_LABEL[b.tipus] || "Egyéb"}
+                    {tipusok.find((t) => t.kulcs === b.tipus)?.nev || b.tipus}
                     {b.kamion_rendszam ? ` · ${b.kamion_rendszam}` : ""}
                   </p>
                 </div>

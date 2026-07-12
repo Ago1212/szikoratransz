@@ -157,7 +157,7 @@ const Karbantartasok = () => {
 
   useEffect(() => {
     const fetchKarbantartasok = async () => {
-      const result = await fetchAction("getKarbantartasok", { id: user.ceg_id, ...filter });
+      const result = await fetchAction("getKarbantartasok", { id: user.ceg_id, ...filter, kerelmezo_id: user.id });
       if (result?.success) {
         setKarbantartasok(result.karbantartasok);
         result.karbantartasok.forEach((karb) => {
@@ -208,7 +208,7 @@ const Karbantartasok = () => {
   };
 
   const refreshList = async () => {
-    const updatedResult = await fetchAction("getKarbantartasok", { id: user.ceg_id, ...filter });
+    const updatedResult = await fetchAction("getKarbantartasok", { id: user.ceg_id, ...filter, kerelmezo_id: user.id });
     if (updatedResult?.success) {
       setKarbantartasok(updatedResult.karbantartasok);
     }
@@ -222,6 +222,7 @@ const Karbantartasok = () => {
     const result = await fetchAction(action, {
       ...newKarbantartas,
       id: editingId || undefined,
+      kerelmezo_id: user.id,
     });
 
     if (result?.success) {
@@ -233,7 +234,7 @@ const Karbantartasok = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Biztosan törölni szeretnéd a karbantartást?")) return;
 
-    const result = await fetchAction("deleteKarbantartas", { id });
+    const result = await fetchAction("deleteKarbantartas", { id, kerelmezo_id: user.id });
     if (result?.success) {
       await refreshList();
     }
