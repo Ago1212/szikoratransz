@@ -7,6 +7,8 @@ import Navbar from "components/Navbars/AuthNavbar.js";
 // views
 import Login from "views/auth/Login.js";
 import Register from "views/auth/Register.js";
+import ElfelejtettJelszo from "views/auth/ElfelejtettJelszo.js";
+import JelszoVisszaallitas from "views/auth/JelszoVisszaallitas.js";
 
 export default function Auth() {
   const history = useHistory();
@@ -46,6 +48,8 @@ export default function Auth() {
             <Switch>
               <Route path="/auth/login" exact component={Login} />
               <Route path="/auth/register" exact component={Register} />
+              <Route path="/auth/elfelejtett-jelszo" exact component={ElfelejtettJelszo} />
+              <Route path="/auth/jelszo-visszaallitas" exact component={JelszoVisszaallitas} />
               <Redirect from="/auth" to="/auth/login" />
             </Switch>
           </div>

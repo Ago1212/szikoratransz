@@ -195,6 +195,7 @@ export default function Bejelentkezes() {
       });
       if (result && result.success) {
         sessionStorage.setItem("user", JSON.stringify(result.user));
+        sessionStorage.setItem("sessionToken", result.token);
 
         if (result.user.admin) {
           history.push("/admin/dashboard");
@@ -281,6 +282,15 @@ export default function Bejelentkezes() {
             onKeyDown={handleKeyDown}
             className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-[#2F4DE0] focus:border-[#2F4DE0] transition duration-300"
           />
+        </div>
+        <div className="mt-2 text-right">
+          <button
+            type="button"
+            onClick={() => history.push("/auth/elfelejtett-jelszo")}
+            className="text-xs text-white/50 hover:text-white transition-colors duration-200"
+          >
+            Elfelejtett jelszó?
+          </button>
         </div>
       </div>
     </div>

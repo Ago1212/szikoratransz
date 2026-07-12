@@ -16,10 +16,25 @@ require 'interface/helyszinInterface.php';
 require 'interface/jogosultsagInterface.php';
 require 'interface/szerepkorInterface.php';
 require 'interface/listaInterface.php';
+require 'interface/keresesInterface.php';
 class ApiHandler {
     protected string $auth_hash;
     protected array $actions = [];
     protected $db;
+
+    // A resolveKerelmezo()/requireValidSession() által feloldott, aktuális
+    // munkamenet gyorsítótárazva — egy kérésen belül legfeljebb egyszer
+    // kérdezzük le a `sessions` táblát, még ha több ellenőrzés is lefut
+    // (validation() + resolveKerelmezo()).
+    private ?array $session = null;
+
+    // Ezek az akciók bejelentkezés (érvényes sessionToken) nélkül is
+    // meghívhatók — a bejelentkezés maga, a jelszó-visszaállítás folyamata
+    // (a felhasználó pont azért van itt, mert nincs érvényes munkamenete),
+    // a nyilvános ajánlatkérő/jelentkező űrlapok, és a kijelentkezés (ami
+    // egy már lejárt/érvénytelen tokennel is sikeresnek kell tűnjön a
+    // kliens felől, ld. logoutUser() komment).
+    const PUBLIC_ACTIONS = ['loginUser', 'logoutUser', 'requestPasswordReset', 'resetPassword', 'sendAjanlatkeres', 'sendJelentkezes'];
 
     // Azok az akciók, amik csapattagok jogosultságát/tagságát módosítják —
     // a legvilágosabb privilégium-eszkalációs kockázat, ha bárki (nem csak
@@ -201,6 +216,8 @@ class ApiHandler {
             'updateListaElemNev' => ['id', 'ceg_id', 'nev', 'kerelmezo_id'],
             'deleteListaElem' => ['id', 'ceg_id', 'kerelmezo_id'],
 
+            'globalSearch' => ['ceg_id', 'q'],
+
             'requestPasswordReset' => ['email'],
             'resetPassword' => ['token', 'password'],
 
@@ -246,6 +263,10 @@ class ApiHandler {
             $this->validateUniqueEmail($request['email'], $request['id']);
         }
 
+        if (!in_array($request['action'], self::PUBLIC_ACTIONS, true)) {
+            $this->requireValidSession($request);
+        }
+
         if (in_array($request['action'], self::ADMIN_ONLY_ACTIONS, true)) {
             $this->requireAdminRole($request);
         } elseif (array_key_exists($request['action'], self::MODULE_PERMISSION_MAP)) {
@@ -254,22 +275,55 @@ class ApiHandler {
         }
     }
 
-    // Feloldja, hogy ki a kérelmező (`kerelmezo_id`), és visszaadja a
-    // tényleges, adatbázisban tárolt szerepkörét + a saját cégét (ceg_id) —
-    // `requireAdminRole()` és `requirePermission()` is ezt használja, hogy
-    // a lekérdezés/ellenőrzés logikája egy helyen éljen.
+    // Feloldja + gyorsítótárazza az aktuális kérés munkamenetét a
+    // `sessionToken` alapján — ez a VALÓDI bizalmi horgony, nem a kliens
+    // által küldött `kerelmezo_id`/`id` mezők (ld. resolveKerelmezo() lenti
+    // komment). Lejárt/hiányzó/ismeretlen token esetén a kliensnek újra be
+    // kell jelentkeznie.
+    private function requireValidSession(array $request): array {
+        if ($this->session !== null) {
+            return $this->session;
+        }
+
+        $token = $request['sessionToken'] ?? '';
+        if ($token === '') {
+            throw new Exception('A munkamenet lejárt, jelentkezz be újra.');
+        }
+
+        $stmt = $this->db->prepare("SELECT felhasznalo_tipus, felhasznalo_id, lejarat FROM sessions WHERE token = :token");
+        $stmt->bindValue(':token', $token);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row || strtotime($row['lejarat']) < time()) {
+            throw new Exception('A munkamenet lejárt, jelentkezz be újra.');
+        }
+
+        $this->session = [
+            'felhasznalo_tipus' => $row['felhasznalo_tipus'],
+            'felhasznalo_id' => (int) $row['felhasznalo_id'],
+        ];
+        return $this->session;
+    }
+
+    // Feloldja, hogy ki a kérelmező, és visszaadja a tényleges, adatbázisban
+    // tárolt szerepkörét + a saját cégét (ceg_id) — `requireAdminRole()` és
+    // `requirePermission()` is ezt használja, hogy a lekérdezés/ellenőrzés
+    // logikája egy helyen éljen.
     //
-    // Fontos korlát: a rendszernek nincs szerver-oldali munkamenete
-    // (session/JWT) — a `kerelmezo_id`-t is a kliens küldi, akárcsak
-    // minden más azonosítót ebben az API-ban. Ez tehát nem cserélhetetlen
-    // hitelesítés, de a tényleges, adatbázisban tárolt szerepkört
-    // kényszeríti ki a korábbi, semmit nem ellenőrző állapothoz képest —
-    // egy fuvarszervező szerepkörű, valódi bejelentkezéssel rendelkező
-    // felhasználó a saját kliensén keresztül sem tudja megkerülni.
+    // A kérelmező azonosítója a validáláskor már feloldott, szerver-oldali
+    // `sessions` tábla-bejegyzésből jön (ld. requireValidSession()), NEM a
+    // kliens által küldött `kerelmezo_id` mezőből — ez utóbbi, ha jelen van,
+    // csak konzisztencia-ellenőrzésre szolgál (a meglévő akció-paraméterezés
+    // változatlanul hagyása érdekében), nem bizalmi forrásként.
     private function resolveKerelmezo(array $request): array {
-        $kerelmezoId = $request['kerelmezo_id'] ?? null;
-        if (empty($kerelmezoId)) {
-            throw new Exception('Hiányzó kérelmező azonosító.');
+        $session = $this->requireValidSession($request);
+        if ($session['felhasznalo_tipus'] !== 'admin') {
+            throw new Exception('Ehhez a művelethez admin-oldali bejelentkezés szükséges.');
+        }
+        $kerelmezoId = $session['felhasznalo_id'];
+
+        if (isset($request['kerelmezo_id']) && (string) $request['kerelmezo_id'] !== (string) $kerelmezoId) {
+            throw new Exception('A kérelmező azonosító nem egyezik a bejelentkezett felhasználóval.');
         }
 
         $stmt = $this->db->prepare("SELECT id, szerepkor, tulajdonos_admin_id FROM admin WHERE id = :id AND torolt <> 'I'");
@@ -286,7 +340,7 @@ class ApiHandler {
         // Emellett azt is ellenőrizzük, hogy a kérelmező tényleg ahhoz a
         // céghez tartozik-e, amelyikre a kérés vonatkozik (`ceg_id`) —
         // enélkül egy másik cég csapattagja is beküldhetne egy tetszőleges
-        // `kerelmezo_id`-t.
+        // `ceg_id`-t.
         if (isset($request['ceg_id']) && (string) $kerelmezo['ceg_id'] !== (string) $request['ceg_id']) {
             throw new Exception('A kérelmező nem ehhez a céghez tartozik.');
         }
@@ -329,7 +383,7 @@ class ApiHandler {
     }
 
     public function process(?array $request) {
-        global $kamionInterface, $potkocsiInterface, $soforokInterface, $filesInterface, $emailInterface, $bejelentesekInterface, $karbantartasInterface, $szabadsagInterface, $tankolasInterface, $jarmuValtasInterface, $ugyfelInterface, $csapatInterface, $helyszinInterface, $jogosultsagInterface, $szerepkorInterface, $listaInterface;
+        global $kamionInterface, $potkocsiInterface, $soforokInterface, $filesInterface, $emailInterface, $bejelentesekInterface, $karbantartasInterface, $szabadsagInterface, $tankolasInterface, $jarmuValtasInterface, $ugyfelInterface, $csapatInterface, $helyszinInterface, $jogosultsagInterface, $szerepkorInterface, $listaInterface, $keresesInterface;
         try {
             $this->validation($request);
             $action = $request['action'];
@@ -345,7 +399,7 @@ class ApiHandler {
                     echo json_encode($this->updateUser($request['id'], $request['nickname'], $request['birthdate'], $request['password']));
                     return;
                 case 'logoutUser':
-                    echo json_encode($this->logoutUser($request['id']));
+                    echo json_encode($this->logoutUser($request['sessionToken'] ?? ''));
                     return;
                 case 'saveKamionData':
                     $result = $kamionInterface->saveKamionData($request);
@@ -635,6 +689,10 @@ class ApiHandler {
                         $this->logAudit($request['ceg_id'], 'listaelemek', $request['id'], 'torles');
                     }
                     echo json_encode($result);
+                    return;
+
+                case 'globalSearch':
+                    echo json_encode($keresesInterface->globalSearch($request['ceg_id'], $request['q']));
                     return;
 
                 case 'getHelyszinek':
@@ -1218,17 +1276,32 @@ class ApiHandler {
     private function loginUser($email, $password) {
         $user = $this->getUser($email);
         if (!empty($user) && password_verify($password, $user['password'])) {
-            return ['success' => true, 'user' => $user];
+            $token = bin2hex(random_bytes(32));
+            $stmt = $this->db->prepare("INSERT INTO sessions (token, felhasznalo_tipus, felhasznalo_id, lejarat) VALUES (:token, :tipus, :id, DATE_ADD(NOW(), INTERVAL 30 DAY))");
+            $stmt->bindValue(':token', $token);
+            $stmt->bindValue(':tipus', $user['admin'] ? 'admin' : 'sofor');
+            $stmt->bindValue(':id', $user['id']);
+            $stmt->execute();
+
+            return ['success' => true, 'user' => $user, 'token' => $token];
         }
         return ['success' => false, 'message' => 'Login failed. Incorrect email or password.'];
     }
 
-    private function logoutUser() {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+    // A korábbi session_start()/session_unset() vestigiális volt — sehol
+    // máshol a kódbázisban nem indult PHP natív session, tehát ez a hívás
+    // ténylegesen semmit nem törölt. Mostantól a valódi, adatbázisban
+    // tárolt `sessions` sort töröljük a kapott tokenhez. Szándékosan NEM
+    // hívunk requireValidSession()-t itt (a logoutUser a PUBLIC_ACTIONS
+    // része) — egy már lejárt/érvénytelen tokennel is sikeresnek kell
+    // tűnjön a kijelentkezés a kliens felől, hogy a helyi állapot mindig
+    // tisztán törölhető legyen.
+    private function logoutUser($sessionToken) {
+        if (!empty($sessionToken)) {
+            $stmt = $this->db->prepare("DELETE FROM sessions WHERE token = :token");
+            $stmt->bindValue(':token', $sessionToken);
+            $stmt->execute();
         }
-        session_unset();
-        session_destroy();
         return ['success' => true, 'message' => 'Successfully logged out.'];
     }
 

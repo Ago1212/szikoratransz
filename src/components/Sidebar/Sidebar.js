@@ -17,9 +17,11 @@ import {
   PiMapPinLight,
   PiShieldCheckLight,
   PiListBulletsLight,
+  PiMagnifyingGlassLight,
 } from "react-icons/pi";
 
 import NotificationDropdown from "components/Dropdowns/NotificationDropdown.js";
+import GlobalSearch from "components/UI/GlobalSearch.js";
 import { fetchAction } from "utils/fetchAction";
 
 const initials = (name) =>
@@ -130,6 +132,7 @@ const TIPUS_LABEL = { kamion: "kamiont", potkocsi: "pótkocsit" };
 export default function Sidebar() {
   const [openGroup, setOpenGroup] = React.useState(null);
   const [kerelmek, setKerelmek] = React.useState([]);
+  const [searchOpen, setSearchOpen] = React.useState(false);
   const location = useLocation();
   const history = useHistory();
 
@@ -238,6 +241,7 @@ export default function Sidebar() {
   const handleLogout = async () => {
     const result = await fetchAction("logoutUser", { id: user?.id });
     sessionStorage.removeItem("user");
+    sessionStorage.removeItem("sessionToken");
     if (!result?.success) {
       // Session already gone client-side regardless of server response.
       console.warn(result?.message || "Logout request failed.");
@@ -293,7 +297,18 @@ export default function Sidebar() {
               className="h-8 w-auto"
             />
           </Link>
-          <NotificationDropdown notifications={kerelemNotifications} />
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setSearchOpen(true)}
+              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-ink-400 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-700"
+              title="Keresés"
+              aria-label="Keresés"
+            >
+              <PiMagnifyingGlassLight className="h-[18px] w-[18px]" />
+            </button>
+            <NotificationDropdown notifications={kerelemNotifications} />
+          </div>
         </div>
 
         {/* Navigáció — ha nem fér ki, ez a rész görgethető.
@@ -540,6 +555,20 @@ export default function Sidebar() {
           </button>
         </nav>
       </div>
+
+      {/* Mobil kereső-FAB — nem fér egy új oszlop a már zsúfolt alsó
+          navigációba (7 oszlop), ezért lebegő gombként, a sáv fölött. */}
+      <button
+        type="button"
+        onClick={() => setSearchOpen(true)}
+        className="fixed bottom-20 right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-brand-600 text-white shadow-soft-lg md:hidden"
+        title="Keresés"
+        aria-label="Keresés"
+      >
+        <PiMagnifyingGlassLight className="h-5 w-5" />
+      </button>
+
+      <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );
 }
