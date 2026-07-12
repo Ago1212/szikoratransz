@@ -354,6 +354,43 @@ const Karbantartasok = () => {
     },
   ];
 
+  // Az exportot külön kell megadni, mert a fenti `columns` több oszlopa
+  // (tipus/rendszam/status) számított érték, aminek nincs egyező nevű
+  // nyers mezője a soron — a régi export logika (`row[col.key]`) ezeket
+  // némán ÜRESEN exportálta. Az `exportValue` ugyanazt a szöveget adja
+  // vissza, amit a táblázat is mutat; emellett bekerül a "Következő
+  // karbantartás" dátuma is, ami a kompakt nézetben nem látszik.
+  const exportColumns = [
+    {
+      key: "tipus",
+      label: "Jármű típusa",
+      exportValue: (row) => (row.potkocsi_id ? "Pótkocsi" : "Kamion"),
+    },
+    {
+      key: "rendszam",
+      label: "Rendszám",
+      exportValue: (row) =>
+        row.potkocsi_id
+          ? getJarmuRendszam(row.potkocsi_id, true)
+          : getJarmuRendszam(row.kamion_id),
+    },
+    { key: "datum", label: "Dátum" },
+    { key: "log", label: "Leírás" },
+    { key: "km_oraallas", label: "Km óraállás" },
+    { key: "elvegezte", label: "Elvégezte" },
+    {
+      key: "koltseg",
+      label: "Költség",
+      exportValue: (row) => (row.koltseg ? formatHuf(row.koltseg) : ""),
+    },
+    { key: "kovetkezo_karbantartas", label: "Következő karbantartás dátuma" },
+    {
+      key: "status",
+      label: "Státusz",
+      exportValue: (row) => getStatus(row).text,
+    },
+  ];
+
   const activeFilterCount = Object.values(filter).filter(Boolean).length;
   const osszesKoltseg = karbantartasok.reduce(
     (sum, karb) => sum + (parseFloat(karb.koltseg) || 0),
@@ -501,6 +538,7 @@ const Karbantartasok = () => {
           }}
           addLabel="Új karbantartás"
           exportFilename="karbantartasok"
+          exportColumns={exportColumns}
           columns={columns}
           rows={karbantartasok}
           mobileTitleKey="rendszam"

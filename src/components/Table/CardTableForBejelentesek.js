@@ -44,6 +44,7 @@ export default function CardTable({ bejelentesek, isLoading, selectedKamion }) {
           {PRIORITAS_LABEL[row.prioritas] || "Közepes"}
         </StatusBadge>
       ),
+      exportValue: (row) => PRIORITAS_LABEL[row.prioritas] || "Közepes",
     },
     {
       key: "statusz",
@@ -53,6 +54,7 @@ export default function CardTable({ bejelentesek, isLoading, selectedKamion }) {
           {STATUSZ_LABEL[row.statusz] || "Új"}
         </StatusBadge>
       ),
+      exportValue: (row) => STATUSZ_LABEL[row.statusz] || "Új",
     },
     {
       key: "actions",
@@ -76,6 +78,27 @@ export default function CardTable({ bejelentesek, isLoading, selectedKamion }) {
     },
   ];
 
+  // Az Excel export a listaoszlopokon felül a bejelentés típusát és a
+  // teljes leírását is tartalmazza, amik a kompakt táblázatban nem
+  // látszanak.
+  const exportColumns = [
+    { key: "cim", label: "Cím" },
+    { key: "sofor_nev", label: "Bejelentő", exportValue: (row) => row.sofor_nev || "Ismeretlen" },
+    { key: "tipus", label: "Típus" },
+    { key: "leiras", label: "Leírás" },
+    { key: "bejelentve", label: "Bejelentve" },
+    {
+      key: "prioritas",
+      label: "Prioritás",
+      exportValue: (row) => PRIORITAS_LABEL[row.prioritas] || "Közepes",
+    },
+    {
+      key: "statusz",
+      label: "Státusz",
+      exportValue: (row) => STATUSZ_LABEL[row.statusz] || "Új",
+    },
+  ];
+
   return (
     <DataTable
       icon={PiChatCircleTextLight}
@@ -83,6 +106,7 @@ export default function CardTable({ bejelentesek, isLoading, selectedKamion }) {
       onAdd={handleNewBejelentes}
       addLabel="Új bejelentés"
       exportFilename="bejelentesek"
+      exportColumns={exportColumns}
       columns={columns}
       rows={bejelentesek}
       loading={isLoading}

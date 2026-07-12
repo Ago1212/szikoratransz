@@ -76,6 +76,7 @@ export default function Szabadsagok() {
       key: "tipus",
       label: "Típus",
       render: (row) => tipusok.find((t) => t.kulcs === row.tipus)?.nev || row.tipus,
+      exportValue: (row) => tipusok.find((t) => t.kulcs === row.tipus)?.nev || row.tipus,
     },
     { key: "megjegyzes", label: "Megjegyzés", render: (row) => row.megjegyzes || "—" },
     {

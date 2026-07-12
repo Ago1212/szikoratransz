@@ -61,12 +61,36 @@ const CardTable = ({ potkocsik }) => {
     },
   ];
 
+  // Az Excel export bővebb, mint a képernyőn látható táblázat — ld. a
+  // Kamionok exportjának ugyanilyen kommentjét (CardTableForKamionok.js).
+  const exportColumns = [
+    { key: "rendszam", label: "Rendszám" },
+    { key: "tipus", label: "Típus" },
+    { key: "allapot", label: "Állapot" },
+    { key: "aktualis_km", label: "Km óraállás" },
+    { key: "muszaki_lejarat", label: "Műszaki vizsga lejárata" },
+    { key: "adr_lejarat", label: "ADR lejárat" },
+    { key: "taograf_illesztes", label: "Tachográf illesztés" },
+    { key: "emelohatfal_vizsga", label: "Emelőhátfal vizsga" },
+    { key: "porolto_lejarat", label: "Poroltó #1 lejárat" },
+    { key: "porolto_lejarat_2", label: "Poroltó #2 lejárat" },
+    { key: "kot_biztositas", label: "Kötelező biztosítás kezdete" },
+    { key: "kot_biz_nev", label: "Kötelező biztosító neve" },
+    { key: "kot_biz_dij", label: "Kötelező biztosítás éves díja" },
+    { key: "kot_biz_utem", label: "Kötelező biztosítás fizetési üteme" },
+    { key: "kaszko_biztositas", label: "Kaszkó biztosítás kezdete" },
+    { key: "kaszko_nev", label: "Kaszkó biztosító neve" },
+    { key: "kaszko_dij", label: "Kaszkó biztosítás éves díja" },
+    { key: "kaszko_fizetesi_utem", label: "Kaszkó biztosítás fizetési üteme" },
+  ];
+
   return (
     <DataTable
       icon={PiTruckTrailerLight}
       title="Pótkocsik"
       onAdd={handleNewPotkocsi}
       exportFilename="potkocsik"
+      exportColumns={exportColumns}
       columns={columns}
       rows={potkocsik}
       onRowDoubleClick={handleEditClick}

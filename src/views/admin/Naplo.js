@@ -49,6 +49,7 @@ export default function Naplo() {
       label: "Entitás",
       className: "font-semibold text-brand-900",
       render: (row) => TABLA_LABEL[row.tabla] || row.tabla,
+      exportValue: (row) => TABLA_LABEL[row.tabla] || row.tabla,
     },
     { key: "rowid", label: "Azonosító" },
     {
@@ -59,6 +60,7 @@ export default function Naplo() {
           {MUVELET_LABEL[row.muvelet] || row.muvelet}
         </StatusBadge>
       ),
+      exportValue: (row) => MUVELET_LABEL[row.muvelet] || row.muvelet,
     },
     { key: "leiras", label: "Leírás", render: (row) => row.leiras || "—" },
     { key: "datum", label: "Időpont" },

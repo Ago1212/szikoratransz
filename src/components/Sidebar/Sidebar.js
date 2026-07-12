@@ -33,9 +33,9 @@ const initials = (name) =>
 
 // A mobil alsó sávban mind a 6 elem egyenlő, kb. 45px széles oszlopot kap
 // (ld. `min-w-0 flex-1` lent) — ide a Sidebar deszktop-menüjének teljes
-// feliratai ("Saját adatok", "Felhasználók", "Alkalmazottak") nem férnek
-// el, csonkolva jelentek meg. Ezért itt, csak a mobil sávhoz, rövidebb
-// feliratokat használunk; a deszktop Sidebar és a kinyíló almenü-lista
+// feliratai ("Felhasználók", "Karbantartások" stb.) nem férnek el, csonkolva
+// jelentek meg. Ezért itt, csak a mobil sávhoz, rövidebb feliratokat
+// használunk; a deszktop Sidebar és a kinyíló almenü-lista
 // (`mobileGroups[].items`) feliratai változatlanok maradnak.
 const mobileDirectLinks = [
   { to: "/admin/dashboard", icon: PiSquaresFourLight, text: "Menü" },
@@ -43,6 +43,13 @@ const mobileDirectLinks = [
   { to: "/admin/felhasznalok", icon: PiUsersFourLight, text: "Fiókok" },
 ];
 
+// Az "egyeb" csoport két, tartalmilag eltérő alcsoportot fed le
+// (ügyfél-kezelés vs. rendszer/adminisztráció) — mobilon nincs hely egy
+// külön alsó-sávos fülre mindkettőnek, ezért belső `divider` bejegyzésekkel
+// (csak felirat, nem link) tagoljuk a kinyíló listát. Deszktopon ugyanez a
+// két alcsoport két önálló, saját fejléces szekció (lásd lejjebb "Ügyfelek"
+// és "Rendszer") — a tartalom ugyanaz, csak a bőségesebb hely miatt ott
+// nem kell egy közös fülbe zsúfolni.
 const mobileGroups = [
   {
     key: "jarmuvek",
@@ -85,8 +92,10 @@ const mobileGroups = [
     label: "Egyéb",
     icon: PiFilesLight,
     items: [
+      { type: "divider", label: "Ügyfelek" },
       { to: "/admin/ugyfelek", icon: PiBuildingsLight, text: "Ügyfelek" },
       { to: "/admin/helyszinek", icon: PiMapPinLight, text: "Helyszínek" },
+      { type: "divider", label: "Rendszer" },
       { to: "/admin/fajlok", icon: PiFilesLight, text: "Fájlok" },
       { to: "/admin/naplo", icon: PiListMagnifyingGlassLight, text: "Napló" },
       {
@@ -135,6 +144,28 @@ export default function Sidebar() {
   // A gyökér (cégtulajdonos) szerepköre mindig fixen 'admin' (ld.
   // Felhasznalok.js), tehát ez a feltétel a root fiókot is helyesen lefedi.
   const isAdmin = user?.szerepkor === "admin";
+
+  // A Sidebar kizárólag az Admin layoutban él (ld. layouts/Admin.js) — ide
+  // sofőr (user tábla) fiók sosem jut el, tehát a lábléc korábbi
+  // `user?.admin ? "Adminisztrátor" : "Sofőr"` feltétele valójában mindig
+  // "Adminisztrátor"-t mutatott, MÉG egy fuvarszervező vagy egyéni
+  // szerepkörű csapattagnak is (a backend `admin` mezője minden admin-tábla
+  // sorra `true`, szerepkörtől függetlenül). A tényleges nevet ezért a cég
+  // szerepkör-listájából kell kikeresni — ugyanaz a minta, mint
+  // CardSettings.js-ben.
+  const [szerepkorNev, setSzerepkorNev] = React.useState(
+    isAdmin ? "Adminisztrátor" : user?.szerepkor || ""
+  );
+  React.useEffect(() => {
+    if (!user?.ceg_id) return;
+    fetchAction("getSzerepkorok", { id: user.ceg_id }).then((result) => {
+      if (result?.success) {
+        const talalt = (result.szerepkorok || []).find((r) => r.kulcs === user.szerepkor);
+        if (talalt) setSzerepkorNev(talalt.nev);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const loadKerelmek = React.useCallback(() => {
     if (!user?.ceg_id) return;
@@ -265,9 +296,17 @@ export default function Sidebar() {
           <NotificationDropdown notifications={kerelemNotifications} />
         </div>
 
-        {/* Navigáció — ha nem fér ki, ez a rész görgethető */}
+        {/* Navigáció — ha nem fér ki, ez a rész görgethető.
+            Csoportosítás: "Áttekintés" (napi gyors ránézés), "Járművek"
+            (flotta), "Csapat" (mindenki, aki a céghez tartozik — a
+            fuvarszervező/admin-fiókok listája ide került át a korábbi
+            "Saját adatok" gyűjtőből), "Ügyfelek" (partnerek/telephelyek),
+            "Rendszer" (fájlok/napló + admin-only beállítások, egy vékony
+            elválasztóval a kettő között). A saját profil (Saját adatok)
+            innentől a lábléc fiók-sorára kattintva érhető el, nem önálló
+            menüpontként — ld. lentebb. */}
         <div className="flex-1 overflow-y-auto px-3 pb-4">
-          <SectionHeader>Saját adatok</SectionHeader>
+          <SectionHeader>Áttekintés</SectionHeader>
           <ul className="space-y-0.5">
             <NavItem
               to="/admin/dashboard"
@@ -275,29 +314,10 @@ export default function Sidebar() {
               text="Főmenü"
             />
             <NavItem
-              to="/admin/settings"
-              icon={PiGearLight}
-              text="Saját adatok"
+              to="/admin/esemenyek"
+              icon={PiCalendarBlankLight}
+              text="Események"
             />
-            <NavItem
-              to="/admin/felhasznalok"
-              icon={PiUsersFourLight}
-              text="Felhasználók"
-            />
-            {isAdmin && (
-              <NavItem
-                to="/admin/jogosultsagok"
-                icon={PiShieldCheckLight}
-                text="Jogosultságok"
-              />
-            )}
-            {isAdmin && (
-              <NavItem
-                to="/admin/listak"
-                icon={PiListBulletsLight}
-                text="Listák"
-              />
-            )}
           </ul>
 
           <SectionHeader>Járművek</SectionHeader>
@@ -315,7 +335,7 @@ export default function Sidebar() {
             />
           </ul>
 
-          <SectionHeader>Alkalmazottak</SectionHeader>
+          <SectionHeader>Csapat</SectionHeader>
           <ul className="space-y-0.5">
             <NavItem to="/admin/soforok" icon={PiUsersLight} text="Sofőrök" />
             <NavItem
@@ -328,41 +348,69 @@ export default function Sidebar() {
               icon={PiCalendarBlankLight}
               text="Szabadságok"
             />
+            <NavItem
+              to="/admin/felhasznalok"
+              icon={PiUsersFourLight}
+              text="Felhasználók"
+            />
           </ul>
 
-          <SectionHeader>Egyéb</SectionHeader>
+          <SectionHeader>Ügyfelek</SectionHeader>
           <ul className="space-y-0.5">
             <NavItem to="/admin/ugyfelek" icon={PiBuildingsLight} text="Ügyfelek" />
             <NavItem to="/admin/helyszinek" icon={PiMapPinLight} text="Helyszínek" />
+          </ul>
+
+          <SectionHeader>Rendszer</SectionHeader>
+          <ul className="space-y-0.5">
             <NavItem to="/admin/fajlok" icon={PiFilesLight} text="Fájlok" />
             <NavItem
               to="/admin/naplo"
               icon={PiListMagnifyingGlassLight}
               text="Napló"
             />
-            <NavItem
-              to="/admin/esemenyek"
-              icon={PiCalendarBlankLight}
-              text="Események"
-            />
+            {isAdmin && (
+              <>
+                <li aria-hidden="true" className="mx-3.5 my-1.5 border-t border-ink-100" />
+                <NavItem
+                  to="/admin/jogosultsagok"
+                  icon={PiShieldCheckLight}
+                  text="Jogosultságok"
+                />
+                <NavItem
+                  to="/admin/listak"
+                  icon={PiListBulletsLight}
+                  text="Listák"
+                />
+              </>
+            )}
           </ul>
         </div>
 
-        {/* Lábléc — fiók + kijelentkezés, mindig fixen lent és mindig látszik */}
+        {/* Lábléc — fiók + kijelentkezés, mindig fixen lent és mindig látszik.
+            A fiók-sor most a saját profil (Saját adatok) linkje is egyben —
+            korábban ez egy külön "Saját adatok" menüpont volt fent a
+            "Saját adatok" gyűjtő szekcióban, ami vegyítette a személyes
+            beállítást a csapat-/admin-eszközökkel; a fogaskerék-ikon jelzi,
+            hogy a sor kattintható. */}
         <div className="flex-shrink-0 border-t border-ink-100 px-4 py-4">
-          <div className="mb-3 flex items-center gap-2.5 px-1">
+          <Link
+            to="/admin/settings"
+            className="group -mx-1 mb-3 flex items-center gap-2.5 rounded-xl px-1 py-1.5 transition-colors duration-200 hover:bg-slate-100"
+          >
             <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold text-white shadow-inner-hairline">
               {initials(user?.name || user?.nev)}
             </span>
-            <span className="min-w-0 text-left">
+            <span className="min-w-0 flex-1 text-left">
               <span className="block truncate text-sm font-semibold leading-tight text-brand-900">
                 {user?.name || user?.nev || "Fiók"}
               </span>
-              <span className="block text-xs leading-tight text-ink-400">
-                {user?.admin ? "Adminisztrátor" : "Sofőr"}
+              <span className="block truncate text-xs leading-tight text-ink-400">
+                {szerepkorNev}
               </span>
             </span>
-          </div>
+            <PiGearLight className="h-4 w-4 flex-shrink-0 text-ink-300 transition-colors duration-200 group-hover:text-ink-500" />
+          </Link>
           <button
             onClick={handleLogout}
             className="flex w-full items-center justify-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-red-600 transition-colors duration-200 hover:bg-red-50"
@@ -383,36 +431,60 @@ export default function Sidebar() {
 
       {/* Mobil alsó navigáció — a fő csoportok mindig lent, kompakt sávban */}
       <div className="fixed inset-x-0 bottom-0 z-40 md:hidden">
-        {/* Csoport lista — felfelé nyílik, a sáv fölött */}
+        {/* Csoport lista — felfelé nyílik, a sáv fölött.
+            `overflow-y-auto` a korábbi `overflow-hidden` helyett: az "Egyéb"
+            csoport admin nézetben 7 elemet + 2 alcím-elválasztót tartalmaz,
+            ami a korábbi rögzített max-h-64 (256px) magasságnál több —
+            overflow-hidden mellett ez némán LEVÁGTA a lista alját (a
+            "Jogosultságok"/"Listák" sorok érinthetetlenek voltak). A
+            max-h-96-ra emelt korlát a jelenlegi legnagyobb csoportot még
+            görgetés nélkül is kiadja, az overflow-y-auto pedig biztonsági
+            háló, ha egy jövőbeli bővítés miatt mégis rövidebb lenne. */}
         <div
-          className={`overflow-hidden rounded-t-2xl border-t border-ink-100 bg-white shadow-soft-lg transition-all duration-300 ease-fluid ${
-            openGroup ? "max-h-64" : "max-h-0"
+          className={`overflow-y-auto rounded-t-2xl border-t border-ink-100 bg-white shadow-soft-lg transition-all duration-300 ease-fluid ${
+            openGroup ? "max-h-96" : "max-h-0"
           }`}
         >
           {mobileGroups
             .filter((group) => group.key === openGroup)
             .map((group) => (
               <ul key={group.key} id={`mobile-group-panel-${group.key}`} className="px-2 py-1.5">
-                {group.items.filter((item) => (!item.adminOnly || isAdmin) && hasAccess(item.to)).map((item) => {
-                  const active = isActive(item.to);
-                  return (
-                    <li key={item.to}>
-                      <Link
-                        to={item.to}
-                        aria-current={active ? "page" : undefined}
-                        className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[15px] font-medium ${
-                          active
-                            ? "bg-brand-50 text-brand-700"
-                            : "text-ink-600 hover:bg-slate-100"
-                        }`}
-                        onClick={() => setOpenGroup(null)}
-                      >
-                        <item.icon className="h-[18px] w-[18px] flex-shrink-0" />
-                        {item.text}
-                      </Link>
-                    </li>
-                  );
-                })}
+                {group.items
+                  .filter(
+                    (item) => item.type === "divider" || ((!item.adminOnly || isAdmin) && hasAccess(item.to))
+                  )
+                  .map((item, i) => {
+                    if (item.type === "divider") {
+                      return (
+                        <li
+                          key={`divider-${item.label}`}
+                          className={`px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-400 ${
+                            i === 0 ? "pt-1" : "pt-3"
+                          }`}
+                        >
+                          {item.label}
+                        </li>
+                      );
+                    }
+                    const active = isActive(item.to);
+                    return (
+                      <li key={item.to}>
+                        <Link
+                          to={item.to}
+                          aria-current={active ? "page" : undefined}
+                          className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[15px] font-medium ${
+                            active
+                              ? "bg-brand-50 text-brand-700"
+                              : "text-ink-600 hover:bg-slate-100"
+                          }`}
+                          onClick={() => setOpenGroup(null)}
+                        >
+                          <item.icon className="h-[18px] w-[18px] flex-shrink-0" />
+                          {item.text}
+                        </Link>
+                      </li>
+                    );
+                  })}
               </ul>
             ))}
         </div>

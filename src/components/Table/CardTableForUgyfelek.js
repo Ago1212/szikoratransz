@@ -53,12 +53,27 @@ const CardTable = ({ ugyfelek }) => {
     },
   ];
 
+  // Az Excel export a listaoszlopokon felül az adószámot, a teljes cím-
+  // bontást, a kapcsolattartó email-címét és a megjegyzést is tartalmazza.
+  const exportColumns = [
+    { key: "nev", label: "Név" },
+    { key: "adoszam", label: "Adószám" },
+    { key: "varos", label: "Város" },
+    { key: "irsz", label: "Irányítószám" },
+    { key: "cim", label: "Cím" },
+    { key: "kapcsolattarto_nev", label: "Kapcsolattartó" },
+    { key: "kapcsolattarto_telefon", label: "Kapcsolattartó telefon" },
+    { key: "kapcsolattarto_email", label: "Kapcsolattartó email" },
+    { key: "megjegyzes", label: "Megjegyzés" },
+  ];
+
   return (
     <DataTable
       icon={PiBuildingsLight}
       title="Ügyfelek"
       onAdd={handleNewUgyfel}
       exportFilename="ugyfelek"
+      exportColumns={exportColumns}
       columns={columns}
       rows={ugyfelek}
       onRowDoubleClick={handleEditClick}
