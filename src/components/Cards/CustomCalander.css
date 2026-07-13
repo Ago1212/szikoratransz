@@ -156,11 +156,26 @@
   border-bottom: 1px solid #eef0f5;
 }
 
-.rbc-month-view,
 .rbc-time-view {
   border: 1px solid #eef0f5;
   border-radius: 0.75rem;
   overflow: hidden;
+}
+
+/* A hónap-nézet sorai `min-height`-tel vannak lezárva (ld. lejjebb és a
+   mobil médialekérdezés), hogy olvashatók maradjanak — ez viszont azt
+   jelenti, hogy egy 6 hetes hónap (max. 100px/sor asztalon, 56px/sor
+   mobilon) néha TÖBB helyet igényel, mint amennyi a szülő flexbox-doboz
+   (Dashboard.js kártyája / mobil fix magasság) ténylegesen ad neki. Sima
+   `overflow: hidden` esetén ez a többlet-tartalom szó szerint eltűnik,
+   görgetési lehetőség nélkül — ezért itt `overflow-y: auto`, hogy egy
+   ilyen esetben a naptár SAJÁT MAGÁBAN görgethető maradjon, ne vágódjon
+   le láthatatlanul az utolsó egy-két hét. */
+.rbc-month-view {
+  border: 1px solid #eef0f5;
+  border-radius: 0.75rem;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .rbc-month-row {

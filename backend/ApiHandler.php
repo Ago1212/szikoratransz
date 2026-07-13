@@ -835,7 +835,8 @@ class ApiHandler {
                         $request['irany'] ?? null,
                         $request['search'] ?? null,
                         $request['page'] ?? null,
-                        $request['pageSize'] ?? null
+                        $request['pageSize'] ?? null,
+                        $request['kategoria'] ?? null
                     ));
                     return;
 

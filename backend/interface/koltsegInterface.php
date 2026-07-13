@@ -606,7 +606,16 @@ class KoltsegInterface {
         }
     }
 
-    public function getEgyebKoltsegek($ceg_id, $datumTol = null, $datumIg = null, $irany = null, $search = null, $page = null, $pageSize = null) {
+    // `$kategoria`: a Pénzforgalom oldal kategória-chipjeinek szűrője. Az
+    // 'uzemanyag'/'egyeb' a ténylegesen tárolt `kategoria` oszlop-értékek,
+    // ezekre valódi szűrés fut. A 'karbantartas'/'biztositas' chipekre
+    // szándékosan NEM létezik `egyeb_koltsegek` sor (azok külön táblákból,
+    // on-the-fly számolódnak, ld. getKoltsegOsszesito) — ezekre a query
+    // egyszerűen üres találati listát ad (nincs ilyen `kategoria` érték a
+    // táblában), a frontend ezt ismeri fel és mutat helyette egy rövid
+    // eligazító szöveget ("ezek a tételek a Karbantartások/Kamionok oldalon
+    // részletesek"), nem hibaüzenetet.
+    public function getEgyebKoltsegek($ceg_id, $datumTol = null, $datumIg = null, $irany = null, $search = null, $page = null, $pageSize = null, $kategoria = null) {
         try {
             [$szuresSql, $szuresParams] = $this->datumSzures('datum', $datumTol, $datumIg);
             $params = [':ceg_id' => $ceg_id];
@@ -617,6 +626,14 @@ class KoltsegInterface {
             if (!empty($irany)) {
                 $query .= " AND irany = :irany";
                 $params[':irany'] = $irany;
+            }
+            if (!empty($kategoria)) {
+                if ($kategoria === 'egyeb') {
+                    $query .= " AND kategoria IS NULL";
+                } else {
+                    $query .= " AND kategoria = :kategoria";
+                    $params[':kategoria'] = $kategoria;
+                }
             }
             if (!empty($search)) {
                 $query .= " AND " . PaginationHelper::likeClause(['megnevezes', 'szamlaszam', 'megjegyzes'], 'search');

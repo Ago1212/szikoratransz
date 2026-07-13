@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import Chart from "chart.js";
 import { useMediaQuery } from "react-responsive";
+import { useHistory } from "react-router-dom";
 import {
   PiCoinsLight,
   PiWrenchLight,
@@ -14,7 +15,11 @@ import {
   PiTruckTrailerLight,
   PiCaretLeftLight,
   PiCaretRightLight,
+  PiCaretDownLight,
+  PiCaretUpLight,
   PiCloudArrowDownLight,
+  PiPlusLight,
+  PiChartBarLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
@@ -51,7 +56,7 @@ const formatHonap = (honap) => {
   return ev && HONAP_ROVID[idx] ? `${HONAP_ROVID[idx]} '${ev.slice(2)}` : honap;
 };
 
-const EGYEB_PAGE_SIZE = 4;
+const TETEL_PAGE_SIZE = 8;
 
 const emptyEgyebTetel = (irany = "kiado") => ({
   irany,
@@ -65,21 +70,45 @@ const emptyEgyebTetel = (irany = "kiado") => ({
   megjegyzes: "",
 });
 
-// Kompakt kategória-chip — a korábbi, nagy stat-kártyás Karbantartás/
-// Üzemanyag/Biztosítás/Egyéb helyett: ezek a grafikon jelmagyarázatának
-// kiterjesztései, nem önálló KPI-k, ezért kisebb, egy sorba rendezhető
-// jelvényként jelennek meg, nem a Bevétel/Kiadás/Nettó hármassal azonos
-// súlyú kártyaként (ld. UX-audit "vizuális prioritások" pontja).
-function CategoryChip({ icon: Icon, label, value, dotClass }) {
+// A kategória-chip valódi SZŰRŐGOMB (ld. UX-audit "egységes pénzforgalmi
+// szemlélet" pontja) — korábban ugyanez a doboz csak egy statikus összeget
+// mutatott, kattintásra semmi nem történt. A Karbantartás/Biztosítás chip
+// is kattintható, de azokhoz nincs `egyeb_koltsegek` sor (külön táblákból,
+// on-the-fly számolt adat) — a lista ilyenkor szándékosan üresen fut, egy
+// eligazító üzenettel (ld. `ledgerEmptyLabel` lejjebb), nem hibaként.
+//
+// A Bevétel/Kiadás/Nettó összesítő ugyanezt a komponenst használja, csak
+// `onClick` NÉLKÜL (ilyenkor `<div>`-ként renderel, kattintás/hover nélkül)
+// — így mind a 7 doboz (3 összesítő + 4 kategória) egyetlen egységes
+// rácsban, egyforma méretben fér el (ld. lent), nem egy külön, hosszú,
+// egysoros csíkban, ami keskeny (mobil) képernyőn feleslegesen sok sort
+// foglalt. A címke+érték két külön sorba kerül (nem egymás mellé), hogy a
+// nagyobb forintösszegek (pl. "132 009 972 Ft") keskeny, 2 oszlopos mobil
+// nézetben se törjenek/lógjanak ki.
+function CategoryChip({ icon: Icon, label, value, valueClass, dotClass, active, onClick }) {
+  const interactive = typeof onClick === "function";
+  const Tag = interactive ? "button" : "div";
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-ink-100 bg-white px-3.5 py-2.5 shadow-soft">
-      <span className={`h-2 w-2 flex-shrink-0 rounded-full ${dotClass}`} />
-      <Icon className="h-4 w-4 flex-shrink-0 text-ink-400" />
-      <span className="text-xs font-semibold text-ink-500">{label}</span>
-      <span className="ml-auto whitespace-nowrap text-sm font-bold tabular-nums text-brand-900">
+    <Tag
+      type={interactive ? "button" : undefined}
+      onClick={onClick}
+      className={`flex w-full flex-col gap-1 rounded-xl border px-3 py-2.5 text-left shadow-soft transition-all duration-200 ease-fluid ${
+        active
+          ? "border-brand-300 bg-brand-50 ring-1 ring-brand-200"
+          : `border-ink-100 bg-white ${interactive ? "hover:border-brand-200" : ""}`
+      }`}
+    >
+      <span className="flex items-center gap-1.5 text-xs font-semibold text-ink-500">
+        <span className={`h-2 w-2 flex-shrink-0 rounded-full ${dotClass}`} />
+        {Icon && <Icon className="h-3.5 w-3.5 flex-shrink-0 text-ink-400" />}
+        <span className="truncate">{label}</span>
+      </span>
+      <span
+        className={`text-sm font-bold tabular-nums ${valueClass || "text-brand-900"}`}
+      >
         {formatHuf(value)}
       </span>
-    </div>
+    </Tag>
   );
 }
 
@@ -185,7 +214,7 @@ function CashflowChart({ havi, simplified }) {
   }, [havi, simplified]);
 
   return (
-    <div className="h-64 md:h-72">
+    <div className="h-56 md:h-64">
       <canvas ref={canvasRef} />
     </div>
   );
@@ -193,7 +222,13 @@ function CashflowChart({ havi, simplified }) {
 
 export default function Koltsegek() {
   const user = JSON.parse(sessionStorage.getItem("user"));
+  const history = useHistory();
   const isMobile = useMediaQuery({ maxWidth: 767 });
+  // A grafikon összecsukható — asztalon alapból nyitva (rögtön látszik a
+  // havi trend), mobilon alapból csukva (ott a tétel-lista férjen el
+  // görgetés nélkül elsőként) — a `useMediaQuery`-s kezdőállapot minta már
+  // bevált a Karbantartasok.js mobil szűrőpaneljénél is.
+  const [chartOpen, setChartOpen] = useState(!isMobile);
   const [loading, setLoading] = useState(true);
   // Alapból a folyó év (Jan 1 – Dec 31) — enélkül a lekérdezés "mindenkori"
   // lenne, ami egy régebb óta futó cégnél sok hónapos grafikont/sok sort
@@ -211,8 +246,7 @@ export default function Koltsegek() {
   const changeYear = (delta) => {
     const ev = displayedYear + delta;
     setFilter({ datumTol: `${ev}-01-01`, datumIg: `${ev}-12-31` });
-    setBevetelPage(1);
-    setKiadasPage(1);
+    setTetelekPage(1);
   };
   const [adat, setAdat] = useState({
     havi: [],
@@ -232,14 +266,19 @@ export default function Koltsegek() {
 
   const [kamionok, setKamionok] = useState([]);
   const [potkocsik, setPotkocsik] = useState([]);
-  const [bevetelTetelek, setBevetelTetelek] = useState([]);
-  const [bevetelTotal, setBevetelTotal] = useState(0);
-  const [bevetelPage, setBevetelPage] = useState(1);
-  const [bevetelSearch, setBevetelSearch] = useState("");
-  const [kiadasTetelek, setKiadasTetelek] = useState([]);
-  const [kiadasTotal, setKiadasTotal] = useState(0);
-  const [kiadasPage, setKiadasPage] = useState(1);
-  const [kiadasSearch, setKiadasSearch] = useState("");
+
+  // A Bevételek és Kiadások — korábban két külön táblázat — mostantól egy
+  // egységes tétel-listát alkotnak, "Irány" jelvényoszloppal és a Mind/
+  // Bevétel/Kiadás szegmens-kapcsolóval (ld. UX-audit 1-2. pontja). A
+  // `getEgyebKoltsegek` backend-hívás `irany` paramétere már korábban is
+  // opcionális volt (üresen mindkét irány visszajön) — csak a kategória-
+  // szűrő (`kategoria`) volt új, azt kellett hozzáadni a backendhez.
+  const [tetelek, setTetelek] = useState([]);
+  const [tetelekTotal, setTetelekTotal] = useState(0);
+  const [tetelekPage, setTetelekPage] = useState(1);
+  const [tetelekSearch, setTetelekSearch] = useState("");
+  const [iranySzuro, setIranySzuro] = useState("mind"); // "mind" | "bevetel" | "kiado"
+  const [kategoriaSzuro, setKategoriaSzuro] = useState(""); // "" | "uzemanyag" | "egyeb" | "karbantartas" | "biztositas"
   const [adding, setAdding] = useState(false);
   const [ujTetel, setUjTetel] = useState(emptyEgyebTetel());
   const [editingTetelId, setEditingTetelId] = useState(null);
@@ -279,72 +318,38 @@ export default function Koltsegek() {
     });
   };
 
-  const loadBevetelTetelek = () => {
+  const loadTetelek = () => {
     fetchAction("getEgyebKoltsegek", {
       ceg_id: user.ceg_id,
       kerelmezo_id: user.id,
       ...filter,
-      irany: "bevetel",
-      search: bevetelSearch || undefined,
-      page: bevetelPage,
-      pageSize: EGYEB_PAGE_SIZE,
+      irany: iranySzuro === "mind" ? undefined : iranySzuro,
+      kategoria: kategoriaSzuro || undefined,
+      search: tetelekSearch || undefined,
+      page: tetelekPage,
+      pageSize: TETEL_PAGE_SIZE,
     }).then((result) => {
       if (result?.success) {
-        setBevetelTetelek(result.tetelek || []);
-        setBevetelTotal(result.total ?? (result.tetelek || []).length);
+        setTetelek(result.tetelek || []);
+        setTetelekTotal(result.total ?? (result.tetelek || []).length);
       } else {
-        setBevetelTotal(0);
+        setTetelekTotal(0);
       }
     });
   };
 
-  const loadKiadasTetelek = () => {
-    fetchAction("getEgyebKoltsegek", {
-      ceg_id: user.ceg_id,
-      kerelmezo_id: user.id,
-      ...filter,
-      irany: "kiado",
-      search: kiadasSearch || undefined,
-      page: kiadasPage,
-      pageSize: EGYEB_PAGE_SIZE,
-    }).then((result) => {
-      if (result?.success) {
-        setKiadasTetelek(result.tetelek || []);
-        setKiadasTotal(result.total ?? (result.tetelek || []).length);
-      } else {
-        setKiadasTotal(0);
-      }
-    });
-  };
-
-  const loadEgyebTetelek = () => {
-    loadBevetelTetelek();
-    loadKiadasTetelek();
-  };
-
-  const handleBevetelExportAll = useCallback(async () => {
+  const handleTetelekExportAll = useCallback(async () => {
     const result = await fetchAction("getEgyebKoltsegek", {
       ceg_id: user.ceg_id,
       kerelmezo_id: user.id,
       ...filter,
-      irany: "bevetel",
-      search: bevetelSearch || undefined,
+      irany: iranySzuro === "mind" ? undefined : iranySzuro,
+      kategoria: kategoriaSzuro || undefined,
+      search: tetelekSearch || undefined,
     });
     return result?.success ? result.tetelek || [] : [];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter, bevetelSearch]);
-
-  const handleKiadasExportAll = useCallback(async () => {
-    const result = await fetchAction("getEgyebKoltsegek", {
-      ceg_id: user.ceg_id,
-      kerelmezo_id: user.id,
-      ...filter,
-      irany: "kiado",
-      search: kiadasSearch || undefined,
-    });
-    return result?.success ? result.tetelek || [] : [];
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter, kiadasSearch]);
+  }, [filter, iranySzuro, kategoriaSzuro, tetelekSearch]);
 
   useEffect(() => {
     loadOsszesito();
@@ -352,14 +357,9 @@ export default function Koltsegek() {
   }, [filter]);
 
   useEffect(() => {
-    loadBevetelTetelek();
+    loadTetelek();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter, bevetelPage, bevetelSearch]);
-
-  useEffect(() => {
-    loadKiadasTetelek();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter, kiadasPage, kiadasSearch]);
+  }, [filter, tetelekPage, tetelekSearch, iranySzuro, kategoriaSzuro]);
 
   useEffect(() => {
     fetchAction("getKamionRendszamok", { id: user.ceg_id }).then((result) => {
@@ -458,8 +458,7 @@ export default function Koltsegek() {
         toast.success(result.message || "Import sikeres.");
         setNavModalOpen(false);
         loadOsszesito();
-        loadBevetelTetelek();
-        loadKiadasTetelek();
+        loadTetelek();
       } else {
         toast.error(result?.message || "Import sikertelen.");
       }
@@ -471,8 +470,7 @@ export default function Koltsegek() {
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilter((prev) => ({ ...prev, [name]: value }));
-    setBevetelPage(1);
-    setKiadasPage(1);
+    setTetelekPage(1);
   };
 
   const handleUjTetelChange = (e) => {
@@ -523,7 +521,7 @@ export default function Koltsegek() {
         setEditingTetelId(null);
         setAdding(false);
         loadOsszesito();
-        loadEgyebTetelek();
+        loadTetelek();
       } else {
         toast.error(result?.message || "Mentés sikertelen.");
       }
@@ -564,10 +562,20 @@ export default function Koltsegek() {
     if (result?.success) {
       toast.success("Törölve.");
       loadOsszesito();
-      loadEgyebTetelek();
+      loadTetelek();
     } else {
       toast.error(result?.message || "Törlés sikertelen.");
     }
+  };
+
+  const toggleKategoriaSzuro = (kulcs) => {
+    setKategoriaSzuro((prev) => (prev === kulcs ? "" : kulcs));
+    setTetelekPage(1);
+  };
+
+  const changeIranySzuro = (kulcs) => {
+    setIranySzuro(kulcs);
+    setTetelekPage(1);
   };
 
   // Jármű szerinti bontás — a képernyőn csak a döntésre releváns 4 oszlop
@@ -635,13 +643,28 @@ export default function Koltsegek() {
     { key: "netto", label: "Nettó (Ft)" },
   ];
 
-  // A bevétel- és kiadás-táblázat ugyanazt a mezőkészletet mutatja, csak
-  // a felhasználó felé nincs "Irány" oszlop — az már abból látszik,
-  // melyik táblázatban van a sor. Az Összeg feljebb került (3. oszlop),
-  // mert ez a leggyakrabban keresett érték — a Számlaszám/Megjegyzés
-  // (gyakran üres, másodlagos mező) mobilon rejtve marad.
+  // Az egykor külön Bevételek/Kiadások táblázat mostantól egy közös lista —
+  // az "Irány" oszlop jelzi, melyik sor melyik irányba tartozik (ld.
+  // UX-audit 1-2. pontja: egy szélesebb, sűrűbb lista kevesebb görgetéssel,
+  // mint két keskeny, fejenként duplázott fejléccel/lapozóval).
   const egyebTetelColumns = [
     { key: "datum", label: "Dátum" },
+    {
+      key: "irany",
+      label: "Irány",
+      render: (row) => (
+        <span
+          className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
+            row.irany === "bevetel"
+              ? "bg-emerald-50 text-emerald-700"
+              : "bg-red-50 text-red-700"
+          }`}
+        >
+          {row.irany === "bevetel" ? "Bevétel" : "Kiadás"}
+        </span>
+      ),
+      exportValue: (row) => (row.irany === "bevetel" ? "Bevétel" : "Kiadás"),
+    },
     {
       key: "megnevezes",
       label: "Megnevezés",
@@ -666,7 +689,15 @@ export default function Koltsegek() {
       label: "Összeg",
       align: "right",
       className: "tabular-nums font-semibold",
-      render: (row) => formatHuf(row.osszeg),
+      render: (row) => (
+        <span
+          className={
+            row.irany === "bevetel" ? "text-emerald-600" : "text-red-600"
+          }
+        >
+          {formatHuf(row.osszeg)}
+        </span>
+      ),
     },
     { key: "rendszam", label: "Jármű", render: (row) => row.rendszam || "—" },
     {
@@ -704,11 +735,108 @@ export default function Koltsegek() {
   ];
   const egyebTetelExportColumns = [
     { key: "datum", label: "Dátum" },
+    {
+      key: "irany",
+      label: "Irány",
+      exportValue: (row) => (row.irany === "bevetel" ? "Bevétel" : "Kiadás"),
+    },
     { key: "megnevezes", label: "Megnevezés" },
     { key: "osszeg", label: "Összeg (Ft)" },
     { key: "rendszam", label: "Jármű" },
     { key: "szamlaszam", label: "Számlaszám" },
     { key: "megjegyzes", label: "Megjegyzés" },
+  ];
+
+  const tetelekHeaderAction = (
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        onClick={() => openAdding("bevetel")}
+        className="flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-emerald-700 shadow-soft transition-all duration-300 ease-fluid hover:bg-emerald-100 active:scale-95"
+      >
+        <PiPlusLight className="h-4 w-4" /> Bevétel
+      </button>
+      <button
+        type="button"
+        onClick={() => openAdding("kiado")}
+        className="flex items-center gap-1.5 rounded-xl bg-brand-600 px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-all duration-300 ease-fluid hover:bg-brand-700 active:scale-95"
+      >
+        <PiPlusLight className="h-4 w-4" /> Kiadás
+      </button>
+    </div>
+  );
+
+  // A Karbantartás/Biztosítás chipre nincs `egyeb_koltsegek` sor (külön
+  // táblákból, on-the-fly számolt adat, ld. koltsegInterface.php komment) —
+  // ha a felhasználó ezekre szűr, a lista szándékosan üres, de egy
+  // eligazító üzenettel (nem hibaként) a tényleges adat helyére mutat.
+  const ledgerEmptyLabel =
+    kategoriaSzuro === "karbantartas" ? (
+      <>
+        Nincs ilyen jelölésű tétel — a karbantartási költségek a{" "}
+        <button
+          type="button"
+          onClick={() => history.push("/admin/karbantartasok")}
+          className="font-semibold text-brand-600 underline underline-offset-2 hover:text-brand-700"
+        >
+          Karbantartások
+        </button>{" "}
+        oldalon részletesek.
+      </>
+    ) : kategoriaSzuro === "biztositas" ? (
+      <>
+        Nincs ilyen jelölésű tétel — a biztosítási díjak a jármű saját
+        adatlapján (
+        <button
+          type="button"
+          onClick={() => history.push("/admin/kamionok")}
+          className="font-semibold text-brand-600 underline underline-offset-2 hover:text-brand-700"
+        >
+          Kamionok
+        </button>
+        /
+        <button
+          type="button"
+          onClick={() => history.push("/admin/potkocsi")}
+          className="font-semibold text-brand-600 underline underline-offset-2 hover:text-brand-700"
+        >
+          Pótkocsik
+        </button>
+        ) részletesek.
+      </>
+    ) : (
+      "Nincs megjeleníthető tétel"
+    );
+
+  const kategoriaChipek = [
+    {
+      key: "karbantartas",
+      label: "Karbantartás",
+      icon: PiWrenchLight,
+      dotClass: "bg-brand-500",
+      value: adat.osszesen.karbantartas,
+    },
+    {
+      key: "uzemanyag",
+      label: "Üzemanyag",
+      icon: PiGasPumpLight,
+      dotClass: "bg-amber-500",
+      value: adat.osszesen.uzemanyag,
+    },
+    {
+      key: "biztositas",
+      label: "Biztosítás",
+      icon: PiShieldCheckLight,
+      dotClass: "bg-purple-500",
+      value: adat.osszesen.biztositas,
+    },
+    {
+      key: "egyeb",
+      label: "Egyéb",
+      icon: PiReceiptLight,
+      dotClass: "bg-yellow-500",
+      value: adat.osszesen.egyeb,
+    },
   ];
 
   return (
@@ -756,18 +884,58 @@ export default function Koltsegek() {
         <Spinner wrapperClassName="flex justify-center py-16" />
       ) : (
         <>
-          {/* A globális "hogy állunk" nettó-hero átkerült a Főoldalra
-              (e havi, fix időszak) — itt, a tetszőleges időszakra
-              szűrhető Pénzforgalom oldalon a Bevétel/Kiadás/Nettó a
-              grafikon kártya fejlécébe olvad, a KIVÁLASZTOTT (szűrt)
-              időszakra vonatkozóan, nem külön hero-kártyaként. */}
-          <div className="rounded-3xl bg-white p-6 shadow-soft ring-1 ring-ink-100">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
+          {/* Havi alakulás — összecsukható diagram-kártya, ismét felül,
+              alapból nyitva asztalon (rögtön látszik a havi trend), alapból
+              csukva mobilon (ott a tétel-lista férjen el felül, görgetés
+              nélkül). A fejléc (cím/nyitó-csukó nyíl + Bevétel/Kiadás/Nettó
+              + év-váltó) mindig látszik, összecsukott állapotban is — így a
+              legfontosabb 3 szám akkor is egy pillantásra elérhető, ha
+              maga a grafikon épp be van csukva. */}
+          <div className="rounded-3xl bg-white p-5 shadow-soft ring-1 ring-ink-100">
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setChartOpen((o) => !o)}
+                className="flex flex-shrink-0 items-center gap-2 text-left"
+              >
+                <PiChartBarLight className="h-4 w-4 flex-shrink-0 text-ink-400" />
                 <h3 className="font-display text-base font-semibold text-brand-900">
                   Havi alakulás
                 </h3>
-                <div className="flex items-center gap-0.5 rounded-lg bg-slate-100 p-0.5">
+                {chartOpen ? (
+                  <PiCaretUpLight className="h-4 w-4 flex-shrink-0 text-ink-400" />
+                ) : (
+                  <PiCaretDownLight className="h-4 w-4 flex-shrink-0 text-ink-400" />
+                )}
+              </button>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                <span className="flex items-center gap-1.5 text-ink-500">
+                  <PiTrendUpLight className="h-4 w-4 text-emerald-600" />
+                  <span className="font-semibold tabular-nums text-ink-800">
+                    {formatHuf(adat.osszesen.bevetel)}
+                  </span>
+                </span>
+                <span className="flex items-center gap-1.5 text-ink-500">
+                  <PiCoinsLight className="h-4 w-4 text-red-600" />
+                  <span className="font-semibold tabular-nums text-ink-800">
+                    {formatHuf(adat.osszesen.kiadas)}
+                  </span>
+                </span>
+                <span className="flex items-center gap-1.5 text-ink-500">
+                  Nettó
+                  <span
+                    className={`font-semibold tabular-nums ${
+                      adat.osszesen.netto >= 0
+                        ? "text-emerald-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {formatHuf(adat.osszesen.netto)}
+                  </span>
+                </span>
+              </div>
+              {chartOpen && (
+                <div className="ml-auto flex flex-shrink-0 items-center gap-0.5 rounded-lg bg-slate-100 p-0.5">
                   <button
                     type="button"
                     onClick={() => changeYear(-1)}
@@ -790,144 +958,109 @@ export default function Koltsegek() {
                     <PiCaretRightLight className="h-3.5 w-3.5" />
                   </button>
                 </div>
-              </div>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-                <span className="flex items-center gap-1.5 text-ink-500">
-                  <PiTrendUpLight className="h-4 w-4 text-emerald-600" />
-                  <span className="font-semibold tabular-nums text-ink-800">
-                    {formatHuf(adat.osszesen.bevetel)}
-                  </span>
-                </span>
-                <span className="flex items-center gap-1.5 text-ink-500">
-                  <PiCoinsLight className="h-4 w-4 text-red-600" />
-                  <span className="font-semibold tabular-nums text-ink-800">
-                    {formatHuf(adat.osszesen.kiadas)}
-                  </span>
-                </span>
-                <span className="flex items-center gap-1.5 border-l border-ink-100 pl-4 text-ink-500">
-                  Nettó
-                  <span
-                    className={`font-semibold tabular-nums ${
-                      adat.osszesen.netto >= 0
-                        ? "text-emerald-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {formatHuf(adat.osszesen.netto)}
-                  </span>
-                </span>
-              </div>
+              )}
             </div>
-            {adat.havi.length === 0 ? (
-              <p className="py-10 text-center text-sm text-ink-400">
-                Nincs megjeleníthető adat ebben az időszakban.
-              </p>
-            ) : (
-              <CashflowChart havi={adat.havi} simplified={isMobile} />
+            {chartOpen && (
+              <div className="mt-4">
+                {adat.havi.length === 0 ? (
+                  <p className="py-10 text-center text-sm text-ink-400">
+                    Nincs megjeleníthető adat ebben az időszakban.
+                  </p>
+                ) : (
+                  <CashflowChart havi={adat.havi} simplified={isMobile} />
+                )}
+                {adat.vanDevizasFuvar && (
+                  <p className="mt-3 text-xs text-ink-400">
+                    Devizás (nem HUF) fuvarok díja nem szerepel az
+                    összesítésben — nincs árfolyam-forrás az appban.
+                  </p>
+                )}
+              </div>
             )}
-            {adat.vanDevizasFuvar && (
-              <p className="mt-3 text-xs text-ink-400">
-                Devizás (nem HUF) fuvarok díja nem szerepel az összesítésben —
-                nincs árfolyam-forrás az appban.
-              </p>
-            )}
+          </div>
 
-            {/* Kategória-chipek — a kiadás négy alkategóriája, kompakt
-                sorban, a grafikon jelmagyarázatának kiterjesztéseként. */}
-            <div className="mt-5 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Kategória-chip rács — Bevétel/Kiadás/Nettó a fenti grafikon-
+              fejlécbe került, itt a 4 kiadás-kategória tölti ki a teljes
+              rendelkezésre álló szélességet (2 oszlop mobilon, 4 oszlop
+              sm+ felett). */}
+          <div className="grid grid-cols-2 gap-2 rounded-3xl bg-white p-4 shadow-soft ring-1 ring-ink-100 sm:grid-cols-4">
+            {kategoriaChipek.map((chip) => (
               <CategoryChip
-                icon={PiWrenchLight}
-                label="Karbantartás"
-                value={adat.osszesen.karbantartas}
-                dotClass="bg-brand-500"
+                key={chip.key}
+                icon={chip.icon}
+                label={chip.label}
+                value={chip.value}
+                dotClass={chip.dotClass}
+                active={kategoriaSzuro === chip.key}
+                onClick={() => toggleKategoriaSzuro(chip.key)}
               />
-              <CategoryChip
-                icon={PiGasPumpLight}
-                label="Üzemanyag"
-                value={adat.osszesen.uzemanyag}
-                dotClass="bg-amber-500"
-              />
-              <CategoryChip
-                icon={PiShieldCheckLight}
-                label="Biztosítás"
-                value={adat.osszesen.biztositas}
-                dotClass="bg-purple-500"
-              />
-              <CategoryChip
-                icon={PiReceiptLight}
-                label="Egyéb"
-                value={adat.osszesen.egyeb}
-                dotClass="bg-yellow-500"
-              />
+            ))}
+          </div>
+
+          {/* Mind/Bevétel/Kiadás szegmens */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-0.5 rounded-xl bg-slate-100 p-1">
+              {[
+                { key: "mind", label: "Mind" },
+                { key: "bevetel", label: "Bevétel" },
+                { key: "kiado", label: "Kiadás" },
+              ].map((opt) => (
+                <button
+                  key={opt.key}
+                  type="button"
+                  onClick={() => changeIranySzuro(opt.key)}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors duration-150 ${
+                    iranySzuro === opt.key
+                      ? "bg-white text-brand-700 shadow-soft"
+                      : "text-ink-500 hover:text-ink-700"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Bevételek és Kiadások — asztalon (lg+) egymás mellett, két
-              oszlopban, mert azonos szerkezetűek és ez a tényleges napi
-              munkaterület (tétel-rögzítés); mobilon/tabletnél egymás
-              alatt, mint eddig. */}
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <div>
+          {(adat.egyebNemKotott.bevetel > 0 || adat.egyebNemKotott.kiado > 0) && (
+            <div className="flex flex-wrap gap-2">
               {adat.egyebNemKotott.bevetel > 0 && (
-                <p className="mb-2 inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs text-ink-500">
-                  Ebből járműhöz nem köthető:{" "}
+                <p className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs text-ink-500">
+                  Ebből járműhöz nem köthető bevétel:{" "}
                   {formatHuf(adat.egyebNemKotott.bevetel)}
                 </p>
               )}
-              <DataTable
-                icon={PiTrendUpLight}
-                title="Bevételek"
-                onAdd={() => openAdding("bevetel")}
-                addLabel="Új bevétel"
-                exportFilename="bevetelek"
-                exportColumns={egyebTetelExportColumns}
-                columns={egyebTetelColumns}
-                rows={bevetelTetelek}
-                mobileTitleKey="megnevezes"
-                emptyLabel="Nincs bevétel-tétel rögzítve"
-                searchable
-                searchPlaceholder="Keresés a bevételek közt..."
-                serverSide
-                totalRows={bevetelTotal}
-                page={bevetelPage}
-                pageSize={EGYEB_PAGE_SIZE}
-                onPageChange={setBevetelPage}
-                onSearchChange={setBevetelSearch}
-                onExportAll={handleBevetelExportAll}
-              />
-            </div>
-
-            <div>
               {adat.egyebNemKotott.kiado > 0 && (
-                <p className="mb-2 inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs text-ink-500">
-                  Ebből járműhöz nem köthető:{" "}
+                <p className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs text-ink-500">
+                  Ebből járműhöz nem köthető kiadás:{" "}
                   {formatHuf(adat.egyebNemKotott.kiado)}
                 </p>
               )}
-              <DataTable
-                icon={PiReceiptLight}
-                title="Kiadások"
-                onAdd={() => openAdding("kiado")}
-                addLabel="Új kiadás"
-                exportFilename="kiadasok"
-                exportColumns={egyebTetelExportColumns}
-                columns={egyebTetelColumns}
-                rows={kiadasTetelek}
-                mobileTitleKey="megnevezes"
-                emptyLabel="Nincs kiadás-tétel rögzítve"
-                searchable
-                searchPlaceholder="Keresés a kiadások közt..."
-                serverSide
-                totalRows={kiadasTotal}
-                page={kiadasPage}
-                pageSize={EGYEB_PAGE_SIZE}
-                onPageChange={setKiadasPage}
-                onSearchChange={setKiadasSearch}
-                onExportAll={handleKiadasExportAll}
-              />
             </div>
-          </div>
+          )}
 
+          <DataTable
+            icon={PiReceiptLight}
+            title="Tételek"
+            headerAction={tetelekHeaderAction}
+            exportFilename="penzforgalom_tetelek"
+            exportColumns={egyebTetelExportColumns}
+            columns={egyebTetelColumns}
+            rows={tetelek}
+            mobileTitleKey="megnevezes"
+            emptyLabel={ledgerEmptyLabel}
+            searchable
+            searchPlaceholder="Keresés a tételek közt..."
+            serverSide
+            totalRows={tetelekTotal}
+            page={tetelekPage}
+            pageSize={TETEL_PAGE_SIZE}
+            onPageChange={setTetelekPage}
+            onSearchChange={setTetelekSearch}
+            onExportAll={handleTetelekExportAll}
+          />
+
+          {/* Jármű szerinti bontás — elemző jellegű, ezért a napi
+              munkafelület (tétel-lista) alatt, a lap alján kap helyet. */}
           <DataTable
             icon={PiCoinsLight}
             title="Jármű szerinti bontás"
