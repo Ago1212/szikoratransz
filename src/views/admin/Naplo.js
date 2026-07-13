@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { PiListMagnifyingGlassLight } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import PageHeader from "components/UI/PageHeader.js";
 import DataTable from "components/UI/DataTable.js";
 import StatusBadge from "components/UI/StatusBadge.js";
+
+const PAGE_SIZE = 20;
 
 const TABLA_LABEL = {
   kamion: "Kamion",
@@ -36,15 +38,40 @@ const MUVELET_LABEL = {
 export default function Naplo() {
   const [naplo, setNaplo] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const user = JSON.parse(sessionStorage.getItem("user"));
-    fetchAction("getAuditLog", { id: user.ceg_id, kerelmezo_id: user.id })
+    setLoading(true);
+    fetchAction("getAuditLog", {
+      id: user.ceg_id,
+      kerelmezo_id: user.id,
+      search: search || undefined,
+      page,
+      pageSize: PAGE_SIZE,
+    })
       .then((result) => {
-        if (result?.success) setNaplo(result.naplo || []);
+        if (result?.success) {
+          setNaplo(result.naplo || []);
+          setTotal(result.total ?? (result.naplo || []).length);
+        } else {
+          setTotal(0);
+        }
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [page, search]);
+
+  const handleExportAll = useCallback(async () => {
+    const user = JSON.parse(sessionStorage.getItem("user"));
+    const result = await fetchAction("getAuditLog", {
+      id: user.ceg_id,
+      kerelmezo_id: user.id,
+      search: search || undefined,
+    });
+    return result?.success ? result.naplo || [] : [];
+  }, [search]);
 
   const columns = [
     {
@@ -74,7 +101,7 @@ export default function Naplo() {
       <div className="flex-shrink-0">
         <PageHeader
           title="Módosítási napló"
-          eyebrow="Utolsó 200 bejegyzés"
+          eyebrow="Teljes előzmény, lapozva"
         />
       </div>
       <div className="min-h-0 flex-1">
@@ -88,6 +115,15 @@ export default function Naplo() {
           mobileTitleKey="tabla"
           emptyLabel="Még nincs naplózott módosítás"
           fill
+          searchable
+          searchPlaceholder="Keresés entitás, leírás szerint..."
+          serverSide
+          totalRows={total}
+          page={page}
+          pageSize={PAGE_SIZE}
+          onPageChange={setPage}
+          onSearchChange={setSearch}
+          onExportAll={handleExportAll}
         />
       </div>
     </div>

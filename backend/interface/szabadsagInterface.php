@@ -10,13 +10,30 @@ class SzabadsagInterface {
 
     // A sofőr nevét PHP oldalon csatoljuk (a projekt konvenciója szerint
     // nincs SQL JOIN sehol a kódbázisban, lásd ApiHandler::getEsemenyek).
-    public function getSzabadsagok($id) {
+    public function getSzabadsagok($id, $search = null, $page = null, $pageSize = null) {
         try {
-            $query = "SELECT * FROM sofor_szabadsag WHERE admin = :id AND torolt <> 'I' ORDER BY datum_tol DESC";
-            $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':id', $id);
-            $stmt->execute();
-            $szabadsagok = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $params = [':id' => $id];
+            $query = "SELECT * FROM sofor_szabadsag WHERE admin = :id AND torolt <> 'I'";
+            // A `sofor_nev` a lekérdezés után, PHP oldalon fűződik a sorokhoz
+            // (ld. lentebb) — a rá szűrő kereséshez ezért alkérdés kell.
+            if (!empty($search)) {
+                $query .= " AND (" . PaginationHelper::likeClause(['tipus', 'megjegyzes'], 'search') .
+                    " OR sofor_id IN (SELECT id FROM user WHERE name LIKE :search_nev))";
+                $params[':search'] = '%' . $search . '%';
+                $params[':search_nev'] = '%' . $search . '%';
+            }
+            $query .= " ORDER BY datum_tol DESC";
+
+            if ($page !== null) {
+                [$szabadsagok, $total, $page, $pageSize] = PaginationHelper::fetchPage($this->db, $query, $params, $page, $pageSize);
+            } else {
+                $stmt = $this->db->prepare($query);
+                foreach ($params as $key => $value) {
+                    $stmt->bindValue($key, $value);
+                }
+                $stmt->execute();
+                $szabadsagok = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
 
             $stmt2 = $this->db->query("SELECT id, name FROM user WHERE torolt <> 'I'");
             $soforNevek = [];
@@ -27,7 +44,13 @@ class SzabadsagInterface {
                 $sz['sofor_nev'] = $soforNevek[$sz['sofor_id']] ?? 'Ismeretlen';
             }
 
-            return ['success' => true, 'szabadsagok' => $szabadsagok];
+            $result = ['success' => true, 'szabadsagok' => $szabadsagok];
+            if ($page !== null) {
+                $result['total'] = $total;
+                $result['page'] = $page;
+                $result['pageSize'] = $pageSize;
+            }
+            return $result;
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }

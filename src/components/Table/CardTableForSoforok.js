@@ -6,7 +6,7 @@ import { PiPencilSimpleLight, PiTrashLight, PiUsersLight } from "react-icons/pi"
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
 
-const CardTable = ({ soforok }) => {
+const CardTable = ({ soforok, loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll }) => {
   const history = useHistory();
   const user = JSON.parse(sessionStorage.getItem("user"));
 
@@ -84,6 +84,16 @@ const CardTable = ({ soforok }) => {
       rows={soforok}
       onRowDoubleClick={handleEditClick}
       emptyLabel="Nincsenek sofőrök megjelenítve"
+      loading={loading}
+      searchable
+      searchPlaceholder="Keresés név, email, telefon szerint..."
+      serverSide
+      totalRows={total}
+      page={page}
+      pageSize={pageSize}
+      onPageChange={onPageChange}
+      onSearchChange={onSearchChange}
+      onExportAll={onExportAll}
     />
   );
 };

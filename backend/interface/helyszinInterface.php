@@ -8,11 +8,25 @@ class HelyszinInterface {
         $this->db = $database->connect();
     }
 
-    public function getHelyszinek($id) {
+    public function getHelyszinek($id, $search = null, $page = null, $pageSize = null) {
         try {
-            $query = "SELECT * FROM helyszinek WHERE admin = :id AND torolt <> 'I' ORDER BY nev ASC";
+            $params = [':id' => $id];
+            $query = "SELECT * FROM helyszinek WHERE admin = :id AND torolt <> 'I'";
+            if (!empty($search)) {
+                $query .= " AND " . PaginationHelper::likeClause(['nev'], 'search');
+                $params[':search'] = '%' . $search . '%';
+            }
+            $query .= " ORDER BY nev ASC";
+
+            if ($page !== null) {
+                [$helyszinek, $total, $page, $pageSize] = PaginationHelper::fetchPage($this->db, $query, $params, $page, $pageSize);
+                return ['success' => true, 'helyszinek' => $helyszinek, 'total' => $total, 'page' => $page, 'pageSize' => $pageSize];
+            }
+
             $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':id', $id);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
             $stmt->execute();
             return ['success' => true, 'helyszinek' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
         } catch (Exception $e) {

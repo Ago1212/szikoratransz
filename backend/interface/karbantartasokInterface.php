@@ -13,7 +13,7 @@ class KarbantartasInterface {
     // potkocsi_id: "",
     // datumTol: "",
     // datumIg: "",
-    public function getKarbantartasok($id, $kamion_id, $potkocsi_id, $datumTol, $datumIg, $elvegezte) {
+    public function getKarbantartasok($id, $kamion_id, $potkocsi_id, $datumTol, $datumIg, $elvegezte, $search = null, $page = null, $pageSize = null) {
         $filter = [
             'kamion_id' => $kamion_id,
             'potkocsi_id' => $potkocsi_id,
@@ -50,6 +50,16 @@ class KarbantartasInterface {
                 $kamionQuery .= " AND elvegezte LIKE :elvegezte";
                 $params[':elvegezte'] = "{$filter['elvegezte']}%";
             }
+            // A `rendszam` a lekérdezés eredményében nincs benne (a frontend
+            // tölti fel egy külön kamion/pótkocsi-listából) — a szabadszavas
+            // keresésnek ezért egy alkérdésre van szüksége a rendszám szerinti
+            // találatokhoz, a `log`/`elvegezte` sima LIKE-ja mellett.
+            if (!empty($search)) {
+                $kamionQuery .= " AND (" . PaginationHelper::likeClause(['log', 'elvegezte'], 'search') .
+                    " OR kamion_id IN (SELECT id FROM kamion WHERE rendszam LIKE :search_rendszam))";
+                $params[':search'] = '%' . $search . '%';
+                $params[':search_rendszam'] = '%' . $search . '%';
+            }
 
             // Potkocsi karbantartások
             $potkocsiQuery = "SELECT 'potkocsi' as tipus, id, null as kamion_id, potkocsi_id, potkocsi_id as jarmuId, datum, log,km_oraallas,elvegezte,koltseg, torolt FROM potkocsi_karbantartars WHERE torolt = 'N'";
@@ -75,9 +85,33 @@ class KarbantartasInterface {
                 $potkocsiQuery .= " AND elvegezte LIKE :elvegezte";
                 $params[':elvegezte'] = "{$filter['elvegezte']}%";
             }
+            if (!empty($search)) {
+                $potkocsiQuery .= " AND (" . PaginationHelper::likeClause(['log', 'elvegezte'], 'search') .
+                    " OR potkocsi_id IN (SELECT id FROM potkocsi WHERE rendszam LIKE :search_rendszam))";
+                $params[':search'] = '%' . $search . '%';
+                $params[':search_rendszam'] = '%' . $search . '%';
+            }
 
             // UNION a két lekérdezés között
             $query = "$kamionQuery UNION ALL $potkocsiQuery ORDER BY datum DESC";
+
+            if ($page !== null) {
+                [$result, $total, $page, $pageSize] = PaginationHelper::fetchPage($this->db, $query, $params, $page, $pageSize);
+
+                // A "Szűrt összes költség" kártya a TELJES szűrt halmazra
+                // vonatkozik, nem csak az épp látott oldalra — ezért egy
+                // külön, LIMIT nélküli összesítő lekérdezés kell ugyanazokkal
+                // a szűrőkkel, különben lapozáskor hamis (csak az oldalra
+                // vonatkozó) összeg jelenne meg.
+                $sumStmt = $this->db->prepare("SELECT SUM(koltseg) AS osszeg FROM ($query) AS agg");
+                foreach ($params as $key => $value) {
+                    $sumStmt->bindValue($key, $value);
+                }
+                $sumStmt->execute();
+                $osszesKoltseg = (float) ($sumStmt->fetch(PDO::FETCH_ASSOC)['osszeg'] ?? 0);
+
+                return ['success' => true, 'message' => 'Karbantartások lekérdezve.', 'karbantartasok' => $result, 'total' => $total, 'page' => $page, 'pageSize' => $pageSize, 'osszesKoltseg' => $osszesKoltseg];
+            }
 
             $stmt = $this->db->prepare($query);
 

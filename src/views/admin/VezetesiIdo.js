@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { PiSteeringWheelLight, PiWarningCircleLight, PiTrashLight } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
@@ -43,6 +43,8 @@ const emptyForm = () => ({
   megjegyzes: "",
 });
 
+const PAGE_SIZE = 10;
+
 export default function VezetesiIdo() {
   const user = JSON.parse(sessionStorage.getItem("user"));
   const [soforok, setSoforok] = useState([]);
@@ -52,25 +54,62 @@ export default function VezetesiIdo() {
   const [openDialog, setOpenDialog] = useState(false);
   const [form, setForm] = useState(emptyForm());
   const [isSaving, setIsSaving] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [sertesSzam, setSertesSzam] = useState(0);
+  const [figyelmeztetesSzam, setFigyelmeztetesSzam] = useState(0);
 
   const load = () => {
     setIsLoading(true);
-    fetchAction("getVezetesiOsszesito", { ceg_id: user.ceg_id, kerelmezo_id: user.id }).then((result) => {
-      if (result?.success) setSoforok(result.soforok || []);
+    fetchAction("getVezetesiOsszesito", {
+      ceg_id: user.ceg_id,
+      kerelmezo_id: user.id,
+      search: search || undefined,
+      page,
+      pageSize: PAGE_SIZE,
+    }).then((result) => {
+      if (result?.success) {
+        setSoforok(result.soforok || []);
+        setTotal(result.total ?? (result.soforok || []).length);
+        setSertesSzam(result.sertesSzam ?? 0);
+        setFigyelmeztetesSzam(result.figyelmeztetesSzam ?? 0);
+      } else {
+        setTotal(0);
+      }
       setIsLoading(false);
     });
   };
 
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, search]);
+
+  useEffect(() => {
     fetchAction("getSoforok", { id: user.ceg_id, kerelmezo_id: user.id }).then((result) => {
       if (result?.success) setSoforValaszto(result.soforok || []);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const sertesSzam = soforok.filter((s) => s.hetek?.[0]?.statusz === "sertes").length;
-  const figyelmeztetesSzam = soforok.filter((s) => s.hetek?.[0]?.statusz === "figyelmeztetes").length;
+  const handleExportAll = useCallback(async () => {
+    const result = await fetchAction("getVezetesiOsszesito", {
+      ceg_id: user.ceg_id,
+      kerelmezo_id: user.id,
+      search: search || undefined,
+    });
+    return result?.success
+      ? (result.soforok || []).map((s) => ({
+          sofor_id: s.sofor_id,
+          sofor_nev: s.sofor_nev || `#${s.sofor_id}`,
+          vezetes_ossz: s.hetek?.[0]?.vezetes_ossz ?? 0,
+          statusz: s.hetek?.[0]?.statusz || "rendben",
+          hetek: s.hetek || [],
+        }))
+      : [];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
 
   const rows = soforok.map((s) => ({
     sofor_id: s.sofor_id,
@@ -190,6 +229,15 @@ export default function VezetesiIdo() {
         rows={rows}
         mobileTitleKey="sofor_nev"
         emptyLabel="Nincs rögzített vezetési adat"
+        searchable
+        searchPlaceholder="Keresés sofőr neve szerint..."
+        serverSide
+        totalRows={total}
+        page={page}
+        pageSize={PAGE_SIZE}
+        onPageChange={setPage}
+        onSearchChange={setSearch}
+        onExportAll={handleExportAll}
       />
       {isLoading && <p className="text-center text-sm text-ink-400">Betöltés…</p>}
 

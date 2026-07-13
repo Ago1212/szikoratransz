@@ -8,11 +8,25 @@ class UgyfelInterface {
         $this->db = $database->connect();
     }
 
-    public function getUgyfelek($id) {
+    public function getUgyfelek($id, $search = null, $page = null, $pageSize = null) {
         try {
-            $query = "SELECT * FROM ugyfelek WHERE admin = :id AND torolt <> 'I' ORDER BY nev ASC";
+            $params = [':id' => $id];
+            $query = "SELECT * FROM ugyfelek WHERE admin = :id AND torolt <> 'I'";
+            if (!empty($search)) {
+                $query .= " AND " . PaginationHelper::likeClause(['nev', 'varos', 'kapcsolattarto_nev', 'kapcsolattarto_telefon', 'kapcsolattarto_email'], 'search');
+                $params[':search'] = '%' . $search . '%';
+            }
+            $query .= " ORDER BY nev ASC";
+
+            if ($page !== null) {
+                [$ugyfelek, $total, $page, $pageSize] = PaginationHelper::fetchPage($this->db, $query, $params, $page, $pageSize);
+                return ['success' => true, 'ugyfelek' => $ugyfelek, 'total' => $total, 'page' => $page, 'pageSize' => $pageSize];
+            }
+
             $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':id', $id);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
             $stmt->execute();
             return ['success' => true, 'ugyfelek' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
         } catch (Exception $e) {

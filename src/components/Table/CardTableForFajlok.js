@@ -54,20 +54,36 @@ const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString("hu-HU", options);
 };
 
+const PAGE_SIZE = 10;
+
 export default function CardTableForFajlok({ id, tabla }) {
   const [files, setFiles] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const storedUserData = sessionStorage.getItem("user");
   const admin = storedUserData ? JSON.parse(storedUserData).ceg_id : "0";
+  // A lapozás/keresés csak az admin saját, önálló "Fájlok" listaoldalán
+  // (tabla === "admin") aktív — a komponens más kontextusban (pl.
+  // Karbantartasok.js egy adott karbantartáshoz tartozó pár fájlja) egy
+  // eleve kicsi, beágyazott listát mutat, ahol ez felesleges lenne.
+  const isListPage = tabla === "admin";
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
 
   const fetchFiles = async () => {
     setIsLoading(true);
     try {
-      const result = await fetchAction("getFiles", { id, tabla });
+      const result = await fetchAction("getFiles", {
+        id,
+        tabla,
+        ...(isListPage ? { search: search || undefined, page, pageSize: PAGE_SIZE } : {}),
+      });
       if (result?.success) {
         setFiles(result.files);
+        if (isListPage) setTotal(result.total ?? (result.files || []).length);
       } else {
         toast.error(result?.message || "Fájlok betöltése sikertelen.");
+        if (isListPage) setTotal(0);
       }
     } catch (error) {
       console.error("Hiba történt a fájlok betöltésekor:", error);
@@ -80,7 +96,8 @@ export default function CardTableForFajlok({ id, tabla }) {
   useEffect(() => {
     fetchFiles();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [id, page, search]);
+
 
   const handleFileDelete = async (file_id) => {
     if (!window.confirm("Biztosan törölni szeretné ezt a fájlt?")) return;
@@ -227,6 +244,18 @@ export default function CardTableForFajlok({ id, tabla }) {
           <p className="mt-2 text-sm">Nincsenek feltöltött fájlok</p>
         </div>
       }
+      {...(isListPage
+        ? {
+            searchable: true,
+            searchPlaceholder: "Keresés fájlnév szerint...",
+            serverSide: true,
+            totalRows: total,
+            page,
+            pageSize: PAGE_SIZE,
+            onPageChange: setPage,
+            onSearchChange: setSearch,
+          }
+        : {})}
     />
   );
 }

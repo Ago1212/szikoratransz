@@ -9,6 +9,8 @@ import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import Modal from "components/UI/Modal.js";
 import FormField from "components/UI/FormField.js";
 
+const PAGE_SIZE = 10;
+
 const emptyForm = () => ({
   leiras: "",
   datum: format(new Date(), "yyyy-MM-dd"),
@@ -19,20 +21,26 @@ const CardTableForEsemenyek = ({ id }) => {
   const [showDialog, setShowDialog] = useState(false);
   const [currentEsemeny, setCurrentEsemeny] = useState(null);
   const [formData, setFormData] = useState(emptyForm());
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
 
   const fetchEsemenyek = async () => {
-    const result = await fetchAction("getEgyediHataridok", { id });
+    const result = await fetchAction("getEgyediHataridok", { id, search: search || undefined, page, pageSize: PAGE_SIZE });
     if (result?.success) {
       setEsemenyek(result.esemenyek);
+      setTotal(result.total ?? (result.esemenyek || []).length);
     } else {
       toast.error(result?.message || "Események betöltése sikertelen.");
+      setTotal(0);
     }
   };
 
   useEffect(() => {
     fetchEsemenyek();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [id, page, search]);
+
 
   const handleEsemenyDelete = async (esemeny_id) => {
     if (!window.confirm("Biztosan törölni szeretné ezt az eseményt?")) return;
@@ -115,6 +123,14 @@ const CardTableForEsemenyek = ({ id }) => {
         rowKey={(row, index) => row.sorszam ?? index}
         onRowDoubleClick={openEditDialog}
         emptyLabel="Nincsenek események megjelenítve"
+        searchable
+        searchPlaceholder="Keresés leírás szerint..."
+        serverSide
+        totalRows={total}
+        page={page}
+        pageSize={PAGE_SIZE}
+        onPageChange={setPage}
+        onSearchChange={setSearch}
       />
 
       <Modal

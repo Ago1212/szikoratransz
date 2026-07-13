@@ -1,5 +1,6 @@
 <?php
 require 'db.php';
+require 'PaginationHelper.php';
 require 'interface/kamionInterface.php';
 require 'interface/potkocsiInterface.php';
 require 'interface/soforokInterface.php';
@@ -458,7 +459,7 @@ class ApiHandler {
                     echo json_encode($result);
                     return;
                 case 'getKamionok':
-                    echo json_encode($kamionInterface->getKamionok($request['id']));
+                    echo json_encode($kamionInterface->getKamionok($request['id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null));
                     return;
                 case 'getKamionValaszto':
                     echo json_encode($kamionInterface->getKamionValaszto($request['ceg_id']));
@@ -506,7 +507,7 @@ class ApiHandler {
                     echo json_encode($result);
                     return;
                 case 'getPotkocsik':
-                    echo json_encode($potkocsiInterface->getPotkocsik($request['id']));
+                    echo json_encode($potkocsiInterface->getPotkocsik($request['id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null));
                     return;
                 case 'getPotkocsiRendszamok':
                     echo json_encode($potkocsiInterface->getPotkocsiRendszamok($request['id']));
@@ -521,10 +522,10 @@ class ApiHandler {
                     echo json_encode($karbantartasInterface->deletePotkocsiKarbantartas($request['id']));
                     return;
                 case 'getKarbantartasok':
-                    echo json_encode($karbantartasInterface->getKarbantartasok($request['id'], $request['kamion_id'], $request['potkocsi_id'], $request['datumTol'], $request['datumIg'], $request['elvegezte']));
+                    echo json_encode($karbantartasInterface->getKarbantartasok($request['id'], $request['kamion_id'], $request['potkocsi_id'], $request['datumTol'], $request['datumIg'], $request['elvegezte'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null));
                     return;
                 case 'getSoforok':
-                    echo json_encode($soforokInterface->getSoforok($request['id']));
+                    echo json_encode($soforokInterface->getSoforok($request['id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null));
                     return;
                 case 'getSajatSofor':
                     echo json_encode($soforokInterface->getSajatSofor($request['id']));
@@ -552,7 +553,7 @@ class ApiHandler {
                     echo json_encode($result);
                     return;
                 case 'getBejelentesek':
-                    echo json_encode($bejelentesekInterface->getBejelentesek($request['ceg_id'], $request['kamion'] ?? null));
+                    echo json_encode($bejelentesekInterface->getBejelentesek($request['ceg_id'], $request['kamion'] ?? null, $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null));
                     return;
                 case 'getNyitottBejelentesek':
                     echo json_encode($bejelentesekInterface->getNyitottBejelentesek($request['id']));
@@ -620,7 +621,7 @@ class ApiHandler {
                     return;
 
                 case 'getUgyfelek':
-                    echo json_encode($ugyfelInterface->getUgyfelek($request['id']));
+                    echo json_encode($ugyfelInterface->getUgyfelek($request['id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null));
                     return;
                 case 'getUgyfelValaszto':
                     echo json_encode($ugyfelInterface->getUgyfelValaszto($request['id']));
@@ -744,7 +745,7 @@ class ApiHandler {
                     return;
 
                 case 'getHelyszinek':
-                    echo json_encode($helyszinInterface->getHelyszinek($request['id']));
+                    echo json_encode($helyszinInterface->getHelyszinek($request['id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null));
                     return;
                 case 'getHelyszin':
                     echo json_encode($helyszinInterface->getHelyszin($request['id']));
@@ -783,7 +784,7 @@ class ApiHandler {
                     return;
 
                 case 'getSzabadsagok':
-                    echo json_encode($szabadsagInterface->getSzabadsagok($request['id']));
+                    echo json_encode($szabadsagInterface->getSzabadsagok($request['id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null));
                     return;
                 case 'newSzabadsag':
                     $result = $szabadsagInterface->newSzabadsag($request);
@@ -802,7 +803,7 @@ class ApiHandler {
                     return;
 
                 case 'getAuditLog':
-                    echo json_encode($this->getAuditLog($request['id']));
+                    echo json_encode($this->getAuditLog($request['id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null));
                     return;
 
                 case 'getKoltsegOsszesito':
@@ -817,7 +818,11 @@ class ApiHandler {
                     echo json_encode($koltsegInterface->getEgyebKoltsegek(
                         $request['ceg_id'],
                         $request['datumTol'] ?? null,
-                        $request['datumIg'] ?? null
+                        $request['datumIg'] ?? null,
+                        $request['irany'] ?? null,
+                        $request['search'] ?? null,
+                        $request['page'] ?? null,
+                        $request['pageSize'] ?? null
                     ));
                     return;
 
@@ -843,7 +848,10 @@ class ApiHandler {
                         $request['ceg_id'],
                         $request['statusz'] ?? null,
                         $request['datumTol'] ?? null,
-                        $request['datumIg'] ?? null
+                        $request['datumIg'] ?? null,
+                        $request['search'] ?? null,
+                        $request['page'] ?? null,
+                        $request['pageSize'] ?? null
                     ));
                     return;
 
@@ -925,7 +933,10 @@ class ApiHandler {
                     echo json_encode($vezetesiIdoInterface->getVezetesiOsszesito(
                         $request['ceg_id'],
                         $request['sofor_id'] ?? null,
-                        $request['hetek'] ?? 8
+                        $request['hetek'] ?? 8,
+                        $request['search'] ?? null,
+                        $request['page'] ?? null,
+                        $request['pageSize'] ?? null
                     ));
                     return;
 
@@ -962,7 +973,7 @@ class ApiHandler {
                     return;
 
                 case 'getFiles':
-                    echo json_encode($filesInterface->getFiles($request['tabla'], $request['id']));
+                    echo json_encode($filesInterface->getFiles($request['tabla'], $request['id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null));
                     return;
                 case 'fileUpload':
                     echo json_encode($filesInterface->fileUpload($request['admin'], $request['tabla'], $request['id'], $request['file'], $request['name'], $request['size'], $request['kategoria'] ?? null));
@@ -974,7 +985,7 @@ class ApiHandler {
                     echo json_encode($filesInterface->deleteFile($request['id']));
                     return;
                 case 'getEgyediHataridok':
-                    echo json_encode($this->getEgyediHataridok($request['id']));
+                    echo json_encode($this->getEgyediHataridok($request['id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null));
                     return;
                 case 'updateEgyediHatarido':
                     echo json_encode($this->updateEgyediHatarido($request['id'], $request['datum'], $request['leiras']));
@@ -1021,11 +1032,25 @@ class ApiHandler {
             echo json_encode($message);
         }
     }
-    private function getEgyediHataridok($id) {
+    private function getEgyediHataridok($id, $search = null, $page = null, $pageSize = null) {
         try {
+            $params = [':id' => $id];
             $query = "SELECT * FROM egyedi_hataridok WHERE admin = :id AND torolt <> 'I'";
+            if (!empty($search)) {
+                $query .= " AND " . PaginationHelper::likeClause(['leiras'], 'search');
+                $params[':search'] = '%' . $search . '%';
+            }
+            $query .= " ORDER BY datum ASC";
+
+            if ($page !== null) {
+                [$hataridok, $total, $page, $pageSize] = PaginationHelper::fetchPage($this->db, $query, $params, $page, $pageSize);
+                return ['success' => true, 'esemenyek' => $hataridok, 'total' => $total, 'page' => $page, 'pageSize' => $pageSize];
+            }
+
             $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':id', $id);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
             $stmt->execute();
             $hataridok = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -1662,11 +1687,30 @@ class ApiHandler {
         }
     }
 
-    private function getAuditLog($id) {
+    // A korábbi kőbe vésett `LIMIT 200` most csak akkor marad meg (a régi,
+    // nem lapozott hívók felé változatlan viselkedést nyújtva), ha a hívó
+    // nem küld `page`-et — a lapozott ág nem korlátozza mesterségesen a
+    // teljes találati halmazt, a `page`/`pageSize` szabja meg, mennyi jön át.
+    private function getAuditLog($id, $search = null, $page = null, $pageSize = null) {
         try {
-            $query = "SELECT * FROM audit_log WHERE admin_id = :id ORDER BY datum DESC LIMIT 200";
+            $params = [':id' => $id];
+            $query = "SELECT * FROM audit_log WHERE admin_id = :id";
+            if (!empty($search)) {
+                $query .= " AND " . PaginationHelper::likeClause(['tabla', 'leiras'], 'search');
+                $params[':search'] = '%' . $search . '%';
+            }
+            $query .= " ORDER BY datum DESC";
+
+            if ($page !== null) {
+                [$naplo, $total, $page, $pageSize] = PaginationHelper::fetchPage($this->db, $query, $params, $page, $pageSize);
+                return ['success' => true, 'naplo' => $naplo, 'total' => $total, 'page' => $page, 'pageSize' => $pageSize];
+            }
+
+            $query .= " LIMIT 200";
             $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':id', $id);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
             $stmt->execute();
 
             return ['success' => true, 'naplo' => $stmt->fetchAll(PDO::FETCH_ASSOC)];

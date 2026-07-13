@@ -149,7 +149,7 @@ class FuvarInterface {
         }
     }
 
-    public function getFuvarok($ceg_id, $statusz = null, $datumTol = null, $datumIg = null) {
+    public function getFuvarok($ceg_id, $statusz = null, $datumTol = null, $datumIg = null, $search = null, $page = null, $pageSize = null) {
         try {
             $query = "SELECT * FROM fuvarok WHERE admin = :ceg_id AND torolt <> 'I'";
             $params = [':ceg_id' => $ceg_id];
@@ -165,14 +165,34 @@ class FuvarInterface {
                 $query .= " AND (felrakas_datum <= :datumIg OR felrakas_datum IS NULL)";
                 $params[':datumIg'] = $datumIg;
             }
+            // A `kamion_rendszam`/`potkocsi_rendszam`/`ugyfel_nev`/`sofor_nev`
+            // a lekérdezés után, PHP oldalon fűződik a sorokhoz (ld. lentebb) —
+            // ezért a rájuk szűrő kereséshez alkérdés kell, nem sima LIKE a
+            // `fuvarok` saját oszlopain.
+            if (!empty($search)) {
+                $query .= " AND (" . PaginationHelper::likeClause(['felrakas_cim', 'lerakas_cim', 'rakomany_leiras', 'megjegyzes'], 'search') .
+                    " OR kamion_id IN (SELECT id FROM kamion WHERE rendszam LIKE :search_kamion)" .
+                    " OR potkocsi_id IN (SELECT id FROM potkocsi WHERE rendszam LIKE :search_potkocsi)" .
+                    " OR ugyfel_id IN (SELECT id FROM ugyfelek WHERE nev LIKE :search_ugyfel)" .
+                    " OR sofor_id IN (SELECT id FROM user WHERE name LIKE :search_sofor))";
+                $params[':search'] = '%' . $search . '%';
+                $params[':search_kamion'] = '%' . $search . '%';
+                $params[':search_potkocsi'] = '%' . $search . '%';
+                $params[':search_ugyfel'] = '%' . $search . '%';
+                $params[':search_sofor'] = '%' . $search . '%';
+            }
             $query .= " ORDER BY COALESCE(felrakas_datum, letrehozva) DESC, id DESC";
 
-            $stmt = $this->db->prepare($query);
-            foreach ($params as $k => $v) {
-                $stmt->bindValue($k, $v);
+            if ($page !== null) {
+                [$fuvarok, $total, $page, $pageSize] = PaginationHelper::fetchPage($this->db, $query, $params, $page, $pageSize);
+            } else {
+                $stmt = $this->db->prepare($query);
+                foreach ($params as $k => $v) {
+                    $stmt->bindValue($k, $v);
+                }
+                $stmt->execute();
+                $fuvarok = $stmt->fetchAll(PDO::FETCH_ASSOC);
             }
-            $stmt->execute();
-            $fuvarok = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             $ugyfelNevek = $this->getNevLookup('ugyfelek', 'nev', $ceg_id);
             $kamionRendszamok = $this->getNevLookup('kamion', 'rendszam', $ceg_id);
@@ -186,7 +206,13 @@ class FuvarInterface {
                 $f['sofor_nev'] = $soforNevek[$f['sofor_id']] ?? null;
             }
 
-            return ['success' => true, 'fuvarok' => $fuvarok];
+            $result = ['success' => true, 'fuvarok' => $fuvarok];
+            if ($page !== null) {
+                $result['total'] = $total;
+                $result['page'] = $page;
+                $result['pageSize'] = $pageSize;
+            }
+            return $result;
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }

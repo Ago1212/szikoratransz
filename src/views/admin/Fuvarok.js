@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
 
@@ -31,11 +31,16 @@ const emptyFuvar = () => ({
   megjegyzes: "",
 });
 
+const PAGE_SIZE = 15;
+
 export default function Fuvarok() {
   const user = JSON.parse(sessionStorage.getItem("user"));
   const [fuvarok, setFuvarok] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState({ statusz: "", datumTol: "", datumIg: "" });
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
 
   const [ugyfelek, setUgyfelek] = useState([]);
   const [kamionok, setKamionok] = useState([]);
@@ -55,8 +60,16 @@ export default function Fuvarok() {
       statusz: filter.statusz || undefined,
       datumTol: filter.datumTol || undefined,
       datumIg: filter.datumIg || undefined,
+      search: search || undefined,
+      page,
+      pageSize: PAGE_SIZE,
     }).then((result) => {
-      if (result?.success) setFuvarok(result.fuvarok || []);
+      if (result?.success) {
+        setFuvarok(result.fuvarok || []);
+        setTotal(result.total ?? (result.fuvarok || []).length);
+      } else {
+        setTotal(0);
+      }
       setIsLoading(false);
     });
   };
@@ -64,7 +77,20 @@ export default function Fuvarok() {
   useEffect(() => {
     loadFuvarok();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter]);
+  }, [filter, page, search]);
+
+  const handleExportAll = useCallback(async () => {
+    const result = await fetchAction("getFuvarok", {
+      ceg_id: user.ceg_id,
+      kerelmezo_id: user.id,
+      statusz: filter.statusz || undefined,
+      datumTol: filter.datumTol || undefined,
+      datumIg: filter.datumIg || undefined,
+      search: search || undefined,
+    });
+    return result?.success ? result.fuvarok || [] : [];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, search]);
 
   // A választók (ügyfél/kamion/pótkocsi/sofőr) csak egyszer töltődnek be —
   // ezek a meglévő, könnyű lookup-akciók, amiket más modulok is használnak.
@@ -176,7 +202,10 @@ export default function Fuvarok() {
           <button
             key={s.key}
             type="button"
-            onClick={() => setFilter((prev) => ({ ...prev, statusz: s.key }))}
+            onClick={() => {
+              setFilter((prev) => ({ ...prev, statusz: s.key }));
+              setPage(1);
+            }}
             className={`rounded-full px-4 py-2 text-xs font-bold transition-colors duration-150 ${
               filter.statusz === s.key ? "bg-brand-600 text-white" : "border border-ink-100 bg-white text-ink-500 hover:bg-slate-100"
             }`}
@@ -193,14 +222,20 @@ export default function Fuvarok() {
             label="Felrakás dátumtól"
             name="datumTol"
             value={filter.datumTol}
-            onChange={(e) => setFilter((prev) => ({ ...prev, datumTol: e.target.value }))}
+            onChange={(e) => {
+              setFilter((prev) => ({ ...prev, datumTol: e.target.value }));
+              setPage(1);
+            }}
           />
           <FormField
             type="date"
             label="Felrakás dátumig"
             name="datumIg"
             value={filter.datumIg}
-            onChange={(e) => setFilter((prev) => ({ ...prev, datumIg: e.target.value }))}
+            onChange={(e) => {
+              setFilter((prev) => ({ ...prev, datumIg: e.target.value }));
+              setPage(1);
+            }}
           />
         </FormSection>
       </div>
@@ -214,6 +249,12 @@ export default function Fuvarok() {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onStatuszValt={handleStatuszValt}
+        total={total}
+        page={page}
+        pageSize={PAGE_SIZE}
+        onPageChange={setPage}
+        onSearchChange={setSearch}
+        onExportAll={handleExportAll}
       />
       {isLoading && <p className="text-center text-sm text-ink-400">Betöltés…</p>}
 

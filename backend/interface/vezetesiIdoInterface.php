@@ -118,7 +118,12 @@ class VezetesiIdoInterface {
 
     // A megfelelőségi motor — sofőrönként heti bontásban számol, PHP
     // oldalon (JOIN-mentes konvenció), a nyers napi sorokból.
-    public function getVezetesiOsszesito($ceg_id, $sofor_id = null, $hetek = 8) {
+    // A `soforok` tömb sofőrönként EGY aggregált sort tartalmaz (nem a nyers
+    // napi naplósorokat) — ezért a keresés/lapozás itt PHP oldalon, az
+    // aggregálás UTÁN történik (`array_filter`/`array_slice`), nem SQL
+    // LIMIT/OFFSET-tel. `$search`/`$page`/`$pageSize` nélkül hívva (a régi
+    // viselkedés) a teljes, lapozatlan lista jön vissza.
+    public function getVezetesiOsszesito($ceg_id, $sofor_id = null, $hetek = 8, $search = null, $page = null, $pageSize = null) {
         try {
             $kezdet = date('Y-m-d', strtotime('-' . ($hetek * 7 + 7) . ' days'));
             $query = "SELECT * FROM vezetesi_naplo WHERE admin = :ceg_id AND torolt <> 'I' AND datum >= :kezdet";
@@ -151,7 +156,37 @@ class VezetesiIdoInterface {
                 ];
             }
 
-            return ['success' => true, 'soforok' => $eredmeny];
+            if (!empty($search)) {
+                $searchLower = mb_strtolower($search);
+                $eredmeny = array_values(array_filter($eredmeny, function ($sofor) use ($searchLower) {
+                    return mb_strpos(mb_strtolower($sofor['sofor_nev'] ?? ''), $searchLower) !== false;
+                }));
+            }
+
+            $result = ['success' => true, 'soforok' => $eredmeny];
+            if ($page !== null) {
+                [$normPage, $normPageSize] = PaginationHelper::normalize($page, $pageSize);
+                $total = count($eredmeny);
+
+                // A "Túllépés"/"Figyelmeztetés" stat-kártyák a TELJES (kereséssel
+                // szűrt, de lapozás előtti) halmazra vonatkoznak — enélkül
+                // lapozáskor csak az épp látott oldal sofőrjeit számolnák.
+                $sertesSzam = 0;
+                $figyelmeztetesSzam = 0;
+                foreach ($eredmeny as $sofor) {
+                    $statusz = $sofor['hetek'][0]['statusz'] ?? 'rendben';
+                    if ($statusz === 'sertes') $sertesSzam++;
+                    elseif ($statusz === 'figyelmeztetes') $figyelmeztetesSzam++;
+                }
+
+                $result['soforok'] = array_slice($eredmeny, ($normPage - 1) * $normPageSize, $normPageSize);
+                $result['total'] = $total;
+                $result['page'] = $normPage;
+                $result['pageSize'] = $normPageSize;
+                $result['sertesSzam'] = $sertesSzam;
+                $result['figyelmeztetesSzam'] = $figyelmeztetesSzam;
+            }
+            return $result;
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }

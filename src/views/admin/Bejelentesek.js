@@ -1,13 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 // components
 import { fetchAction } from "utils/fetchAction";
 import CardTable from "components/Table/CardTableForBejelentesek.js";
+
+const PAGE_SIZE = 15;
 
 export default function Bejelentesek() {
   const [bejelentesek, setBejelentesek] = useState([]);
   const [kamionok, setKamionok] = useState([]);
   const [selectedKamion, setSelectedKamion] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
 
   // Kamionok betöltése az elején — a legördülő mostantól csak EGY OPCIONÁLIS
   // szűrő, nem előfeltétele a bejelentések megtekintésének (korábban addig
@@ -27,6 +32,7 @@ export default function Bejelentesek() {
   // `selectedKamion` csak további szűkítés, ha az admin be akarja határolni
   // egy adott járműre.
   useEffect(() => {
+    let cancelled = false;
     const fetchData = async () => {
       setIsLoading(true);
       const user = JSON.parse(sessionStorage.getItem("user"));
@@ -34,21 +40,42 @@ export default function Bejelentesek() {
         ceg_id: user.ceg_id,
         kamion: selectedKamion || undefined,
         kerelmezo_id: user.id,
+        search: search || undefined,
+        page,
+        pageSize: PAGE_SIZE,
       });
+      if (cancelled) return;
       if (result.success) {
         setBejelentesek(result.bejelentesek || []);
+        setTotal(result.total ?? (result.bejelentesek || []).length);
       } else {
         setBejelentesek([]);
+        setTotal(0);
         console.error("Error fetching stats:", result.message);
       }
       setIsLoading(false);
     };
     fetchData();
-  }, [selectedKamion]);
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedKamion, page, search]);
 
   const handleKamionChange = (event) => {
     setSelectedKamion(event.target.value);
+    setPage(1);
   };
+
+  const handleExportAll = useCallback(async () => {
+    const user = JSON.parse(sessionStorage.getItem("user"));
+    const result = await fetchAction("getBejelentesek", {
+      ceg_id: user.ceg_id,
+      kamion: selectedKamion || undefined,
+      kerelmezo_id: user.id,
+      search: search || undefined,
+    });
+    return result.success ? result.bejelentesek || [] : [];
+  }, [selectedKamion, search]);
 
   return (
     <>
@@ -76,6 +103,12 @@ export default function Bejelentesek() {
             bejelentesek={bejelentesek}
             isLoading={isLoading}
             selectedKamion={selectedKamion}
+            total={total}
+            page={page}
+            pageSize={PAGE_SIZE}
+            onPageChange={setPage}
+            onSearchChange={setSearch}
+            onExportAll={handleExportAll}
           />
         </div>
       </div>
