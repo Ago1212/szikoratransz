@@ -129,7 +129,13 @@ export default function CustomCalendar() {
             events={events}
             startAccessor="start"
             endAccessor="end"
-            style={{ height: 320 }}
+            // 320px korábban túl alacsony volt: a mobil eszköztár (két
+            // sorba törve, ld. CustomCalander.css) + fejléc + akár 6 heti
+            // sor (56px/sor) együtt kb. 430-450px-et igényel — enélkül a
+            // hónap utolsó hete(i) láthatatlanul levágódtak. A
+            // `.rbc-month-view` overflow-y:auto biztonsági hálóként még
+            // ezen felül is véd, ha egy nap sok esemény miatt magasabb.
+            style={{ height: 470 }}
             defaultDate={new Date()}
             selectable="ignoreEvents"
             onSelectSlot={handleSelectSlot}
