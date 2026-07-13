@@ -6,6 +6,7 @@ import {
   PiWrenchLight,
   PiGasPumpLight,
   PiTrashLight,
+  PiPencilSimpleLight,
   PiReceiptLight,
   PiShieldCheckLight,
   PiTrendUpLight,
@@ -13,6 +14,7 @@ import {
   PiTruckTrailerLight,
   PiCaretLeftLight,
   PiCaretRightLight,
+  PiCloudArrowDownLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
@@ -239,7 +241,22 @@ export default function Koltsegek() {
   const [kiadasSearch, setKiadasSearch] = useState("");
   const [adding, setAdding] = useState(false);
   const [ujTetel, setUjTetel] = useState(emptyEgyebTetel());
+  const [editingTetelId, setEditingTetelId] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  // NAV Online Számla import — a Beállítások oldalon konfigurált cégenkénti
+  // technikai felhasználóval lekérdezett számlákból a felhasználó választja
+  // ki, melyeket vegye fel bevétel/kiadás tételként (ld. terv: kézi
+  // lekérdezés + jóváhagyás, nincs automatikus/felügyelet nélküli import).
+  const [navVanBeallitva, setNavVanBeallitva] = useState(false);
+  const [navModalOpen, setNavModalOpen] = useState(false);
+  const [navDatumTol, setNavDatumTol] = useState(filter.datumTol);
+  const [navDatumIg, setNavDatumIg] = useState(filter.datumIg);
+  const [navLekerdezve, setNavLekerdezve] = useState(false);
+  const [navLekerdezesLoading, setNavLekerdezesLoading] = useState(false);
+  const [navTetelek, setNavTetelek] = useState([]);
+  const [navKivalasztott, setNavKivalasztott] = useState(() => new Set());
+  const [navImportLoading, setNavImportLoading] = useState(false);
 
   const loadOsszesito = () => {
     setLoading(true);
@@ -350,8 +367,93 @@ export default function Koltsegek() {
     fetchAction("getPotkocsiRendszamok", { id: user.ceg_id }).then((result) => {
       if (result?.success) setPotkocsik(result.potkocsik || []);
     });
+    fetchAction("getNavSzamlaBeallitasokStatusz", {
+      ceg_id: user.ceg_id,
+      kerelmezo_id: user.id,
+    }).then((result) => {
+      if (result?.success) setNavVanBeallitva(!!result.van_beallitva);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const openNavModal = () => {
+    setNavDatumTol(filter.datumTol);
+    setNavDatumIg(filter.datumIg);
+    setNavLekerdezve(false);
+    setNavTetelek([]);
+    setNavKivalasztott(new Set());
+    setNavModalOpen(true);
+  };
+
+  const handleNavLekerdezes = async () => {
+    setNavLekerdezesLoading(true);
+    try {
+      const result = await fetchAction("navSzamlaLekerdezes", {
+        ceg_id: user.ceg_id,
+        kerelmezo_id: user.id,
+        datumTol: navDatumTol,
+        datumIg: navDatumIg,
+      });
+      if (result?.success) {
+        const tetelek = result.tetelek || [];
+        setNavTetelek(tetelek);
+        // Alapból minden ÚJ (még nem importált, forint-összeggel rendelkező)
+        // tétel ki van pipálva — a felhasználó itt egyesével lemondhatja
+        // azokat, amiket mégsem szeretne felvenni, jóváhagyás előtt.
+        setNavKivalasztott(
+          new Set(
+            tetelek.filter((t) => t.importalhato).map((t) => t.szamlaszam),
+          ),
+        );
+        setNavLekerdezve(true);
+      } else {
+        toast.error(result?.message || "Lekérdezés sikertelen.");
+      }
+    } finally {
+      setNavLekerdezesLoading(false);
+    }
+  };
+
+  const toggleNavTetel = (szamlaszam) => {
+    setNavKivalasztott((prev) => {
+      const uj = new Set(prev);
+      if (uj.has(szamlaszam)) {
+        uj.delete(szamlaszam);
+      } else {
+        uj.add(szamlaszam);
+      }
+      return uj;
+    });
+  };
+
+  const handleNavImport = async () => {
+    const kivalasztottTetelek = navTetelek.filter((t) =>
+      navKivalasztott.has(t.szamlaszam),
+    );
+    if (kivalasztottTetelek.length === 0) {
+      toast.error("Nincs kiválasztva egyetlen tétel sem.");
+      return;
+    }
+    setNavImportLoading(true);
+    try {
+      const result = await fetchAction("importNavSzamlak", {
+        ceg_id: user.ceg_id,
+        kerelmezo_id: user.id,
+        tetelek: kivalasztottTetelek,
+      });
+      if (result?.success) {
+        toast.success(result.message || "Import sikeres.");
+        setNavModalOpen(false);
+        loadOsszesito();
+        loadBevetelTetelek();
+        loadKiadasTetelek();
+      } else {
+        toast.error(result?.message || "Import sikertelen.");
+      }
+    } finally {
+      setNavImportLoading(false);
+    }
+  };
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -379,7 +481,14 @@ export default function Koltsegek() {
     }
     setIsSaving(true);
     try {
-      const result = await fetchAction("newEgyebKoltseg", {
+      // Szerkesztéskor (`editingTetelId`) ugyanez a form egy meglévő tételt
+      // frissít, nem újat hoz létre — elsősorban azért kellett, hogy egy
+      // NAV Online Számlából importált tételhez (aminek importáláskor
+      // nincs kamion_id/potkocsi_id-je) utólag hozzá lehessen rendelni
+      // egy járművet, de bármelyik mezője szerkeszthető vele.
+      const action = editingTetelId ? "updateEgyebKoltseg" : "newEgyebKoltseg";
+      const result = await fetchAction(action, {
+        id: editingTetelId || undefined,
         ceg_id: user.ceg_id,
         kerelmezo_id: user.id,
         irany: ujTetel.irany,
@@ -392,8 +501,12 @@ export default function Koltsegek() {
         megjegyzes: ujTetel.megjegyzes.trim() || null,
       });
       if (result?.success) {
-        toast.success(result.message || "Tétel rögzítve.");
+        toast.success(
+          result.message ||
+            (editingTetelId ? "Tétel frissítve." : "Tétel rögzítve."),
+        );
         setUjTetel(emptyEgyebTetel());
+        setEditingTetelId(null);
         setAdding(false);
         loadOsszesito();
         loadEgyebTetelek();
@@ -406,7 +519,23 @@ export default function Koltsegek() {
   };
 
   const openAdding = (irany) => {
+    setEditingTetelId(null);
     setUjTetel(emptyEgyebTetel(irany));
+    setAdding(true);
+  };
+
+  const openEditing = (row) => {
+    setEditingTetelId(row.id);
+    setUjTetel({
+      irany: row.irany,
+      datum: row.datum,
+      megnevezes: row.megnevezes,
+      szamlaszam: row.szamlaszam || "",
+      osszeg: row.osszeg,
+      kamion_id: row.kamion_id || "",
+      potkocsi_id: row.potkocsi_id || "",
+      megjegyzes: row.megjegyzes || "",
+    });
     setAdding(true);
   };
 
@@ -528,7 +657,12 @@ export default function Koltsegek() {
       label: "Műveletek",
       align: "right",
       render: (row) => (
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-1">
+          <ActionIcon
+            icon={<PiPencilSimpleLight />}
+            onClick={() => openEditing(row)}
+            title="Szerkesztés"
+          />
           <ActionIcon
             icon={<PiTrashLight />}
             danger
@@ -572,6 +706,19 @@ export default function Koltsegek() {
               onChange={handleFilterChange}
               className="w-40"
             />
+            <button
+              type="button"
+              onClick={openNavModal}
+              title={
+                navVanBeallitva
+                  ? undefined
+                  : "A NAV-kapcsolat még nincs beállítva — lásd Beállítások"
+              }
+              className="flex items-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-ink-600 shadow-soft transition-all duration-300 ease-fluid hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 active:scale-95"
+            >
+              <PiCloudArrowDownLight className="h-4 w-4" />
+              NAV számlák lekérdezése
+            </button>
           </div>
         }
       />
@@ -588,7 +735,9 @@ export default function Koltsegek() {
           <div className="rounded-3xl bg-white p-6 shadow-soft ring-1 ring-ink-100">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <h3 className="font-display text-base font-semibold text-brand-900">Havi alakulás</h3>
+                <h3 className="font-display text-base font-semibold text-brand-900">
+                  Havi alakulás
+                </h3>
                 <div className="flex items-center gap-0.5 rounded-lg bg-slate-100 p-0.5">
                   <button
                     type="button"
@@ -616,17 +765,23 @@ export default function Koltsegek() {
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
                 <span className="flex items-center gap-1.5 text-ink-500">
                   <PiTrendUpLight className="h-4 w-4 text-emerald-600" />
-                  <span className="font-semibold tabular-nums text-ink-800">{formatHuf(adat.osszesen.bevetel)}</span>
+                  <span className="font-semibold tabular-nums text-ink-800">
+                    {formatHuf(adat.osszesen.bevetel)}
+                  </span>
                 </span>
                 <span className="flex items-center gap-1.5 text-ink-500">
                   <PiCoinsLight className="h-4 w-4 text-red-600" />
-                  <span className="font-semibold tabular-nums text-ink-800">{formatHuf(adat.osszesen.kiadas)}</span>
+                  <span className="font-semibold tabular-nums text-ink-800">
+                    {formatHuf(adat.osszesen.kiadas)}
+                  </span>
                 </span>
                 <span className="flex items-center gap-1.5 border-l border-ink-100 pl-4 text-ink-500">
                   Nettó
                   <span
                     className={`font-semibold tabular-nums ${
-                      adat.osszesen.netto >= 0 ? "text-emerald-600" : "text-red-600"
+                      adat.osszesen.netto >= 0
+                        ? "text-emerald-600"
+                        : "text-red-600"
                     }`}
                   >
                     {formatHuf(adat.osszesen.netto)}
@@ -764,9 +919,18 @@ export default function Koltsegek() {
         open={adding}
         onClose={() => {
           setAdding(false);
+          setEditingTetelId(null);
           setUjTetel(emptyEgyebTetel());
         }}
-        title={ujTetel.irany === "bevetel" ? "Új bevétel" : "Új kiadás"}
+        title={
+          editingTetelId
+            ? ujTetel.irany === "bevetel"
+              ? "Bevétel szerkesztése"
+              : "Kiadás szerkesztése"
+            : ujTetel.irany === "bevetel"
+              ? "Új bevétel"
+              : "Új kiadás"
+        }
       >
         <form onSubmit={handleAddSubmit} className="space-y-4">
           <FormSection columns={2}>
@@ -849,6 +1013,7 @@ export default function Koltsegek() {
               type="button"
               onClick={() => {
                 setAdding(false);
+                setEditingTetelId(null);
                 setUjTetel(emptyEgyebTetel());
               }}
               className="rounded-xl px-4 py-2 text-sm font-medium text-ink-500 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-800"
@@ -860,10 +1025,155 @@ export default function Koltsegek() {
               disabled={isSaving}
               className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSaving ? "Mentés..." : "Hozzáadás"}
+              {isSaving ? "Mentés..." : editingTetelId ? "Mentés" : "Hozzáadás"}
             </button>
           </div>
         </form>
+      </Modal>
+
+      <Modal
+        open={navModalOpen}
+        onClose={() => setNavModalOpen(false)}
+        title="NAV Online Számla — számlák lekérdezése"
+        maxWidth="max-w-5xl"
+      >
+        {!navVanBeallitva ? (
+          <p className="text-sm text-ink-500">
+            A NAV Online Számla kapcsolat még nincs beállítva ehhez a céghez.
+            Állítsd be a{" "}
+            <span className="font-semibold text-ink-700">Beállítások</span>{" "}
+            oldalon (technikai felhasználó adatai), utána itt lekérdezhetők a
+            számlák.
+          </p>
+        ) : (
+          <div className="space-y-4">
+            <FormSection columns={3}>
+              <FormField
+                type="date"
+                label="Dátumtól"
+                value={navDatumTol}
+                onChange={(e) => setNavDatumTol(e.target.value)}
+              />
+              <FormField
+                type="date"
+                label="Dátumig"
+                value={navDatumIg}
+                onChange={(e) => setNavDatumIg(e.target.value)}
+              />
+              <div className="flex items-end">
+                <button
+                  type="button"
+                  onClick={handleNavLekerdezes}
+                  disabled={navLekerdezesLoading}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {navLekerdezesLoading ? "Lekérdezés..." : "Lekérdezés"}
+                </button>
+              </div>
+            </FormSection>
+
+            {navLekerdezve && (
+              <>
+                {navTetelek.length === 0 ? (
+                  <p className="py-6 text-center text-sm text-ink-400">
+                    Nincs számla a NAV-nál ebben az időszakban.
+                  </p>
+                ) : (
+                  <div className="max-h-96 overflow-y-auto rounded-xl border border-ink-100">
+                    <table className="w-full text-sm">
+                      <thead className="sticky top-0 bg-slate-50 text-xs uppercase text-ink-400">
+                        <tr>
+                          <th className="px-3 py-2 text-left"> </th>
+                          <th className="px-3 py-2 text-left">Számlaszám</th>
+                          <th className="px-3 py-2 text-left">Irány</th>
+                          <th className="px-3 py-2 text-left">Dátum</th>
+                          <th className="px-3 py-2 text-left">Partner</th>
+                          <th className="px-3 py-2 text-right">Összeg</th>
+                          <th className="px-3 py-2 text-left">Állapot</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {navTetelek.map((t) => (
+                          <tr
+                            key={t.szamlaszam}
+                            className="border-t border-ink-100"
+                          >
+                            <td className="px-3 py-2">
+                              <input
+                                type="checkbox"
+                                checked={navKivalasztott.has(t.szamlaszam)}
+                                disabled={!t.importalhato}
+                                onChange={() => toggleNavTetel(t.szamlaszam)}
+                                className="h-4 w-4 rounded border-ink-300 accent-brand-600 disabled:cursor-not-allowed disabled:opacity-40"
+                              />
+                            </td>
+                            <td className="px-3 py-2 font-medium text-ink-700">
+                              {t.szamlaszam}
+                            </td>
+                            <td className="px-3 py-2">
+                              <span
+                                className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
+                                  t.irany === "bevetel"
+                                    ? "bg-emerald-50 text-emerald-700"
+                                    : "bg-red-50 text-red-700"
+                                }`}
+                              >
+                                {t.irany === "bevetel" ? "Bevétel" : "Kiadás"}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 text-ink-500">
+                              {t.datum}
+                            </td>
+                            <td className="px-3 py-2 text-ink-500">
+                              {t.partner_nev || "—"}
+                            </td>
+                            <td className="px-3 py-2 text-right tabular-nums text-ink-700">
+                              {t.osszeg_huf !== null
+                                ? formatHuf(t.osszeg_huf)
+                                : "—"}
+                              {t.penznem && t.penznem !== "HUF" && (
+                                <span className="ml-1 text-xs text-ink-400">
+                                  ({t.penznem})
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-3 py-2 text-xs text-ink-400">
+                              {t.mar_importalva
+                                ? "Már importálva"
+                                : t.osszeg_huf === null
+                                  ? "Hiányos adat"
+                                  : "Új"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setNavModalOpen(false)}
+                    className="rounded-xl px-4 py-2 text-sm font-medium text-ink-500 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-800"
+                  >
+                    Mégse
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleNavImport}
+                    disabled={navImportLoading || navKivalasztott.size === 0}
+                    className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {navImportLoading
+                      ? "Importálás..."
+                      : `Kiválasztottak importálása (${navKivalasztott.size})`}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </Modal>
     </div>
   );

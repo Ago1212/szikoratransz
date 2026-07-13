@@ -515,6 +515,44 @@ class KoltsegInterface {
         }
     }
 
+    // Meglévő tétel szerkesztése — elsősorban azért kellett, hogy egy NAV
+    // Online Számlából importált tételhez (aminek importáláskor nincs
+    // kamion_id/potkocsi_id-je, ld. NavSzamlaInterface::importalSzamlak)
+    // utólag hozzá lehessen rendelni egy járművet, de a többi mező is
+    // szerkeszthető vele, ugyanazokkal a mezőkkel, mint az új tétel
+    // felvételénél. A `WHERE ... AND admin = :ceg_id` szándékosan van ott —
+    // enélkül egy másik cég is módosíthatná a sorodat, ha kitalálná az id-t.
+    public function updateEgyebKoltseg($data) {
+        try {
+            $irany = in_array($data['irany'] ?? null, ['bevetel', 'kiado'], true) ? $data['irany'] : 'kiado';
+            $query = "UPDATE egyeb_koltsegek SET
+                        irany = :irany, kamion_id = :kamion_id, potkocsi_id = :potkocsi_id,
+                        datum = :datum, megnevezes = :megnevezes, szamlaszam = :szamlaszam,
+                        osszeg = :osszeg, megjegyzes = :megjegyzes
+                      WHERE id = :id AND admin = :admin";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindValue(':id', $data['id']);
+            $stmt->bindValue(':admin', $data['ceg_id']);
+            $stmt->bindValue(':irany', $irany);
+            $stmt->bindValue(':kamion_id', empty($data['kamion_id']) ? null : $data['kamion_id']);
+            $stmt->bindValue(':potkocsi_id', empty($data['potkocsi_id']) ? null : $data['potkocsi_id']);
+            $stmt->bindValue(':datum', $data['datum']);
+            $stmt->bindValue(':megnevezes', $data['megnevezes']);
+            $stmt->bindValue(':szamlaszam', $data['szamlaszam'] ?: null);
+            $stmt->bindValue(':osszeg', $data['osszeg']);
+            $stmt->bindValue(':megjegyzes', $data['megjegyzes'] ?? null);
+            $stmt->execute();
+
+            return [
+                'success' => true,
+                'message' => $irany === 'bevetel' ? 'Bevétel frissítve.' : 'Kiadás frissítve.',
+                'irany' => $irany,
+            ];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
     public function getEgyebKoltsegek($ceg_id, $datumTol = null, $datumIg = null, $irany = null, $search = null, $page = null, $pageSize = null) {
         try {
             [$szuresSql, $szuresParams] = $this->datumSzures('datum', $datumTol, $datumIg);

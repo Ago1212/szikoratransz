@@ -2,7 +2,13 @@ import React from "react";
 import { PiXLight } from "react-icons/pi";
 import { useMediaQuery } from "react-responsive";
 
-export default function Modal({ open, onClose, title, children, maxWidth = "max-w-md" }) {
+export default function Modal({
+  open,
+  onClose,
+  title,
+  children,
+  maxWidth = "max-w-md",
+}) {
   const isMobile = useMediaQuery({ maxWidth: 767 });
   const inlineRef = React.useRef(null);
 

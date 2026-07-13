@@ -22,6 +22,7 @@ require 'interface/koltsegInterface.php';
 require 'interface/fuvarInterface.php';
 require 'interface/ertesitesInterface.php';
 require 'interface/vezetesiIdoInterface.php';
+require 'interface/navSzamlaInterface.php';
 class ApiHandler {
     protected string $auth_hash;
     protected array $actions = [];
@@ -120,7 +121,13 @@ class ApiHandler {
         'getKoltsegOsszesito' => ['koltsegek', 'hozzaferes'],
         'getEgyebKoltsegek' => ['koltsegek', 'hozzaferes'],
         'newEgyebKoltseg' => ['koltsegek', 'szerkesztes'],
+        'updateEgyebKoltseg' => ['koltsegek', 'szerkesztes'],
         'deleteEgyebKoltseg' => ['koltsegek', 'torles'],
+
+        'getNavSzamlaBeallitasokStatusz' => ['koltsegek', 'hozzaferes'],
+        'navSzamlaLekerdezes' => ['koltsegek', 'hozzaferes'],
+        'saveNavSzamlaBeallitasok' => ['koltsegek', 'szerkesztes'],
+        'importNavSzamlak' => ['koltsegek', 'szerkesztes'],
 
         'getFuvarok' => ['fuvarok', 'hozzaferes'],
         'newFuvar' => ['fuvarok', 'szerkesztes'],
@@ -226,7 +233,13 @@ class ApiHandler {
             'getKoltsegOsszesito' => ['ceg_id', 'kerelmezo_id'],
             'getEgyebKoltsegek' => ['ceg_id', 'kerelmezo_id'],
             'newEgyebKoltseg' => ['ceg_id', 'datum', 'megnevezes', 'osszeg', 'kerelmezo_id'],
+            'updateEgyebKoltseg' => ['id', 'ceg_id', 'datum', 'megnevezes', 'osszeg', 'kerelmezo_id'],
             'deleteEgyebKoltseg' => ['id', 'ceg_id', 'kerelmezo_id'],
+
+            'getNavSzamlaBeallitasokStatusz' => ['ceg_id', 'kerelmezo_id'],
+            'saveNavSzamlaBeallitasok' => ['ceg_id', 'kerelmezo_id', 'adoszam', 'login', 'jelszo', 'alairoKulcs', 'csereKulcs', 'kornyezet'],
+            'navSzamlaLekerdezes' => ['ceg_id', 'kerelmezo_id', 'datumTol', 'datumIg'],
+            'importNavSzamlak' => ['ceg_id', 'kerelmezo_id', 'tetelek'],
 
             'getFuvarok' => ['ceg_id', 'kerelmezo_id'],
             'newFuvar' => ['ceg_id', 'felrakas_cim', 'lerakas_cim', 'kerelmezo_id'],
@@ -426,7 +439,7 @@ class ApiHandler {
     }
 
     public function process(?array $request) {
-        global $kamionInterface, $potkocsiInterface, $soforokInterface, $filesInterface, $emailInterface, $bejelentesekInterface, $karbantartasInterface, $szabadsagInterface, $tankolasInterface, $jarmuValtasInterface, $ugyfelInterface, $csapatInterface, $helyszinInterface, $jogosultsagInterface, $szerepkorInterface, $listaInterface, $keresesInterface, $koltsegInterface, $fuvarInterface, $ertesitesInterface, $vezetesiIdoInterface;
+        global $kamionInterface, $potkocsiInterface, $soforokInterface, $filesInterface, $emailInterface, $bejelentesekInterface, $karbantartasInterface, $szabadsagInterface, $tankolasInterface, $jarmuValtasInterface, $ugyfelInterface, $csapatInterface, $helyszinInterface, $jogosultsagInterface, $szerepkorInterface, $listaInterface, $keresesInterface, $koltsegInterface, $fuvarInterface, $ertesitesInterface, $vezetesiIdoInterface, $navSzamlaInterface;
         try {
             $this->validation($request);
             $action = $request['action'];
@@ -835,10 +848,55 @@ class ApiHandler {
                     echo json_encode($result);
                     return;
 
+                case 'updateEgyebKoltseg':
+                    $result = $koltsegInterface->updateEgyebKoltseg($request);
+                    if ($result['success']) {
+                        $iranyLabel = $result['irany'] === 'bevetel' ? 'bevétel' : 'kiadás';
+                        $this->logAudit($request['ceg_id'], 'egyeb_koltsegek', $request['id'], 'modositas', "($iranyLabel) " . ($request['megnevezes'] ?? ''));
+                    }
+                    echo json_encode($result);
+                    return;
+
                 case 'deleteEgyebKoltseg':
                     $result = $koltsegInterface->deleteEgyebKoltseg($request['id'], $request['ceg_id']);
                     if ($result['success']) {
                         $this->logAudit($request['ceg_id'], 'egyeb_koltsegek', $request['id'], 'torles');
+                    }
+                    echo json_encode($result);
+                    return;
+
+                case 'getNavSzamlaBeallitasokStatusz':
+                    echo json_encode($navSzamlaInterface->getBeallitasokStatusz($request['ceg_id']));
+                    return;
+
+                case 'saveNavSzamlaBeallitasok':
+                    $result = $navSzamlaInterface->saveBeallitasok(
+                        $request['ceg_id'],
+                        $request['adoszam'],
+                        $request['login'],
+                        $request['jelszo'],
+                        $request['alairoKulcs'],
+                        $request['csereKulcs'],
+                        $request['kornyezet']
+                    );
+                    if ($result['success']) {
+                        $this->logAudit($request['ceg_id'], 'nav_szamla_beallitasok', $request['ceg_id'], 'modositas', 'NAV Online Számla kapcsolat beállítva/frissítve');
+                    }
+                    echo json_encode($result);
+                    return;
+
+                case 'navSzamlaLekerdezes':
+                    echo json_encode($navSzamlaInterface->lekerdezSzamlak($request['ceg_id'], $request['datumTol'], $request['datumIg']));
+                    return;
+
+                case 'importNavSzamlak':
+                    $result = $navSzamlaInterface->importalSzamlak($request['ceg_id'], $request['tetelek']);
+                    if ($result['success'] && $result['importalva'] > 0) {
+                        // `rowid`-ként a ceg_id-t naplózzuk (nem egy konkrét
+                        // egyeb_koltsegek sort) — ez egy köteges import, nem
+                        // egyetlen rekordhoz köthető esemény, ugyanaz a minta,
+                        // mint a NAV-beállítások mentésének naplózásánál.
+                        $this->logAudit($request['ceg_id'], 'egyeb_koltsegek', $request['ceg_id'], 'letrehozas', "NAV import: {$result['importalva']} tétel");
                     }
                     echo json_encode($result);
                     return;
