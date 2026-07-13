@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { PiCalendarBlankLight, PiTrashLight } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
@@ -8,6 +8,8 @@ import PageHeader from "components/UI/PageHeader.js";
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import Modal from "components/UI/Modal.js";
 import FormField, { FormSection } from "components/UI/FormField.js";
+
+const PAGE_SIZE = 10;
 
 const emptySzabadsag = (adminId) => ({
   admin: adminId,
@@ -25,19 +27,47 @@ export default function Szabadsagok() {
   const [openDialog, setOpenDialog] = useState(false);
   const [form, setForm] = useState(emptySzabadsag(user.ceg_id));
   const { elemek: tipusok } = useListaElemek("szabadsag_tipus");
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
 
   const fetchSzabadsagok = async () => {
-    const result = await fetchAction("getSzabadsagok", { id: user.ceg_id, kerelmezo_id: user.id });
-    if (result?.success) setSzabadsagok(result.szabadsagok || []);
+    const result = await fetchAction("getSzabadsagok", {
+      id: user.ceg_id,
+      kerelmezo_id: user.id,
+      search: search || undefined,
+      page,
+      pageSize: PAGE_SIZE,
+    });
+    if (result?.success) {
+      setSzabadsagok(result.szabadsagok || []);
+      setTotal(result.total ?? (result.szabadsagok || []).length);
+    } else {
+      setTotal(0);
+    }
   };
 
   useEffect(() => {
     fetchSzabadsagok();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, search]);
+
+  useEffect(() => {
     fetchAction("getSoforok", { id: user.ceg_id, kerelmezo_id: user.id }).then((result) => {
       if (result?.success) setSoforok(result.soforok || []);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleExportAll = useCallback(async () => {
+    const result = await fetchAction("getSzabadsagok", {
+      id: user.ceg_id,
+      kerelmezo_id: user.id,
+      search: search || undefined,
+    });
+    return result?.success ? result.szabadsagok || [] : [];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -114,6 +144,15 @@ export default function Szabadsagok() {
           mobileTitleKey="sofor_nev"
           emptyLabel="Nincsenek rögzített szabadságok"
           fill
+          searchable
+          searchPlaceholder="Keresés sofőr, típus, megjegyzés szerint..."
+          serverSide
+          totalRows={total}
+          page={page}
+          pageSize={PAGE_SIZE}
+          onPageChange={setPage}
+          onSearchChange={setSearch}
+          onExportAll={handleExportAll}
         />
       </div>
 

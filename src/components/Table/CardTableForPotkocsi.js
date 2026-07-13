@@ -11,7 +11,7 @@ import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
 import AllapotBadge from "components/UI/AllapotBadge.js";
 
-const CardTable = ({ potkocsik }) => {
+const CardTable = ({ potkocsik, loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll }) => {
   const history = useHistory();
   const user = JSON.parse(sessionStorage.getItem("user"));
 
@@ -95,6 +95,16 @@ const CardTable = ({ potkocsik }) => {
       rows={potkocsik}
       onRowDoubleClick={handleEditClick}
       emptyLabel="Nincsenek pótkocsik megjelenítve"
+      loading={loading}
+      searchable
+      searchPlaceholder="Keresés rendszám, típus szerint..."
+      serverSide
+      totalRows={total}
+      page={page}
+      pageSize={pageSize}
+      onPageChange={onPageChange}
+      onSearchChange={onSearchChange}
+      onExportAll={onExportAll}
     />
   );
 };

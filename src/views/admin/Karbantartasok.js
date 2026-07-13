@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useMediaQuery } from "react-responsive";
 import {
   PiFunnelLight,
@@ -40,6 +40,8 @@ const formatHuf = (value) =>
     maximumFractionDigits: 0,
   }).format(value || 0);
 
+const PAGE_SIZE = 15;
+
 const Karbantartasok = () => {
   const isMobile = useMediaQuery({ maxWidth: 767 });
   // Mobilon alapból zárva (helyet spórolunk), asztali nézeten viszont
@@ -55,6 +57,10 @@ const Karbantartasok = () => {
     datumIg: "",
     elvegezte: "",
   });
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [osszesKoltseg, setOsszesKoltseg] = useState(0);
   const user = JSON.parse(sessionStorage.getItem("user"));
   const [openDialog, setOpenDialog] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -157,21 +163,45 @@ const Karbantartasok = () => {
 
   useEffect(() => {
     const fetchKarbantartasok = async () => {
-      const result = await fetchAction("getKarbantartasok", { id: user.ceg_id, ...filter, kerelmezo_id: user.id });
+      const result = await fetchAction("getKarbantartasok", {
+        id: user.ceg_id,
+        ...filter,
+        kerelmezo_id: user.id,
+        search: search || undefined,
+        page,
+        pageSize: PAGE_SIZE,
+      });
       if (result?.success) {
         setKarbantartasok(result.karbantartasok);
+        setTotal(result.total ?? result.karbantartasok.length);
+        setOsszesKoltseg(result.osszesKoltseg ?? 0);
         result.karbantartasok.forEach((karb) => {
           fetchFilesForKarbantartas(karb.id);
         });
+      } else {
+        setTotal(0);
+        setOsszesKoltseg(0);
       }
     };
     fetchKarbantartasok();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter, user.ceg_id]);
+  }, [filter, user.ceg_id, page, search]);
+
+  const handleExportAll = useCallback(async () => {
+    const result = await fetchAction("getKarbantartasok", {
+      id: user.ceg_id,
+      ...filter,
+      kerelmezo_id: user.id,
+      search: search || undefined,
+    });
+    return result?.success ? result.karbantartasok || [] : [];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, user.ceg_id, search]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilter((prev) => ({ ...prev, [name]: value }));
+    setPage(1);
   };
 
   const handleNewKarbantartasChange = (e) => {
@@ -208,9 +238,18 @@ const Karbantartasok = () => {
   };
 
   const refreshList = async () => {
-    const updatedResult = await fetchAction("getKarbantartasok", { id: user.ceg_id, ...filter, kerelmezo_id: user.id });
+    const updatedResult = await fetchAction("getKarbantartasok", {
+      id: user.ceg_id,
+      ...filter,
+      kerelmezo_id: user.id,
+      search: search || undefined,
+      page,
+      pageSize: PAGE_SIZE,
+    });
     if (updatedResult?.success) {
       setKarbantartasok(updatedResult.karbantartasok);
+      setTotal(updatedResult.total ?? updatedResult.karbantartasok.length);
+      setOsszesKoltseg(updatedResult.osszesKoltseg ?? 0);
     }
   };
 
@@ -392,10 +431,6 @@ const Karbantartasok = () => {
   ];
 
   const activeFilterCount = Object.values(filter).filter(Boolean).length;
-  const osszesKoltseg = karbantartasok.reduce(
-    (sum, karb) => sum + (parseFloat(karb.koltseg) || 0),
-    0
-  );
 
   return (
     <div className="mx-auto flex h-full w-full max-w-7xl flex-col">
@@ -511,15 +546,16 @@ const Karbantartasok = () => {
             </FormSection>
             <button
               type="button"
-              onClick={() =>
+              onClick={() => {
                 setFilter({
                   kamion_id: "",
                   potkocsi_id: "",
                   datumTol: "",
                   datumIg: "",
                   elvegezte: "",
-                })
-              }
+                });
+                setPage(1);
+              }}
               className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-800"
             >
               <PiXLight className="h-4 w-4" /> Összes szűrő törlése
@@ -545,6 +581,15 @@ const Karbantartasok = () => {
           onRowDoubleClick={handleEditKarbantartas}
           emptyLabel="Nincsenek megjeleníthető karbantartások"
           fill
+          searchable
+          searchPlaceholder="Keresés leírás, elvégezte, rendszám szerint..."
+          serverSide
+          totalRows={total}
+          page={page}
+          pageSize={PAGE_SIZE}
+          onPageChange={setPage}
+          onSearchChange={setSearch}
+          onExportAll={handleExportAll}
         />
       </div>
 

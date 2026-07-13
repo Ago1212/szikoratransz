@@ -24,20 +24,37 @@ class BejelentesekInterface {
     // ApiHandler::getEsemenyek) a táblákat sosem kapcsoljuk össze egy
     // lekérdezésen belül — a kapcsolódó neveket külön lekérdezéssel
     // töltjük be, és PHP oldalon fűzzük össze.
-    public function getBejelentesek($ceg_id, $kamion = null) {
+    public function getBejelentesek($ceg_id, $kamion = null, $search = null, $page = null, $pageSize = null) {
         try {
+            $params = [':ceg_id' => $ceg_id];
             $query = "SELECT * FROM bejelentesek WHERE admin = :ceg_id AND torolt <> 'I'";
             if (!empty($kamion)) {
                 $query .= " AND kamion_id = :kamion";
+                $params[':kamion'] = $kamion;
+            }
+            // A `sofor_nev`/`kamion_rendszam` a lekérdezés után, PHP oldalon
+            // fűződik a sorokhoz (ld. lentebb) — ezért a rájuk szűrő kereséshez
+            // egy-egy alkérdés kell (nem sima LIKE a `bejelentesek` oszlopain).
+            if (!empty($search)) {
+                $query .= " AND (" . PaginationHelper::likeClause(['cim', 'leiras', 'tipus'], 'search') .
+                    " OR kamion_id IN (SELECT id FROM kamion WHERE rendszam LIKE :search_rendszam)" .
+                    " OR sofor_id IN (SELECT id FROM user WHERE name LIKE :search_nev))";
+                $params[':search'] = '%' . $search . '%';
+                $params[':search_rendszam'] = '%' . $search . '%';
+                $params[':search_nev'] = '%' . $search . '%';
             }
             $query .= " ORDER BY bejelentve DESC";
-            $stmt = $this->db->prepare($query);
-            $stmt->bindValue(':ceg_id', $ceg_id);
-            if (!empty($kamion)) {
-                $stmt->bindValue(':kamion', $kamion);
+
+            if ($page !== null) {
+                [$bejelentesek, $total, $page, $pageSize] = PaginationHelper::fetchPage($this->db, $query, $params, $page, $pageSize);
+            } else {
+                $stmt = $this->db->prepare($query);
+                foreach ($params as $key => $value) {
+                    $stmt->bindValue($key, $value);
+                }
+                $stmt->execute();
+                $bejelentesek = $stmt->fetchAll(PDO::FETCH_ASSOC);
             }
-            $stmt->execute();
-            $bejelentesek = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             $soforNevek = $this->getSoforNevek();
             $kamionRendszamok = $this->getKamionRendszamok();
@@ -46,7 +63,13 @@ class BejelentesekInterface {
                 $b['kamion_rendszam'] = $kamionRendszamok[$b['kamion_id']] ?? null;
             }
 
-            return ['success' => true, 'bejelentesek' => $bejelentesek];
+            $result = ['success' => true, 'bejelentesek' => $bejelentesek];
+            if ($page !== null) {
+                $result['total'] = $total;
+                $result['page'] = $page;
+                $result['pageSize'] = $pageSize;
+            }
+            return $result;
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }

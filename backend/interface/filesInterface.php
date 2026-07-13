@@ -8,12 +8,30 @@ class FilesInterface {
         $this->db = $database->connect();
     }
 
-    function getFiles($tabla, $id) {
+    // A `search`/`page`/`pageSize` KIZÁRÓLAG a `tabla === "admin"` ágra
+    // (az admin saját, önálló "Fájlok" listaoldala) vonatkozik — a másik
+    // ág (egy adott rekordhoz, pl. karbantartáshoz tartozó néhány fájl)
+    // eleve kicsi, beágyazott lista, nem igényel lapozást.
+    function getFiles($tabla, $id, $search = null, $page = null, $pageSize = null) {
         try {
             if ($tabla === "admin") {
+                $params = [':id' => $id];
                 $query = "SELECT * FROM fajlok WHERE admin = :id";
+                if (!empty($search)) {
+                    $query .= " AND " . PaginationHelper::likeClause(['filename'], 'search');
+                    $params[':search'] = '%' . $search . '%';
+                }
+                $query .= " ORDER BY feltoltve DESC";
+
+                if ($page !== null) {
+                    [$files, $total, $page, $pageSize] = PaginationHelper::fetchPage($this->db, $query, $params, $page, $pageSize);
+                    return ['success' => true, 'files' => $files, 'total' => $total, 'page' => $page, 'pageSize' => $pageSize];
+                }
+
                 $stmt = $this->db->prepare($query);
-                $stmt->bindParam(':id', $id);
+                foreach ($params as $key => $value) {
+                    $stmt->bindValue($key, $value);
+                }
             } else {
                 $query = "SELECT * FROM fajlok WHERE rowid = :id AND tabla = :tabla";
                 $stmt = $this->db->prepare($query);

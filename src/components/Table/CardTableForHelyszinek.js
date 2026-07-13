@@ -6,7 +6,7 @@ import { PiPencilSimpleLight, PiTrashLight, PiMapPinLight } from "react-icons/pi
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
 
-const CardTable = ({ helyszinek }) => {
+const CardTable = ({ helyszinek, loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll }) => {
   const history = useHistory();
 
   const handleNewHelyszin = () => {
@@ -58,6 +58,16 @@ const CardTable = ({ helyszinek }) => {
       rows={helyszinek}
       onRowDoubleClick={handleEditClick}
       emptyLabel="Nincsenek helyszínek megjelenítve"
+      loading={loading}
+      searchable
+      searchPlaceholder="Keresés név szerint..."
+      serverSide
+      totalRows={total}
+      page={page}
+      pageSize={pageSize}
+      onPageChange={onPageChange}
+      onSearchChange={onSearchChange}
+      onExportAll={onExportAll}
     />
   );
 };

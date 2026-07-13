@@ -13,7 +13,7 @@ const PRIORITAS_LABEL = { alacsony: "Alacsony", kozepes: "Közepes", magas: "Mag
 const STATUSZ_TONE = { uj: "info", folyamatban: "warning", lezart: "success" };
 const STATUSZ_LABEL = { uj: "Új", folyamatban: "Folyamatban", lezart: "Lezárt" };
 
-export default function CardTable({ bejelentesek, isLoading, selectedKamion }) {
+export default function CardTable({ bejelentesek, isLoading, selectedKamion, total, page, pageSize, onPageChange, onSearchChange, onExportAll }) {
   const history = useHistory();
   const user = JSON.parse(sessionStorage.getItem("user"));
 
@@ -115,6 +115,15 @@ export default function CardTable({ bejelentesek, isLoading, selectedKamion }) {
       mobileTitleKey="cim"
       onRowDoubleClick={handleEditClick}
       emptyLabel="Nincsenek bejelentések megjelenítve"
+      searchable
+      searchPlaceholder="Keresés cím, rendszám, bejelentő szerint..."
+      serverSide
+      totalRows={total}
+      page={page}
+      pageSize={pageSize}
+      onPageChange={onPageChange}
+      onSearchChange={onSearchChange}
+      onExportAll={onExportAll}
     />
   );
 }

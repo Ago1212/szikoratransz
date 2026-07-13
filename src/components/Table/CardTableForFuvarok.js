@@ -23,7 +23,19 @@ const formatHuf = (value, devizanem) =>
       }).format(value)
     : "—";
 
-export default function CardTableForFuvarok({ fuvarok, onAdd, onEdit, onDelete, onStatuszValt }) {
+export default function CardTableForFuvarok({
+  fuvarok,
+  onAdd,
+  onEdit,
+  onDelete,
+  onStatuszValt,
+  total,
+  page,
+  pageSize,
+  onPageChange,
+  onSearchChange,
+  onExportAll,
+}) {
   const columns = [
     {
       key: "felrakas_cim",
@@ -119,6 +131,15 @@ export default function CardTableForFuvarok({ fuvarok, onAdd, onEdit, onDelete, 
       rows={fuvarok}
       mobileTitleKey="felrakas_cim"
       emptyLabel="Nincsenek fuvarok megjelenítve"
+      searchable
+      searchPlaceholder="Keresés cím, ügyfél, rendszám, sofőr szerint..."
+      serverSide
+      totalRows={total}
+      page={page}
+      pageSize={pageSize}
+      onPageChange={onPageChange}
+      onSearchChange={onSearchChange}
+      onExportAll={onExportAll}
     />
   );
 }

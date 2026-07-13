@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import Chart from "chart.js";
 import { useMediaQuery } from "react-responsive";
 import {
@@ -48,6 +48,8 @@ const formatHonap = (honap) => {
   const idx = parseInt(ho, 10) - 1;
   return ev && HONAP_ROVID[idx] ? `${HONAP_ROVID[idx]} '${ev.slice(2)}` : honap;
 };
+
+const EGYEB_PAGE_SIZE = 4;
 
 const emptyEgyebTetel = (irany = "kiado") => ({
   irany,
@@ -206,6 +208,8 @@ export default function Koltsegek() {
   const changeYear = (delta) => {
     const ev = displayedYear + delta;
     setFilter({ datumTol: `${ev}-01-01`, datumIg: `${ev}-12-31` });
+    setBevetelPage(1);
+    setKiadasPage(1);
   };
   const [adat, setAdat] = useState({
     havi: [],
@@ -225,7 +229,14 @@ export default function Koltsegek() {
 
   const [kamionok, setKamionok] = useState([]);
   const [potkocsik, setPotkocsik] = useState([]);
-  const [egyebTetelek, setEgyebTetelek] = useState([]);
+  const [bevetelTetelek, setBevetelTetelek] = useState([]);
+  const [bevetelTotal, setBevetelTotal] = useState(0);
+  const [bevetelPage, setBevetelPage] = useState(1);
+  const [bevetelSearch, setBevetelSearch] = useState("");
+  const [kiadasTetelek, setKiadasTetelek] = useState([]);
+  const [kiadasTotal, setKiadasTotal] = useState(0);
+  const [kiadasPage, setKiadasPage] = useState(1);
+  const [kiadasSearch, setKiadasSearch] = useState("");
   const [adding, setAdding] = useState(false);
   const [ujTetel, setUjTetel] = useState(emptyEgyebTetel());
   const [isSaving, setIsSaving] = useState(false);
@@ -250,21 +261,87 @@ export default function Koltsegek() {
     });
   };
 
-  const loadEgyebTetelek = () => {
+  const loadBevetelTetelek = () => {
     fetchAction("getEgyebKoltsegek", {
       ceg_id: user.ceg_id,
       kerelmezo_id: user.id,
       ...filter,
+      irany: "bevetel",
+      search: bevetelSearch || undefined,
+      page: bevetelPage,
+      pageSize: EGYEB_PAGE_SIZE,
     }).then((result) => {
-      if (result?.success) setEgyebTetelek(result.tetelek || []);
+      if (result?.success) {
+        setBevetelTetelek(result.tetelek || []);
+        setBevetelTotal(result.total ?? (result.tetelek || []).length);
+      } else {
+        setBevetelTotal(0);
+      }
     });
   };
 
+  const loadKiadasTetelek = () => {
+    fetchAction("getEgyebKoltsegek", {
+      ceg_id: user.ceg_id,
+      kerelmezo_id: user.id,
+      ...filter,
+      irany: "kiado",
+      search: kiadasSearch || undefined,
+      page: kiadasPage,
+      pageSize: EGYEB_PAGE_SIZE,
+    }).then((result) => {
+      if (result?.success) {
+        setKiadasTetelek(result.tetelek || []);
+        setKiadasTotal(result.total ?? (result.tetelek || []).length);
+      } else {
+        setKiadasTotal(0);
+      }
+    });
+  };
+
+  const loadEgyebTetelek = () => {
+    loadBevetelTetelek();
+    loadKiadasTetelek();
+  };
+
+  const handleBevetelExportAll = useCallback(async () => {
+    const result = await fetchAction("getEgyebKoltsegek", {
+      ceg_id: user.ceg_id,
+      kerelmezo_id: user.id,
+      ...filter,
+      irany: "bevetel",
+      search: bevetelSearch || undefined,
+    });
+    return result?.success ? result.tetelek || [] : [];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, bevetelSearch]);
+
+  const handleKiadasExportAll = useCallback(async () => {
+    const result = await fetchAction("getEgyebKoltsegek", {
+      ceg_id: user.ceg_id,
+      kerelmezo_id: user.id,
+      ...filter,
+      irany: "kiado",
+      search: kiadasSearch || undefined,
+    });
+    return result?.success ? result.tetelek || [] : [];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, kiadasSearch]);
+
   useEffect(() => {
     loadOsszesito();
-    loadEgyebTetelek();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
+
+  useEffect(() => {
+    loadBevetelTetelek();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, bevetelPage, bevetelSearch]);
+
+  useEffect(() => {
+    loadKiadasTetelek();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, kiadasPage, kiadasSearch]);
 
   useEffect(() => {
     fetchAction("getKamionRendszamok", { id: user.ceg_id }).then((result) => {
@@ -279,6 +356,8 @@ export default function Koltsegek() {
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilter((prev) => ({ ...prev, [name]: value }));
+    setBevetelPage(1);
+    setKiadasPage(1);
   };
 
   const handleUjTetelChange = (e) => {
@@ -469,9 +548,6 @@ export default function Koltsegek() {
     { key: "megjegyzes", label: "Megjegyzés" },
   ];
 
-  const bevetelTetelek = egyebTetelek.filter((t) => t.irany === "bevetel");
-  const kiadasTetelek = egyebTetelek.filter((t) => t.irany !== "bevetel");
-
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
       <PageHeader
@@ -625,7 +701,15 @@ export default function Koltsegek() {
                 rows={bevetelTetelek}
                 mobileTitleKey="megnevezes"
                 emptyLabel="Nincs bevétel-tétel rögzítve"
-                maxBodyHeight="260px"
+                searchable
+                searchPlaceholder="Keresés a bevételek közt..."
+                serverSide
+                totalRows={bevetelTotal}
+                page={bevetelPage}
+                pageSize={EGYEB_PAGE_SIZE}
+                onPageChange={setBevetelPage}
+                onSearchChange={setBevetelSearch}
+                onExportAll={handleBevetelExportAll}
               />
             </div>
 
@@ -647,7 +731,15 @@ export default function Koltsegek() {
                 rows={kiadasTetelek}
                 mobileTitleKey="megnevezes"
                 emptyLabel="Nincs kiadás-tétel rögzítve"
-                maxBodyHeight="260px"
+                searchable
+                searchPlaceholder="Keresés a kiadások közt..."
+                serverSide
+                totalRows={kiadasTotal}
+                page={kiadasPage}
+                pageSize={EGYEB_PAGE_SIZE}
+                onPageChange={setKiadasPage}
+                onSearchChange={setKiadasSearch}
+                onExportAll={handleKiadasExportAll}
               />
             </div>
           </div>
@@ -661,6 +753,9 @@ export default function Koltsegek() {
             rows={adat.jarmuvenkent}
             mobileTitleKey="rendszam"
             emptyLabel="Nincs megjeleníthető adat"
+            searchable
+            searchPlaceholder="Keresés rendszám vagy típus szerint..."
+            pageSize={8}
           />
         </>
       )}

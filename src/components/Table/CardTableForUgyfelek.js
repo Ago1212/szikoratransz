@@ -6,7 +6,7 @@ import { PiPencilSimpleLight, PiTrashLight, PiBuildingsLight } from "react-icons
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
 
-const CardTable = ({ ugyfelek }) => {
+const CardTable = ({ ugyfelek, loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll }) => {
   const history = useHistory();
   const user = JSON.parse(sessionStorage.getItem("user"));
 
@@ -78,6 +78,16 @@ const CardTable = ({ ugyfelek }) => {
       rows={ugyfelek}
       onRowDoubleClick={handleEditClick}
       emptyLabel="Nincsenek ügyfelek megjelenítve"
+      loading={loading}
+      searchable
+      searchPlaceholder="Keresés ügyfél, város, kapcsolattartó szerint..."
+      serverSide
+      totalRows={total}
+      page={page}
+      pageSize={pageSize}
+      onPageChange={onPageChange}
+      onSearchChange={onSearchChange}
+      onExportAll={onExportAll}
     />
   );
 };

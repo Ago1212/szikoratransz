@@ -515,17 +515,34 @@ class KoltsegInterface {
         }
     }
 
-    public function getEgyebKoltsegek($ceg_id, $datumTol = null, $datumIg = null) {
+    public function getEgyebKoltsegek($ceg_id, $datumTol = null, $datumIg = null, $irany = null, $search = null, $page = null, $pageSize = null) {
         try {
             [$szuresSql, $szuresParams] = $this->datumSzures('datum', $datumTol, $datumIg);
-            $query = "SELECT * FROM egyeb_koltsegek WHERE admin = :ceg_id AND torolt <> 'I'$szuresSql ORDER BY datum DESC, id DESC";
-            $stmt = $this->db->prepare($query);
-            $stmt->bindValue(':ceg_id', $ceg_id);
+            $params = [':ceg_id' => $ceg_id];
             foreach ($szuresParams as $k => $v) {
-                $stmt->bindValue($k, $v);
+                $params[$k] = $v;
             }
-            $stmt->execute();
-            $tetelek = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $query = "SELECT * FROM egyeb_koltsegek WHERE admin = :ceg_id AND torolt <> 'I'$szuresSql";
+            if (!empty($irany)) {
+                $query .= " AND irany = :irany";
+                $params[':irany'] = $irany;
+            }
+            if (!empty($search)) {
+                $query .= " AND " . PaginationHelper::likeClause(['megnevezes', 'szamlaszam', 'megjegyzes'], 'search');
+                $params[':search'] = '%' . $search . '%';
+            }
+            $query .= " ORDER BY datum DESC, id DESC";
+
+            if ($page !== null) {
+                [$tetelek, $total, $page, $pageSize] = PaginationHelper::fetchPage($this->db, $query, $params, $page, $pageSize);
+            } else {
+                $stmt = $this->db->prepare($query);
+                foreach ($params as $k => $v) {
+                    $stmt->bindValue($k, $v);
+                }
+                $stmt->execute();
+                $tetelek = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
 
             $kamionRendszamok = $this->getRendszamok('kamion', $ceg_id);
             $potkocsiRendszamok = $this->getRendszamok('potkocsi', $ceg_id);
@@ -539,7 +556,13 @@ class KoltsegInterface {
                 }
             }
 
-            return ['success' => true, 'tetelek' => $tetelek];
+            $result = ['success' => true, 'tetelek' => $tetelek];
+            if ($page !== null) {
+                $result['total'] = $total;
+                $result['page'] = $page;
+                $result['pageSize'] = $pageSize;
+            }
+            return $result;
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }

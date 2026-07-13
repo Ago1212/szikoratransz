@@ -7,7 +7,7 @@ import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
 import AllapotBadge from "components/UI/AllapotBadge.js";
 
-const CardTable = ({ kamionok }) => {
+const CardTable = ({ kamionok, loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll }) => {
   const history = useHistory();
   const user = JSON.parse(sessionStorage.getItem("user"));
 
@@ -97,6 +97,16 @@ const CardTable = ({ kamionok }) => {
       rows={kamionok}
       onRowDoubleClick={handleEditClick}
       emptyLabel="Nincsenek kamionok megjelenítve"
+      loading={loading}
+      searchable
+      searchPlaceholder="Keresés rendszám, típus szerint..."
+      serverSide
+      totalRows={total}
+      page={page}
+      pageSize={pageSize}
+      onPageChange={onPageChange}
+      onSearchChange={onSearchChange}
+      onExportAll={onExportAll}
     />
   );
 };

@@ -8,12 +8,26 @@ class PotkocsiInterface {
         $this->db = $database->connect();
     }
 
-    public function getPotkocsik($id) {
+    public function getPotkocsik($id, $search = null, $page = null, $pageSize = null) {
 
         try {
+            $params = [':id' => $id];
             $query = "SELECT * FROM potkocsi WHERE admin = :id  AND torolt <> 'I'";
+            if (!empty($search)) {
+                $query .= " AND " . PaginationHelper::likeClause(['rendszam', 'tipus', 'allapot'], 'search');
+                $params[':search'] = '%' . $search . '%';
+            }
+            $query .= " ORDER BY rendszam ASC";
+
+            if ($page !== null) {
+                [$potkocsik, $total, $page, $pageSize] = PaginationHelper::fetchPage($this->db, $query, $params, $page, $pageSize);
+                return ['success' => true, 'potkocsik' => $potkocsik, 'total' => $total, 'page' => $page, 'pageSize' => $pageSize];
+            }
+
             $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':id', $id);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
             $stmt->execute();
             $potkocsik = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
