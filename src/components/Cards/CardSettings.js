@@ -14,6 +14,8 @@ import {
   PiShieldCheckLight,
   PiTruckLight,
   PiIdentificationBadgeLight,
+  PiReceiptLight,
+  PiKeyLight,
 } from "react-icons/pi";
 import PageCard from "components/UI/PageCard.js";
 import SaveButton from "components/UI/SaveButton.js";
@@ -41,6 +43,84 @@ export default function CardSettings() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // A NAV Online Számla kapcsolat cégszintű, érzékeny beállítás — csak a
+  // cég tulajdonos-adminja láthatja/módosíthatja, nem minden csapattag.
+  // A titkos mezőket (jelszó/kulcsok) a szerver SOSEM adja vissza
+  // visszafejtve — csak azt jelzi, van-e már beállítva kapcsolat; a mezők
+  // üresen maradnak, "•••• (mentve)" placeholderrel jelezve, hogy van
+  // mentett érték, amit csak akkor írunk felül, ha ténylegesen új
+  // szöveget gépel bele a felhasználó.
+  const isOwnerAdmin = initialUserData.szerepkor === "admin";
+  const [navVanBeallitva, setNavVanBeallitva] = useState(false);
+  const [navForm, setNavForm] = useState({
+    adoszam: "",
+    login: "",
+    jelszo: "",
+    alairoKulcs: "",
+    csereKulcs: "",
+    kornyezet: "eles",
+  });
+  const [isNavSaving, setIsNavSaving] = useState(false);
+
+  useEffect(() => {
+    if (!isOwnerAdmin || !initialUserData.ceg_id) return;
+    fetchAction("getNavSzamlaBeallitasokStatusz", {
+      ceg_id: initialUserData.ceg_id,
+      kerelmezo_id: initialUserData.id,
+    }).then((result) => {
+      if (result?.success && result.van_beallitva) {
+        setNavVanBeallitva(true);
+        setNavForm((prev) => ({
+          ...prev,
+          adoszam: result.adoszam || "",
+          login: result.login || "",
+          kornyezet: result.kornyezet || "eles",
+        }));
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleNavInputChange = (e) => {
+    const { name, value } = e.target;
+    setNavForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleNavSave = async () => {
+    if (!navForm.adoszam.trim() || !navForm.login.trim()) {
+      toast.error("Az adószám és a technikai felhasználó login megadása kötelező!");
+      return;
+    }
+    if (!navVanBeallitva && (!navForm.jelszo || !navForm.alairoKulcs || !navForm.csereKulcs)) {
+      toast.error("Első alkalommal a jelszó, az aláíró kulcs és a cserekulcs megadása is kötelező!");
+      return;
+    }
+    setIsNavSaving(true);
+    try {
+      const result = await fetchAction("saveNavSzamlaBeallitasok", {
+        ceg_id: initialUserData.ceg_id,
+        kerelmezo_id: initialUserData.id,
+        adoszam: navForm.adoszam.trim(),
+        login: navForm.login.trim(),
+        jelszo: navForm.jelszo,
+        alairoKulcs: navForm.alairoKulcs,
+        csereKulcs: navForm.csereKulcs,
+        kornyezet: navForm.kornyezet,
+      });
+      if (result?.success) {
+        toast.success("NAV Online Számla beállítások mentve.");
+        setNavVanBeallitva(true);
+        setNavForm((prev) => ({ ...prev, jelszo: "", alairoKulcs: "", csereKulcs: "" }));
+      } else {
+        throw new Error(result?.message || "Mentés sikertelen");
+      }
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setIsNavSaving(false);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -187,6 +267,79 @@ export default function CardSettings() {
           <div className="flex justify-end border-t border-ink-100 pt-4">
             <SaveButton onClick={handleSave} isSaving={isSaving} />
           </div>
+
+          {isOwnerAdmin && (
+            <div className="border-t border-ink-100 pt-5">
+              <FormSection
+                id="nav-szamla"
+                title="NAV Online Számla kapcsolat"
+                icon={PiReceiptLight}
+                columns={3}
+              >
+                <FormField
+                  icon={PiIdentificationCardLight}
+                  label="Adószám (csak az első 8 számjegy)"
+                  name="adoszam"
+                  value={navForm.adoszam}
+                  onChange={handleNavInputChange}
+                  placeholder="pl. 12345678 (kötőjelek/ellenőrző számok nélkül)"
+                />
+                <FormField
+                  icon={PiUserLight}
+                  label="Technikai felhasználó login"
+                  name="login"
+                  value={navForm.login}
+                  onChange={handleNavInputChange}
+                />
+                <FormField
+                  as="select"
+                  icon={PiShieldCheckLight}
+                  label="Környezet"
+                  name="kornyezet"
+                  value={navForm.kornyezet}
+                  onChange={handleNavInputChange}
+                >
+                  <option value="eles">Éles</option>
+                  <option value="teszt">Teszt</option>
+                </FormField>
+                <FormField
+                  icon={PiKeyLight}
+                  label="Jelszó"
+                  type="password"
+                  name="jelszo"
+                  value={navForm.jelszo}
+                  onChange={handleNavInputChange}
+                  placeholder={navVanBeallitva ? "•••• (mentve — hagyd üresen, ha nem változik)" : ""}
+                />
+                <FormField
+                  icon={PiKeyLight}
+                  label="Aláíró kulcs"
+                  type="password"
+                  name="alairoKulcs"
+                  value={navForm.alairoKulcs}
+                  onChange={handleNavInputChange}
+                  placeholder={navVanBeallitva ? "•••• (mentve — hagyd üresen, ha nem változik)" : ""}
+                />
+                <FormField
+                  icon={PiKeyLight}
+                  label="Cserekulcs"
+                  type="password"
+                  name="csereKulcs"
+                  value={navForm.csereKulcs}
+                  onChange={handleNavInputChange}
+                  placeholder={navVanBeallitva ? "•••• (mentve — hagyd üresen, ha nem változik)" : ""}
+                />
+              </FormSection>
+              <p className="-mt-1 mb-3 text-xs text-ink-400">
+                {navVanBeallitva
+                  ? "A kapcsolat be van állítva — a Pénzforgalom oldalon lekérdezheted a NAV-tól a számlákat."
+                  : "A technikai felhasználó adatait a NAV Online Számla portálján kell előbb létrehozni."}
+              </p>
+              <div className="flex justify-end">
+                <SaveButton onClick={handleNavSave} isSaving={isNavSaving} />
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </PageCard>
