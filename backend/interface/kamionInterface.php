@@ -8,10 +8,17 @@ class KamionInterface {
         $this->db = $database->connect();
     }
 
-    public function getKamionValaszto($user) {
+    // FONTOS: korábban ez a metódus egyáltalán nem szűrt cég szerint —
+    // a `$user` paramétert kapta, de sosem használta, és a lekérdezés
+    // MINDEN cég MINDEN kamionját visszaadta (a Bejelentések oldal
+    // "Kamion kiválasztása" legördülője mindenki más flottáját is
+    // mutatta). Most `ceg_id`-vel scope-olva, a projekt többi
+    // kamion-lekérdezésével konzisztensen.
+    public function getKamionValaszto($ceg_id) {
         try {
-            $query = "SELECT id, rendszam FROM kamion WHERE torolt <> 'I'";
+            $query = "SELECT id, rendszam FROM kamion WHERE admin = :ceg_id AND torolt <> 'I'";
             $stmt = $this->db->prepare($query);
+            $stmt->bindValue(':ceg_id', $ceg_id);
             $stmt->execute();
             $kamionok = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

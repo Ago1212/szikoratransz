@@ -75,6 +75,37 @@ class JarmuValtasInterface {
         }
     }
 
+    // Sofőr-oldali értesítéshez — a nemrég ELBÍRÁLT (jóváhagyott/elutasított)
+    // saját kérései, hogy a sofőr lássa, ha időközben döntés született.
+    // Szándékosan NEM ugyanaz, mint getSajatJarmuValtasKerelmek() fent —
+    // az kizárólag a még függőben lévőket adja vissza (más hívók, pl.
+    // JarmuValaszto.js, pont ezért használják: hogy tudják, van-e még
+    // aktív kérés), a 'visszavonva' állapotot pedig szándékosan kihagyjuk,
+    // mert azt a sofőr saját maga váltotta ki, nem admin-döntés.
+    public function getElbiraltJarmuValtasok($sofor_id) {
+        try {
+            $query = "SELECT * FROM jarmu_valtas_kerelmek
+                      WHERE sofor_id = :sofor_id AND allapot IN ('jovahagyva', 'elutasitva') AND torolt <> 'I'
+                      ORDER BY elbiralva DESC LIMIT 5";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindValue(':sofor_id', $sofor_id);
+            $stmt->execute();
+            $kerelmek = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $kamionRendszamok = $this->getRendszamok('kamion');
+            $potkocsiRendszamok = $this->getRendszamok('potkocsi');
+            foreach ($kerelmek as &$k) {
+                $k['jarmu_rendszam'] = $k['tipus'] === 'kamion'
+                    ? ($kamionRendszamok[$k['jarmu_id']] ?? null)
+                    : ($potkocsiRendszamok[$k['jarmu_id']] ?? null);
+            }
+
+            return ['success' => true, 'kerelmek' => $kerelmek];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
     // Admin oldali nézet — az összes függőben lévő kérés a cég flottájára.
     public function getFuggoJarmuValtasok($admin) {
         try {

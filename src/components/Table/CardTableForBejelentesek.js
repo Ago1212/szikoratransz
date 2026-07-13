@@ -34,6 +34,7 @@ export default function CardTable({ bejelentesek, isLoading, selectedKamion }) {
 
   const columns = [
     { key: "cim", label: "Cím", className: "font-semibold text-brand-900" },
+    { key: "kamion_rendszam", label: "Rendszám", render: (row) => row.kamion_rendszam || "—" },
     { key: "sofor_nev", label: "Bejelentő", render: (row) => row.sofor_nev || "Ismeretlen" },
     { key: "bejelentve", label: "Bejelentve" },
     {
@@ -83,6 +84,7 @@ export default function CardTable({ bejelentesek, isLoading, selectedKamion }) {
   // látszanak.
   const exportColumns = [
     { key: "cim", label: "Cím" },
+    { key: "kamion_rendszam", label: "Rendszám" },
     { key: "sofor_nev", label: "Bejelentő", exportValue: (row) => row.sofor_nev || "Ismeretlen" },
     { key: "tipus", label: "Típus" },
     { key: "leiras", label: "Leírás" },

@@ -11,6 +11,7 @@ import { PiBellLight, PiSignOutLight } from "react-icons/pi";
 
 import useNoIndex from "utils/useNoIndex";
 import { fetchAction } from "utils/fetchAction";
+import { useSajatErtesitesek } from "utils/useSajatErtesitesek.js";
 import BottomNav from "components/UI/BottomNav.js";
 import Spinner from "components/UI/Spinner.js";
 
@@ -24,6 +25,7 @@ const Bejelentesek = React.lazy(() => import("views/user/Bejelentesek.js"));
 const Tankolas = React.lazy(() => import("views/user/Tankolas.js"));
 const Profil = React.lazy(() => import("views/user/Profil.js"));
 const Ertesitesek = React.lazy(() => import("views/user/Ertesitesek.js"));
+const VezetesiIdo = React.lazy(() => import("views/user/VezetesiIdo.js"));
 const Helyszinek = React.lazy(() => import("views/user/Helyszinek.js"));
 const HelyszinReszletek = React.lazy(() => import("views/user/HelyszinReszletek.js"));
 
@@ -44,6 +46,7 @@ const desktopLinks = [
   { to: "/user/bejelentesek", label: "Bejelentéseim" },
   { to: "/user/helyszinek", label: "Helyszínek" },
   { to: "/user/tankolas", label: "Tankolás" },
+  { to: "/user/vezetesi-ido", label: "Vezetési idő" },
   { to: "/user/profil", label: "Profil" },
 ];
 
@@ -56,6 +59,7 @@ function DesktopNav() {
   const location = useLocation();
   const history = useHistory();
   const isActive = (path) => location.pathname.startsWith(path);
+  const { osszesSzam } = useSajatErtesitesek();
 
   const handleLogout = async () => {
     const user = JSON.parse(sessionStorage.getItem("user") || "null");
@@ -98,7 +102,7 @@ function DesktopNav() {
         <div className="flex flex-shrink-0 items-center gap-2">
           <Link
             to="/user/ertesitesek"
-            className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors duration-150 ${
+            className={`relative flex h-9 w-9 items-center justify-center rounded-full transition-colors duration-150 ${
               isActive("/user/ertesitesek")
                 ? "bg-brand-50 text-brand-600"
                 : "text-ink-400 hover:bg-slate-100"
@@ -106,6 +110,9 @@ function DesktopNav() {
             aria-label="Értesítések"
           >
             <PiBellLight className="h-[18px] w-[18px]" />
+            {osszesSzam > 0 && (
+              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />
+            )}
           </Link>
           <Link
             to="/user/bejelentes/uj"
@@ -163,6 +170,7 @@ export default function User() {
               component={Bejelentesek}
             />
             <PrivateRoute path="/user/tankolas" exact component={Tankolas} />
+            <PrivateRoute path="/user/vezetesi-ido" exact component={VezetesiIdo} />
             <PrivateRoute path="/user/profil" exact component={Profil} />
             <PrivateRoute
               path="/user/ertesitesek"

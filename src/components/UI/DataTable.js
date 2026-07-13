@@ -138,7 +138,11 @@ export default function DataTable({
   const primaryCol =
     (mobileTitleKey && fieldCols.find((col) => col.key === mobileTitleKey)) ||
     fieldCols[0];
-  const secondaryCols = fieldCols.filter((col) => col.key !== primaryCol?.key);
+  // Egy oszlop opcionálisan `mobileHidden: true`-val jelezheti, hogy a
+  // mobil kártyanézetből kimaradjon (pl. ritkán kitöltött, másodlagos
+  // mező, mint egy számlaszám vagy megjegyzés) — az asztali táblázatot
+  // és az Excel-exportot ez nem érinti, csak a mobil kártya-grid mezőit.
+  const secondaryCols = fieldCols.filter((col) => col.key !== primaryCol?.key && !col.mobileHidden);
   // Mobilon nincs Excel-exportra szükség (nincs hova letölteni/megnyitni
   // kényelmesen egy .xlsx fájlt egy kártyalistás nézetben) — a gomb csak
   // `md:` fölött jelenik meg, hogy a mobil fejléc ne zsúfolódjon tele.

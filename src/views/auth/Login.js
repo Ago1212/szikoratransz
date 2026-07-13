@@ -197,7 +197,7 @@ export default function Bejelentkezes() {
         sessionStorage.setItem("user", JSON.stringify(result.user));
         sessionStorage.setItem("sessionToken", result.token);
 
-        if (result.user.admin) {
+        if (result.user.is_admin) {
           history.push("/admin/dashboard");
         } else {
           history.push("/user/dashboard");

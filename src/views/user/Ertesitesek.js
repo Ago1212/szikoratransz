@@ -1,39 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
-import { PiWarningCircleLight, PiChatCircleTextLight, PiBellSlashLight } from "react-icons/pi";
-import { fetchAction } from "utils/fetchAction";
+import {
+  PiWarningCircleLight,
+  PiChatCircleTextLight,
+  PiBellSlashLight,
+  PiTruckLight,
+  PiCheckCircleLight,
+  PiXCircleLight,
+} from "react-icons/pi";
 import MobileHeader from "components/UI/MobileHeader.js";
 import StatusBadge from "components/UI/StatusBadge.js";
 import Spinner from "components/UI/Spinner.js";
-import { DOCUMENT_FIELDS, getDocumentStatus, getDocumentTone, daysUntil } from "utils/documentStatus.js";
+import { getDocumentTone } from "utils/documentStatus.js";
+import { useSajatErtesitesek } from "utils/useSajatErtesitesek.js";
 
 export default function Ertesitesek() {
-  const [loading, setLoading] = useState(true);
-  const [dokumentumEsemenyek, setDokumentumEsemenyek] = useState([]);
-  const [bejelentesEsemenyek, setBejelentesEsemenyek] = useState([]);
+  const { lejaratok: dokumentumEsemenyek, bejelentesValaszok: bejelentesEsemenyek, jarmuValtasok, loading } =
+    useSajatErtesitesek();
 
-  useEffect(() => {
-    const user = JSON.parse(sessionStorage.getItem("user"));
-
-    const lejaratok = DOCUMENT_FIELDS.map((field) => ({
-      ...field,
-      status: getDocumentStatus(user[field.key]),
-      days: daysUntil(user[field.key]),
-    })).filter((d) => d.status === "expired" || d.status === "warning");
-    setDokumentumEsemenyek(lejaratok);
-
-    fetchAction("getBejelentesekSofor", { sofor_id: user.id }).then((result) => {
-      if (result?.success) {
-        const valaszolt = (result.bejelentesek || []).filter(
-          (b) => b.statusz !== "uj" || b.admin_valasz,
-        );
-        setBejelentesEsemenyek(valaszolt.slice(0, 5));
-      }
-      setLoading(false);
-    });
-  }, []);
-
-  const isEmpty = dokumentumEsemenyek.length === 0 && bejelentesEsemenyek.length === 0;
+  const isEmpty = dokumentumEsemenyek.length === 0 && bejelentesEsemenyek.length === 0 && jarmuValtasok.length === 0;
 
   return (
     <div className="flex flex-col gap-3">
@@ -91,6 +76,40 @@ export default function Ertesitesek() {
               </div>
             </Link>
           ))}
+
+          {jarmuValtasok.map((k) => {
+            const jovahagyva = k.allapot === "jovahagyva";
+            return (
+              <Link
+                key={k.id}
+                to={k.tipus === "kamion" ? "/user/jarmu-valaszto" : "/user/potkocsi-valaszto"}
+                className="flex items-center gap-3 rounded-2xl border border-ink-100 bg-white p-3.5 shadow-soft"
+              >
+                <span
+                  className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${
+                    jovahagyva ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
+                  }`}
+                >
+                  {jovahagyva ? (
+                    <PiCheckCircleLight className="h-5 w-5" />
+                  ) : (
+                    <PiXCircleLight className="h-5 w-5" />
+                  )}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-ink-900">
+                    {k.tipus === "kamion" ? "Kamion" : "Pótkocsi"}-váltási kérésed {jovahagyva ? "jóváhagyva" : "elutasítva"}
+                  </p>
+                  <p className="truncate text-xs text-ink-500">
+                    {k.jarmu_rendszam ? `Kért jármű: ${k.jarmu_rendszam}` : " "}
+                  </p>
+                </div>
+                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-slate-50 text-ink-400">
+                  <PiTruckLight className="h-4 w-4" />
+                </span>
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

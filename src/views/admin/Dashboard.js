@@ -6,12 +6,22 @@ import {
   PiTruckTrailerLight,
   PiCalendarBlankLight,
   PiWarningCircleLight,
+  PiTrendUpLight,
+  PiCoinsLight,
+  PiArrowRightLight,
 } from "react-icons/pi";
 
 // components
 import CardStats from "components/Cards/CardStats";
 import CardCalender from "components/Cards/CardCalender";
 import { fetchAction } from "utils/fetchAction";
+
+const formatHuf = (value) =>
+  new Intl.NumberFormat("hu-HU", {
+    style: "currency",
+    currency: "HUF",
+    maximumFractionDigits: 0,
+  }).format(value || 0);
 
 export default function Dashboard() {
   const history = useHistory();
@@ -23,6 +33,15 @@ export default function Dashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Nettó eredmény — az e havi cashflow gyors áttekintése (nem
+  // mindenkori összesítés, mint a Pénzforgalom oldal alap nézete, hanem
+  // szándékosan a folyó hónapra szűkítve, hogy egy "hogy állunk most"
+  // pillanatkép legyen, ne egy lassan változó, nagy kumulált szám).
+  // Korábban ez a Pénzforgalom oldal tetején álló hero-kártya volt —
+  // ide került át, mert ez a valódi "hogy állunk" kezdőoldal.
+  const [cashflow, setCashflow] = useState({ bevetel: 0, kiadas: 0, netto: 0 });
+  const [cashflowLoading, setCashflowLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -49,6 +68,27 @@ export default function Dashboard() {
     };
 
     fetchData();
+  }, []);
+
+  useEffect(() => {
+    const user = JSON.parse(sessionStorage.getItem("user"));
+    const ma = new Date();
+    const honapEleje = new Date(ma.getFullYear(), ma.getMonth(), 1).toISOString().slice(0, 10);
+    fetchAction("getKoltsegOsszesito", {
+      ceg_id: user.ceg_id,
+      kerelmezo_id: user.id,
+      datumTol: honapEleje,
+      datumIg: ma.toISOString().slice(0, 10),
+    }).then((result) => {
+      if (result?.success) {
+        setCashflow({
+          bevetel: result.osszesen.bevetel,
+          kiadas: result.osszesen.kiadas,
+          netto: result.osszesen.netto,
+        });
+      }
+      setCashflowLoading(false);
+    });
   }, []);
 
   const navigateTo = (path) => history.push(path);
@@ -134,6 +174,48 @@ export default function Dashboard() {
           />
         ))}
       </div>
+
+      {/* Nettó eredmény (e havi) — a Pénzforgalom oldal korábbi hero-
+          kártyája ide került át, mert ez a "hogy állunk most" kezdőoldal,
+          nem a részletes, tetszőleges időszakra szűrhető riport. Szándékosan
+          a folyó hónapra szűkítve (nem a Pénzforgalom oldal alapértelmezett
+          "mindenkori" nézete), hogy egy gyorsan változó, aznapra releváns
+          szám legyen, ne egy lassan mozduló kumulált összeg. */}
+      {!cashflowLoading && (
+        <button
+          type="button"
+          onClick={() => navigateTo("/admin/koltsegek")}
+          className="group mb-4 flex-shrink-0 rounded-3xl bg-white p-5 text-left shadow-soft ring-1 ring-ink-100 transition-all duration-300 ease-fluid hover:-translate-y-0.5 hover:shadow-soft-lg md:mb-6 md:p-6"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
+                Nettó eredmény (e havi)
+              </p>
+              <p
+                className={`mt-1 font-display text-3xl font-bold tabular-nums md:text-4xl ${
+                  cashflow.netto >= 0 ? "text-emerald-600" : "text-red-600"
+                }`}
+              >
+                {formatHuf(cashflow.netto)}
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm">
+                <span className="flex items-center gap-1.5 text-ink-500">
+                  <PiTrendUpLight className="h-4 w-4 text-emerald-600" />
+                  Bevétel <span className="font-semibold tabular-nums text-ink-800">{formatHuf(cashflow.bevetel)}</span>
+                </span>
+                <span className="flex items-center gap-1.5 text-ink-500">
+                  <PiCoinsLight className="h-4 w-4 text-red-600" />
+                  Kiadás <span className="font-semibold tabular-nums text-ink-800">{formatHuf(cashflow.kiadas)}</span>
+                </span>
+              </div>
+            </div>
+            <span className="hidden flex-shrink-0 items-center gap-1 text-xs font-semibold text-brand-600 group-hover:underline sm:flex">
+              Pénzforgalom <PiArrowRightLight className="h-3.5 w-3.5" />
+            </span>
+          </div>
+        </button>
+      )}
 
       <div className="flex flex-col rounded-3xl border border-ink-100 bg-white shadow-soft md:min-h-[420px] md:flex-1 md:overflow-hidden">
         <div className="flex-shrink-0 border-b border-ink-100 px-4 py-3 md:px-6 md:py-4">

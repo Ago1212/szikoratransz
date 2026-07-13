@@ -17,6 +17,9 @@ const TABLA_LABEL = {
   jogosultsagok: "Jogosultságok",
   szerepkorok: "Szerepkörök",
   listaelemek: "Listaelem",
+  egyeb_koltsegek: "Pénzforgalom tétel",
+  fuvarok: "Fuvar",
+  vezetesi_naplo: "Vezetési napló",
 };
 
 const MUVELET_TONE = {

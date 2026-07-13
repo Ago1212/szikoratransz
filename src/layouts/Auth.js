@@ -21,7 +21,7 @@ export default function Auth() {
       user = null;
     }
     if (user) {
-      history.push(user.admin ? "/admin/dashboard" : "/user/dashboard");
+      history.push(user.is_admin ? "/admin/dashboard" : "/user/dashboard");
     }
   }, [history]);
 

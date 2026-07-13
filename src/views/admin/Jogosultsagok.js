@@ -15,6 +15,9 @@ const MODUL_LABEL = {
   szabadsagok: "Szabadságok",
   ugyfelek: "Ügyfelek",
   naplo: "Napló",
+  koltsegek: "Pénzforgalom",
+  fuvarok: "Fuvarok",
+  vezetesi_ido: "Vezetési idő",
 };
 
 // "Diszpécser" -> "diszpecser", "Raktáros / Logisztikus" -> "raktaros_logisztikus"
