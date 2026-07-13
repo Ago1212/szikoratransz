@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
 import {
@@ -19,16 +19,28 @@ import PageCard from "components/UI/PageCard.js";
 import SaveButton from "components/UI/SaveButton.js";
 import FormField, { FormSection } from "components/UI/FormField.js";
 
-const SZEREPKOR_LABEL = {
-  admin: "Adminisztrátor",
-  fuvarszervezo: "Fuvarszervező",
-};
-
 export default function CardSettings() {
   const storedUserData = sessionStorage.getItem("user");
   const initialUserData = storedUserData ? JSON.parse(storedUserData) : {};
   const [userData, setUserData] = useState(initialUserData);
   const [isSaving, setIsSaving] = useState(false);
+  // A szerepkörök cégenként egyénileg bővíthetők (ld. Jogosultsagok.js) —
+  // a megjelenítendő nevet ezért a cég szerepkör-listájából kell kikeresni,
+  // nem egy fix, kódba égetett címke-térképből.
+  const [szerepkorNev, setSzerepkorNev] = useState(
+    initialUserData.szerepkor === "admin" ? "Adminisztrátor" : initialUserData.szerepkor || ""
+  );
+
+  useEffect(() => {
+    if (!initialUserData.ceg_id) return;
+    fetchAction("getSzerepkorok", { id: initialUserData.ceg_id }).then((result) => {
+      if (result?.success) {
+        const talalt = (result.szerepkorok || []).find((r) => r.kulcs === initialUserData.szerepkor);
+        if (talalt) setSzerepkorNev(talalt.nev);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -90,7 +102,7 @@ export default function CardSettings() {
               as="info"
               icon={PiIdentificationBadgeLight}
               label="Szerepkör"
-              value={SZEREPKOR_LABEL[userData.szerepkor] || SZEREPKOR_LABEL.admin}
+              value={szerepkorNev}
             />
             <FormField
               icon={PiCakeLight}

@@ -4,9 +4,19 @@ import { GradientCardHeader } from "components/UI/PageCard.js";
 import Spinner from "components/UI/Spinner.js";
 
 // Excel export — a `render` oszlopok JSX-et adnak vissza (pl. állapot-
-// jelvény, gombok), ezért azoknál a nyers `row[col.key]` értéket
-// exportáljuk, nem a renderelt kimenetet; az "actions" oszlop mindig
-// kimarad.
+// jelvény, gombok), ezért azoknál nem a renderelt kimenetet exportáljuk.
+// Egy oszlop opcionálisan megadhat egy `exportValue(row)` függvényt, ami
+// egy sima szöveget ad vissza kifejezetten az exporthoz (pl. egy számított
+// oszlopnál, aminek a `key`-e nem is létezik nyers mezőként a soron —
+// enélkül az ilyen oszlopok korábban NÉMÁN ÜRESEN exportálódtak, mert az
+// export a puszta `row[col.key]`-t nézte). Ha nincs `exportValue`, a nyers
+// `row[col.key]` érték kerül a cellába. Az "actions" oszlop mindig kimarad.
+//
+// A táblázatot megjelenítő `columns`-tól függetlenül egy oldal megadhat
+// egy bővebb `exportColumns` listát is (ld. DataTable `exportColumns`
+// propja) — így az exportba bekerülhetnek olyan mezők is, amik a kompakt
+// nézetben helyhiány miatt nem látszanak (pl. lejárati dátumok, biztosítási
+// adatok), anélkül hogy a képernyőn megjelenő táblázat zsúfolt lenne.
 //
 // Szándékosan NEM az npm `xlsx` (SheetJS) csomagot használjuk: az onnan
 // telepíthető legfrissebb verzió (0.18.5) ismert, javítatlan sérülékeny-
@@ -27,12 +37,14 @@ function exportRowsToExcel(columns, rows, filename) {
   };
   const cell = (value) =>
     `<Cell><Data ss:Type="String">${escapeXml(value)}</Data></Cell>`;
+  const resolveValue = (col, row) =>
+    col.exportValue ? col.exportValue(row) : row[col.key];
 
   const headerRow = `<Row>${exportCols.map((col) => cell(col.label)).join("")}</Row>`;
   const dataRows = rows
     .map(
       (row) =>
-        `<Row>${exportCols.map((col) => cell(row[col.key])).join("")}</Row>`,
+        `<Row>${exportCols.map((col) => cell(resolveValue(col, row))).join("")}</Row>`,
     )
     .join("");
 
@@ -109,6 +121,11 @@ export default function DataTable({
   // Ha meg van adva, a fejlécben megjelenik egy "Excel export" gomb, ami a
   // jelenleg megjelenített (szűrt) sorokat tölti le ezzel a fájlnévvel.
   exportFilename,
+  // Opcionális, bővebb oszlopkészlet KIFEJEZETTEN az exporthoz — ha nincs
+  // megadva, a képernyőn is látható `columns` kerül exportálásra. Ezzel egy
+  // oldal olyan mezőket is belefoglalhat az Excel-be, amik a kompakt
+  // táblázat-/kártyanézetben helyhiány miatt nem jelennek meg.
+  exportColumns,
   // Ha true: a táblázat a szülő flex-konténer rendelkezésre álló
   // magasságát tölti ki (nem egy fix vh-értéket) — így egy olyan oldalon,
   // ahol felette még van cím/szűrő sáv is, a táblázat sosem lóghat túl a
@@ -121,13 +138,20 @@ export default function DataTable({
   const primaryCol =
     (mobileTitleKey && fieldCols.find((col) => col.key === mobileTitleKey)) ||
     fieldCols[0];
-  const secondaryCols = fieldCols.filter((col) => col.key !== primaryCol?.key);
+  // Egy oszlop opcionálisan `mobileHidden: true`-val jelezheti, hogy a
+  // mobil kártyanézetből kimaradjon (pl. ritkán kitöltött, másodlagos
+  // mező, mint egy számlaszám vagy megjegyzés) — az asztali táblázatot
+  // és az Excel-exportot ez nem érinti, csak a mobil kártya-grid mezőit.
+  const secondaryCols = fieldCols.filter((col) => col.key !== primaryCol?.key && !col.mobileHidden);
+  // Mobilon nincs Excel-exportra szükség (nincs hova letölteni/megnyitni
+  // kényelmesen egy .xlsx fájlt egy kártyalistás nézetben) — a gomb csak
+  // `md:` fölött jelenik meg, hogy a mobil fejléc ne zsúfolódjon tele.
   const exportButton = exportFilename && (
     <button
-      className="flex items-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-ink-500 shadow-soft transition-all duration-300 ease-fluid hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 active:scale-95"
+      className="hidden items-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-ink-500 shadow-soft transition-all duration-300 ease-fluid hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 active:scale-95 md:flex"
       type="button"
       title="Táblázat exportálása Excelbe"
-      onClick={() => exportRowsToExcel(columns, rows, exportFilename)}
+      onClick={() => exportRowsToExcel(exportColumns || columns, rows, exportFilename)}
     >
       <PiDownloadSimpleLight className="h-4 w-4" /> Excel
     </button>

@@ -1,14 +1,22 @@
 <?php
 
 // Több admin-fiók egy céghez — ld. backend/sql/6.sql. A `szerepkor` mező
-// (admin/fuvarszervezo, ld. backend/sql/7.sql) ma még csak megjelenítési
-// célú címke — mindenki, aki egy céghez tartozik, ugyanazt
-// látja/szerkeszti, amíg nincs bevezetve a jogosultsági mátrix. Ez a
-// mező előkészíti a talajt ahhoz anélkül, hogy most bármit korlátozna.
+// értéke ma már NEM egy fix, kódba égetett lista ('admin'/'fuvarszervezo')
+// — cégenként egyéni szerepkörök is létrehozhatók (ld. szerepkorInterface.php
+// + backend/sql/11.sql), ezért az érvényes szerepkör-készletet mindig az
+// adott cég `szerepkorok` táblájából (+ a mindig létező 'admin'-ból)
+// olvassuk ki, nem egy statikus konstansból.
 class CsapatInterface {
     protected $db;
 
-    const SZEREPKOROK = ['admin', 'fuvarszervezo'];
+    private function ervenyesSzerepkorok($ceg_id) {
+        $stmt = $this->db->prepare("SELECT kulcs FROM szerepkorok WHERE admin = :ceg_id AND torolt <> 'I'");
+        $stmt->bindValue(':ceg_id', $ceg_id);
+        $stmt->execute();
+        $kulcsok = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        $kulcsok[] = 'admin';
+        return $kulcsok;
+    }
 
     public function __construct() {
         $database = new Database();
@@ -42,7 +50,7 @@ class CsapatInterface {
                 return ['success' => false, 'message' => 'Már létezik fiók ezzel az email címmel.'];
             }
 
-            $szerepkor = in_array($data['szerepkor'] ?? null, self::SZEREPKOROK, true) ? $data['szerepkor'] : 'admin';
+            $szerepkor = in_array($data['szerepkor'] ?? null, $this->ervenyesSzerepkorok($data['ceg_id']), true) ? $data['szerepkor'] : 'admin';
             $hashed = password_hash($data['password'], PASSWORD_DEFAULT);
             $query = "INSERT INTO admin (tulajdonos_admin_id, name, email, phone, password, szerepkor)
                       VALUES (:ceg_id, :name, :email, :phone, :password, :szerepkor)";
@@ -66,7 +74,7 @@ class CsapatInterface {
     // módosítható innen, de a gyökér-mivolta (tulajdonos_admin_id) nem.
     public function updateCsapattagSzerepkor($id, $ceg_id, $szerepkor) {
         try {
-            if (!in_array($szerepkor, self::SZEREPKOROK, true)) {
+            if (!in_array($szerepkor, $this->ervenyesSzerepkorok($ceg_id), true)) {
                 return ['success' => false, 'message' => 'Érvénytelen szerepkör.'];
             }
             $query = "UPDATE admin SET szerepkor = :szerepkor

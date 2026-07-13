@@ -17,22 +17,59 @@ class BejelentesekInterface {
         $this->db = $database->connect();
     }
 
-    // Admin oldali böngészés — a meglévő UX szerint kamiononként listáz.
-    // A projekt konvenciója szerint (lásd ApiHandler::getEsemenyek) a
-    // táblákat sosem kapcsoljuk össze egy lekérdezésen belül — a
-    // kapcsolódó neveket külön lekérdezéssel töltjük be, és PHP oldalon
-    // fűzzük össze.
-    public function getBejelentesek($kamion) {
+    // Admin oldali böngészés — a cég ÖSSZES bejelentését adja vissza,
+    // a `kamion` csak OPCIONÁLIS további szűrés (korábban kötelező volt,
+    // az admin kényszerűen ki kellett válasszon egy kamiont, mielőtt
+    // bármit is látott volna). A projekt konvenciója szerint (lásd
+    // ApiHandler::getEsemenyek) a táblákat sosem kapcsoljuk össze egy
+    // lekérdezésen belül — a kapcsolódó neveket külön lekérdezéssel
+    // töltjük be, és PHP oldalon fűzzük össze.
+    public function getBejelentesek($ceg_id, $kamion = null) {
         try {
-            $query = "SELECT * FROM bejelentesek WHERE kamion_id = :kamion AND torolt <> 'I' ORDER BY bejelentve DESC";
+            $query = "SELECT * FROM bejelentesek WHERE admin = :ceg_id AND torolt <> 'I'";
+            if (!empty($kamion)) {
+                $query .= " AND kamion_id = :kamion";
+            }
+            $query .= " ORDER BY bejelentve DESC";
             $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':kamion', $kamion);
+            $stmt->bindValue(':ceg_id', $ceg_id);
+            if (!empty($kamion)) {
+                $stmt->bindValue(':kamion', $kamion);
+            }
             $stmt->execute();
             $bejelentesek = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             $soforNevek = $this->getSoforNevek();
+            $kamionRendszamok = $this->getKamionRendszamok();
             foreach ($bejelentesek as &$b) {
                 $b['sofor_nev'] = $soforNevek[$b['sofor_id']] ?? null;
+                $b['kamion_rendszam'] = $kamionRendszamok[$b['kamion_id']] ?? null;
+            }
+
+            return ['success' => true, 'bejelentesek' => $bejelentesek];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    // Admin-oldali harang-értesítéshez — a `getBejelentesek($kamion)`-tól
+    // eltérően itt NEM egy konkrét kamionra szűkítünk, hanem a cég ÖSSZES
+    // kamionján átívelő, még nyitott (`statusz = 'uj'`) bejelentéseket adjuk
+    // vissza, hogy a Sidebar haranG-ja jelezni tudja: van-e olyan bejelentés,
+    // amit még senki nem nézett meg.
+    public function getNyitottBejelentesek($ceg_id) {
+        try {
+            $query = "SELECT * FROM bejelentesek WHERE admin = :ceg_id AND statusz = 'uj' AND torolt <> 'I' ORDER BY bejelentve DESC";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindValue(':ceg_id', $ceg_id);
+            $stmt->execute();
+            $bejelentesek = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $soforNevek = $this->getSoforNevek();
+            $kamionRendszamok = $this->getKamionRendszamok();
+            foreach ($bejelentesek as &$b) {
+                $b['sofor_nev'] = $soforNevek[$b['sofor_id']] ?? null;
+                $b['kamion_rendszam'] = $kamionRendszamok[$b['kamion_id']] ?? null;
             }
 
             return ['success' => true, 'bejelentesek' => $bejelentesek];

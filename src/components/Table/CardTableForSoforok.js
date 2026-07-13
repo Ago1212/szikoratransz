@@ -8,6 +8,7 @@ import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
 
 const CardTable = ({ soforok }) => {
   const history = useHistory();
+  const user = JSON.parse(sessionStorage.getItem("user"));
 
   const handleNewSofor = () => {
     history.push("/admin/soforForm", { data: {} });
@@ -22,6 +23,7 @@ const CardTable = ({ soforok }) => {
     confirmMessage: "Biztosan törölni szeretnéd a sofőrt?",
     successMessage: "A sofőr sikeresen törölve.",
     listPath: "/admin/soforok",
+    extraParams: { kerelmezo_id: user.id },
   });
 
   const columns = [
@@ -51,12 +53,33 @@ const CardTable = ({ soforok }) => {
     },
   ];
 
+  // Az Excel export a listaoszlopokon felül a sofőr dokumentumainak lejárati
+  // dátumait és a teljes cím-bontást is tartalmazza — ezek a kompakt
+  // táblázatban helyhiány miatt nem látszanak, de egy exportnál (pl.
+  // lejárat-figyeléshez) pont ezek a leghasznosabbak.
+  const exportColumns = [
+    { key: "name", label: "Név" },
+    { key: "email", label: "Email" },
+    { key: "phone", label: "Telefon" },
+    { key: "lakcim", label: "Lakcím" },
+    { key: "varos", label: "Város" },
+    { key: "irsz", label: "Irányítószám" },
+    { key: "cim", label: "Cím" },
+    { key: "szul_datum", label: "Születési dátum" },
+    { key: "szemelyi", label: "Személyigazolvány szám" },
+    { key: "szemelyi_lejarat", label: "Személyi lejárata" },
+    { key: "jogsi_lejarat", label: "Jogosítvány lejárata" },
+    { key: "gki_lejarat", label: "GKI lejárata" },
+    { key: "adr_lejarat", label: "ADR lejárata" },
+  ];
+
   return (
     <DataTable
       icon={PiUsersLight}
       title="Sofőrök"
       onAdd={handleNewSofor}
       exportFilename="soforok"
+      exportColumns={exportColumns}
       columns={columns}
       rows={soforok}
       onRowDoubleClick={handleEditClick}

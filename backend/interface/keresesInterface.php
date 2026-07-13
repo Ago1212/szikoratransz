@@ -1,0 +1,109 @@
+<?php
+
+// Globális keresés — egyetlen keresőmezőből az összes fő modulban keres
+// (kamionok, pótkocsik, sofőrök, ügyfelek, helyszínek), cégenként (ceg_id)
+// szűrve. A projekt meglévő konvenciója szerint (ld. bejelentesekInterface.php
+// komment) nincs JOIN — minden tábla saját lekérdezést kap, az eredmények
+// PHP oldalon egy közös, egységes alakra hozva.
+//
+// Az `url` szándékosan a LISTA oldalra mutat, nem közvetlenül a szerkesztő
+// formra — a szerkesztő oldalak (pl. KamionForm.js) kizárólag a
+// `location.state.data`-ból töltik fel magukat (nincs önálló "adott id
+// lekérése" akció egyik modulnál sem), a keresés viszont csak részleges
+// mezőket ad vissza. Közvetlen mélylinkeléshez egy külön "getById" akciót
+// kellene bevezetni minden modulhoz — ez túlmutat ezen a körön.
+class KeresesInterface {
+    protected $db;
+
+    public function __construct() {
+        $database = new Database();
+        $this->db = $database->connect();
+    }
+
+    public function globalSearch($ceg_id, $q) {
+        try {
+            $q = trim($q);
+            if ($q === '' || mb_strlen($q) < 2) {
+                return ['success' => true, 'talalatok' => []];
+            }
+            $like = '%' . $q . '%';
+            $talalatok = [];
+
+            $stmt = $this->db->prepare("SELECT id, rendszam, tipus FROM kamion WHERE admin = :ceg_id AND torolt <> 'I' AND rendszam LIKE :q LIMIT 8");
+            $stmt->bindValue(':ceg_id', $ceg_id);
+            $stmt->bindValue(':q', $like);
+            $stmt->execute();
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $talalatok[] = [
+                    'tipus' => 'kamion',
+                    'id' => $row['id'],
+                    'cim' => $row['rendszam'],
+                    'alcim' => $row['tipus'] ?: 'Kamion',
+                    'url' => '/admin/kamionok',
+                ];
+            }
+
+            $stmt = $this->db->prepare("SELECT id, rendszam, tipus FROM potkocsi WHERE admin = :ceg_id AND torolt <> 'I' AND rendszam LIKE :q LIMIT 8");
+            $stmt->bindValue(':ceg_id', $ceg_id);
+            $stmt->bindValue(':q', $like);
+            $stmt->execute();
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $talalatok[] = [
+                    'tipus' => 'potkocsi',
+                    'id' => $row['id'],
+                    'cim' => $row['rendszam'],
+                    'alcim' => $row['tipus'] ?: 'Pótkocsi',
+                    'url' => '/admin/potkocsi',
+                ];
+            }
+
+            $stmt = $this->db->prepare("SELECT id, name, email FROM user WHERE admin = :ceg_id AND admin <> id AND torolt <> 'I' AND name LIKE :q LIMIT 8");
+            $stmt->bindValue(':ceg_id', $ceg_id);
+            $stmt->bindValue(':q', $like);
+            $stmt->execute();
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $talalatok[] = [
+                    'tipus' => 'sofor',
+                    'id' => $row['id'],
+                    'cim' => $row['name'],
+                    'alcim' => $row['email'] ?: 'Sofőr',
+                    'url' => '/admin/soforok',
+                ];
+            }
+
+            $stmt = $this->db->prepare("SELECT id, nev, varos FROM ugyfelek WHERE admin = :ceg_id AND torolt <> 'I' AND nev LIKE :q LIMIT 8");
+            $stmt->bindValue(':ceg_id', $ceg_id);
+            $stmt->bindValue(':q', $like);
+            $stmt->execute();
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $talalatok[] = [
+                    'tipus' => 'ugyfel',
+                    'id' => $row['id'],
+                    'cim' => $row['nev'],
+                    'alcim' => $row['varos'] ?: 'Ügyfél',
+                    'url' => '/admin/ugyfelek',
+                ];
+            }
+
+            $stmt = $this->db->prepare("SELECT id, nev FROM helyszinek WHERE admin = :ceg_id AND torolt <> 'I' AND nev LIKE :q LIMIT 8");
+            $stmt->bindValue(':ceg_id', $ceg_id);
+            $stmt->bindValue(':q', $like);
+            $stmt->execute();
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $talalatok[] = [
+                    'tipus' => 'helyszin',
+                    'id' => $row['id'],
+                    'cim' => $row['nev'],
+                    'alcim' => 'Helyszín',
+                    'url' => '/admin/helyszinek',
+                ];
+            }
+
+            return ['success' => true, 'talalatok' => $talalatok];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+}
+
+$keresesInterface = new KeresesInterface();

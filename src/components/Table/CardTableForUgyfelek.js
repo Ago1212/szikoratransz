@@ -8,6 +8,7 @@ import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
 
 const CardTable = ({ ugyfelek }) => {
   const history = useHistory();
+  const user = JSON.parse(sessionStorage.getItem("user"));
 
   const handleNewUgyfel = () => {
     history.push("/admin/ugyfelForm", { data: {} });
@@ -22,6 +23,7 @@ const CardTable = ({ ugyfelek }) => {
     confirmMessage: "Biztosan törölni szeretnéd az ügyfelet?",
     successMessage: "Az ügyfél sikeresen törölve.",
     listPath: "/admin/ugyfelek",
+    extraParams: { kerelmezo_id: user.id },
   });
 
   const columns = [
@@ -51,12 +53,27 @@ const CardTable = ({ ugyfelek }) => {
     },
   ];
 
+  // Az Excel export a listaoszlopokon felül az adószámot, a teljes cím-
+  // bontást, a kapcsolattartó email-címét és a megjegyzést is tartalmazza.
+  const exportColumns = [
+    { key: "nev", label: "Név" },
+    { key: "adoszam", label: "Adószám" },
+    { key: "varos", label: "Város" },
+    { key: "irsz", label: "Irányítószám" },
+    { key: "cim", label: "Cím" },
+    { key: "kapcsolattarto_nev", label: "Kapcsolattartó" },
+    { key: "kapcsolattarto_telefon", label: "Kapcsolattartó telefon" },
+    { key: "kapcsolattarto_email", label: "Kapcsolattartó email" },
+    { key: "megjegyzes", label: "Megjegyzés" },
+  ];
+
   return (
     <DataTable
       icon={PiBuildingsLight}
       title="Ügyfelek"
       onAdd={handleNewUgyfel}
       exportFilename="ugyfelek"
+      exportColumns={exportColumns}
       columns={columns}
       rows={ugyfelek}
       onRowDoubleClick={handleEditClick}

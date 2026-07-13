@@ -50,6 +50,7 @@ export default function CardKamion({ initialKamion }) {
       const result = await fetchAction(action, {
         admin: storedUserData.ceg_id,
         ...formData,
+        kerelmezo_id: storedUserData.id,
       });
 
       if (result?.success) {

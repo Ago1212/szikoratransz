@@ -2,17 +2,12 @@ import React, { useState, useEffect } from "react";
 import { PiCalendarBlankLight, PiTrashLight } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
+import { useListaElemek } from "utils/useListaElemek.js";
 
 import PageHeader from "components/UI/PageHeader.js";
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import Modal from "components/UI/Modal.js";
 import FormField, { FormSection } from "components/UI/FormField.js";
-
-const TIPUS_LABEL = {
-  szabadsag: "Szabadság",
-  betegszabadsag: "Betegszabadság",
-  egyeb: "Egyéb",
-};
 
 const emptySzabadsag = (adminId) => ({
   admin: adminId,
@@ -29,15 +24,16 @@ export default function Szabadsagok() {
   const [soforok, setSoforok] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [form, setForm] = useState(emptySzabadsag(user.ceg_id));
+  const { elemek: tipusok } = useListaElemek("szabadsag_tipus");
 
   const fetchSzabadsagok = async () => {
-    const result = await fetchAction("getSzabadsagok", { id: user.ceg_id });
+    const result = await fetchAction("getSzabadsagok", { id: user.ceg_id, kerelmezo_id: user.id });
     if (result?.success) setSzabadsagok(result.szabadsagok || []);
   };
 
   useEffect(() => {
     fetchSzabadsagok();
-    fetchAction("getSoforok", { id: user.ceg_id }).then((result) => {
+    fetchAction("getSoforok", { id: user.ceg_id, kerelmezo_id: user.id }).then((result) => {
       if (result?.success) setSoforok(result.soforok || []);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -50,7 +46,7 @@ export default function Szabadsagok() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    const result = await fetchAction("newSzabadsag", form);
+    const result = await fetchAction("newSzabadsag", { ...form, kerelmezo_id: user.id });
     if (result?.success) {
       toast.success("Szabadság rögzítve.");
       setOpenDialog(false);
@@ -63,7 +59,7 @@ export default function Szabadsagok() {
 
   const handleDelete = async (id) => {
     if (!window.confirm("Biztosan törölni szeretnéd ezt a bejegyzést?")) return;
-    const result = await fetchAction("deleteSzabadsag", { id });
+    const result = await fetchAction("deleteSzabadsag", { id, kerelmezo_id: user.id });
     if (result?.success) {
       toast.success("Törölve.");
       fetchSzabadsagok();
@@ -79,7 +75,8 @@ export default function Szabadsagok() {
     {
       key: "tipus",
       label: "Típus",
-      render: (row) => TIPUS_LABEL[row.tipus] || row.tipus,
+      render: (row) => tipusok.find((t) => t.kulcs === row.tipus)?.nev || row.tipus,
+      exportValue: (row) => tipusok.find((t) => t.kulcs === row.tipus)?.nev || row.tipus,
     },
     { key: "megjegyzes", label: "Megjegyzés", render: (row) => row.megjegyzes || "—" },
     {
@@ -162,9 +159,11 @@ export default function Szabadsagok() {
             value={form.tipus}
             onChange={handleChange}
           >
-            <option value="szabadsag">Szabadság</option>
-            <option value="betegszabadsag">Betegszabadság</option>
-            <option value="egyeb">Egyéb</option>
+            {tipusok.map((t) => (
+              <option key={t.kulcs} value={t.kulcs}>
+                {t.nev}
+              </option>
+            ))}
           </FormField>
           <FormField
             as="textarea"

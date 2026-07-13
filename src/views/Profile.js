@@ -11,7 +11,7 @@ export default function Profile() {
   } catch (e) {
     user = null;
   }
-  const settingsPath = user?.admin ? "/admin/settings" : "/user/dashboard";
+  const settingsPath = user?.is_admin ? "/admin/settings" : "/user/dashboard";
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">

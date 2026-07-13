@@ -1,58 +1,53 @@
 import React from "react";
-import { createPopper } from "@popperjs/core";
-import { PiBellLight, PiCheckCircleLight } from "react-icons/pi";
+import { PiCheckCircleLight, PiXLight } from "react-icons/pi";
 
-const NotificationDropdown = ({ notifications = [] }) => {
-  const [open, setOpen] = React.useState(false);
-  const btnRef = React.useRef(null);
-  const popoverRef = React.useRef(null);
-
-  const openPopover = () => {
-    createPopper(btnRef.current, popoverRef.current, {
-      placement: "bottom-end",
-      modifiers: [{ name: "offset", options: { offset: [0, 8] } }],
-    });
-    setOpen(true);
+// Korábban egy Popper-pozicionált, kis dropdown volt (a haranG-gombhoz
+// horgonyozva) — ehelyett most a GlobalSearch.js-ben már bevált,
+// konzisztens teljes-képernyős overlay mintát követi (háttér-elhomályosítás
+// + középre igazított panel, Escape/háttérre kattintva zár). Ez nem csak
+// vizuálisan egységesebb, hanem a haranG-gombtól függetlenül, BÁRHONNAN
+// (pl. egy mobil FAB-ból is) megnyitható — a Popper-változat csak a
+// deszktop Sidebar fejlécéhez volt rögzítve.
+export default function NotificationDropdown({ notifications = [], open, onClose, onDismiss, onDismissAll }) {
+  const handleKeyDown = (e) => {
+    if (e.key === "Escape") onClose();
   };
-  const closePopover = () => setOpen(false);
 
-  React.useEffect(() => {
-    const onClick = (e) => {
-      if (
-        popoverRef.current &&
-        !popoverRef.current.contains(e.target) &&
-        !btnRef.current.contains(e.target)
-      ) {
-        closePopover();
-      }
-    };
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
-  }, []);
+  if (!open) return null;
 
   return (
-    <>
-      <button
-        ref={btnRef}
-        onClick={() => (open ? closePopover() : openPopover())}
-        className="relative flex h-9 w-9 items-center justify-center rounded-full text-ink-500 transition-colors duration-300 ease-fluid hover:bg-brand-50 hover:text-brand-700"
-        aria-label="Értesítések"
-      >
-        <PiBellLight className="h-5 w-5" />
-        {notifications.length > 0 && (
-          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-ember-500 ring-2 ring-white" />
-        )}
-      </button>
-
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center bg-ink-950/50 p-4 pt-[12vh] backdrop-blur-sm"
+      onClick={onClose}
+      onKeyDown={handleKeyDown}
+    >
       <div
-        ref={popoverRef}
-        className={`${
-          open ? "animate-scale-in" : "hidden"
-        } z-50 w-72 rounded-2xl border border-ink-100 bg-white p-1.5 shadow-soft-lg`}
+        className="w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-soft-lg ring-1 ring-ink-100"
+        onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-3 py-2.5 text-sm font-semibold text-brand-900">
-          Értesítések
+        <div className="flex items-center justify-between gap-2.5 border-b border-ink-100 px-4 py-3.5">
+          <h3 className="text-sm font-semibold text-brand-900">Értesítések</h3>
+          <div className="flex items-center gap-1">
+            {notifications.length > 0 && (
+              <button
+                type="button"
+                onClick={() => onDismissAll(notifications.map((n) => n.id))}
+                className="rounded-lg px-2 py-1 text-xs font-semibold text-ink-400 hover:bg-slate-100 hover:text-ink-700"
+              >
+                Összes törlése
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-slate-100 hover:text-ink-700"
+              aria-label="Bezárás"
+            >
+              <PiXLight className="h-4 w-4" />
+            </button>
+          </div>
         </div>
+
         {notifications.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
             <PiCheckCircleLight className="h-7 w-7 text-ink-300" />
@@ -61,36 +56,45 @@ const NotificationDropdown = ({ notifications = [] }) => {
             </p>
           </div>
         ) : (
-          <div className="max-h-72 overflow-y-auto py-1">
+          <div className="max-h-[60vh] overflow-y-auto py-1">
             {notifications.map((n, i) => (
-              <div key={n.id ?? i} className="rounded-xl px-3 py-2 text-sm text-ink-700 hover:bg-brand-50">
-                <p>{n.text}</p>
-                {n.meta && <p className="mt-0.5 text-xs text-ink-400">{n.meta}</p>}
-                {n.actions?.length > 0 && (
-                  <div className="mt-1.5 flex gap-2">
-                    {n.actions.map((action, ai) => (
-                      <button
-                        key={ai}
-                        type="button"
-                        onClick={action.onClick}
-                        className={`rounded-lg px-2.5 py-1 text-xs font-bold ${
-                          action.tone === "danger"
-                            ? "bg-red-50 text-red-600 hover:bg-red-100"
-                            : "bg-brand-600 text-white hover:bg-brand-700"
-                        }`}
-                      >
-                        {action.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
+              <div key={n.id ?? i} className="group flex items-start gap-2 px-4 py-3 hover:bg-slate-50">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-ink-700">{n.text}</p>
+                  {n.meta && <p className="mt-0.5 text-xs text-ink-400">{n.meta}</p>}
+                  {n.actions?.length > 0 && (
+                    <div className="mt-2 flex gap-2">
+                      {n.actions.map((action, ai) => (
+                        <button
+                          key={ai}
+                          type="button"
+                          onClick={action.onClick}
+                          className={`rounded-lg px-2.5 py-1 text-xs font-bold ${
+                            action.tone === "danger"
+                              ? "bg-red-50 text-red-600 hover:bg-red-100"
+                              : "bg-brand-600 text-white hover:bg-brand-700"
+                          }`}
+                        >
+                          {action.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onDismiss(n.id)}
+                  className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-ink-300 hover:bg-slate-200 hover:text-ink-600"
+                  title="Törlés"
+                  aria-label="Értesítés törlése"
+                >
+                  <PiXLight className="h-3.5 w-3.5" />
+                </button>
               </div>
             ))}
           </div>
         )}
       </div>
-    </>
+    </div>
   );
-};
-
-export default NotificationDropdown;
+}

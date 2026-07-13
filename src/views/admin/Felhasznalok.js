@@ -7,7 +7,7 @@ import {
   PiPencilSimpleLight,
   PiMagnifyingGlassLight,
   PiUserGearLight,
-  PiMapTrifoldLight,
+  PiIdentificationBadgeLight,
   PiSteeringWheelLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
@@ -16,16 +16,11 @@ import PageHeader from "components/UI/PageHeader.js";
 import FormField from "components/UI/FormField.js";
 import Spinner from "components/UI/Spinner.js";
 
-const SZEREPKOR_LABEL = {
-  admin: "Adminisztrátor",
-  fuvarszervezo: "Fuvarszervező",
-};
-
-// Ugyanazok az ikonok, mint az UjFelhasznalo.js szerepkör-választójában —
-// itt a listában a felhasználó szerepköréhez kötve jelennek meg soronként.
+// A szerepkörök listája cégenként egyénileg bővíthető (ld. Jogosultsagok.js)
+// — itt csak az 'admin' és a sofőr-koncepció ikonja fix, minden egyéni
+// szerepkör ugyanazt az általános ikont kapja a sorban.
 const ROLE_ICON = {
   admin: PiUserGearLight,
-  fuvarszervezo: PiMapTrifoldLight,
   sofor: PiSteeringWheelLight,
 };
 
@@ -44,17 +39,20 @@ export default function Felhasznalok() {
   const user = JSON.parse(sessionStorage.getItem("user"));
   const [csapattagok, setCsapattagok] = useState([]);
   const [soforok, setSoforok] = useState([]);
+  const [szerepkorok, setSzerepkorok] = useState([{ kulcs: "admin", nev: "Adminisztrátor" }]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("mind");
 
   const load = async () => {
-    const [csapatRes, soforRes] = await Promise.all([
+    const [csapatRes, soforRes, szerepkorRes] = await Promise.all([
       fetchAction("getCsapattagok", { id: user.ceg_id }),
-      fetchAction("getSoforok", { id: user.ceg_id }),
+      fetchAction("getSoforok", { id: user.ceg_id, kerelmezo_id: user.id }),
+      fetchAction("getSzerepkorok", { id: user.ceg_id }),
     ]);
     if (csapatRes?.success) setCsapattagok(csapatRes.csapattagok || []);
     if (soforRes?.success) setSoforok(soforRes.soforok || []);
+    if (szerepkorRes?.success) setSzerepkorok(szerepkorRes.szerepkorok || []);
     setLoading(false);
   };
 
@@ -97,7 +95,12 @@ export default function Felhasznalok() {
   });
 
   const handleSzerepkorChange = async (row, szerepkor) => {
-    const result = await fetchAction("updateCsapattagSzerepkor", { id: row.id, ceg_id: user.ceg_id, szerepkor });
+    const result = await fetchAction("updateCsapattagSzerepkor", {
+      id: row.id,
+      ceg_id: user.ceg_id,
+      szerepkor,
+      kerelmezo_id: user.id,
+    });
     if (result?.success) {
       toast.success("Szerepkör frissítve.");
       load();
@@ -108,7 +111,7 @@ export default function Felhasznalok() {
 
   const handleDeleteCsapattag = async (id) => {
     if (!window.confirm("Biztosan törlöd ezt a csapattagot? A saját belépését elveszíti.")) return;
-    const result = await fetchAction("deleteCsapattag", { id, ceg_id: user.ceg_id });
+    const result = await fetchAction("deleteCsapattag", { id, ceg_id: user.ceg_id, kerelmezo_id: user.id });
     if (result?.success) {
       toast.success("Csapattag törölve.");
       load();
@@ -119,7 +122,7 @@ export default function Felhasznalok() {
 
   const handleDeleteSofor = async (id) => {
     if (!window.confirm("Biztosan törlöd ezt a sofőrt?")) return;
-    const result = await fetchAction("deleteSofor", { id });
+    const result = await fetchAction("deleteSofor", { id, kerelmezo_id: user.id });
     if (result?.success) {
       toast.success("Sofőr törölve.");
       load();
@@ -191,9 +194,7 @@ export default function Felhasznalok() {
             >
               {(() => {
                 const RoleIcon =
-                  row.tipus === "sofor"
-                    ? ROLE_ICON.sofor
-                    : ROLE_ICON[row.szerepkor] || ROLE_ICON.admin;
+                  row.tipus === "sofor" ? ROLE_ICON.sofor : ROLE_ICON[row.szerepkor] || PiIdentificationBadgeLight;
                 return (
                   <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600">
                     <RoleIcon className="h-5 w-5" />
@@ -234,7 +235,7 @@ export default function Felhasznalok() {
                       className="w-44 flex-shrink-0 truncate rounded-lg bg-ink-50 px-3 py-1.5 text-center text-xs font-semibold text-ink-500"
                       title="A cégtulajdonos szerepköre fixen adminisztrátor, nem módosítható."
                     >
-                      {SZEREPKOR_LABEL.admin}
+                      Adminisztrátor
                     </span>
                   ) : (
                     <FormField
@@ -244,9 +245,9 @@ export default function Felhasznalok() {
                       className="w-44 flex-shrink-0"
                       inputClassName="text-xs py-1.5"
                     >
-                      {Object.entries(SZEREPKOR_LABEL).map(([value, label]) => (
-                        <option key={value} value={value}>
-                          {label}
+                      {szerepkorok.map((r) => (
+                        <option key={r.kulcs} value={r.kulcs}>
+                          {r.nev}
                         </option>
                       ))}
                     </FormField>

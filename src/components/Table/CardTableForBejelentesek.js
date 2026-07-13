@@ -15,6 +15,7 @@ const STATUSZ_LABEL = { uj: "Új", folyamatban: "Folyamatban", lezart: "Lezárt"
 
 export default function CardTable({ bejelentesek, isLoading, selectedKamion }) {
   const history = useHistory();
+  const user = JSON.parse(sessionStorage.getItem("user"));
 
   const handleNewBejelentes = () => {
     history.push("/admin/bejelentesForm", { data: { kamion_id: selectedKamion || "" } });
@@ -28,10 +29,12 @@ export default function CardTable({ bejelentesek, isLoading, selectedKamion }) {
     confirmMessage: "Biztosan törölni szeretnéd a bejelentést?",
     successMessage: "A bejelentés sikeresen törölve.",
     listPath: "/admin/bejelentesek",
+    extraParams: { kerelmezo_id: user.id },
   });
 
   const columns = [
     { key: "cim", label: "Cím", className: "font-semibold text-brand-900" },
+    { key: "kamion_rendszam", label: "Rendszám", render: (row) => row.kamion_rendszam || "—" },
     { key: "sofor_nev", label: "Bejelentő", render: (row) => row.sofor_nev || "Ismeretlen" },
     { key: "bejelentve", label: "Bejelentve" },
     {
@@ -42,6 +45,7 @@ export default function CardTable({ bejelentesek, isLoading, selectedKamion }) {
           {PRIORITAS_LABEL[row.prioritas] || "Közepes"}
         </StatusBadge>
       ),
+      exportValue: (row) => PRIORITAS_LABEL[row.prioritas] || "Közepes",
     },
     {
       key: "statusz",
@@ -51,6 +55,7 @@ export default function CardTable({ bejelentesek, isLoading, selectedKamion }) {
           {STATUSZ_LABEL[row.statusz] || "Új"}
         </StatusBadge>
       ),
+      exportValue: (row) => STATUSZ_LABEL[row.statusz] || "Új",
     },
     {
       key: "actions",
@@ -74,6 +79,28 @@ export default function CardTable({ bejelentesek, isLoading, selectedKamion }) {
     },
   ];
 
+  // Az Excel export a listaoszlopokon felül a bejelentés típusát és a
+  // teljes leírását is tartalmazza, amik a kompakt táblázatban nem
+  // látszanak.
+  const exportColumns = [
+    { key: "cim", label: "Cím" },
+    { key: "kamion_rendszam", label: "Rendszám" },
+    { key: "sofor_nev", label: "Bejelentő", exportValue: (row) => row.sofor_nev || "Ismeretlen" },
+    { key: "tipus", label: "Típus" },
+    { key: "leiras", label: "Leírás" },
+    { key: "bejelentve", label: "Bejelentve" },
+    {
+      key: "prioritas",
+      label: "Prioritás",
+      exportValue: (row) => PRIORITAS_LABEL[row.prioritas] || "Közepes",
+    },
+    {
+      key: "statusz",
+      label: "Státusz",
+      exportValue: (row) => STATUSZ_LABEL[row.statusz] || "Új",
+    },
+  ];
+
   return (
     <DataTable
       icon={PiChatCircleTextLight}
@@ -81,6 +108,7 @@ export default function CardTable({ bejelentesek, isLoading, selectedKamion }) {
       onAdd={handleNewBejelentes}
       addLabel="Új bejelentés"
       exportFilename="bejelentesek"
+      exportColumns={exportColumns}
       columns={columns}
       rows={bejelentesek}
       loading={isLoading}

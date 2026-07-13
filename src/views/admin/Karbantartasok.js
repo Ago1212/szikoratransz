@@ -157,7 +157,7 @@ const Karbantartasok = () => {
 
   useEffect(() => {
     const fetchKarbantartasok = async () => {
-      const result = await fetchAction("getKarbantartasok", { id: user.ceg_id, ...filter });
+      const result = await fetchAction("getKarbantartasok", { id: user.ceg_id, ...filter, kerelmezo_id: user.id });
       if (result?.success) {
         setKarbantartasok(result.karbantartasok);
         result.karbantartasok.forEach((karb) => {
@@ -208,7 +208,7 @@ const Karbantartasok = () => {
   };
 
   const refreshList = async () => {
-    const updatedResult = await fetchAction("getKarbantartasok", { id: user.ceg_id, ...filter });
+    const updatedResult = await fetchAction("getKarbantartasok", { id: user.ceg_id, ...filter, kerelmezo_id: user.id });
     if (updatedResult?.success) {
       setKarbantartasok(updatedResult.karbantartasok);
     }
@@ -222,6 +222,7 @@ const Karbantartasok = () => {
     const result = await fetchAction(action, {
       ...newKarbantartas,
       id: editingId || undefined,
+      kerelmezo_id: user.id,
     });
 
     if (result?.success) {
@@ -233,7 +234,7 @@ const Karbantartasok = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Biztosan törölni szeretnéd a karbantartást?")) return;
 
-    const result = await fetchAction("deleteKarbantartas", { id });
+    const result = await fetchAction("deleteKarbantartas", { id, kerelmezo_id: user.id });
     if (result?.success) {
       await refreshList();
     }
@@ -350,6 +351,43 @@ const Karbantartasok = () => {
           />
         </div>
       ),
+    },
+  ];
+
+  // Az exportot külön kell megadni, mert a fenti `columns` több oszlopa
+  // (tipus/rendszam/status) számított érték, aminek nincs egyező nevű
+  // nyers mezője a soron — a régi export logika (`row[col.key]`) ezeket
+  // némán ÜRESEN exportálta. Az `exportValue` ugyanazt a szöveget adja
+  // vissza, amit a táblázat is mutat; emellett bekerül a "Következő
+  // karbantartás" dátuma is, ami a kompakt nézetben nem látszik.
+  const exportColumns = [
+    {
+      key: "tipus",
+      label: "Jármű típusa",
+      exportValue: (row) => (row.potkocsi_id ? "Pótkocsi" : "Kamion"),
+    },
+    {
+      key: "rendszam",
+      label: "Rendszám",
+      exportValue: (row) =>
+        row.potkocsi_id
+          ? getJarmuRendszam(row.potkocsi_id, true)
+          : getJarmuRendszam(row.kamion_id),
+    },
+    { key: "datum", label: "Dátum" },
+    { key: "log", label: "Leírás" },
+    { key: "km_oraallas", label: "Km óraállás" },
+    { key: "elvegezte", label: "Elvégezte" },
+    {
+      key: "koltseg",
+      label: "Költség",
+      exportValue: (row) => (row.koltseg ? formatHuf(row.koltseg) : ""),
+    },
+    { key: "kovetkezo_karbantartas", label: "Következő karbantartás dátuma" },
+    {
+      key: "status",
+      label: "Státusz",
+      exportValue: (row) => getStatus(row).text,
     },
   ];
 
@@ -500,6 +538,7 @@ const Karbantartasok = () => {
           }}
           addLabel="Új karbantartás"
           exportFilename="karbantartasok"
+          exportColumns={exportColumns}
           columns={columns}
           rows={karbantartasok}
           mobileTitleKey="rendszam"

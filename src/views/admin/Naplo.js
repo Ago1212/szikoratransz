@@ -14,6 +14,12 @@ const TABLA_LABEL = {
   ugyfelek: "Ügyfél",
   helyszinek: "Helyszín",
   admin: "Csapattag",
+  jogosultsagok: "Jogosultságok",
+  szerepkorok: "Szerepkörök",
+  listaelemek: "Listaelem",
+  egyeb_koltsegek: "Pénzforgalom tétel",
+  fuvarok: "Fuvar",
+  vezetesi_naplo: "Vezetési napló",
 };
 
 const MUVELET_TONE = {
@@ -33,7 +39,7 @@ export default function Naplo() {
 
   useEffect(() => {
     const user = JSON.parse(sessionStorage.getItem("user"));
-    fetchAction("getAuditLog", { id: user.ceg_id })
+    fetchAction("getAuditLog", { id: user.ceg_id, kerelmezo_id: user.id })
       .then((result) => {
         if (result?.success) setNaplo(result.naplo || []);
       })
@@ -46,6 +52,7 @@ export default function Naplo() {
       label: "Entitás",
       className: "font-semibold text-brand-900",
       render: (row) => TABLA_LABEL[row.tabla] || row.tabla,
+      exportValue: (row) => TABLA_LABEL[row.tabla] || row.tabla,
     },
     { key: "rowid", label: "Azonosító" },
     {
@@ -56,6 +63,7 @@ export default function Naplo() {
           {MUVELET_LABEL[row.muvelet] || row.muvelet}
         </StatusBadge>
       ),
+      exportValue: (row) => MUVELET_LABEL[row.muvelet] || row.muvelet,
     },
     { key: "leiras", label: "Leírás", render: (row) => row.leiras || "—" },
     { key: "datum", label: "Időpont" },

@@ -9,6 +9,7 @@ import AllapotBadge from "components/UI/AllapotBadge.js";
 
 const CardTable = ({ kamionok }) => {
   const history = useHistory();
+  const user = JSON.parse(sessionStorage.getItem("user"));
 
   const handleNewKamion = () => {
     history.push("/admin/kamionForm", { data: {} });
@@ -23,6 +24,7 @@ const CardTable = ({ kamionok }) => {
     confirmMessage: "Biztosan törölni szeretnéd a kamiont?",
     successMessage: "A kamion sikeresen törölve.",
     listPath: "/admin/kamionok",
+    extraParams: { kerelmezo_id: user.id },
   });
 
   const columns = [
@@ -57,12 +59,40 @@ const CardTable = ({ kamionok }) => {
     },
   ];
 
+  // Az Excel export bővebb, mint a képernyőn látható táblázat — a
+  // kompakt nézetben helyhiány miatt nem szereplő lejárati dátumok és
+  // biztosítási adatok is bekerülnek, hiszen egy exportált táblázatnál
+  // ezek pont annyira (vagy jobban) érdekesek, mint a listaoszlopok.
+  const exportColumns = [
+    { key: "rendszam", label: "Rendszám" },
+    { key: "tipus", label: "Típus" },
+    { key: "meret", label: "Méret" },
+    { key: "potkocsi", label: "Pótkocsi" },
+    { key: "allapot", label: "Állapot" },
+    { key: "aktualis_km", label: "Km óraállás" },
+    { key: "muszaki_lejarat", label: "Műszaki vizsga lejárata" },
+    { key: "adr_lejarat", label: "ADR lejárat" },
+    { key: "taograf_illesztes", label: "Tachográf illesztés" },
+    { key: "emelohatfal_vizsga", label: "Emelőhátfal vizsga" },
+    { key: "porolto_lejarat", label: "Poroltó #1 lejárat" },
+    { key: "porolto_lejarat_2", label: "Poroltó #2 lejárat" },
+    { key: "kot_biztositas", label: "Kötelező biztosítás kezdete" },
+    { key: "kot_biz_nev", label: "Kötelező biztosító neve" },
+    { key: "kot_biz_dij", label: "Kötelező biztosítás éves díja" },
+    { key: "kot_biz_utem", label: "Kötelező biztosítás fizetési üteme" },
+    { key: "kaszko_biztositas", label: "Kaszkó biztosítás kezdete" },
+    { key: "kaszko_nev", label: "Kaszkó biztosító neve" },
+    { key: "kaszko_dij", label: "Kaszkó biztosítás éves díja" },
+    { key: "kaszko_fizetesi_utem", label: "Kaszkó biztosítás fizetési üteme" },
+  ];
+
   return (
     <DataTable
       icon={PiTruckLight}
       title="Kamionok"
       onAdd={handleNewKamion}
       exportFilename="kamionok"
+      exportColumns={exportColumns}
       columns={columns}
       rows={kamionok}
       onRowDoubleClick={handleEditClick}

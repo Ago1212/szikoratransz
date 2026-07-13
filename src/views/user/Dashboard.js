@@ -9,6 +9,7 @@ import {
   PiPhoneLight,
   PiCaretRightLight,
   PiMapPinLight,
+  PiSteeringWheelLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import StatusBadge from "components/UI/StatusBadge.js";
@@ -25,6 +26,7 @@ const quickActions = [
   { to: "/user/potkocsi-valaszto", icon: PiTruckTrailerLight, label: "Pótkocsi", tone: "brand" },
   { to: "/user/helyszinek", icon: PiMapPinLight, label: "Helyszínek", tone: "brand" },
   { to: "/user/tankolas", icon: PiGasPumpLight, label: "Tankolás", tone: "brand" },
+  { to: "/user/vezetesi-ido", icon: PiSteeringWheelLight, label: "Vezetési idő", tone: "brand" },
 ];
 
 const TILE_TONE = {
@@ -38,6 +40,8 @@ export default function UserDashboard() {
   const [kamionok, setKamionok] = useState([]);
   const [potkocsik, setPotkocsik] = useState([]);
   const [sajatBejelentesek, setSajatBejelentesek] = useState([]);
+  const [bejelentesValaszolt, setBejelentesValaszolt] = useState(false);
+  const [elbiraltJarmuValtasok, setElbiraltJarmuValtasok] = useState([]);
   const [kerelmek, setKerelmek] = useState([]);
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -55,13 +59,14 @@ export default function UserDashboard() {
       // ha időközben az admin jóváhagyott egy jármű-váltási kérést, ez
       // frissíti a kamion/aktiv_potkocsi mezőket anélkül, hogy ki kellene
       // jelentkezni.
-      const [freshRes, kamionRes, potkocsiRes, bejelentesRes, adminRes, kerelemRes] = await Promise.all([
+      const [freshRes, kamionRes, potkocsiRes, bejelentesRes, adminRes, kerelemRes, elbiraltRes] = await Promise.all([
         fetchAction("getSajatSofor", { id: userData.id }),
         fetchAction("getKamionok", { id: userData.admin }),
         fetchAction("getPotkocsik", { id: userData.admin }),
         fetchAction("getBejelentesekSofor", { sofor_id: userData.id }),
         fetchAction("getAdminElerhetoseg", { id: userData.admin }),
         fetchAction("getSajatJarmuValtasKerelmek", { sofor_id: userData.id }),
+        fetchAction("getElbiraltJarmuValtasok", { sofor_id: userData.id }),
       ]);
       if (freshRes?.success && freshRes.user) {
         const merged = { ...userData, ...freshRes.user };
@@ -70,9 +75,14 @@ export default function UserDashboard() {
       }
       if (kamionRes?.success) setKamionok(kamionRes.kamionok || []);
       if (potkocsiRes?.success) setPotkocsik(potkocsiRes.potkocsik || []);
-      if (bejelentesRes?.success) setSajatBejelentesek((bejelentesRes.bejelentesek || []).slice(0, 3));
+      if (bejelentesRes?.success) {
+        const osszes = bejelentesRes.bejelentesek || [];
+        setSajatBejelentesek(osszes.slice(0, 3));
+        setBejelentesValaszolt(osszes.some((b) => b.statusz !== "uj" || b.admin_valasz));
+      }
       if (adminRes?.success) setAdmin(adminRes);
       if (kerelemRes?.success) setKerelmek(kerelemRes.kerelmek || []);
+      if (elbiraltRes?.success) setElbiraltJarmuValtasok(elbiraltRes.kerelmek || []);
       setLoading(false);
     };
     load();
@@ -93,6 +103,12 @@ export default function UserDashboard() {
     status: getDocumentStatus(user[field.key]),
   })).filter((d) => d.status === "expired" || d.status === "warning");
 
+  // A haranG korábban csak a lejáró dokumentumokat jelezte — most a
+  // megválaszolt bejelentéseket és az elbírált jármű-váltási kérelmeket is,
+  // ugyanúgy, mint az Ertesitesek.js oldal (ld. useSajatErtesitesek.js).
+  const vanErtesitesJelzes =
+    lejaroDokumentumok.length > 0 || bejelentesValaszolt || elbiraltJarmuValtasok.length > 0;
+
   const firstName = (user.name || "").split(" ")[0];
 
   return (
@@ -109,7 +125,7 @@ export default function UserDashboard() {
           aria-label="Értesítések"
         >
           <PiBellLight className="h-5 w-5" />
-          {lejaroDokumentumok.length > 0 && (
+          {vanErtesitesJelzes && (
             <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
           )}
         </Link>
