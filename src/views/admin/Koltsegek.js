@@ -55,6 +55,7 @@ const EGYEB_PAGE_SIZE = 4;
 
 const emptyEgyebTetel = (irany = "kiado") => ({
   irany,
+  kategoria: "",
   datum: new Date().toISOString().slice(0, 10),
   megnevezes: "",
   szamlaszam: "",
@@ -395,7 +396,13 @@ export default function Koltsegek() {
         datumIg: navDatumIg,
       });
       if (result?.success) {
-        const tetelek = result.tetelek || [];
+        // A `kategoria_javaslat` (partnernév-egyezés alapján, pl. "MOL") csak
+        // egy előre kitöltött javaslat — a felhasználó importálás előtt
+        // soronként felülbírálhatja a review-listában.
+        const tetelek = (result.tetelek || []).map((t) => ({
+          ...t,
+          kategoria: t.kategoria_javaslat || "",
+        }));
         setNavTetelek(tetelek);
         // Alapból minden ÚJ (még nem importált, forint-összeggel rendelkező)
         // tétel ki van pipálva — a felhasználó itt egyesével lemondhatja
@@ -424,6 +431,12 @@ export default function Koltsegek() {
       }
       return uj;
     });
+  };
+
+  const changeNavKategoria = (szamlaszam, kategoria) => {
+    setNavTetelek((prev) =>
+      prev.map((t) => (t.szamlaszam === szamlaszam ? { ...t, kategoria } : t)),
+    );
   };
 
   const handleNavImport = async () => {
@@ -492,6 +505,7 @@ export default function Koltsegek() {
         ceg_id: user.ceg_id,
         kerelmezo_id: user.id,
         irany: ujTetel.irany,
+        kategoria: ujTetel.kategoria || null,
         datum: ujTetel.datum,
         megnevezes: ujTetel.megnevezes.trim(),
         szamlaszam: ujTetel.szamlaszam.trim() || null,
@@ -528,6 +542,7 @@ export default function Koltsegek() {
     setEditingTetelId(row.id);
     setUjTetel({
       irany: row.irany,
+      kategoria: row.kategoria || "",
       datum: row.datum,
       megnevezes: row.megnevezes,
       szamlaszam: row.szamlaszam || "",
@@ -631,6 +646,20 @@ export default function Koltsegek() {
       key: "megnevezes",
       label: "Megnevezés",
       className: "font-semibold text-brand-900",
+      render: (row) => (
+        <div className="flex items-center gap-1.5">
+          <span>{row.megnevezes}</span>
+          {row.kategoria === "uzemanyag" && (
+            <span
+              className="inline-flex flex-shrink-0 items-center rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700"
+              title="Üzemanyag kategóriába sorolva"
+            >
+              Üzemanyag
+            </span>
+          )}
+        </div>
+      ),
+      exportValue: (row) => row.megnevezes,
     },
     {
       key: "osszeg",
@@ -963,6 +992,18 @@ export default function Koltsegek() {
             }
             required
           />
+          {ujTetel.irany === "kiado" && (
+            <FormField
+              as="select"
+              label="Kategória"
+              name="kategoria"
+              value={ujTetel.kategoria}
+              onChange={handleUjTetelChange}
+            >
+              <option value="">Egyéb</option>
+              <option value="uzemanyag">Üzemanyag</option>
+            </FormField>
+          )}
           <FormField
             label="Számlaszám (opcionális)"
             name="szamlaszam"
@@ -1089,6 +1130,7 @@ export default function Koltsegek() {
                           <th className="px-3 py-2 text-left">Dátum</th>
                           <th className="px-3 py-2 text-left">Partner</th>
                           <th className="px-3 py-2 text-right">Összeg</th>
+                          <th className="px-3 py-2 text-left">Kategória</th>
                           <th className="px-3 py-2 text-left">Állapot</th>
                         </tr>
                       </thead>
@@ -1135,6 +1177,21 @@ export default function Koltsegek() {
                                 <span className="ml-1 text-xs text-ink-400">
                                   ({t.penznem})
                                 </span>
+                              )}
+                            </td>
+                            <td className="px-3 py-2">
+                              {t.irany === "kiado" ? (
+                                <select
+                                  value={t.kategoria || ""}
+                                  onChange={(e) => changeNavKategoria(t.szamlaszam, e.target.value)}
+                                  disabled={t.mar_importalva}
+                                  className="rounded-lg border border-ink-200 bg-white px-2 py-1 text-xs text-ink-700 disabled:cursor-not-allowed disabled:opacity-40"
+                                >
+                                  <option value="">Egyéb</option>
+                                  <option value="uzemanyag">Üzemanyag</option>
+                                </select>
+                              ) : (
+                                <span className="text-ink-300">—</span>
                               )}
                             </td>
                             <td className="px-3 py-2 text-xs text-ink-400">

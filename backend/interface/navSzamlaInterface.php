@@ -122,6 +122,31 @@ class NavSzamlaInterface {
         );
     }
 
+    // Ismert üzemanyag-szolgáltatók neve (a NAV digest `partner_nev`
+    // mezőjében szereplő céggel részleges, kis/nagybetűtől független
+    // egyezés) — csak JAVASLATOT ad a felületen, amit az importálás előtt
+    // a felhasználó felülbírálhat, nem kényszerít semmit. Bővíthető, ha
+    // más szolgáltatótól is érkezik számla.
+    const ISMERT_UZEMANYAG_SZOLGALTATOK = ['MOL', 'SHELL', 'OMV', 'AVIA', 'AVANTI', 'ORLEN', 'EUROWAG', 'UTA', 'DKV'];
+
+    // Szóhatár-illesztés (nem sima substring) — enélkül pl. egy "Molnár
+    // Kft." nevű, üzemanyaghoz semmi köze nem lévő partner is "MOL"-nak
+    // tűnne (mert a "MOL" karakterlánc benne van a "MOLNÁR" szóban).
+    // Élő teszttel (php -r + reflection) találtam meg ezt a hamis
+    // pozitívot, mielőtt bekerülhetett volna.
+    private function uzemanyagJavaslat($partnerNev) {
+        if (!$partnerNev) {
+            return false;
+        }
+        $nev = mb_strtoupper($partnerNev);
+        foreach (self::ISMERT_UZEMANYAG_SZOLGALTATOK as $szolgaltato) {
+            if (preg_match('/(?<![A-ZÁÉÍÓÖŐÚÜŰ])' . preg_quote($szolgaltato, '/') . '(?![A-ZÁÉÍÓÖŐÚÜŰ])/u', $nev)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // A meglévő `egyeb_koltsegek.szamlaszam` alapján megjelöli, mely
     // lekérdezett NAV-tételek vannak már importálva — ezek a felületen
     // eleve kipipálatlanok/letiltottak lesznek, hogy ne kerülhessenek be
@@ -149,6 +174,9 @@ class NavSzamlaInterface {
                 // hiányzik egy sornál, azt a sort nem tudjuk megbízhatóan
                 // összegszerűen importálni.
                 $t['importalhato'] = !$t['mar_importalva'] && $t['osszeg_huf'] !== null;
+                // Csak javaslat — a felhasználó importálás előtt bármikor
+                // felülbírálhatja a felületen (ld. Koltsegek.js NAV modal).
+                $t['kategoria_javaslat'] = $this->uzemanyagJavaslat($t['partner_nev'] ?? null) ? 'uzemanyag' : null;
                 $tetelek[] = $t;
             }
 
@@ -165,8 +193,8 @@ class NavSzamlaInterface {
     public function importalSzamlak($ceg_id, $tetelek) {
         try {
             $mar_importalt = $this->marImportaltSzamlaszamok($ceg_id);
-            $query = "INSERT INTO egyeb_koltsegek (admin, irany, kamion_id, potkocsi_id, datum, megnevezes, szamlaszam, osszeg, megjegyzes)
-                      VALUES (:admin, :irany, NULL, NULL, :datum, :megnevezes, :szamlaszam, :osszeg, :megjegyzes)";
+            $query = "INSERT INTO egyeb_koltsegek (admin, irany, kategoria, kamion_id, potkocsi_id, datum, megnevezes, szamlaszam, osszeg, megjegyzes)
+                      VALUES (:admin, :irany, :kategoria, NULL, NULL, :datum, :megnevezes, :szamlaszam, :osszeg, :megjegyzes)";
             $stmt = $this->db->prepare($query);
 
             $importalva = 0;
@@ -179,9 +207,14 @@ class NavSzamlaInterface {
                     continue;
                 }
                 $irany = ($t['irany'] ?? null) === 'bevetel' ? 'bevetel' : 'kiado';
+                // A felhasználó a lekérdezés-eredménylistában felülbírálhatja
+                // az automatikus javaslatot — amit ténylegesen küld
+                // (`kategoria`), az számít, nem az eredeti javaslat.
+                $kategoria = ($t['kategoria'] ?? null) === 'uzemanyag' ? 'uzemanyag' : null;
 
                 $stmt->bindValue(':admin', $ceg_id);
                 $stmt->bindValue(':irany', $irany);
+                $stmt->bindValue(':kategoria', $kategoria);
                 $stmt->bindValue(':datum', $t['datum'] ?? date('Y-m-d'));
                 $stmt->bindValue(':megnevezes', $t['partner_nev'] ?: 'NAV számla');
                 $stmt->bindValue(':szamlaszam', $szamlaszam);
