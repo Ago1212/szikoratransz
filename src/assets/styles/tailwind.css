@@ -2039,6 +2039,10 @@ h1,
   border-radius: 0.5rem;
 }
 
+.rounded-md {
+  border-radius: 0.375rem;
+}
+
 .rounded-xl {
   border-radius: 0.75rem;
 }
@@ -2634,6 +2638,10 @@ h1,
 
 .object-cover {
   object-fit: cover;
+}
+
+.p-0\.5 {
+  padding: 0.125rem;
 }
 
 .p-1 {

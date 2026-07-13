@@ -11,6 +11,8 @@ import {
   PiTrendUpLight,
   PiTruckLight,
   PiTruckTrailerLight,
+  PiCaretLeftLight,
+  PiCaretRightLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
@@ -188,7 +190,23 @@ export default function Koltsegek() {
   const user = JSON.parse(sessionStorage.getItem("user"));
   const isMobile = useMediaQuery({ maxWidth: 767 });
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState({ datumTol: "", datumIg: "" });
+  // Alapból a folyó év (Jan 1 – Dec 31) — enélkül a lekérdezés "mindenkori"
+  // lenne, ami egy régebb óta futó cégnél sok hónapos grafikont/sok sort
+  // eredményezne az első pillantásra. A "Havi alakulás" fejlécében lévő
+  // év-váltó (◄ / ►) pontosan ezt a két mezőt írja át egy másik év teljes
+  // tartományára — a Dátumtól/Dátumig mezők ettől függetlenül bármikor
+  // felülírhatók egy pontos, nem egész évre szóló szűréshez is.
+  const [filter, setFilter] = useState(() => {
+    const ev = new Date().getFullYear();
+    return { datumTol: `${ev}-01-01`, datumIg: `${ev}-12-31` };
+  });
+  const displayedYear = filter.datumTol
+    ? new Date(filter.datumTol).getFullYear()
+    : new Date().getFullYear();
+  const changeYear = (delta) => {
+    const ev = displayedYear + delta;
+    setFilter({ datumTol: `${ev}-01-01`, datumIg: `${ev}-12-31` });
+  };
   const [adat, setAdat] = useState({
     havi: [],
     jarmuvenkent: [],
@@ -493,7 +511,32 @@ export default function Koltsegek() {
               időszakra vonatkozóan, nem külön hero-kártyaként. */}
           <div className="rounded-3xl bg-white p-6 shadow-soft ring-1 ring-ink-100">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <h3 className="font-display text-base font-semibold text-brand-900">Havi alakulás</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="font-display text-base font-semibold text-brand-900">Havi alakulás</h3>
+                <div className="flex items-center gap-0.5 rounded-lg bg-slate-100 p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => changeYear(-1)}
+                    className="flex h-6 w-6 items-center justify-center rounded-md text-ink-500 transition-colors duration-150 hover:bg-white hover:text-brand-600"
+                    aria-label="Előző év"
+                    title="Előző év"
+                  >
+                    <PiCaretLeftLight className="h-3.5 w-3.5" />
+                  </button>
+                  <span className="w-11 text-center text-xs font-bold tabular-nums text-ink-700">
+                    {displayedYear}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => changeYear(1)}
+                    className="flex h-6 w-6 items-center justify-center rounded-md text-ink-500 transition-colors duration-150 hover:bg-white hover:text-brand-600"
+                    aria-label="Következő év"
+                    title="Következő év"
+                  >
+                    <PiCaretRightLight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
                 <span className="flex items-center gap-1.5 text-ink-500">
                   <PiTrendUpLight className="h-4 w-4 text-emerald-600" />
@@ -582,6 +625,7 @@ export default function Koltsegek() {
                 rows={bevetelTetelek}
                 mobileTitleKey="megnevezes"
                 emptyLabel="Nincs bevétel-tétel rögzítve"
+                maxBodyHeight="260px"
               />
             </div>
 
@@ -603,6 +647,7 @@ export default function Koltsegek() {
                 rows={kiadasTetelek}
                 mobileTitleKey="megnevezes"
                 emptyLabel="Nincs kiadás-tétel rögzítve"
+                maxBodyHeight="260px"
               />
             </div>
           </div>
