@@ -23,6 +23,7 @@ require 'interface/fuvarInterface.php';
 require 'interface/ertesitesInterface.php';
 require 'interface/vezetesiIdoInterface.php';
 require 'interface/navSzamlaInterface.php';
+require 'interface/gpsmartInterface.php';
 class ApiHandler {
     protected string $auth_hash;
     protected array $actions = [];
@@ -127,6 +128,9 @@ class ApiHandler {
         'getNavSzamlaBeallitasokStatusz' => ['koltsegek', 'hozzaferes'],
         'navSzamlaLekerdezes' => ['koltsegek', 'hozzaferes'],
         'saveNavSzamlaBeallitasok' => ['koltsegek', 'szerkesztes'],
+        'getGpsmartBeallitasokStatusz' => ['kamionok', 'hozzaferes'],
+        'gpsmartPoziciok' => ['kamionok', 'hozzaferes'],
+        'saveGpsmartBeallitasok' => ['kamionok', 'szerkesztes'],
         'importNavSzamlak' => ['koltsegek', 'szerkesztes'],
 
         'getFuvarok' => ['fuvarok', 'hozzaferes'],
@@ -239,6 +243,9 @@ class ApiHandler {
             'getNavSzamlaBeallitasokStatusz' => ['ceg_id', 'kerelmezo_id'],
             'saveNavSzamlaBeallitasok' => ['ceg_id', 'kerelmezo_id', 'adoszam', 'login', 'jelszo', 'alairoKulcs', 'csereKulcs', 'kornyezet'],
             'navSzamlaLekerdezes' => ['ceg_id', 'kerelmezo_id', 'datumTol', 'datumIg'],
+            'getGpsmartBeallitasokStatusz' => ['ceg_id', 'kerelmezo_id'],
+            'saveGpsmartBeallitasok' => ['ceg_id', 'kerelmezo_id', 'felhasznalonev', 'jelszo', 'userid'],
+            'gpsmartPoziciok' => ['ceg_id', 'kerelmezo_id'],
             'importNavSzamlak' => ['ceg_id', 'kerelmezo_id', 'tetelek'],
 
             'getFuvarok' => ['ceg_id', 'kerelmezo_id'],
@@ -439,7 +446,7 @@ class ApiHandler {
     }
 
     public function process(?array $request) {
-        global $kamionInterface, $potkocsiInterface, $soforokInterface, $filesInterface, $emailInterface, $bejelentesekInterface, $karbantartasInterface, $szabadsagInterface, $tankolasInterface, $jarmuValtasInterface, $ugyfelInterface, $csapatInterface, $helyszinInterface, $jogosultsagInterface, $szerepkorInterface, $listaInterface, $keresesInterface, $koltsegInterface, $fuvarInterface, $ertesitesInterface, $vezetesiIdoInterface, $navSzamlaInterface;
+        global $kamionInterface, $potkocsiInterface, $soforokInterface, $filesInterface, $emailInterface, $bejelentesekInterface, $karbantartasInterface, $szabadsagInterface, $tankolasInterface, $jarmuValtasInterface, $ugyfelInterface, $csapatInterface, $helyszinInterface, $jogosultsagInterface, $szerepkorInterface, $listaInterface, $keresesInterface, $koltsegInterface, $fuvarInterface, $ertesitesInterface, $vezetesiIdoInterface, $navSzamlaInterface, $gpsmartInterface;
         try {
             $this->validation($request);
             $action = $request['action'];
@@ -900,6 +907,27 @@ class ApiHandler {
                         $this->logAudit($request['ceg_id'], 'egyeb_koltsegek', $request['ceg_id'], 'letrehozas', "NAV import: {$result['importalva']} tétel");
                     }
                     echo json_encode($result);
+                    return;
+
+                case 'getGpsmartBeallitasokStatusz':
+                    echo json_encode($gpsmartInterface->getBeallitasokStatusz($request['ceg_id']));
+                    return;
+
+                case 'saveGpsmartBeallitasok':
+                    $result = $gpsmartInterface->saveBeallitasok(
+                        $request['ceg_id'],
+                        $request['felhasznalonev'],
+                        $request['jelszo'],
+                        $request['userid']
+                    );
+                    if ($result['success']) {
+                        $this->logAudit($request['ceg_id'], 'gpsmart_beallitasok', $request['ceg_id'], 'modositas', 'GPSmart flottakövetés kapcsolat beállítva/frissítve');
+                    }
+                    echo json_encode($result);
+                    return;
+
+                case 'gpsmartPoziciok':
+                    echo json_encode($gpsmartInterface->lekerdezPoziciok($request['ceg_id']));
                     return;
 
                 case 'getFuvarok':
