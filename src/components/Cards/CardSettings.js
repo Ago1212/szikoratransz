@@ -16,6 +16,8 @@ import {
   PiIdentificationBadgeLight,
   PiReceiptLight,
   PiKeyLight,
+  PiMapTrifoldLight,
+  PiHashLight,
 } from "react-icons/pi";
 import PageCard from "components/UI/PageCard.js";
 import SaveButton from "components/UI/SaveButton.js";
@@ -119,6 +121,73 @@ export default function CardSettings() {
       toast.error(error.message);
     } finally {
       setIsNavSaving(false);
+    }
+  };
+
+  // A GPSmart flottakövetés kapcsolat ugyanaz a minta, mint a NAV Online
+  // Számláé: cégszintű, csak a tulajdonos-adminnak látható/módosítható,
+  // a jelszót a szerver sosem adja vissza, üresen hagyva a mentett érték
+  // megmarad.
+  const [gpsmartVanBeallitva, setGpsmartVanBeallitva] = useState(false);
+  const [gpsmartForm, setGpsmartForm] = useState({
+    felhasznalonev: "",
+    jelszo: "",
+    userid: "",
+  });
+  const [isGpsmartSaving, setIsGpsmartSaving] = useState(false);
+
+  useEffect(() => {
+    if (!isOwnerAdmin || !initialUserData.ceg_id) return;
+    fetchAction("getGpsmartBeallitasokStatusz", {
+      ceg_id: initialUserData.ceg_id,
+      kerelmezo_id: initialUserData.id,
+    }).then((result) => {
+      if (result?.success && result.van_beallitva) {
+        setGpsmartVanBeallitva(true);
+        setGpsmartForm((prev) => ({
+          ...prev,
+          felhasznalonev: result.felhasznalonev || "",
+          userid: result.userid || "",
+        }));
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleGpsmartInputChange = (e) => {
+    const { name, value } = e.target;
+    setGpsmartForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleGpsmartSave = async () => {
+    if (!gpsmartForm.felhasznalonev.trim() || !gpsmartForm.userid.trim()) {
+      toast.error("A felhasználónév és a UserID megadása kötelező!");
+      return;
+    }
+    if (!gpsmartVanBeallitva && !gpsmartForm.jelszo) {
+      toast.error("Első alkalommal a jelszó megadása is kötelező!");
+      return;
+    }
+    setIsGpsmartSaving(true);
+    try {
+      const result = await fetchAction("saveGpsmartBeallitasok", {
+        ceg_id: initialUserData.ceg_id,
+        kerelmezo_id: initialUserData.id,
+        felhasznalonev: gpsmartForm.felhasznalonev.trim(),
+        jelszo: gpsmartForm.jelszo,
+        userid: gpsmartForm.userid.trim(),
+      });
+      if (result?.success) {
+        toast.success("GPSmart beállítások mentve.");
+        setGpsmartVanBeallitva(true);
+        setGpsmartForm((prev) => ({ ...prev, jelszo: "" }));
+      } else {
+        throw new Error(result?.message || "Mentés sikertelen");
+      }
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setIsGpsmartSaving(false);
     }
   };
 
@@ -337,6 +406,50 @@ export default function CardSettings() {
               </p>
               <div className="flex justify-end">
                 <SaveButton onClick={handleNavSave} isSaving={isNavSaving} />
+              </div>
+            </div>
+          )}
+
+          {isOwnerAdmin && (
+            <div className="border-t border-ink-100 pt-5">
+              <FormSection
+                id="gpsmart"
+                title="GPSmart flottakövetés kapcsolat"
+                icon={PiMapTrifoldLight}
+                columns={3}
+              >
+                <FormField
+                  icon={PiUserLight}
+                  label="Felhasználónév"
+                  name="felhasznalonev"
+                  value={gpsmartForm.felhasznalonev}
+                  onChange={handleGpsmartInputChange}
+                />
+                <FormField
+                  icon={PiKeyLight}
+                  label="Jelszó"
+                  type="password"
+                  name="jelszo"
+                  value={gpsmartForm.jelszo}
+                  onChange={handleGpsmartInputChange}
+                  placeholder={gpsmartVanBeallitva ? "•••• (mentve — hagyd üresen, ha nem változik)" : ""}
+                />
+                <FormField
+                  icon={PiHashLight}
+                  label="UserID"
+                  name="userid"
+                  value={gpsmartForm.userid}
+                  onChange={handleGpsmartInputChange}
+                  placeholder="a GPSmart oldal linkjében szereplő UserID"
+                />
+              </FormSection>
+              <p className="-mt-1 mb-3 text-xs text-ink-400">
+                {gpsmartVanBeallitva
+                  ? "A kapcsolat be van állítva — a Flottakövetés menüpontban megjelennek a kamionok pillanatnyi pozíciói."
+                  : "Ugyanazok a belépési adatok, amikkel a flottanavigacio.gpsmart.eu oldalra szoktatok bejelentkezni."}
+              </p>
+              <div className="flex justify-end">
+                <SaveButton onClick={handleGpsmartSave} isSaving={isGpsmartSaving} />
               </div>
             </div>
           )}

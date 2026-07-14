@@ -21,6 +21,7 @@ import BejelentesekForm from "views/admin/BejelentesekForm";
 import Szabadsagok from "views/admin/Szabadsagok.js";
 import Naplo from "views/admin/Naplo.js";
 import Koltsegek from "views/admin/Koltsegek.js";
+import Flottakovetes from "views/admin/Flottakovetes.js";
 import Fuvarok from "views/admin/Fuvarok.js";
 import Fuvartervezo from "views/admin/Fuvartervezo.js";
 import VezetesiIdo from "views/admin/VezetesiIdo.js";
@@ -104,6 +105,7 @@ export default function Admin() {
             <PrivateRoute path="/admin/szabadsagok" exact component={Szabadsagok} />
             <PrivateRoute path="/admin/naplo" exact component={Naplo} />
             <PrivateRoute path="/admin/koltsegek" exact component={Koltsegek} />
+            <PrivateRoute path="/admin/flottakovetes" exact component={Flottakovetes} />
             <PrivateRoute path="/admin/fuvarok" exact component={Fuvarok} />
             <PrivateRoute path="/admin/fuvartervezo" exact component={Fuvartervezo} />
             <PrivateRoute path="/admin/ugyfelek" exact component={Ugyfelek} />

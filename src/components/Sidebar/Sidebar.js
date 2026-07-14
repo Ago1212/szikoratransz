@@ -24,6 +24,7 @@ import {
   PiCalendarCheckLight,
   PiSteeringWheelLight,
   PiCaretDownLight,
+  PiMapTrifoldLight,
 } from "react-icons/pi";
 
 import NotificationDropdown from "components/Dropdowns/NotificationDropdown.js";
@@ -64,6 +65,11 @@ const mobileGroups = [
     label: "Flotta",
     icon: PiTruckLight,
     items: [
+      {
+        to: "/admin/flottakovetes",
+        icon: PiMapTrifoldLight,
+        text: "Flottakövetés",
+      },
       {
         to: "/admin/fuvartervezo",
         icon: PiCalendarCheckLight,
@@ -494,6 +500,11 @@ export default function Sidebar() {
                 to="/admin/koltsegek"
                 icon={PiCoinsLight}
                 text="Pénzforgalom"
+              />
+              <NavItem
+                to="/admin/flottakovetes"
+                icon={PiMapTrifoldLight}
+                text="Flottakövetés"
               />
             </ul>
           </div>
