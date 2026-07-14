@@ -130,6 +130,7 @@ class ApiHandler {
         'saveNavSzamlaBeallitasok' => ['koltsegek', 'szerkesztes'],
         'getGpsmartBeallitasokStatusz' => ['kamionok', 'hozzaferes'],
         'gpsmartPoziciok' => ['kamionok', 'hozzaferes'],
+        'gpsmartUtvonal' => ['kamionok', 'hozzaferes'],
         'saveGpsmartBeallitasok' => ['kamionok', 'szerkesztes'],
         'importNavSzamlak' => ['koltsegek', 'szerkesztes'],
 
@@ -246,6 +247,7 @@ class ApiHandler {
             'getGpsmartBeallitasokStatusz' => ['ceg_id', 'kerelmezo_id'],
             'saveGpsmartBeallitasok' => ['ceg_id', 'kerelmezo_id', 'felhasznalonev', 'jelszo', 'userid'],
             'gpsmartPoziciok' => ['ceg_id', 'kerelmezo_id'],
+            'gpsmartUtvonal' => ['ceg_id', 'kerelmezo_id', 'carId', 'datumTol', 'datumIg'],
             'importNavSzamlak' => ['ceg_id', 'kerelmezo_id', 'tetelek'],
 
             'getFuvarok' => ['ceg_id', 'kerelmezo_id'],
@@ -928,6 +930,15 @@ class ApiHandler {
 
                 case 'gpsmartPoziciok':
                     echo json_encode($gpsmartInterface->lekerdezPoziciok($request['ceg_id']));
+                    return;
+
+                case 'gpsmartUtvonal':
+                    echo json_encode($gpsmartInterface->lekerdezUtvonal(
+                        $request['ceg_id'],
+                        $request['carId'],
+                        $request['datumTol'],
+                        $request['datumIg']
+                    ));
                     return;
 
                 case 'getFuvarok':

@@ -3,7 +3,7 @@ import { useHistory } from "react-router-dom";
 import {
   PiTruckLight,
   PiNavigationArrowLight,
-  PiArrowSquareOutLight,
+  PiClockCounterClockwiseLight,
   PiSteeringWheelLight,
   PiCrosshairSimpleLight,
   PiMapPinLight,
@@ -35,18 +35,19 @@ function Mezo({ icon: Icon, label, value }) {
 // ban jeleníti meg ugyanezt a tartalmat (`kompakt` prop: nincs saját
 // kártya-fejléc/keret, mert azt már a Modal adja).
 //
-// Az "Előzmények" és "Vezetési idő" gomb SZÁNDÉKOSAN nem ezen az oldalon
-// mutat adatot: a GPSmart jelenlegi (pillanatnyi pozíciót adó) lekérdezése
-// nem tartalmaz út-előzményt, a vezetési idő pedig egy teljesen más
-// adatforrásból (tachográf, "Vezetési idő" menüpont) származik — ahelyett,
-// hogy ezekhez kitalált adatot mutatnánk, a gombok a valódi forráshoz
-// visznek (a GPSmart saját felülete, illetve a app saját Vezetési idő
-// oldala).
+// Az "Előzmények" gomb a `waybill.pl` GPSmart-végpontra épülő valódi
+// útvonal-előzményt nyitja meg (ld. ElozmenyekModal.js) — ehhez a jármű
+// GPSmart saját `car_id`-je kell, amit a `lekerdezPoziciok()` válasz már
+// tartalmaz. A "Vezetési idő" gomb viszont TUDATOSAN nem mutat adatot
+// ezen az oldalon: az egy teljesen más adatforrásból (tachográf, "Vezetési
+// idő" menüpont) származik, ide belinkelni a valódi oldalra egyszerűbb és
+// őszintébb, mint egy második, párhuzamos vezetési-idő nézetet építeni.
 export default function JarmuReszletek({
   jarmu,
   kompakt = false,
   kovetesEnabled,
   onKovetesToggle,
+  onElozmenyekOpen,
   onClose,
 }) {
   const history = useHistory();
@@ -121,15 +122,16 @@ export default function JarmuReszletek({
           <PiCrosshairSimpleLight className="h-4 w-4" />
           Követés
         </button>
-        <a
-          href="https://flottanavigacio.gpsmart.eu"
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center justify-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink-600 shadow-soft transition-colors duration-200 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
+        <button
+          type="button"
+          onClick={onElozmenyekOpen}
+          disabled={!jarmu.car_id}
+          title={!jarmu.car_id ? "Ehhez a járműhöz nincs GPSmart azonosító" : undefined}
+          className="flex items-center justify-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink-600 shadow-soft transition-colors duration-200 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          <PiArrowSquareOutLight className="h-4 w-4" />
+          <PiClockCounterClockwiseLight className="h-4 w-4" />
           Előzmények
-        </a>
+        </button>
         <button
           type="button"
           onClick={() => history.push("/admin/vezetesi-ido")}

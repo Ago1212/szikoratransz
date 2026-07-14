@@ -140,6 +140,37 @@ class GpsmartInterface {
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
+
+    // Egy jármű útvonal-előzménye egy dátumtartományra. A `carId` a
+    // GPSmart saját, belső jármű-azonosítója (nem a mi `kamion.id`-nk!) —
+    // ezt a frontend a korábban már lekért `lekerdezPoziciok()` válasz
+    // `car_id` mezőjéből ismeri, nem kell hozzá külön feloldás/tárolás:
+    // a `car_id` csak az adott cég saját GPSmart-fiókjának névterében
+    // értelmezhető, amit itt a cég saját (ceg_id szerinti) beállítása
+    // választ ki, tehát más cég nem tudna vele idegen adatot lekérni.
+    public function lekerdezUtvonal($ceg_id, $carId, $datumTol, $datumIg) {
+        try {
+            $stmt = $this->db->prepare('SELECT felhasznalonev, jelszo_titkositva, userid FROM gpsmart_beallitasok WHERE admin = :admin');
+            $stmt->bindValue(':admin', $ceg_id);
+            $stmt->execute();
+            $beallitas = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$beallitas) {
+                return ['success' => false, 'message' => 'A GPSmart kapcsolat még nincs beállítva ehhez a céghez.'];
+            }
+
+            $client = new GpsmartClient(
+                $beallitas['felhasznalonev'],
+                $this->visszafejt($beallitas['jelszo_titkositva']),
+                $beallitas['userid']
+            );
+            $utvonal = $client->lekerdezUtvonal($carId, $datumTol, $datumIg);
+
+            return ['success' => true] + $utvonal;
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
 }
 
 $gpsmartInterface = new GpsmartInterface();

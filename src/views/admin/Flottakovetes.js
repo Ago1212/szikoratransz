@@ -11,6 +11,7 @@ import FlottaSzurok from "components/Flottakovetes/FlottaSzurok.js";
 import JarmuLista from "components/Flottakovetes/JarmuLista.js";
 import FlottaTerkep from "components/Flottakovetes/FlottaTerkep.js";
 import JarmuReszletek from "components/Flottakovetes/JarmuReszletek.js";
+import ElozmenyekModal from "components/Flottakovetes/ElozmenyekModal.js";
 import { dusitottPoziciok } from "utils/gpsmartHelpers.js";
 
 const FRISSITES_MS = 60000; // pozíció-lekérdezés gyakorisága
@@ -61,6 +62,8 @@ export default function Flottakovetes() {
   const [kereses, setKereses] = useState("");
   const [statuszSzuro, setStatuszSzuro] = useState("mind");
   const [now, setNow] = useState(() => new Date());
+  const [elozmenyekOpen, setElozmenyekOpen] = useState(false);
+  const [utvonalPontok, setUtvonalPontok] = useState(null);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), ORA_FRISSITES_MS);
@@ -129,6 +132,14 @@ export default function Flottakovetes() {
   const torolKivalasztast = () => {
     setKivalasztott(null);
     setKovetesEnabled(false);
+    setUtvonalPontok(null);
+  };
+  // Egy másik jármű kiválasztásakor a korábbi útvonal-előzmény (ha volt)
+  // már nem hozzá tartozik — töröljük, hogy ne maradjon a térképen egy
+  // másik kamion rajzolt útvonala a most kiválasztott mellett.
+  const valasszJarmuvet = (rendszam) => {
+    setKivalasztott(rendszam);
+    setUtvonalPontok(null);
   };
 
   const elsoBetoltesFolyamatban = loading && poziciok.length === 0 && frissitve === null;
@@ -207,16 +218,17 @@ export default function Flottakovetes() {
 
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
             <div className="order-2 h-[360px] xl:order-1 xl:col-span-3 xl:h-[640px]">
-              <JarmuLista rows={szurt} kivalasztott={kivalasztott} onSelect={setKivalasztott} />
+              <JarmuLista rows={szurt} kivalasztott={kivalasztott} onSelect={valasszJarmuvet} />
             </div>
 
             <div className="order-1 h-[420px] md:h-[520px] xl:order-2 xl:col-span-6 xl:h-[640px]">
               <FlottaTerkep
                 dusitett={szurt}
                 kivalasztott={kivalasztott}
-                onSelect={setKivalasztott}
+                onSelect={valasszJarmuvet}
                 kovetesEnabled={kovetesEnabled}
                 onKovetesToggle={toggleKoveses}
+                utvonalPontok={utvonalPontok}
               />
             </div>
 
@@ -227,6 +239,7 @@ export default function Flottakovetes() {
                   kovetesEnabled={kovetesEnabled}
                   onKovetesToggle={toggleKoveses}
                   onClose={torolKivalasztast}
+                  onElozmenyekOpen={() => setElozmenyekOpen(true)}
                 />
               </div>
             )}
@@ -245,9 +258,19 @@ export default function Flottakovetes() {
             kompakt
             kovetesEnabled={kovetesEnabled}
             onKovetesToggle={toggleKoveses}
+            onElozmenyekOpen={() => setElozmenyekOpen(true)}
           />
         </Modal>
       )}
+
+      <ElozmenyekModal
+        open={elozmenyekOpen}
+        onClose={() => setElozmenyekOpen(false)}
+        jarmu={kivalasztottJarmu}
+        cegId={user.ceg_id}
+        kerelmezoId={user.id}
+        onUtvonalBetoltve={setUtvonalPontok}
+      />
     </div>
   );
 }

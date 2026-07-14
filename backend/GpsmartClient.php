@@ -35,6 +35,169 @@ class GpsmartClient {
         return $this->htmlFeldolgozas($html);
     }
 
+    // Egy adott jármű (GPSmart saját `carID`-je, ld. `car_id` mező a
+    // `lekerdezPoziciok()` válaszban) útvonal-előzménye egy dátum/idő-
+    // tartományra — a `waybill.pl` végpont, ami a pozíció-lekérdezéstől
+    // eltérő, gazdagabb HTML-táblát ad vissza: útvonalpontok (lat/lon/idő/
+    // cím/sebesség), megállások/szakaszok (hivatali/magán, időtartam,
+    // táv, csúcssebesség) és egy napi összesítő (táv/menetidő/állásidő).
+    public function lekerdezUtvonal($carId, $datumTol, $datumIg, $idoTol = '00:00', $idoIg = '23:59') {
+        $cookie = $this->bejelentkezes();
+        $html = $this->utvonalLekerdezes($cookie, $carId, $datumTol, $datumIg, $idoTol, $idoIg);
+        return $this->utvonalFeldolgozas($html);
+    }
+
+    private function utvonalLekerdezes($cookie, $carId, $datumTol, $datumIg, $idoTol, $idoIg) {
+        $url = self::BASE_URL . '/cgi-bin/waybill.pl?' . http_build_query([
+            'Lang' => 'Hun',
+            'UserID' => $this->userId,
+            'Type' => 11,
+            'Template' => 'template1',
+            'carID' => $carId,
+            'startDate' => $datumTol,
+            'endDate' => $datumIg,
+            'startTime' => $idoTol,
+            'endTime' => $idoIg,
+            'Excel' => 0,
+            'Sablon' => 1,
+            'driverID' => 0,
+        ]);
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => ['Cookie: CGISESSID=' . $cookie],
+            CURLOPT_TIMEOUT => 30,
+        ]);
+        $valasz = curl_exec($ch);
+        $curlHiba = curl_error($ch);
+        curl_close($ch);
+
+        if ($valasz === false) {
+            throw new Exception('GPSmart kapcsolódási hiba: ' . $curlHiba);
+        }
+
+        return $valasz;
+    }
+
+    // A `waybill.pl` egy `id="waybillTable"` táblázatot ad vissza, soron-
+    // ként vegyesen: napi fejléc (`mainLine`), szakasz-kezdés (`startLine`,
+    // km óra állás + hivatali/magán jelzés + kezdő időpont), útvonalpontok
+    // (`data-zone` attribútummal jelölt sorok, az `onclick="googleMarker(
+    // lat, lon, 'idő', this)"`-ből nyerjük ki a koordinátákat — ez
+    // megbízhatóbb, mint a cellaindex, mert a rejtett diagnosztikai
+    // oszlopok száma sablononként változhatna), szakasz-zárás (`stopLine`,
+    // menetidő/táv/csúcssebesség), és a végén egy összesítő (`allSummaryLine`,
+    // beágyazott `summaryTable`: hivatali/magán/összesen táv, menetidő,
+    // állásidő).
+    private function utvonalFeldolgozas($html) {
+        $dom = new DOMDocument();
+        libxml_use_internal_errors(true);
+        $dom->loadHTML('<?xml encoding="utf-8"?>' . $html);
+        libxml_clear_errors();
+
+        $tabla = $dom->getElementById('waybillTable');
+        if (!$tabla) {
+            return ['pontok' => [], 'szakaszok' => [], 'osszesito' => null];
+        }
+        $xpath = new DOMXPath($dom);
+
+        $szoveg = function ($node) {
+            return $node ? trim(str_replace("\xc2\xa0", ' ', $node->textContent)) : '';
+        };
+
+        $pontok = [];
+        $szakaszok = [];
+        $osszesito = null;
+        $aktualisSzakasz = null;
+
+        foreach ($tabla->getElementsByTagName('tr') as $sor) {
+            $class = $sor->getAttribute('class');
+
+            if ($sor->hasAttribute('data-zone')) {
+                $onclick = $sor->getAttribute('onclick');
+                if (preg_match('/googleMarker\(([\-0-9.]+),\s*([\-0-9.]+),\s*\'([^\']+)\'/', $onclick, $m)) {
+                    $cellak = $sor->getElementsByTagName('td');
+                    $pontok[] = [
+                        'lat' => (float) $m[1],
+                        'lon' => (float) $m[2],
+                        'ido' => $m[3],
+                        'cim' => $szoveg($cellak->item(2)),
+                        'sebesseg' => $szoveg($cellak->item(4)),
+                        'uzemanyag' => $szoveg($cellak->item(6)),
+                        'akkumulator' => $szoveg($cellak->item(17)),
+                    ];
+                }
+                continue;
+            }
+
+            if (strpos($class, 'startLine') !== false) {
+                $ido = null;
+                foreach ($sor->getElementsByTagName('input') as $inp) {
+                    if ($inp->getAttribute('type') === 'hidden' && preg_match('/^\d{4}-\d{2}-\d{2}/', $inp->getAttribute('value'))) {
+                        $ido = $inp->getAttribute('value');
+                        break;
+                    }
+                }
+                $img = $xpath->query('.//img[contains(@class,"roadType")]', $sor)->item(0);
+                $aktualisSzakasz = [
+                    'tol' => $ido,
+                    'tipus' => $img ? $img->getAttribute('title') : null,
+                ];
+                continue;
+            }
+
+            if (strpos($class, 'stopLine') !== false) {
+                if ($aktualisSzakasz) {
+                    $megtettUt = null;
+                    $maxSebesseg = null;
+                    foreach ($sor->getElementsByTagName('td') as $td) {
+                        if ($td->getAttribute('title') === 'Megtett út') {
+                            $megtettUt = trim(preg_replace('/\s+/', ' ', $szoveg($td)));
+                        }
+                        if ($td->getAttribute('title') === 'Legnagyobb sebesség') {
+                            $maxSebesseg = $szoveg($td);
+                        }
+                    }
+                    $aktualisSzakasz['megtett_ut'] = $megtettUt;
+                    $aktualisSzakasz['max_sebesseg'] = $maxSebesseg;
+                    $szakaszok[] = $aktualisSzakasz;
+                    $aktualisSzakasz = null;
+                }
+                continue;
+            }
+
+            if (strpos($class, 'allSummaryLine') !== false) {
+                $summaryTable = $sor->getElementsByTagName('table')->item(0);
+                if ($summaryTable) {
+                    $sorAdat = function ($index) use ($summaryTable, $szoveg) {
+                        $sorok = $summaryTable->getElementsByTagName('tr');
+                        if (!$sorok->item($index)) {
+                            return [];
+                        }
+                        $adat = [];
+                        foreach ($sorok->item($index)->getElementsByTagName('td') as $td) {
+                            $adat[] = $szoveg($td);
+                        }
+                        return $adat;
+                    };
+                    $tavolsag = $sorAdat(2);
+                    $menetido = $sorAdat(3);
+                    $allasido = $sorAdat(4);
+                    $osszesito = [
+                        'tavolsag_hivatali' => $tavolsag[1] ?? null,
+                        'tavolsag_magan' => $tavolsag[2] ?? null,
+                        'tavolsag_osszesen' => $tavolsag[3] ?? null,
+                        'menetido' => $menetido[3] ?? null,
+                        'allasido' => $allasido[3] ?? null,
+                    ];
+                }
+                continue;
+            }
+        }
+
+        return ['pontok' => $pontok, 'szakaszok' => $szakaszok, 'osszesito' => $osszesito];
+    }
+
     private function bejelentkezes() {
         $ch = curl_init(self::BASE_URL . '/cgi-bin/login.cgi');
         curl_setopt_array($ch, [
@@ -153,6 +316,12 @@ class GpsmartClient {
                 'sebesseg' => $szoveg($cellak, 12),
                 'uzemanyag' => $szoveg($cellak, 13),
                 'km' => $szoveg($cellak, 14),
+                // A GPSmart saját belső jármű-azonosítója — ugyanez az
+                // érték kell a `waybill.pl` (útvonal-előzmény) `carID`
+                // paraméterébe, ld. `lekerdezUtvonal()`. Élőben ellenőrizve
+                // (a felhasználó által kapott UserID->carID lista pontosan
+                // ezekkel az értékekkel egyezett).
+                'car_id' => $szoveg($cellak, 16),
             ];
         }
 
