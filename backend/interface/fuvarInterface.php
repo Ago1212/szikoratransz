@@ -24,6 +24,15 @@ class FuvarInterface {
             if (empty($data['felrakas_cim']) || empty($data['lerakas_cim'])) {
                 return ['success' => false, 'message' => 'A felrakási és lerakási cím megadása kötelező.'];
             }
+            // Mindkét dátum opcionális (ld. fenti komment: "gyors rögzítés",
+            // utólag is kiegészíthető), de ha mindkettő meg van adva, a
+            // lerakás nem előzheti meg a felrakást.
+            if (!empty($data['felrakas_datum']) && !empty($data['lerakas_datum']) && $data['lerakas_datum'] < $data['felrakas_datum']) {
+                return ['success' => false, 'message' => 'A lerakási dátum nem lehet korábbi a felrakási dátumnál.'];
+            }
+            if (isset($data['dij']) && $data['dij'] !== '' && $data['dij'] !== null && (float) $data['dij'] < 0) {
+                return ['success' => false, 'message' => 'A díj nem lehet negatív.'];
+            }
 
             $query = "INSERT INTO fuvarok
                       (admin, ugyfel_id, kamion_id, potkocsi_id, sofor_id, felrakas_cim, felrakas_datum,
@@ -58,6 +67,15 @@ class FuvarInterface {
         try {
             if (empty($data['felrakas_cim']) || empty($data['lerakas_cim'])) {
                 return ['success' => false, 'message' => 'A felrakási és lerakási cím megadása kötelező.'];
+            }
+            // Mindkét dátum opcionális (ld. fenti komment: "gyors rögzítés",
+            // utólag is kiegészíthető), de ha mindkettő meg van adva, a
+            // lerakás nem előzheti meg a felrakást.
+            if (!empty($data['felrakas_datum']) && !empty($data['lerakas_datum']) && $data['lerakas_datum'] < $data['felrakas_datum']) {
+                return ['success' => false, 'message' => 'A lerakási dátum nem lehet korábbi a felrakási dátumnál.'];
+            }
+            if (isset($data['dij']) && $data['dij'] !== '' && $data['dij'] !== null && (float) $data['dij'] < 0) {
+                return ['success' => false, 'message' => 'A díj nem lehet negatív.'];
             }
 
             $query = "UPDATE fuvarok SET
@@ -170,16 +188,26 @@ class FuvarInterface {
             // ezért a rájuk szűrő kereséshez alkérdés kell, nem sima LIKE a
             // `fuvarok` saját oszlopain.
             if (!empty($search)) {
+                // A subquery-k is `admin = :ceg_id AND torolt <> 'I'` szerint
+                // szűrnek, konzisztensen a fájl többi lekérdezésével (ld.
+                // getNevLookup/getSoforNevek lentebb) — enélkül egy másik
+                // cégbeli vagy törölt kamion/pótkocsi/ügyfél/sofőr rendszáma/
+                // neve is illeszkedhetne, ha egy `*_id` FK véletlenül arra
+                // mutatna.
                 $query .= " AND (" . PaginationHelper::likeClause(['felrakas_cim', 'lerakas_cim', 'rakomany_leiras', 'megjegyzes'], 'search') .
-                    " OR kamion_id IN (SELECT id FROM kamion WHERE rendszam LIKE :search_kamion)" .
-                    " OR potkocsi_id IN (SELECT id FROM potkocsi WHERE rendszam LIKE :search_potkocsi)" .
-                    " OR ugyfel_id IN (SELECT id FROM ugyfelek WHERE nev LIKE :search_ugyfel)" .
-                    " OR sofor_id IN (SELECT id FROM user WHERE name LIKE :search_sofor))";
+                    " OR kamion_id IN (SELECT id FROM kamion WHERE rendszam LIKE :search_kamion AND admin = :ceg_id_kamion AND torolt <> 'I')" .
+                    " OR potkocsi_id IN (SELECT id FROM potkocsi WHERE rendszam LIKE :search_potkocsi AND admin = :ceg_id_potkocsi AND torolt <> 'I')" .
+                    " OR ugyfel_id IN (SELECT id FROM ugyfelek WHERE nev LIKE :search_ugyfel AND admin = :ceg_id_ugyfel AND torolt <> 'I')" .
+                    " OR sofor_id IN (SELECT id FROM user WHERE name LIKE :search_sofor AND admin = :ceg_id_sofor AND torolt <> 'I'))";
                 $params[':search'] = '%' . $search . '%';
                 $params[':search_kamion'] = '%' . $search . '%';
+                $params[':ceg_id_kamion'] = $ceg_id;
                 $params[':search_potkocsi'] = '%' . $search . '%';
+                $params[':ceg_id_potkocsi'] = $ceg_id;
                 $params[':search_ugyfel'] = '%' . $search . '%';
+                $params[':ceg_id_ugyfel'] = $ceg_id;
                 $params[':search_sofor'] = '%' . $search . '%';
+                $params[':ceg_id_sofor'] = $ceg_id;
             }
             $query .= " ORDER BY COALESCE(felrakas_datum, letrehozva) DESC, id DESC";
 

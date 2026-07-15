@@ -304,8 +304,8 @@ class ApiHandler {
             'downloadFile' => ['id'],
 
             'getEgyediHataridok' => ['id'],
-            'updateEgyediHatarido' => ['id', 'datum', 'leiras'],
-            'deleteEgyediHatarido' => ['id'],
+            'updateEgyediHatarido' => ['id', 'datum', 'leiras', 'ceg_id'],
+            'deleteEgyediHatarido' => ['id', 'ceg_id'],
             'createEgyediHatarido' => ['id', 'datum', 'leiras'],
 
             'sendAjanlatkeres' => ['name', 'email', 'phone', 'message'],
@@ -425,6 +425,50 @@ class ApiHandler {
         return $kerelmezo;
     }
 
+    // A resolveKerelmezo() admin-típusú munkamenetet vár — a sofőr saját
+    // (nem admin-oldali) önkiszolgáló akcióihoz (pl. jármű-váltási kérés
+    // beküldése/visszavonása) ez a pár a megfelelője: a sofőr saját,
+    // szerver-oldalon feloldott azonosítóját adja vissza, NEM a kliens
+    // által küldött `sofor_id` mezőt — enélkül egy sofőr más sofőr
+    // nevében is tudna kérést beküldeni/visszavonni/megtekinteni.
+    private function resolveSajatSoforId(array $request): int {
+        $session = $this->requireValidSession($request);
+        if ($session['felhasznalo_tipus'] !== 'sofor') {
+            throw new Exception('Ehhez a művelethez sofőr-oldali bejelentkezés szükséges.');
+        }
+        return (int) $session['felhasznalo_id'];
+    }
+
+    // Sok akciót (fájlfeltöltés, saját jármű-váltási kérés stb.) mind
+    // admin-, mind sofőr-típusú munkamenet elérhet — ehhez kell egy olyan
+    // "saját ceg_id" feloldás, ami MINDKÉT munkamenet-típusnál a valódi,
+    // szerver-oldali hovatartozást adja vissza, sosem a kliens által
+    // küldött `admin`/`ceg_id` mezőt.
+    private function resolveSajatCegId(array $request): int {
+        $session = $this->requireValidSession($request);
+        if ($session['felhasznalo_tipus'] === 'admin') {
+            $stmt = $this->db->prepare("SELECT id, tulajdonos_admin_id FROM admin WHERE id = :id AND torolt <> 'I'");
+            $stmt->bindValue(':id', $session['felhasznalo_id']);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$row) {
+                throw new Exception('A kérelmező fiók nem található.');
+            }
+            return (int) (empty($row['tulajdonos_admin_id']) ? $row['id'] : $row['tulajdonos_admin_id']);
+        }
+        if ($session['felhasznalo_tipus'] === 'sofor') {
+            $stmt = $this->db->prepare("SELECT admin FROM user WHERE id = :id AND torolt <> 'I'");
+            $stmt->bindValue(':id', $session['felhasznalo_id']);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$row) {
+                throw new Exception('A sofőr fiók nem található.');
+            }
+            return (int) $row['admin'];
+        }
+        throw new Exception('Ismeretlen munkamenet-típus.');
+    }
+
     private function requireAdminRole(array $request) {
         $kerelmezo = $this->resolveKerelmezo($request);
         if (!$kerelmezo['is_root'] && $kerelmezo['szerepkor'] !== 'admin') {
@@ -492,9 +536,6 @@ class ApiHandler {
                     return;
                 case 'getSum':
                     echo json_encode($this->getSum($request['id']));
-                    return;
-                case 'updateUser':
-                    echo json_encode($this->updateUser($request['id'], $request['nickname'], $request['birthdate'], $request['password']));
                     return;
                 case 'logoutUser':
                     echo json_encode($this->logoutUser($request['sessionToken'] ?? ''));
@@ -647,24 +688,34 @@ class ApiHandler {
                     return;
 
                 case 'requestJarmuValtas':
-                    echo json_encode($jarmuValtasInterface->requestJarmuValtas($request));
+                    $sajatSoforId = $this->resolveSajatSoforId($request);
+                    echo json_encode($jarmuValtasInterface->requestJarmuValtas($sajatSoforId, $request['tipus'], $request['jarmu_id'], $request['indoklas'] ?? null));
                     return;
                 case 'visszavonJarmuValtas':
-                    echo json_encode($jarmuValtasInterface->visszavonJarmuValtas($request['id']));
+                    $sajatSoforId = $this->resolveSajatSoforId($request);
+                    echo json_encode($jarmuValtasInterface->visszavonJarmuValtas($request['id'], $sajatSoforId));
                     return;
                 case 'getSajatJarmuValtasKerelmek':
-                    echo json_encode($jarmuValtasInterface->getSajatJarmuValtasKerelmek($request['sofor_id']));
+                    $sajatSoforId = $this->resolveSajatSoforId($request);
+                    echo json_encode($jarmuValtasInterface->getSajatJarmuValtasKerelmek($sajatSoforId));
                     return;
                 case 'getElbiraltJarmuValtasok':
-                    echo json_encode($jarmuValtasInterface->getElbiraltJarmuValtasok($request['sofor_id']));
+                    $sajatSoforId = $this->resolveSajatSoforId($request);
+                    echo json_encode($jarmuValtasInterface->getElbiraltJarmuValtasok($sajatSoforId));
                     return;
                 case 'getFuggoJarmuValtasok':
-                    echo json_encode($jarmuValtasInterface->getFuggoJarmuValtasok($request['id']));
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($jarmuValtasInterface->getFuggoJarmuValtasok($kerelmezo['ceg_id']));
                     return;
                 case 'elbiralJarmuValtas':
-                    $result = $jarmuValtasInterface->elbiralJarmuValtas($request['id'], $request['allapot']);
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    if (!$kerelmezo['is_root'] && $kerelmezo['szerepkor'] !== 'admin') {
+                        echo json_encode(['success' => false, 'message' => 'Ehhez a művelethez adminisztrátori jogosultság szükséges.']);
+                        return;
+                    }
+                    $result = $jarmuValtasInterface->elbiralJarmuValtas($request['id'], $request['allapot'], $kerelmezo['ceg_id']);
                     if ($result['success']) {
-                        $this->logAudit($request['admin'] ?? null, 'jarmu_valtas_kerelmek', $request['id'], 'modositas', $request['allapot']);
+                        $this->logAudit($kerelmezo['ceg_id'], 'jarmu_valtas_kerelmek', $request['id'], 'modositas', $request['allapot']);
                     }
                     echo json_encode($result);
                     return;
@@ -1133,25 +1184,29 @@ class ApiHandler {
                     return;
 
                 case 'getFiles':
-                    echo json_encode($filesInterface->getFiles($request['tabla'], $request['id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null));
+                    echo json_encode($filesInterface->getFiles($request['tabla'], $request['id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $this->resolveSajatCegId($request)));
                     return;
                 case 'fileUpload':
-                    echo json_encode($filesInterface->fileUpload($request['admin'], $request['tabla'], $request['id'], $request['file'], $request['name'], $request['size'], $request['kategoria'] ?? null));
+                    // A fájlt a SAJÁT (szerver-oldalon feloldott) ceg_id-vel
+                    // taggeljük, nem a kliens által küldött `admin` mezővel —
+                    // különben valaki más cég `admin` id-jét beküldve egy
+                    // idegen cég fájllistájába "csempészhetne" fel tartalmat.
+                    echo json_encode($filesInterface->fileUpload($this->resolveSajatCegId($request), $request['tabla'], $request['id'], $request['file'], $request['name'], $request['size'], $request['kategoria'] ?? null));
                     return;
                 case 'downloadFile':
-                    echo json_encode($filesInterface->downloadFile($request['id']));
+                    echo json_encode($filesInterface->downloadFile($request['id'], $this->resolveSajatCegId($request)));
                     return;
                 case 'deleteFile':
-                    echo json_encode($filesInterface->deleteFile($request['id']));
+                    echo json_encode($filesInterface->deleteFile($request['id'], $this->resolveSajatCegId($request)));
                     return;
                 case 'getEgyediHataridok':
                     echo json_encode($this->getEgyediHataridok($request['id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null));
                     return;
                 case 'updateEgyediHatarido':
-                    echo json_encode($this->updateEgyediHatarido($request['id'], $request['datum'], $request['leiras']));
+                    echo json_encode($this->updateEgyediHatarido($request['id'], $request['datum'], $request['leiras'], $request['ceg_id']));
                     return;
                 case 'deleteEgyediHatarido':
-                    echo json_encode($this->deleteEgyediHatarido($request['id']));
+                    echo json_encode($this->deleteEgyediHatarido($request['id'], $request['ceg_id']));
                     return;
                 case 'createEgyediHatarido':
                     echo json_encode($this->createEgyediHatarido($request['id'], $request['datum'], $request['leiras']));
@@ -1168,8 +1223,17 @@ class ApiHandler {
                     echo json_encode($emailInterface->sendJelentkezes($request['name'], $request['email'], $request['phone'], $request['message']));
                     return;
                 case 'saveAdminData':
+                    // Csak a SAJÁT profil szerkeszthető ("Saját adatok"
+                    // oldal) — az `id`-t és a `szerepkor`-t szándékosan a
+                    // szerver-oldalon feloldott munkamenetből vesszük, nem a
+                    // kliens kéréséből, különben bármely bejelentkezett
+                    // csapattag módosíthatná más (akár másik cégbeli) admin
+                    // fiók adatait és szerepkörét is. Más csapattag
+                    // szerepkörének módosítására a külön, admin-only
+                    // `updateCsapattagSzerepkor` akció való.
+                    $kerelmezo = $this->resolveKerelmezo($request);
                     echo json_encode($this->saveAdminData(
-                        $request['id'],
+                        $kerelmezo['id'],
                         $request['name'],
                         $request['email'],
                         $request['phone'],
@@ -1182,7 +1246,7 @@ class ApiHandler {
                         $request['jogsi_lejarat'],
                         $request['gki_lejarat'],
                         $request['adr_lejarat'],
-                        $request['szerepkor'] ?? 'admin'
+                        $kerelmezo['szerepkor']
                     ));
 
                     return;
@@ -1219,14 +1283,23 @@ class ApiHandler {
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
-    private function updateEgyediHatarido($id, $datum, $leiras) {
+    // `$ceg_id` nélkül bármely bejelentkezett felhasználó módosíthatna
+    // egy másik cég naptár-bejegyzését a `sorszam` eltalálásával/
+    // végigpróbálásával — ezért a WHERE feltételbe is bekerül, és a
+    // `rowCount()`-ot is ellenőrizzük, hogy a hívó tényleg értesüljön,
+    // ha a bejegyzés nem a sajátja (vagy nem is létezik).
+    private function updateEgyediHatarido($id, $datum, $leiras, $ceg_id) {
         try {
-            $query = "UPDATE egyedi_hataridok SET datum = :datum, leiras = :leiras WHERE sorszam = :id";
+            $query = "UPDATE egyedi_hataridok SET datum = :datum, leiras = :leiras WHERE sorszam = :id AND admin = :ceg_id";
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':id', $id);
             $stmt->bindParam(':datum', $datum);
             $stmt->bindParam(':leiras', $leiras);
+            $stmt->bindParam(':ceg_id', $ceg_id);
             $stmt->execute();
+            if ($stmt->rowCount() === 0) {
+                return ['success' => false, 'message' => 'A bejegyzés nem található, vagy nem a te céged bejegyzése.'];
+            }
 
             return ['success' => true];
         } catch (Exception $e) {
@@ -1247,12 +1320,16 @@ class ApiHandler {
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
-    private function deleteEgyediHatarido($id) {
+    private function deleteEgyediHatarido($id, $ceg_id) {
         try {
-            $query = "UPDATE egyedi_hataridok SET torolt = 'I' WHERE sorszam = :id";
+            $query = "UPDATE egyedi_hataridok SET torolt = 'I' WHERE sorszam = :id AND admin = :ceg_id";
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':id', $id);
+            $stmt->bindParam(':ceg_id', $ceg_id);
             $stmt->execute();
+            if ($stmt->rowCount() === 0) {
+                return ['success' => false, 'message' => 'A bejegyzés nem található, vagy nem a te céged bejegyzése.'];
+            }
 
             return ['success' => true];
         } catch (Exception $e) {
@@ -1658,9 +1735,28 @@ class ApiHandler {
         return "0";
     }
 
+    // Brute-force elleni védelem (ld. backend/sql/26.sql): a jelszó
+    // ellenőrzése előtt megnézzük, nincs-e a fiók ideiglenesen zárolva;
+    // sikeres bejelentkezéskor a számláló nullázódik, sikertelennél nő, és
+    // `MAX_LOGIN_PROBALKOZAS` elérésekor a fiók `ZAROLAS_PERC` percre
+    // zárolódik. Szándékosan a fiókhoz (nem IP-hez) kötött — egyszerűbb,
+    // és nem igényel külön IP-nyilvántartó táblát.
+    const MAX_LOGIN_PROBALKOZAS = 5;
+    const ZAROLAS_PERC = 15;
+
     private function loginUser($email, $password) {
         $user = $this->getUser($email);
+        $tabla = (!empty($user) && $user['is_admin']) ? 'admin' : 'user';
+
+        if (!empty($user) && !empty($user['zarolva_eddig']) && strtotime($user['zarolva_eddig']) > time()) {
+            return ['success' => false, 'message' => 'Túl sok sikertelen bejelentkezési kísérlet történt — próbáld újra ' . self::ZAROLAS_PERC . ' perc múlva.'];
+        }
+
         if (!empty($user) && password_verify($password, $user['password'])) {
+            $stmt = $this->db->prepare("UPDATE `$tabla` SET sikertelen_probalkozasok = 0, zarolva_eddig = NULL WHERE id = :id");
+            $stmt->bindValue(':id', $user['id']);
+            $stmt->execute();
+
             $token = bin2hex(random_bytes(32));
             $stmt = $this->db->prepare("INSERT INTO sessions (token, felhasznalo_tipus, felhasznalo_id, lejarat) VALUES (:token, :tipus, :id, DATE_ADD(NOW(), INTERVAL 30 DAY))");
             $stmt->bindValue(':token', $token);
@@ -1670,6 +1766,20 @@ class ApiHandler {
 
             return ['success' => true, 'user' => $user, 'token' => $token];
         }
+
+        if (!empty($user)) {
+            $ujSzam = (int) $user['sikertelen_probalkozasok'] + 1;
+            if ($ujSzam >= self::MAX_LOGIN_PROBALKOZAS) {
+                $stmt = $this->db->prepare("UPDATE `$tabla` SET sikertelen_probalkozasok = 0, zarolva_eddig = DATE_ADD(NOW(), INTERVAL " . self::ZAROLAS_PERC . " MINUTE) WHERE id = :id");
+                $stmt->bindValue(':id', $user['id']);
+            } else {
+                $stmt = $this->db->prepare("UPDATE `$tabla` SET sikertelen_probalkozasok = :szam WHERE id = :id");
+                $stmt->bindValue(':szam', $ujSzam);
+                $stmt->bindValue(':id', $user['id']);
+            }
+            $stmt->execute();
+        }
+
         return ['success' => false, 'message' => 'Login failed. Incorrect email or password.'];
     }
 
@@ -1735,30 +1845,6 @@ class ApiHandler {
             $stmt->execute();
             $user = $this->getUser($email);
             return ['success' => true, 'user' => $user];
-        } catch (Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
-        }
-    }
-    private function updateUser($id, $nickname, $birthdate, $password = null) {
-        try {
-            $query = "UPDATE user SET nickname = :nickname, birthdate = :birthdate";
-            $hashedPassword = null;
-            if ($password) {
-                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-                $query .= ", password = :password";
-            }
-            $query .= " WHERE id = :id";
-
-            $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':id', $id);
-            $stmt->bindParam(':nickname', $nickname);
-            $stmt->bindParam(':birthdate', $birthdate);
-            if ($password) {
-                $stmt->bindParam(':password', $hashedPassword);
-            }
-            $stmt->execute();
-
-            return ['success' => true];
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }

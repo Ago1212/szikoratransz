@@ -368,6 +368,7 @@ export default function Fuvarok() {
               value={form.dij}
               onChange={handleFormChange}
               className="md:col-span-2"
+              min="0"
             />
             <FormField
               as="select"

@@ -33,10 +33,16 @@ class FilesInterface {
                     $stmt->bindValue($key, $value);
                 }
             } else {
-                $query = "SELECT * FROM fajlok WHERE rowid = :id AND tabla = :tabla";
+                // A `fajlok.admin` oszlop minden sornál kitöltött (nem csak
+                // a `tabla === "admin"` ágnál) — enélkül a szűrés nélkül
+                // bármely cég bármely másik cég `rowid`-jét eltalálva
+                // (pl. egy karbantartás/sofőr azonosítót végigpróbálva)
+                // hozzáférhetne annak fájllistájához.
+                $query = "SELECT * FROM fajlok WHERE rowid = :id AND tabla = :tabla AND admin = :ceg_id";
                 $stmt = $this->db->prepare($query);
                 $stmt->bindParam(':id', $id);
                 $stmt->bindParam(':tabla', $tabla);
+                $stmt->bindValue(':ceg_id', $ceg_id);
             }
             $stmt->execute();
             $files = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -47,16 +53,19 @@ class FilesInterface {
         }
     }
 
-    function deleteFile($id) {
-        // Először lekérjük a fájl elérési útját az adatbázisból
-        $query = "SELECT hely FROM fajlok WHERE sorszam = :id";
+    // `$ceg_id` nélkül bármely bejelentkezett felhasználó törölhetne
+    // bármely másik cég fájlját a `sorszam` (auto-increment, tehát könnyen
+    // végigpróbálható) eltalálásával — a WHERE feltétel ezt zárja ki.
+    function deleteFile($id, $ceg_id) {
+        $query = "SELECT hely FROM fajlok WHERE sorszam = :id AND admin = :ceg_id";
         $stmt = $this->db->prepare($query);
         $stmt->bindParam(':id', $id);
+        $stmt->bindValue(':ceg_id', $ceg_id);
         $stmt->execute();
         $file = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$file) {
-            return ['success' => false, 'message' => 'A fájl nem található az adatbázisban'];
+            return ['success' => false, 'message' => 'A fájl nem található, vagy nem a te céged fájlja'];
         }
 
         // Töröljük a fájlt a mappából
@@ -65,24 +74,28 @@ class FilesInterface {
         }
 
         // Töröljük a rekordot az adatbázisból
-        $query = "DELETE FROM fajlok WHERE sorszam = :id";
+        $query = "DELETE FROM fajlok WHERE sorszam = :id AND admin = :ceg_id";
         $stmt = $this->db->prepare($query);
         $stmt->bindParam(':id', $id);
+        $stmt->bindValue(':ceg_id', $ceg_id);
         $stmt->execute();
 
         return ['success' => true, 'message' => 'A fájl sikeresen törölve'];
     }
 
 
-    function downloadFile($id) {
-        $query = "SELECT * FROM fajlok WHERE sorszam = :id";
+    // `$ceg_id` — ld. deleteFile() fenti komment, ugyanaz a kockázat
+    // letöltésnél is (bármely cég bármely fájlját letölthetné anélkül).
+    function downloadFile($id, $ceg_id) {
+        $query = "SELECT * FROM fajlok WHERE sorszam = :id AND admin = :ceg_id";
         $stmt = $this->db->prepare($query);
         $stmt->bindParam(':id', $id);
+        $stmt->bindValue(':ceg_id', $ceg_id);
         $stmt->execute();
         $file = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$file) {
-            return ['success' => false, 'message' => 'Nincs ilyen fájl'];
+            return ['success' => false, 'message' => 'Nincs ilyen fájl, vagy nem a te céged fájlja'];
         }
 
         if (!file_exists($file['hely'])) {
@@ -118,34 +131,59 @@ class FilesInterface {
         return $result;
     }
 
+    // Csak ezek a kiterjesztések tölthetők fel — enélkül egy `.php`/`.phtml`
+    // stb. fájl feltölthető és (mivel a `backend/files/` a production
+    // webrootön belül van, ld. CLAUDE.md) közvetlenül lefuttatható lenne a
+    // webszerveren (RCE). A whitelist a projektben ténylegesen használt
+    // dokumentum-/kép-/táblázat-típusokra szorítkozik.
+    const MEGENGEDETT_KITERJESZTESEK = [
+        'pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif',
+        'doc', 'docx', 'xls', 'xlsx', 'csv', 'txt',
+    ];
+
+    // A kliens-oldali 10MB-os ellenőrzés (ld. CardTableForFajlok.js)
+    // trivially megkerülhető közvetlen API-hívással — ez a szerver-oldali,
+    // a TÉNYLEGESEN dekódolt bájtokon mért kényszerítő korlát.
+    const MAX_FAJLMERET_BYTE = 10 * 1024 * 1024;
+
     function fileUpload($admin, $tabla, $rowid, $base64File, $name, $size, $kategoria = null) {
+        $kiterjesztes = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+        if (!in_array($kiterjesztes, self::MEGENGEDETT_KITERJESZTESEK, true)) {
+            return ['success' => false, 'message' => 'Ez a fájltípus nem engedélyezett.'];
+        }
+
+        $fileData = base64_decode($base64File, true);
+        if ($fileData === false) {
+            return ['success' => false, 'message' => 'Hiba a fájl visszakódolásánál'];
+        }
+        if (strlen($fileData) > self::MAX_FAJLMERET_BYTE) {
+            return ['success' => false, 'message' => 'A fájl mérete túl nagy (maximum 10MB).'];
+        }
+
         $baseDirectory =  __DIR__ . '/../files';
         if (!is_dir($baseDirectory)) {
             if (!mkdir($baseDirectory, 0755, true)) {
                 return ['success' => false, 'message' => 'Hiba a mappa létrehozásánál'];
             }
         }
-        $safeName = preg_replace('/[^a-zA-Z0-9_\.-]/', '_', $name);
-        $filePath = rtrim($baseDirectory, '/') . '/' . $safeName;
 
-        $fileData = base64_decode($base64File, true);
-        if ($fileData === false) {
-            return ['success' => false, 'message' => 'Hiba a fájl visszakódolásánál'];
-            return false;
-        }
+        // Az eredeti fájlnevet csak megjelenítésre (DB `filename` oszlop)
+        // tároljuk — a lemezen a fájl neve egy generált, ütközésmentes
+        // azonosító, hogy két cég azonos nevű feltöltése (pl. "szamla.pdf")
+        // sose írja felül egymást.
+        $egyediNev = bin2hex(random_bytes(16)) . '.' . $kiterjesztes;
+        $filePath = rtrim($baseDirectory, '/') . '/' . $egyediNev;
+        $displayName = preg_replace('/[^a-zA-Z0-9_\.-]/', '_', $name);
 
         if (file_put_contents($filePath, $fileData) !== false) {
-            if ($this->fileToDatabase($admin, $tabla, $rowid, $filePath, $safeName, $size, $kategoria)) {
+            if ($this->fileToDatabase($admin, $tabla, $rowid, $filePath, $displayName, strlen($fileData), $kategoria)) {
                 return ['success' => true, 'message' => 'A fájl mentve', 'id' => $this->db->lastInsertId()];
-            } else {
-                return ['success' => false, 'message' => 'Hiba a fájl mentésénél az adatbázisba'];
-                unlink($filePath);
             }
-        } else {
-            return ['success' => false, 'message' => 'Hiba a fájl mentésénél a mappába'];
+            unlink($filePath);
+            return ['success' => false, 'message' => 'Hiba a fájl mentésénél az adatbázisba'];
         }
 
-        return false;
+        return ['success' => false, 'message' => 'Hiba a fájl mentésénél a mappába'];
     }
 }
 

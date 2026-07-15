@@ -33,6 +33,20 @@ export default function ElozmenyekModal({
       toast.error("Ehhez a járműhöz nincs GPSmart azonosítója — nem kérdezhető le az útvonala.");
       return;
     }
+    // Egy nagyobb (kb. 1 hónapos) tartomány feldolgozása a szerveren
+    // túllépheti a PHP végrehajtási időkorlátját (ld. gpsmartInterface.php
+    // komment) — a backend max. 7 napos tartományt fogad el, ezt itt is
+    // ellenőrizzük, hogy a felhasználó gyors, egyértelmű visszajelzést
+    // kapjon egy szerver-kör nélkül is.
+    const napok = (new Date(datumIg) - new Date(datumTol)) / 86400000;
+    if (napok < 0) {
+      toast.error('A "dátumig" nem lehet korábbi, mint a "dátumtól".');
+      return;
+    }
+    if (napok > 7) {
+      toast.error("Legfeljebb 7 napos tartomány kérdezhető le egyszerre.");
+      return;
+    }
     setLoading(true);
     try {
       const result = await fetchAction("gpsmartUtvonal", {

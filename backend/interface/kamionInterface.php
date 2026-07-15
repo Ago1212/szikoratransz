@@ -43,6 +43,7 @@ class KamionInterface {
 
             if ($page !== null) {
                 [$kamionok, $total, $page, $pageSize] = PaginationHelper::fetchPage($this->db, $query, $params, $page, $pageSize);
+                $this->potkocsiRendszamFeloldas($kamionok, $id);
                 return ['success' => true, 'kamionok' => $kamionok, 'total' => $total, 'page' => $page, 'pageSize' => $pageSize];
             }
 
@@ -52,10 +53,31 @@ class KamionInterface {
             }
             $stmt->execute();
             $kamionok = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $this->potkocsiRendszamFeloldas($kamionok, $id);
 
             return ['success' => true, 'kamionok' => $kamionok];
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    // A `kamion.potkocsi` a `potkocsi` tábla ID-jét tárolja (nem a
+    // rendszámot) — a lista-nézet ezt korábban nyers számként jelenítette
+    // meg (ld. CardTableForKamionok.js "Pótkocsi" oszlop), itt oldjuk fel
+    // a valódi rendszámra egy `potkocsi_rendszam` mezőben.
+    private function potkocsiRendszamFeloldas(array &$kamionok, $ceg_id) {
+        if (empty($kamionok)) {
+            return;
+        }
+        $stmt = $this->db->prepare("SELECT id, rendszam FROM potkocsi WHERE admin = :ceg_id AND torolt <> 'I'");
+        $stmt->bindValue(':ceg_id', $ceg_id);
+        $stmt->execute();
+        $map = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $p) {
+            $map[$p['id']] = $p['rendszam'];
+        }
+        foreach ($kamionok as &$k) {
+            $k['potkocsi_rendszam'] = $k['potkocsi'] ? ($map[$k['potkocsi']] ?? null) : null;
         }
     }
 

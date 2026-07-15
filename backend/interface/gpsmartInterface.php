@@ -164,8 +164,25 @@ class GpsmartInterface {
     // a `car_id` csak az adott cég saját GPSmart-fiókjának névterében
     // értelmezhető, amit itt a cég saját (ceg_id szerinti) beállítása
     // választ ki, tehát más cég nem tudna vele idegen adatot lekérni.
+    // A GPSmart HTML-válaszát soronként dolgozzuk fel DOMDocument-tel — élő
+    // teszttel megerősítve: egy kb. 1 hónapos tartomány feldolgozása
+    // önmagában (nem a hálózati hívás) túllépheti a PHP alapértelmezett
+    // 30 másodperces `max_execution_time`-ját, ami egy EL NEM KAPHATÓ
+    // PHP Fatal Error-t (nem Exception!) okoz — a hívó nyers 500-as hibát
+    // kap, a `try/catch` ezt nem tudja szépen kezelni. Ezért a tartományt
+    // itt, a hívás előtt korlátozzuk.
+    const MAX_UTVONAL_NAPOK = 7;
+
     public function lekerdezUtvonal($ceg_id, $carId, $datumTol, $datumIg) {
         try {
+            $napok = (strtotime($datumIg) - strtotime($datumTol)) / 86400;
+            if ($napok < 0) {
+                return ['success' => false, 'message' => 'A "dátumig" nem lehet korábbi, mint a "dátumtól".'];
+            }
+            if ($napok > self::MAX_UTVONAL_NAPOK) {
+                return ['success' => false, 'message' => 'Legfeljebb ' . self::MAX_UTVONAL_NAPOK . ' napos tartomány kérdezhető le egyszerre — szűkítsd a dátumtartományt.'];
+            }
+
             $stmt = $this->db->prepare('SELECT felhasznalonev, jelszo_titkositva, userid FROM gpsmart_beallitasok WHERE admin = :admin');
             $stmt->bindValue(':admin', $ceg_id);
             $stmt->execute();
