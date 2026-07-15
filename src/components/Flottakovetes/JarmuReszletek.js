@@ -12,6 +12,7 @@ import {
   PiGasPumpLight,
   PiRoadHorizonLight,
   PiXLight,
+  PiUserLight,
 } from "react-icons/pi";
 import { GradientCardHeader } from "components/UI/PageCard.js";
 import StatusBadge from "components/UI/StatusBadge.js";
@@ -72,6 +73,14 @@ export default function JarmuReszletek({
           <StatusBadge tone={jarmu._allapot.tone}>{jarmu._allapot.label}</StatusBadge>
         </div>
       </div>
+
+      {jarmu.kamion_id && (
+        <Mezo
+          icon={PiUserLight}
+          label="Jelenlegi sofőr"
+          value={jarmu.sofor_nev || "Nincs hozzárendelve"}
+        />
+      )}
 
       <div className="grid grid-cols-2 gap-2.5">
         <Mezo icon={PiGaugeLight} label="Sebesség" value={jarmu.sebesseg || "—"} />

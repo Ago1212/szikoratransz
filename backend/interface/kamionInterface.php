@@ -89,7 +89,7 @@ class KamionInterface {
 
             // Paraméterek kötése
             $stmt->bindParam(':rendszam', $data['rendszam'], PDO::PARAM_STR);
-            $stmt->bindParam(':potkocsi', $data['potkocsi'], PDO::PARAM_STR);
+            $stmt->bindValue(':potkocsi', empty($data['potkocsi']) ? null : $data['potkocsi']);
             $stmt->bindParam(':tipus', $data['tipus'], PDO::PARAM_STR);
             $stmt->bindParam(':meret', $data['meret'], PDO::PARAM_STR);
             $stmt->bindValue(':allapot', empty($data['allapot']) ? 'szabad' : $data['allapot']);
@@ -133,7 +133,7 @@ class KamionInterface {
             // Paraméterek kötése
             $stmt->bindParam(':admin', $data['admin'], PDO::PARAM_STR);
             $stmt->bindParam(':rendszam', $data['rendszam'], PDO::PARAM_STR);
-            $stmt->bindParam(':potkocsi', $data['potkocsi'], PDO::PARAM_STR);
+            $stmt->bindValue(':potkocsi', empty($data['potkocsi']) ? null : $data['potkocsi']);
             $stmt->bindParam(':tipus', $data['tipus'], PDO::PARAM_STR);
             $stmt->bindParam(':meret', $data['meret'], PDO::PARAM_STR);
             $stmt->bindValue(':allapot', empty($data['allapot']) ? 'szabad' : $data['allapot']);

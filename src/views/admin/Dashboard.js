@@ -65,6 +65,56 @@ function NettoCard({ className, cashflow, onClick }) {
   );
 }
 
+// Item 3: "várható eredmény" a következő hónapra — ld. koltsegInterface.php
+// getVarhatoEredmeny komment a becslés logikájáért (6 havi bevétel-átlag
+// mínusz fix költségek). A bérek csak adminnak számítanak bele a
+// fixköltségekbe (a backend nem-admin hívónak már eleve nem küldi vissza az
+// `aktivBer` mezőt) — a felirat ezért attól függően más ("biztosítás" vagy
+// "biztosítás + bérek"), hogy a kérelmező admin-e.
+function VarhatoCard({ className, adat, onClick, isAdmin }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`group rounded-3xl bg-white p-5 text-left shadow-soft ring-1 ring-ink-100 transition-all duration-300 ease-fluid hover:-translate-y-0.5 hover:shadow-soft-lg ${className}`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
+            Várható eredmény (jövő hónap, becslés)
+          </p>
+          <p
+            className={`mt-1 font-display text-3xl font-bold tabular-nums ${
+              adat.varhatoEredmeny >= 0 ? "text-emerald-600" : "text-red-600"
+            }`}
+          >
+            {formatHuf(adat.varhatoEredmeny)}
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm">
+            <span className="flex items-center gap-1.5 text-ink-500">
+              <PiTrendUpLight className="h-4 w-4 text-emerald-600" />
+              Bevétel (6 havi átlag){" "}
+              <span className="font-semibold tabular-nums text-ink-800">
+                {formatHuf(adat.atlagBevetel)}
+              </span>
+            </span>
+            <span className="flex items-center gap-1.5 text-ink-500">
+              <PiCoinsLight className="h-4 w-4 text-red-600" />
+              Fix költségek ({isAdmin ? "biztosítás + bérek" : "biztosítás"}){" "}
+              <span className="font-semibold tabular-nums text-ink-800">
+                {formatHuf(adat.fixKoltsegek)}
+              </span>
+            </span>
+          </div>
+        </div>
+        <span className="hidden flex-shrink-0 items-center gap-1 text-xs font-semibold text-brand-600 group-hover:underline sm:flex">
+          Pénzforgalom <PiArrowRightLight className="h-3.5 w-3.5" />
+        </span>
+      </div>
+    </button>
+  );
+}
+
 export default function Dashboard() {
   const history = useHistory();
   const [stats, setStats] = useState({
@@ -84,6 +134,16 @@ export default function Dashboard() {
   // ide került át, mert ez a valódi "hogy állunk" kezdőoldal.
   const [cashflow, setCashflow] = useState({ bevetel: 0, kiadas: 0, netto: 0 });
   const [cashflowLoading, setCashflowLoading] = useState(true);
+
+  // Várható eredmény (Item 3) — ld. koltsegInterface.php getVarhatoEredmeny.
+  const [varhato, setVarhato] = useState({
+    atlagBevetel: 0,
+    fixKoltsegek: 0,
+    varhatoEredmeny: 0,
+  });
+  const [varhatoLoading, setVarhatoLoading] = useState(true);
+  const isOwnerAdmin =
+    JSON.parse(sessionStorage.getItem("user") || "null")?.szerepkor === "admin";
 
   useEffect(() => {
     const fetchData = async () => {
@@ -130,6 +190,23 @@ export default function Dashboard() {
         });
       }
       setCashflowLoading(false);
+    });
+  }, []);
+
+  useEffect(() => {
+    const user = JSON.parse(sessionStorage.getItem("user"));
+    fetchAction("getVarhatoEredmeny", {
+      ceg_id: user.ceg_id,
+      kerelmezo_id: user.id,
+    }).then((result) => {
+      if (result?.success) {
+        setVarhato({
+          atlagBevetel: result.atlagBevetel,
+          fixKoltsegek: result.fixKoltsegek,
+          varhatoEredmeny: result.varhatoEredmeny,
+        });
+      }
+      setVarhatoLoading(false);
     });
   }, []);
 
@@ -216,38 +293,60 @@ export default function Dashboard() {
         />
       )}
 
-      {/* Asztalon (md+) a Nettó eredmény a 4 statisztika MELLETT, egy közös
-          sorban él (korábban egy külön, teljes szélességű sorban, a 4
-          kártya alatt) — így egy pillantásra összetartoznak, de a
-          cashflow-szám a legfontosabb infó itt, ezért nagyobb (flex-[3])
-          hányadot kap, mint a 4 statisztika együttes 2×2-es blokkja
-          (flex-[2]). `flex-wrap` + `min-w` a két blokkon: keskenyebb (pl.
-          tablet-szélességű, md-de-nem-lg) képernyőn a két blokk NEM
-          zsugorodik a CardStats-tartalmat összenyomó, egymásra csúszó
-          szélességre, hanem egymás alá esik (Nettó teljes szélességben
-          felül, a 4 statisztika alatta) — csak elég széles (kb. lg+)
-          képernyőn marad a két blokk egymás mellett. */}
+      {/* Asztalon (md+) a Nettó eredmény és a Várható eredmény EGYMÁS
+          MELLETT, egy közös sorban (a két "hogy állunk" kártya egyforma
+          súllyal, flex-1 mindkettőn) — a 4 statisztika ez alatt, saját,
+          teljes szélességű 4-oszlopos sorban. `flex-wrap` + `min-w` a két
+          eredmény-kártyán: keskenyebb (pl. tablet-szélességű, md-de-nem-lg)
+          képernyőn NEM zsugorodnak egymásra csúszó szélességre, hanem
+          egymás alá esnek — csak elég széles (kb. lg+) képernyőn marad a
+          két kártya egymás mellett. */}
       <div className="hidden flex-shrink-0 flex-wrap items-stretch gap-4 md:mb-4 md:flex">
         {!cashflowLoading && (
           <NettoCard
-            className="min-w-[320px] flex-[3]"
+            className="min-w-[320px] flex-1"
             cashflow={cashflow}
             onClick={() => navigateTo("/admin/koltsegek")}
           />
         )}
-
-        <div className="grid min-w-[320px] flex-[2] grid-cols-2 gap-3">
-          {cards.map((card) => (
-            <CardStats
-              key={card.title}
-              statSubtitle={card.title}
-              statTitle={card.value}
-              statIcon={card.icon}
-              onClick={() => navigateTo(card.path)}
-            />
-          ))}
-        </div>
+        {!varhatoLoading && (
+          <VarhatoCard
+            className="min-w-[320px] flex-1"
+            adat={varhato}
+            isAdmin={isOwnerAdmin}
+            onClick={() => navigateTo("/admin/koltsegek")}
+          />
+        )}
       </div>
+
+      {/* Statisztikák (md+) — a fenti két eredmény-kártya alatt, önálló,
+          teljes szélességű 4-oszlopos sorban (korábban a Nettó eredmény
+          mellett, egy 2×2-es blokkban élt — a Várható eredmény kártya
+          bevezetése után a sor túlzsúfolt lett volna hárommal, ezért ez a
+          blokk saját sort kapott). */}
+      <div className="hidden flex-shrink-0 grid-cols-4 gap-3 md:mb-4 md:grid">
+        {cards.map((card) => (
+          <CardStats
+            key={card.title}
+            statSubtitle={card.title}
+            statTitle={card.value}
+            statIcon={card.icon}
+            onClick={() => navigateTo(card.path)}
+          />
+        ))}
+      </div>
+
+      {/* Várható eredmény — mobilon önálló, teljes szélességű sor a Nettó
+          eredmény alatt (md+ nézetben már a fenti sorban, a Nettó eredmény
+          mellett jelenik meg, ld. fent). */}
+      {!varhatoLoading && (
+        <VarhatoCard
+          className="mb-4 flex-shrink-0 md:hidden"
+          adat={varhato}
+          isAdmin={isOwnerAdmin}
+          onClick={() => navigateTo("/admin/koltsegek")}
+        />
+      )}
 
       <div className="flex flex-col rounded-3xl border border-ink-100 bg-white shadow-soft md:min-h-[420px] md:flex-1 md:overflow-hidden">
         <div className="flex-shrink-0 border-b border-ink-100 px-4 py-3 md:px-6 md:py-4">

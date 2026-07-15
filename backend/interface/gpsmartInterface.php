@@ -130,9 +130,25 @@ class GpsmartInterface {
                 $kamionokRendszamSzerint[strtoupper(trim($kamion['rendszam']))] = $kamion['id'];
             }
 
+            // Ha a rendszám alapján sikerül azonosítani a saját kamionunkat,
+            // ahhoz a `user.kamion` mező alapján hozzárendeljük az aktuális
+            // sofőrt is — ez a "jelenlegi" hozzárendelés, nem egy adott
+            // napra visszamenőleg (a rendszer nincs napi bontásban vezetve,
+            // ki melyik kamionnal ment); ha egy sofőr aznap más kamiont
+            // vitt, ez nem tükrözi azt.
+            $soforStmt = $this->db->prepare('SELECT kamion, name FROM user WHERE admin = :admin AND torolt <> \'I\' AND kamion IS NOT NULL');
+            $soforStmt->bindValue(':admin', $ceg_id);
+            $soforStmt->execute();
+            $soforokKamionSzerint = [];
+            foreach ($soforStmt->fetchAll(PDO::FETCH_ASSOC) as $sofor) {
+                $soforokKamionSzerint[$sofor['kamion']] = $sofor['name'];
+            }
+
             foreach ($poziciok as &$pozicio) {
                 $kulcs = strtoupper(trim($pozicio['rendszam']));
-                $pozicio['kamion_id'] = $kamionokRendszamSzerint[$kulcs] ?? null;
+                $kamionId = $kamionokRendszamSzerint[$kulcs] ?? null;
+                $pozicio['kamion_id'] = $kamionId;
+                $pozicio['sofor_nev'] = $kamionId ? ($soforokKamionSzerint[$kamionId] ?? null) : null;
             }
 
             return ['success' => true, 'poziciok' => $poziciok];
@@ -170,6 +186,94 @@ class GpsmartInterface {
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
+    }
+
+    // Item 6: a Vezetési idő napi bejegyzéséhez a `vezetes_ora` mező
+    // becslése a GPSmart útvonal-adatból — csak a sofőr JELENLEGI
+    // (`user.kamion`) kamionjához tartozó GPS-adatot tudjuk lekérni, mert
+    // nincs a rendszerben napi bontású, visszamenőleges sofőr↔kamion
+    // hozzárendelés-history (ld. lekerdezPoziciok() fenti komment) — ezért
+    // ez a becslés csak akkor megbízható, ha a sofőr a kérdéses napon is
+    // ugyanazt a kamiont vezette, mint most. A frontend ezt egy explicit
+    // figyelmeztetéssel jelzi, és a visszaadott órát a felhasználó a
+    // mentés előtt még szabadon módosíthatja — ez sosem ment el automatikusan,
+    // csak előtölti a mezőt. Szándékosan csak a `vezetes_ora`-t becsüljük,
+    // a `pihenes_ora`-t sosem (GPS-ből nem vezethető le megbízhatóan, hogy
+    // a jármű állásideje közben a sofőr ténylegesen pihent-e).
+    public function getVezetesJavaslat($ceg_id, $sofor_id, $datum) {
+        try {
+            $soforStmt = $this->db->prepare("SELECT kamion FROM user WHERE id = :id AND admin = :ceg_id AND torolt <> 'I'");
+            $soforStmt->bindValue(':id', $sofor_id);
+            $soforStmt->bindValue(':ceg_id', $ceg_id);
+            $soforStmt->execute();
+            $sofor = $soforStmt->fetch(PDO::FETCH_ASSOC);
+            if (!$sofor || empty($sofor['kamion'])) {
+                return ['success' => false, 'message' => 'A sofőrhöz jelenleg nincs kamion rendelve.'];
+            }
+
+            $kamionStmt = $this->db->prepare("SELECT rendszam FROM kamion WHERE id = :id AND admin = :ceg_id AND torolt <> 'I'");
+            $kamionStmt->bindValue(':id', $sofor['kamion']);
+            $kamionStmt->bindValue(':ceg_id', $ceg_id);
+            $kamionStmt->execute();
+            $kamion = $kamionStmt->fetch(PDO::FETCH_ASSOC);
+            if (!$kamion) {
+                return ['success' => false, 'message' => 'A sofőrhöz rendelt kamion nem található.'];
+            }
+
+            $poziciok = $this->lekerdezPoziciok($ceg_id);
+            if (!$poziciok['success']) {
+                return $poziciok;
+            }
+
+            $carId = null;
+            $kulcs = strtoupper(trim($kamion['rendszam']));
+            foreach ($poziciok['poziciok'] as $p) {
+                if (strtoupper(trim($p['rendszam'])) === $kulcs) {
+                    $carId = $p['car_id'] ?? null;
+                    break;
+                }
+            }
+            if (!$carId) {
+                return ['success' => false, 'message' => 'A kamion (' . $kamion['rendszam'] . ') nem található a GPSmart flottakövetőben.'];
+            }
+
+            $utvonal = $this->lekerdezUtvonal($ceg_id, $carId, $datum, $datum);
+            if (!$utvonal['success']) {
+                return $utvonal;
+            }
+
+            $menetidoNyers = $utvonal['osszesito']['menetido'] ?? null;
+            $oraDecimal = $this->idoSzovegOraDecimalra($menetidoNyers);
+            if ($oraDecimal === null) {
+                return ['success' => false, 'message' => 'Ehhez a naphoz nem érhető el vezetési idő adat a GPSmart-tól (a jármű típusától függően nem minden útvonal-adat tartalmaz menetidő-összesítést).'];
+            }
+
+            return [
+                'success' => true,
+                'vezetes_ora' => $oraDecimal,
+                'menetido_nyers' => $menetidoNyers,
+                'rendszam' => $kamion['rendszam'],
+            ];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    // A GPSmart "menetidő" mezője "Ó:PP" (pl. "8:23") vagy "Ó:PP:MP" alakú
+    // szöveg — ld. Item 6 kutatás: élő teszttel megerősítve ez a tényleges
+    // formátum GPS-alapú járműveknél (CAN-busz integrációjú járműveknél a
+    // mező hiányzik, ld. fenti komment).
+    private function idoSzovegOraDecimalra($ido) {
+        if (empty($ido)) {
+            return null;
+        }
+        if (!preg_match('/^(\d+):(\d{2})(?::(\d{2}))?$/', trim($ido), $m)) {
+            return null;
+        }
+        $ora = (int) $m[1];
+        $perc = (int) $m[2];
+        $mp = isset($m[3]) ? (int) $m[3] : 0;
+        return round($ora + $perc / 60 + $mp / 3600, 2);
     }
 }
 

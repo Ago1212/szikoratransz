@@ -34,6 +34,7 @@ export default function CardSoforok({ initSofor }) {
     adr_lejarat: sofor.adr_lejarat || "",
     kamion: sofor.kamion || "",
     aktiv_potkocsi: sofor.aktiv_potkocsi || "",
+    ber: sofor.ber ?? "",
   });
 
   const handleSave = async () => {

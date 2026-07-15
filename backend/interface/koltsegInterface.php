@@ -76,17 +76,22 @@ class KoltsegInterface {
     // ott mindig `koltseg`, itt `osszeg`, és itt kell `irany`-t is
     // szűrni, ezért külön kis lekérdezés, nem a meglévő helper.
     // `$kategoriaSzuro`: null = minden (kategóriától függetlenül, ma nem
-    // használt kívülről), 'egyeb' = csak a kategória NÉLKÜLI sorok (ez a
-    // hagyományos "Egyéb" kiadás/bevétel-kártya alapja), 'uzemanyag' =
-    // csak az így megjelölt sorok (ezek a tankolasok.osszeg mellé, az
-    // Üzemanyag-összesítőbe folynak be, ld. getKoltsegOsszesito).
+    // használt kívülről), 'egyeb' = csak a kategória NÉLKÜLI sorok (a
+    // "Kiadás" — korábban "Egyéb" — kártya alapja), 'uzemanyag'/
+    // 'karbantartas'/'biztositas'/'ber' = az így megjelölt sorok (ezek a
+    // saját táblájukból/on-the-fly számolt forrás MELLÉ, ugyanabba az
+    // összesítőbe folynak be, ld. getKoltsegOsszesito) — ezt a 4 kézzel is
+    // választható kategóriát ugyanaz a KATEGORIAK lista sorolja fel, amit
+    // a normalizKategoria() is használ.
+    const KATEGORIAK = ['uzemanyag', 'karbantartas', 'biztositas', 'ber'];
+
     private function kategoriaWhere($kategoriaSzuro, &$params) {
-        if ($kategoriaSzuro === 'uzemanyag') {
-            $params[':kategoria'] = 'uzemanyag';
-            return " AND kategoria = :kategoria";
-        }
         if ($kategoriaSzuro === 'egyeb') {
             return " AND kategoria IS NULL";
+        }
+        if (in_array($kategoriaSzuro, self::KATEGORIAK, true)) {
+            $params[':kategoria'] = $kategoriaSzuro;
+            return " AND kategoria = :kategoria";
         }
         return "";
     }
@@ -302,7 +307,64 @@ class KoltsegInterface {
         return $tetelek;
     }
 
-    public function getKoltsegOsszesito($ceg_id, $datumTol = null, $datumIg = null) {
+    // Havi bérek — nincs saját "bérfizetés" tábla, a sofőr (`user.ber`) és
+    // a csapattagok (`admin.ber`) mezőjéből generálódik on-the-fly, egy
+    // tétel/hónap/ember, ugyanúgy, mint a biztosítási díjak. Csak a MÁR
+    // eltelt hónapokra (a jövőbeli hónap még nem valós kiadás — ugyanaz az
+    // elv, mint elapsedPeriodDatums()-nál). Dátumszűrés nélkül (üres
+    // datumTol/datumIg) szándékosan üres listát ad — enélkül egy
+    // "mindenkori" lekérdezés a fiók fennállása óta minden hónapra
+    // generálna bér-tételt, ami félrevezető lenne.
+    private function getBerKiadasok($ceg_id, $datumTol, $datumIg) {
+        if (empty($datumTol) || empty($datumIg)) {
+            return [];
+        }
+
+        $berek = [];
+        $soforStmt = $this->db->prepare("SELECT ber FROM user WHERE admin = :ceg_id AND torolt <> 'I' AND ber IS NOT NULL AND ber > 0");
+        $soforStmt->bindValue(':ceg_id', $ceg_id);
+        $soforStmt->execute();
+        foreach ($soforStmt->fetchAll(PDO::FETCH_COLUMN) as $ber) {
+            $berek[] = (float) $ber;
+        }
+        $csapatStmt = $this->db->prepare("SELECT ber FROM admin WHERE (id = :ceg_id OR tulajdonos_admin_id = :ceg_id2) AND torolt <> 'I' AND ber IS NOT NULL AND ber > 0");
+        $csapatStmt->bindValue(':ceg_id', $ceg_id);
+        $csapatStmt->bindValue(':ceg_id2', $ceg_id);
+        $csapatStmt->execute();
+        foreach ($csapatStmt->fetchAll(PDO::FETCH_COLUMN) as $ber) {
+            $berek[] = (float) $ber;
+        }
+        if (empty($berek)) {
+            return [];
+        }
+
+        $folyoHonap = new DateTime('first day of this month');
+        $honap = new DateTime(date('Y-m-01', strtotime($datumTol)));
+        $veg = new DateTime(date('Y-m-01', strtotime($datumIg)));
+        if ($veg > $folyoHonap) {
+            $veg = $folyoHonap;
+        }
+
+        $tetelek = [];
+        while ($honap <= $veg) {
+            $honapKulcs = $honap->format('Y-m');
+            foreach ($berek as $ber) {
+                $tetelek[] = ['honap' => $honapKulcs, 'osszeg' => $ber];
+            }
+            $honap->modify('+1 month');
+        }
+        return $tetelek;
+    }
+
+    // `$isAdmin`: a bér-kategória konkrét összege csak admin szerepkörnek
+    // jár (ld. sql/24.sql) — nem-admin kérelmezőnél a `ber` mezőket
+    // NULLÁZZUK a válaszban (a chart/chipek egyszerűen nem mutatnak
+    // "Fizetés" oszlopot/összeget neki), DE a `kiadasOsszesen`/`netto`
+    // TOVÁBBRA IS a valós (bért is tartalmazó) összeggel számol — a teljes
+    // cégszintű pénzügyi képet (mennyi jött be, mennyi ment el összesen)
+    // nem akarjuk hamisítani egy csapattagnak, csak a bér-specifikus
+    // RÉSZLETEZÉST rejtjük el előle.
+    public function getKoltsegOsszesito($ceg_id, $datumTol = null, $datumIg = null, $isAdmin = false) {
         try {
             // --- Havi bontás (grafikonhoz) ---
             $karbHavonta = $this->havonta('kamion_karbantartars', 'datum', $datumTol, $datumIg, $ceg_id);
@@ -330,17 +392,37 @@ class KoltsegInterface {
             $egyebBevetelHavonta = $this->egyebHavonta('bevetel', $datumTol, $datumIg, $ceg_id);
             $fuvarBevetelHavonta = $this->fuvarBevetelHavonta($datumTol, $datumIg, $ceg_id);
 
-            // Az 'uzemanyag' kategóriával megjelölt kiadás-tételek (pl. NAV-ból
-            // importált MOL-számla) a tankolasok.osszeg mellé, ugyanabba az
-            // Üzemanyag-összesítőbe folynak be — nem az Egyébbe.
+            // A 4 kézzel is választható kategória (Üzemanyag/Karbantartás/
+            // Biztosítás/Fizetés) — az így megjelölt kézi/NAV-importált
+            // egyeb_koltsegek tételek a saját táblájukból számolt/on-the-fly
+            // összeg MELLÉ, ugyanabba az összesítőbe folynak be, nem a
+            // kategória nélküli "Kiadás"-ba.
             foreach ($this->egyebHavonta('kiado', $datumTol, $datumIg, $ceg_id, 'uzemanyag') as $honap => $osszeg) {
                 $uzemanyagHavonta[$honap] = ($uzemanyagHavonta[$honap] ?? 0) + $osszeg;
+            }
+            foreach ($this->egyebHavonta('kiado', $datumTol, $datumIg, $ceg_id, 'karbantartas') as $honap => $osszeg) {
+                $karbHavonta[$honap] = ($karbHavonta[$honap] ?? 0) + $osszeg;
             }
 
             $biztositasTetelek = $this->getBiztositasKiadasok($ceg_id, $datumTol, $datumIg);
             $biztositasHavonta = [];
             foreach ($biztositasTetelek as $t) {
                 $biztositasHavonta[$t['honap']] = ($biztositasHavonta[$t['honap']] ?? 0) + $t['osszeg'];
+            }
+            foreach ($this->egyebHavonta('kiado', $datumTol, $datumIg, $ceg_id, 'biztositas') as $honap => $osszeg) {
+                $biztositasHavonta[$honap] = ($biztositasHavonta[$honap] ?? 0) + $osszeg;
+            }
+
+            // Bérek — automatikusan, a sofőrök/csapattagok havi bér mezőjéből
+            // (ld. getBerKiadasok), a kézzel "Fizetés" kategóriával jelölt
+            // tételekkel (pl. egyszeri bónusz) kiegészítve.
+            $berTetelek = $this->getBerKiadasok($ceg_id, $datumTol, $datumIg);
+            $berHavonta = [];
+            foreach ($berTetelek as $t) {
+                $berHavonta[$t['honap']] = ($berHavonta[$t['honap']] ?? 0) + $t['osszeg'];
+            }
+            foreach ($this->egyebHavonta('kiado', $datumTol, $datumIg, $ceg_id, 'ber') as $honap => $osszeg) {
+                $berHavonta[$honap] = ($berHavonta[$honap] ?? 0) + $osszeg;
             }
 
             $bevetelHavonta = $fuvarBevetelHavonta;
@@ -352,6 +434,7 @@ class KoltsegInterface {
                 array_keys($karbHavonta),
                 array_keys($uzemanyagHavonta),
                 array_keys($biztositasHavonta),
+                array_keys($berHavonta),
                 array_keys($egyebKiadasHavonta),
                 array_keys($bevetelHavonta)
             ));
@@ -361,15 +444,17 @@ class KoltsegInterface {
                 $karbantartas = $karbHavonta[$honap] ?? 0;
                 $uzemanyag = $uzemanyagHavonta[$honap] ?? 0;
                 $biztositas = $biztositasHavonta[$honap] ?? 0;
+                $ber = $berHavonta[$honap] ?? 0;
                 $egyeb = $egyebKiadasHavonta[$honap] ?? 0;
                 $bevetel = $bevetelHavonta[$honap] ?? 0;
-                $kiadasOsszesen = $karbantartas + $uzemanyag + $biztositas + $egyeb;
+                $kiadasOsszesen = $karbantartas + $uzemanyag + $biztositas + $ber + $egyeb;
                 $havi[] = [
                     'honap' => $honap,
                     'bevetel' => $bevetel,
                     'karbantartas' => $karbantartas,
                     'uzemanyag' => $uzemanyag,
                     'biztositas' => $biztositas,
+                    'ber' => $ber,
                     'egyeb' => $egyeb,
                     'kiadasOsszesen' => $kiadasOsszesen,
                     'netto' => $bevetel - $kiadasOsszesen,
@@ -401,14 +486,21 @@ class KoltsegInterface {
             $egyebBevetelPotkocsinkent = $this->egyebJarmuvenkent('bevetel', 'potkocsi_id', $datumTol, $datumIg, $ceg_id);
             $fuvarBevetelKamiononkent = $this->fuvarBevetelJarmuvenkent($datumTol, $datumIg, $ceg_id);
 
-            // Az 'uzemanyag' kategóriájú, jármühöz kötött kiadás-tételek a
-            // tankolasok jármű szerinti bontása mellé folynak be — a
-            // pótkocsi-oldali térkép új (a tankolasok táblának nincs
-            // potkocsi_id oszlopa, eddig mindig 0 volt itt).
+            // Az 'uzemanyag'/'karbantartas'/'biztositas' kategóriájú, jármühöz
+            // kötött kiadás-tételek a saját forrásuk jármű szerinti bontása
+            // mellé folynak be — enélkül a jármű-táblázat sorainak összege
+            // nem egyezne a havi grafikon összegével egy ilyen kézi tételnél.
             foreach ($this->egyebJarmuvenkent('kiado', 'kamion_id', $datumTol, $datumIg, $ceg_id, 'uzemanyag') as $id => $osszeg) {
                 $uzemanyagKamiononkent[$id] = ($uzemanyagKamiononkent[$id] ?? 0) + $osszeg;
             }
             $uzemanyagPotkocsinkent = $this->egyebJarmuvenkent('kiado', 'potkocsi_id', $datumTol, $datumIg, $ceg_id, 'uzemanyag');
+
+            foreach ($this->egyebJarmuvenkent('kiado', 'kamion_id', $datumTol, $datumIg, $ceg_id, 'karbantartas') as $id => $osszeg) {
+                $karbKamiononkent[$id] = ($karbKamiononkent[$id] ?? 0) + $osszeg;
+            }
+            foreach ($this->egyebJarmuvenkent('kiado', 'potkocsi_id', $datumTol, $datumIg, $ceg_id, 'karbantartas') as $id => $osszeg) {
+                $karbPotkocsinkent[$id] = ($karbPotkocsinkent[$id] ?? 0) + $osszeg;
+            }
 
             $biztositasKamiononkent = [];
             $biztositasPotkocsinkent = [];
@@ -418,6 +510,12 @@ class KoltsegInterface {
                 } else {
                     $biztositasPotkocsinkent[$t['jarmu_id']] = ($biztositasPotkocsinkent[$t['jarmu_id']] ?? 0) + $t['osszeg'];
                 }
+            }
+            foreach ($this->egyebJarmuvenkent('kiado', 'kamion_id', $datumTol, $datumIg, $ceg_id, 'biztositas') as $id => $osszeg) {
+                $biztositasKamiononkent[$id] = ($biztositasKamiononkent[$id] ?? 0) + $osszeg;
+            }
+            foreach ($this->egyebJarmuvenkent('kiado', 'potkocsi_id', $datumTol, $datumIg, $ceg_id, 'biztositas') as $id => $osszeg) {
+                $biztositasPotkocsinkent[$id] = ($biztositasPotkocsinkent[$id] ?? 0) + $osszeg;
             }
 
             $bevetelKamiononkent = $fuvarBevetelKamiononkent;
@@ -500,8 +598,20 @@ class KoltsegInterface {
             $osszesenKarbantartas = array_sum($karbHavonta);
             $osszesenUzemanyag = array_sum($uzemanyagHavonta);
             $osszesenBiztositas = array_sum($biztositasHavonta);
+            $osszesenBer = array_sum($berHavonta);
             $osszesenEgyeb = array_sum($egyebKiadasHavonta);
-            $osszesenKiadas = $osszesenKarbantartas + $osszesenUzemanyag + $osszesenBiztositas + $osszesenEgyeb;
+            $osszesenKiadas = $osszesenKarbantartas + $osszesenUzemanyag + $osszesenBiztositas + $osszesenBer + $osszesenEgyeb;
+
+            // Nem-admin kérelmezőnek a bér-RÉSZLETEZÉST rejtjük (ld. fenti
+            // komment) — a havi soronkénti `ber` mezőt is nullázzuk, hogy a
+            // grafikon se rajzoljon ki egy "Fizetés" oszlopot neki.
+            if (!$isAdmin) {
+                foreach ($havi as &$honapSor) {
+                    $honapSor['ber'] = 0;
+                }
+                unset($honapSor);
+                $osszesenBer = 0;
+            }
 
             return [
                 'success' => true,
@@ -514,11 +624,92 @@ class KoltsegInterface {
                     'karbantartas' => $osszesenKarbantartas,
                     'uzemanyag' => $osszesenUzemanyag,
                     'biztositas' => $osszesenBiztositas,
+                    'ber' => $osszesenBer,
                     'egyeb' => $osszesenEgyeb,
                     'kiadas' => $osszesenKiadas,
                     'netto' => $osszesenBevetel - $osszesenKiadas,
                 ],
             ];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    // A havi bérezés (user.ber + admin.ber) ÉLŐ, aktuális összege — nem az
+    // `egyeb_koltsegek`/`getBerKiadasok()` havi-bontású, múltra vonatkozó
+    // generált tételeiből, hanem közvetlenül a jelenlegi bér-mezőkből. A
+    // "várható eredmény" (Item 3) ezt használja fixköltségként, mert a
+    // bérezés valódi FIX (nem átlagolandó) havi kiadás — a múltbeli
+    // átlagolás itt épp azt torzítaná el, ha valakinek nemrég változott a
+    // bére, vagy új munkatársat vettek fel.
+    private function getAktivBerOsszeg($ceg_id) {
+        $soforStmt = $this->db->prepare("SELECT COALESCE(SUM(ber), 0) AS osszeg FROM user WHERE admin = :ceg_id AND torolt <> 'I' AND ber IS NOT NULL");
+        $soforStmt->bindValue(':ceg_id', $ceg_id);
+        $soforStmt->execute();
+        $soforBer = (float) $soforStmt->fetch(PDO::FETCH_ASSOC)['osszeg'];
+
+        $csapatStmt = $this->db->prepare("SELECT COALESCE(SUM(ber), 0) AS osszeg FROM admin WHERE (id = :ceg_id OR tulajdonos_admin_id = :ceg_id2) AND torolt <> 'I' AND ber IS NOT NULL");
+        $csapatStmt->bindValue(':ceg_id', $ceg_id);
+        $csapatStmt->bindValue(':ceg_id2', $ceg_id);
+        $csapatStmt->execute();
+        $csapatBer = (float) $csapatStmt->fetch(PDO::FETCH_ASSOC)['osszeg'];
+
+        return $soforBer + $csapatBer;
+    }
+
+    // Item 3: "várható eredmény" a következő hónapra — a bevételt az elmúlt
+    // 6 LEZÁRT (nem a folyó, részleges) hónap átlagából becsüljük, mert a
+    // bevétel hónapról hónapra ingadozik (nincs jobb előrejelzési forrás,
+    // mint a közelmúlt átlaga). A fix költségeket (biztosítás + bérek)
+    // viszont NEM átlagoljuk ugyanígy — a bérek élő, aktuális összegét
+    // használjuk (ld. getAktivBerOsszeg fenti komment), a biztosítást pedig
+    // az átlagra hagyjuk, mert az egyes járművek befizetései esedékesség
+    // szerint egyenetlenül oszlanak el hónapok között (ld.
+    // calculateNextPaymentDate), a 6 havi átlag ezt simítja ki leginkább
+    // torzításmentesen anélkül, hogy jármű-szintű esedékesség-számítást
+    // kellene újraírni ide.
+    //
+    // `$isAdmin`: a bérek (mint fixköltség-elem) csak adminnak látszanak és
+    // számítanak bele a kiírt "várható eredménybe" — nem-admin kérelmezőnek
+    // a bér-sort és -összeget teljesen kihagyjuk a válaszból (nem csak
+    // nullázzuk, ld. getKoltsegOsszesito komment), mert egy kombinált
+    // "fix költségek" szám a látható biztosítás-chippel együtt könnyen
+    // visszafejthető lenne bér-összeggé — ezt itt, a forrásnál kerüljük el.
+    public function getVarhatoEredmeny($ceg_id, $isAdmin = false) {
+        try {
+            $honapEleje = new DateTime('first day of this month');
+            $datumIg = (clone $honapEleje)->modify('-1 day');
+            $datumTol = (clone $honapEleje)->modify('-6 months');
+
+            $osszesito = $this->getKoltsegOsszesito($ceg_id, $datumTol->format('Y-m-d'), $datumIg->format('Y-m-d'), true);
+            if (!$osszesito['success']) {
+                return $osszesito;
+            }
+
+            $honapokSzama = max(count($osszesito['havi']), 1);
+            $atlagBevetel = round($osszesito['osszesen']['bevetel'] / $honapokSzama, 2);
+            $atlagBiztositas = round($osszesito['osszesen']['biztositas'] / $honapokSzama, 2);
+
+            $result = [
+                'success' => true,
+                'honapokSzama' => $honapokSzama,
+                'datumTol' => $datumTol->format('Y-m-d'),
+                'datumIg' => $datumIg->format('Y-m-d'),
+                'atlagBevetel' => $atlagBevetel,
+                'atlagBiztositas' => $atlagBiztositas,
+            ];
+
+            if ($isAdmin) {
+                $aktivBer = $this->getAktivBerOsszeg($ceg_id);
+                $result['aktivBer'] = $aktivBer;
+                $result['fixKoltsegek'] = round($atlagBiztositas + $aktivBer, 2);
+                $result['varhatoEredmeny'] = round($atlagBevetel - $atlagBiztositas - $aktivBer, 2);
+            } else {
+                $result['fixKoltsegek'] = $atlagBiztositas;
+                $result['varhatoEredmeny'] = round($atlagBevetel - $atlagBiztositas, 2);
+            }
+
+            return $result;
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
@@ -530,15 +721,21 @@ class KoltsegInterface {
     // párosítási kulcsa a számlaszám lenne) — ma még nincs tényleges
     // NAV-lekérdezés, csak a mező létezik, kézzel is kitölthető.
 
-    // Az egyetlen ma felismert kategória-érték az 'uzemanyag' — ezzel
-    // jelölt kiadás-tételek a Pénzforgalom Üzemanyag-összesítőjébe folynak
-    // be (ld. getKoltsegOsszesito), nem az Egyébbe. Bármi más értéket a
-    // felület küldene, csendben null-ra esik vissza (= "Egyéb").
-    private function normalizKategoria($kategoria) {
-        return $kategoria === 'uzemanyag' ? 'uzemanyag' : null;
+    // A négy felismert kategória-érték: 'uzemanyag'/'karbantartas'/
+    // 'biztositas'/'ber' — ezzel jelölt kiadás-tételek a Pénzforgalom
+    // megfelelő összesítőjébe folynak be (ld. getKoltsegOsszesito), nem a
+    // "Kiadás" (kategória nélküli) kártyába. Bármi más értéket a felület
+    // küldene, csendben null-ra esik vissza. A 'ber' kategóriát csak admin
+    // szerepkör állíthatja be egy tételen (ld. sql/24.sql) — nem-admin
+    // kérelmezőnél ez is null-ra esik, ugyanúgy, mint egy ismeretlen érték.
+    private function normalizKategoria($kategoria, $isAdmin = false) {
+        if ($kategoria === 'ber' && !$isAdmin) {
+            return null;
+        }
+        return in_array($kategoria, self::KATEGORIAK, true) ? $kategoria : null;
     }
 
-    public function newEgyebKoltseg($data) {
+    public function newEgyebKoltseg($data, $isAdmin = false) {
         try {
             $irany = in_array($data['irany'] ?? null, ['bevetel', 'kiado'], true) ? $data['irany'] : 'kiado';
             $query = "INSERT INTO egyeb_koltsegek (admin, irany, kategoria, kamion_id, potkocsi_id, datum, megnevezes, szamlaszam, osszeg, megjegyzes)
@@ -546,7 +743,7 @@ class KoltsegInterface {
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(':admin', $data['ceg_id']);
             $stmt->bindValue(':irany', $irany);
-            $stmt->bindValue(':kategoria', $this->normalizKategoria($data['kategoria'] ?? null));
+            $stmt->bindValue(':kategoria', $this->normalizKategoria($data['kategoria'] ?? null, $isAdmin));
             $stmt->bindValue(':kamion_id', empty($data['kamion_id']) ? null : $data['kamion_id']);
             $stmt->bindValue(':potkocsi_id', empty($data['potkocsi_id']) ? null : $data['potkocsi_id']);
             $stmt->bindValue(':datum', $data['datum']);
@@ -574,7 +771,7 @@ class KoltsegInterface {
     // szerkeszthető vele, ugyanazokkal a mezőkkel, mint az új tétel
     // felvételénél. A `WHERE ... AND admin = :ceg_id` szándékosan van ott —
     // enélkül egy másik cég is módosíthatná a sorodat, ha kitalálná az id-t.
-    public function updateEgyebKoltseg($data) {
+    public function updateEgyebKoltseg($data, $isAdmin = false) {
         try {
             $irany = in_array($data['irany'] ?? null, ['bevetel', 'kiado'], true) ? $data['irany'] : 'kiado';
             $query = "UPDATE egyeb_koltsegek SET
@@ -586,7 +783,7 @@ class KoltsegInterface {
             $stmt->bindValue(':id', $data['id']);
             $stmt->bindValue(':admin', $data['ceg_id']);
             $stmt->bindValue(':irany', $irany);
-            $stmt->bindValue(':kategoria', $this->normalizKategoria($data['kategoria'] ?? null));
+            $stmt->bindValue(':kategoria', $this->normalizKategoria($data['kategoria'] ?? null, $isAdmin));
             $stmt->bindValue(':kamion_id', empty($data['kamion_id']) ? null : $data['kamion_id']);
             $stmt->bindValue(':potkocsi_id', empty($data['potkocsi_id']) ? null : $data['potkocsi_id']);
             $stmt->bindValue(':datum', $data['datum']);
@@ -615,7 +812,7 @@ class KoltsegInterface {
     // táblában), a frontend ezt ismeri fel és mutat helyette egy rövid
     // eligazító szöveget ("ezek a tételek a Karbantartások/Kamionok oldalon
     // részletesek"), nem hibaüzenetet.
-    public function getEgyebKoltsegek($ceg_id, $datumTol = null, $datumIg = null, $irany = null, $search = null, $page = null, $pageSize = null, $kategoria = null) {
+    public function getEgyebKoltsegek($ceg_id, $datumTol = null, $datumIg = null, $irany = null, $search = null, $page = null, $pageSize = null, $kategoria = null, $isAdmin = false) {
         try {
             [$szuresSql, $szuresParams] = $this->datumSzures('datum', $datumTol, $datumIg);
             $params = [':ceg_id' => $ceg_id];
@@ -634,6 +831,12 @@ class KoltsegInterface {
                     $query .= " AND kategoria = :kategoria";
                     $params[':kategoria'] = $kategoria;
                 }
+            }
+            // A bérezés-tételek (kategoria = 'ber') listás nézetben is csak
+            // adminnak látszanak — ugyanaz a szabály, mint az összesítőben
+            // (ld. getKoltsegOsszesito), csak itt a lekérdezés szintjén.
+            if (!$isAdmin) {
+                $query .= " AND (kategoria IS NULL OR kategoria <> 'ber')";
             }
             if (!empty($search)) {
                 $query .= " AND " . PaginationHelper::likeClause(['megnevezes', 'szamlaszam', 'megjegyzes'], 'search');

@@ -40,7 +40,11 @@ const PrivateRoute = ({ component: Component, ...rest }) => {
     <Route
       {...rest}
       render={(props) =>
-        isAuthenticated ? <Component {...props} /> : <Redirect to="/login" />
+        isAuthenticated ? (
+          <Component {...props} />
+        ) : (
+          <Redirect to="/auth/login" />
+        )
       }
     />
   );
@@ -88,7 +92,11 @@ export default function Admin() {
               component={Karbantartasok}
             />
             <PrivateRoute path="/admin/soforok" exact component={Soforok} />
-            <PrivateRoute path="/admin/vezetesi-ido" exact component={VezetesiIdo} />
+            <PrivateRoute
+              path="/admin/vezetesi-ido"
+              exact
+              component={VezetesiIdo}
+            />
             <PrivateRoute path="/admin/soforForm" exact component={SoforForm} />
             <PrivateRoute path="/admin/fajlok" exact component={Fajlok} />
             <PrivateRoute path="/admin/esemenyek" exact component={Esemenyek} />
@@ -102,21 +110,57 @@ export default function Admin() {
               exact
               component={BejelentesekForm}
             />
-            <PrivateRoute path="/admin/szabadsagok" exact component={Szabadsagok} />
+            <PrivateRoute
+              path="/admin/szabadsagok"
+              exact
+              component={Szabadsagok}
+            />
             <PrivateRoute path="/admin/naplo" exact component={Naplo} />
             <PrivateRoute path="/admin/koltsegek" exact component={Koltsegek} />
-            <PrivateRoute path="/admin/flottakovetes" exact component={Flottakovetes} />
+            <PrivateRoute
+              path="/admin/flottakovetes"
+              exact
+              component={Flottakovetes}
+            />
             <PrivateRoute path="/admin/fuvarok" exact component={Fuvarok} />
-            <PrivateRoute path="/admin/fuvartervezo" exact component={Fuvartervezo} />
+            <PrivateRoute
+              path="/admin/fuvartervezo"
+              exact
+              component={Fuvartervezo}
+            />
             <PrivateRoute path="/admin/ugyfelek" exact component={Ugyfelek} />
-            <PrivateRoute path="/admin/ugyfelForm" exact component={UgyfelForm} />
-            <PrivateRoute path="/admin/felhasznalok" exact component={Felhasznalok} />
-            <PrivateRoute path="/admin/felhasznalok/uj" exact component={UjFelhasznalo} />
-            <PrivateRoute path="/admin/jogosultsagok" exact component={Jogosultsagok} />
+            <PrivateRoute
+              path="/admin/ugyfelForm"
+              exact
+              component={UgyfelForm}
+            />
+            <PrivateRoute
+              path="/admin/felhasznalok"
+              exact
+              component={Felhasznalok}
+            />
+            <PrivateRoute
+              path="/admin/felhasznalok/uj"
+              exact
+              component={UjFelhasznalo}
+            />
+            <PrivateRoute
+              path="/admin/jogosultsagok"
+              exact
+              component={Jogosultsagok}
+            />
             <PrivateRoute path="/admin/listak" exact component={Listak} />
-            <PrivateRoute path="/admin/helyszinek" exact component={Helyszinek} />
-            <PrivateRoute path="/admin/helyszinForm" exact component={HelyszinForm} />
-            <Route path="/login" exact component={LoginPage} />
+            <PrivateRoute
+              path="/admin/helyszinek"
+              exact
+              component={Helyszinek}
+            />
+            <PrivateRoute
+              path="/admin/helyszinForm"
+              exact
+              component={HelyszinForm}
+            />
+            <Route path="/auth/login" exact component={LoginPage} />
             <Redirect from="/admin" to="/admin/dashboard" />
           </Switch>
           {/* Garantált térköz a mobil alsó navigáció alatt — valódi blokk-magasság,

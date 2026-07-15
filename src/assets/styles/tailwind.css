@@ -1559,6 +1559,10 @@ h1,
   width: 0.875rem;
 }
 
+.w-32 {
+  width: 8rem;
+}
+
 .w-4 {
   width: 1rem;
 }
@@ -1709,10 +1713,6 @@ h1,
 
 .flex-1 {
   flex: 1 1 0%;
-}
-
-.flex-\[2\] {
-  flex: 2;
 }
 
 .flex-\[3\] {
@@ -2035,6 +2035,10 @@ h1,
 .divide-ink-100 > :not([hidden]) ~ :not([hidden]) {
   --tw-divide-opacity: 1;
   border-color: rgb(229 229 231 / var(--tw-divide-opacity, 1));
+}
+
+.self-end {
+  align-self: flex-end;
 }
 
 .overflow-auto {
@@ -2452,6 +2456,11 @@ h1,
   background-color: rgb(0 0 0 / 0.6);
 }
 
+.bg-blue-50 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(238 241 253 / var(--tw-bg-opacity, 1));
+}
+
 .bg-blueGray-50 {
   --tw-bg-opacity: 1;
   background-color: rgb(244 244 245 / var(--tw-bg-opacity, 1));
@@ -2565,9 +2574,24 @@ h1,
   background-color: rgb(254 215 170 / var(--tw-bg-opacity, 1));
 }
 
+.bg-orange-50 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(255 247 237 / var(--tw-bg-opacity, 1));
+}
+
+.bg-orange-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(249 115 22 / var(--tw-bg-opacity, 1));
+}
+
 .bg-purple-200 {
   --tw-bg-opacity: 1;
   background-color: rgb(233 213 255 / var(--tw-bg-opacity, 1));
+}
+
+.bg-purple-50 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(250 245 255 / var(--tw-bg-opacity, 1));
 }
 
 .bg-purple-500 {
@@ -3285,6 +3309,11 @@ h1,
   color: rgb(146 64 14 / var(--tw-text-opacity, 1));
 }
 
+.text-blue-700 {
+  --tw-text-opacity: 1;
+  color: rgb(30 58 168 / var(--tw-text-opacity, 1));
+}
+
 .text-blueGray-100 {
   --tw-text-opacity: 1;
   color: rgb(229 229 231 / var(--tw-text-opacity, 1));
@@ -3408,6 +3437,16 @@ h1,
 .text-orange-500 {
   --tw-text-opacity: 1;
   color: rgb(249 115 22 / var(--tw-text-opacity, 1));
+}
+
+.text-orange-700 {
+  --tw-text-opacity: 1;
+  color: rgb(194 65 12 / var(--tw-text-opacity, 1));
+}
+
+.text-purple-700 {
+  --tw-text-opacity: 1;
+  color: rgb(126 34 206 / var(--tw-text-opacity, 1));
 }
 
 .text-red-300 {
@@ -4218,6 +4257,10 @@ h1,
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
+  .sm\:grid-cols-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
   .sm\:flex-row {
     flex-direction: row;
   }
@@ -4327,6 +4370,10 @@ h1,
 
   .md\:flex {
     display: flex;
+  }
+
+  .md\:grid {
+    display: grid;
   }
 
   .md\:hidden {

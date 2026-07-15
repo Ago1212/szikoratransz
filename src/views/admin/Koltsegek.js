@@ -20,6 +20,7 @@ import {
   PiCloudArrowDownLight,
   PiPlusLight,
   PiChartBarLight,
+  PiWalletLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
@@ -57,6 +58,16 @@ const formatHonap = (honap) => {
 };
 
 const TETEL_PAGE_SIZE = 8;
+
+// Kézzel felvett/módosított tétel kategória-jelvénye a tétel-listában — csak
+// a ténylegesen tárolt `kategoria` oszlop-értékekhez van jelvény ('egyeb'/null
+// esetén nincs, hiszen az a lista alapértelmezett, jelvény nélküli állapota).
+const KATEGORIA_BADGE = {
+  uzemanyag: { label: "Üzemanyag", className: "bg-amber-50 text-amber-700" },
+  karbantartas: { label: "Karbantartás", className: "bg-blue-50 text-blue-700" },
+  biztositas: { label: "Biztosítás", className: "bg-purple-50 text-purple-700" },
+  ber: { label: "Fizetés", className: "bg-orange-50 text-orange-700" },
+};
 
 const emptyEgyebTetel = (irany = "kiado") => ({
   irany,
@@ -120,7 +131,7 @@ function CategoryChip({ icon: Icon, label, value, valueClass, dotClass, active, 
 // jelenik meg, a 4 kiadás-alkategória bontása nélkül — egy kis mobil
 // képernyőn az 5 datasetes jelmagyarázat inkább zajt, mint áttekinthető
 // információt adna.
-function CashflowChart({ havi, simplified }) {
+function CashflowChart({ havi, simplified, isAdmin }) {
   const canvasRef = useRef(null);
   const chartRef = useRef(null);
 
@@ -169,8 +180,22 @@ function CashflowChart({ havi, simplified }) {
             data: havi.map((h) => h.biztositas),
             stack: "kiado",
           },
+          // A "Fizetés" (bérek) dataset csak adminnak jelenik meg — a
+          // backend (koltsegInterface.php getKoltsegOsszesito) nem-admin
+          // hívónak amúgy is nullázza a `ber` mezőt havi bontásban, de itt
+          // is elhagyjuk a jelmagyarázatból, nem csak nulla oszlopot mutatunk.
+          ...(isAdmin
+            ? [
+                {
+                  label: "Fizetés",
+                  backgroundColor: "#F97316",
+                  data: havi.map((h) => h.ber),
+                  stack: "kiado",
+                },
+              ]
+            : []),
           {
-            label: "Egyéb",
+            label: "Kiadás",
             backgroundColor: "#D9A441",
             data: havi.map((h) => h.egyeb),
             stack: "kiado",
@@ -224,6 +249,11 @@ export default function Koltsegek() {
   const user = JSON.parse(sessionStorage.getItem("user"));
   const history = useHistory();
   const isMobile = useMediaQuery({ maxWidth: 767 });
+  // A "Fizetés" (bérek) kategória — sor, chip, diagram-oszlop, dropdown-
+  // opció — kizárólag admin szerepkörnek jelenik meg (ld. koltsegInterface.php
+  // getKoltsegOsszesito/getEgyebKoltsegek `$isAdmin` kapuzása). A frontend
+  // itt csak elrejti, a valódi védelmi vonal a backend.
+  const isOwnerAdmin = user.szerepkor === "admin";
   // A grafikon összecsukható — asztalon alapból nyitva (rögtön látszik a
   // havi trend), mobilon alapból csukva (ott a tétel-lista férjen el
   // görgetés nélkül elsőként) — a `useMediaQuery`-s kezdőállapot minta már
@@ -259,6 +289,7 @@ export default function Koltsegek() {
       uzemanyag: 0,
       biztositas: 0,
       egyeb: 0,
+      ber: 0,
       kiadas: 0,
       netto: 0,
     },
@@ -266,6 +297,20 @@ export default function Koltsegek() {
 
   const [kamionok, setKamionok] = useState([]);
   const [potkocsik, setPotkocsik] = useState([]);
+
+  // Várható eredmény (Item 3) — ld. koltsegInterface.php getVarhatoEredmeny.
+  // Független a fenti `filter` dátumtartománytól (mindig a "jövő hónapra"
+  // vonatkozó, fix logikájú becslés), ezért csak egyszer töltjük be.
+  const [varhato, setVarhato] = useState(null);
+  useEffect(() => {
+    fetchAction("getVarhatoEredmeny", {
+      ceg_id: user.ceg_id,
+      kerelmezo_id: user.id,
+    }).then((result) => {
+      if (result?.success) setVarhato(result);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // A Bevételek és Kiadások — korábban két külön táblázat — mostantól egy
   // egységes tétel-listát alkotnak, "Irány" jelvényoszloppal és a Mind/
@@ -672,12 +717,12 @@ export default function Koltsegek() {
       render: (row) => (
         <div className="flex items-center gap-1.5">
           <span>{row.megnevezes}</span>
-          {row.kategoria === "uzemanyag" && (
+          {row.kategoria && KATEGORIA_BADGE[row.kategoria] && (
             <span
-              className="inline-flex flex-shrink-0 items-center rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700"
-              title="Üzemanyag kategóriába sorolva"
+              className={`inline-flex flex-shrink-0 items-center rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${KATEGORIA_BADGE[row.kategoria].className}`}
+              title={`${KATEGORIA_BADGE[row.kategoria].label} kategóriába sorolva`}
             >
-              Üzemanyag
+              {KATEGORIA_BADGE[row.kategoria].label}
             </span>
           )}
         </div>
@@ -804,6 +849,19 @@ export default function Koltsegek() {
         </button>
         ) részletesek.
       </>
+    ) : kategoriaSzuro === "ber" ? (
+      <>
+        Nincs ilyen jelölésű tétel — a havi bérezés a{" "}
+        <button
+          type="button"
+          onClick={() => history.push("/admin/felhasznalok")}
+          className="font-semibold text-brand-600 underline underline-offset-2 hover:text-brand-700"
+        >
+          Sofőrök/Csapattagok
+        </button>{" "}
+        adatlapján állítható be, és automatikusan minden hónapban megjelenik
+        itt kiadásként.
+      </>
     ) : (
       "Nincs megjeleníthető tétel"
     );
@@ -832,11 +890,25 @@ export default function Koltsegek() {
     },
     {
       key: "egyeb",
-      label: "Egyéb",
+      label: "Kiadás",
       icon: PiReceiptLight,
       dotClass: "bg-yellow-500",
       value: adat.osszesen.egyeb,
     },
+    // A bérezés (Item 2: havi bérezés → Pénzforgalom kiadás) csak adminnak
+    // látszik — ld. koltsegInterface.php getKoltsegOsszesito `$isAdmin`
+    // kapuzása, ami nem-admin hívónak eleve 0-t ad vissza `osszesen.ber`-re.
+    ...(isOwnerAdmin
+      ? [
+          {
+            key: "ber",
+            label: "Fizetés",
+            icon: PiWalletLight,
+            dotClass: "bg-orange-500",
+            value: adat.osszesen.ber,
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -879,6 +951,48 @@ export default function Koltsegek() {
           </div>
         }
       />
+
+      {/* Várható eredmény (Item 3) — a "Havi alakulás" grafikon FELETT, mert
+          ez egy előretekintő becslés (jövő hónap), nem a `filter`
+          dátumtartományra vonatkozó, visszatekintő adat, mint minden más
+          ezen az oldalon — a `loading` (a `filter`-hez kötött) állapottól
+          függetlenül, saját `varhato !== null` őrfeltétellel jelenik meg. */}
+      {varhato && (
+        <div className="rounded-3xl bg-white p-5 shadow-soft ring-1 ring-ink-100">
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
+            Várható eredmény (jövő hónap, becslés)
+          </p>
+          <p
+            className={`mt-1 font-display text-3xl font-bold tabular-nums ${
+              varhato.varhatoEredmeny >= 0 ? "text-emerald-600" : "text-red-600"
+            }`}
+          >
+            {formatHuf(varhato.varhatoEredmeny)}
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm">
+            <span className="flex items-center gap-1.5 text-ink-500">
+              <PiTrendUpLight className="h-4 w-4 text-emerald-600" />
+              Bevétel ({varhato.honapokSzama} havi átlag){" "}
+              <span className="font-semibold tabular-nums text-ink-800">
+                {formatHuf(varhato.atlagBevetel)}
+              </span>
+            </span>
+            <span className="flex items-center gap-1.5 text-ink-500">
+              <PiCoinsLight className="h-4 w-4 text-red-600" />
+              Fix költségek ({varhato.aktivBer !== undefined ? "biztosítás + bérek" : "biztosítás"}){" "}
+              <span className="font-semibold tabular-nums text-ink-800">
+                {formatHuf(varhato.fixKoltsegek)}
+              </span>
+            </span>
+          </div>
+          <p className="mt-3 text-xs text-ink-400">
+            Becslés: az elmúlt {varhato.honapokSzama} lezárt hónap bevétel-átlagából
+            {varhato.aktivBer !== undefined
+              ? " levonva az aktuális havi bérezést és a biztosítási díjak átlagát."
+              : " levonva a biztosítási díjak átlagát."}
+          </p>
+        </div>
+      )}
 
       {loading ? (
         <Spinner wrapperClassName="flex justify-center py-16" />
@@ -967,7 +1081,11 @@ export default function Koltsegek() {
                     Nincs megjeleníthető adat ebben az időszakban.
                   </p>
                 ) : (
-                  <CashflowChart havi={adat.havi} simplified={isMobile} />
+                  <CashflowChart
+                    havi={adat.havi}
+                    simplified={isMobile}
+                    isAdmin={isOwnerAdmin}
+                  />
                 )}
                 {adat.vanDevizasFuvar && (
                   <p className="mt-3 text-xs text-ink-400">
@@ -983,7 +1101,11 @@ export default function Koltsegek() {
               fejlécbe került, itt a 4 kiadás-kategória tölti ki a teljes
               rendelkezésre álló szélességet (2 oszlop mobilon, 4 oszlop
               sm+ felett). */}
-          <div className="grid grid-cols-2 gap-2 rounded-3xl bg-white p-4 shadow-soft ring-1 ring-ink-100 sm:grid-cols-4">
+          <div
+            className={`grid grid-cols-2 gap-2 rounded-3xl bg-white p-4 shadow-soft ring-1 ring-ink-100 ${
+              isOwnerAdmin ? "sm:grid-cols-5" : "sm:grid-cols-4"
+            }`}
+          >
             {kategoriaChipek.map((chip) => (
               <CategoryChip
                 key={chip.key}
@@ -1133,8 +1255,11 @@ export default function Koltsegek() {
               value={ujTetel.kategoria}
               onChange={handleUjTetelChange}
             >
-              <option value="">Egyéb</option>
+              <option value="">Kiadás</option>
               <option value="uzemanyag">Üzemanyag</option>
+              <option value="karbantartas">Karbantartás</option>
+              <option value="biztositas">Biztosítás</option>
+              {isOwnerAdmin && <option value="ber">Fizetés</option>}
             </FormField>
           )}
           <FormField
@@ -1320,8 +1445,10 @@ export default function Koltsegek() {
                                   disabled={t.mar_importalva}
                                   className="rounded-lg border border-ink-200 bg-white px-2 py-1 text-xs text-ink-700 disabled:cursor-not-allowed disabled:opacity-40"
                                 >
-                                  <option value="">Egyéb</option>
+                                  <option value="">Kiadás</option>
                                   <option value="uzemanyag">Üzemanyag</option>
+                                  <option value="karbantartas">Karbantartás</option>
+                                  <option value="biztositas">Biztosítás</option>
                                 </select>
                               ) : (
                                 <span className="text-ink-300">—</span>

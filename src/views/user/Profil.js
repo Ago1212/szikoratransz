@@ -18,7 +18,12 @@ import FormField, { FormSection } from "components/UI/FormField.js";
 import StatusBadge from "components/UI/StatusBadge.js";
 import SaveButton from "components/UI/SaveButton.js";
 import Spinner from "components/UI/Spinner.js";
-import { DOCUMENT_FIELDS, getDocumentStatus, getDocumentTone, daysUntil } from "utils/documentStatus.js";
+import {
+  DOCUMENT_FIELDS,
+  getDocumentStatus,
+  getDocumentTone,
+  daysUntil,
+} from "utils/documentStatus.js";
 
 const initials = (name) =>
   (name || "")
@@ -39,7 +44,7 @@ export default function Profil() {
   useEffect(() => {
     const user = JSON.parse(sessionStorage.getItem("user"));
     if (!user) {
-      history.push("/login");
+      history.push("/auth/login");
       return;
     }
     setForm(user);
@@ -47,14 +52,22 @@ export default function Profil() {
     if (user.kamion) {
       fetchAction("getKamionok", { id: user.admin }).then((result) => {
         if (result?.success) {
-          setKamion((result.kamionok || []).find((k) => String(k.id) === String(user.kamion)) || null);
+          setKamion(
+            (result.kamionok || []).find(
+              (k) => String(k.id) === String(user.kamion),
+            ) || null,
+          );
         }
       });
     }
     if (user.aktiv_potkocsi) {
       fetchAction("getPotkocsik", { id: user.admin }).then((result) => {
         if (result?.success) {
-          setPotkocsi((result.potkocsik || []).find((p) => String(p.id) === String(user.aktiv_potkocsi)) || null);
+          setPotkocsi(
+            (result.potkocsik || []).find(
+              (p) => String(p.id) === String(user.aktiv_potkocsi),
+            ) || null,
+          );
         }
       });
     }
@@ -68,7 +81,10 @@ export default function Profil() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const result = await fetchAction("saveSoforData", { ...form, id: form.id });
+      const result = await fetchAction("saveSoforData", {
+        ...form,
+        id: form.id,
+      });
       if (result?.success) {
         sessionStorage.setItem("user", JSON.stringify(form));
         toast.success("Adatok mentve!");
@@ -102,7 +118,9 @@ export default function Profil() {
           {initials(form.name)}
         </span>
         <div className="min-w-0">
-          <p className="truncate font-display text-base font-bold text-brand-900">{form.name}</p>
+          <p className="truncate font-display text-base font-bold text-brand-900">
+            {form.name}
+          </p>
           <p className="truncate text-xs text-ink-500">{form.email}</p>
         </div>
       </div>
@@ -112,18 +130,24 @@ export default function Profil() {
           <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-400">
             <PiTruckLight className="h-4 w-4" /> Kamion
           </div>
-          <p className="mt-1 font-mono text-sm font-bold text-ink-900">{kamion?.rendszam || "—"}</p>
+          <p className="mt-1 font-mono text-sm font-bold text-ink-900">
+            {kamion?.rendszam || "—"}
+          </p>
         </div>
         <div className="rounded-2xl border border-ink-100 bg-white p-3.5 shadow-soft">
           <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-400">
             <PiTruckTrailerLight className="h-4 w-4" /> Pótkocsi
           </div>
-          <p className="mt-1 font-mono text-sm font-bold text-ink-900">{potkocsi?.rendszam || "—"}</p>
+          <p className="mt-1 font-mono text-sm font-bold text-ink-900">
+            {potkocsi?.rendszam || "—"}
+          </p>
         </div>
       </div>
 
       <div>
-        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">Dokumentumok lejárata</h2>
+        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">
+          Dokumentumok lejárata
+        </h2>
         <div className="flex flex-col gap-2">
           {DOCUMENT_FIELDS.map((field) => {
             const status = getDocumentStatus(form[field.key]);
@@ -133,7 +157,9 @@ export default function Profil() {
                 key={field.key}
                 className="flex items-center justify-between rounded-xl border border-ink-100 bg-white px-3.5 py-2.5"
               >
-                <span className="text-sm font-medium text-ink-700">{field.label}</span>
+                <span className="text-sm font-medium text-ink-700">
+                  {field.label}
+                </span>
                 <StatusBadge tone={getDocumentTone(status)}>
                   {status === "unknown"
                     ? "Nincs megadva"
@@ -149,9 +175,21 @@ export default function Profil() {
         </div>
       </div>
 
-      <form onSubmit={(e) => e.preventDefault()} className="flex flex-col gap-5">
-        <FormSection title="Felhasználó adatok" icon={PiIdentificationCardLight} columns={2}>
-          <FormField label="Név" name="name" value={form.name || ""} onChange={handleChange} />
+      <form
+        onSubmit={(e) => e.preventDefault()}
+        className="flex flex-col gap-5"
+      >
+        <FormSection
+          title="Felhasználó adatok"
+          icon={PiIdentificationCardLight}
+          columns={2}
+        >
+          <FormField
+            label="Név"
+            name="name"
+            value={form.name || ""}
+            onChange={handleChange}
+          />
           <FormField
             icon={PiEnvelopeLight}
             type="email"
@@ -186,8 +224,20 @@ export default function Profil() {
             value={form.varos || ""}
             onChange={handleChange}
           />
-          <FormField label="Irányítószám" inputMode="numeric" name="irsz" value={form.irsz || ""} onChange={handleChange} />
-          <FormField label="Cím" name="cim" value={form.cim || ""} onChange={handleChange} className="md:col-span-2" />
+          <FormField
+            label="Irányítószám"
+            inputMode="numeric"
+            name="irsz"
+            value={form.irsz || ""}
+            onChange={handleChange}
+          />
+          <FormField
+            label="Cím"
+            name="cim"
+            value={form.cim || ""}
+            onChange={handleChange}
+            className="md:col-span-2"
+          />
           <FormField
             label="Lakcím"
             name="lakcim"
@@ -197,8 +247,17 @@ export default function Profil() {
           />
         </FormSection>
 
-        <FormSection title="Iratok" icon={PiIdentificationCardLight} columns={2}>
-          <FormField label="Személyi igazolvány szám" name="szemelyi" value={form.szemelyi || ""} onChange={handleChange} />
+        <FormSection
+          title="Iratok"
+          icon={PiIdentificationCardLight}
+          columns={2}
+        >
+          <FormField
+            label="Személyi igazolvány szám"
+            name="szemelyi"
+            value={form.szemelyi || ""}
+            onChange={handleChange}
+          />
           <FormField
             type="date"
             label="Személyi lejárat"
@@ -229,7 +288,11 @@ export default function Profil() {
           />
         </FormSection>
 
-        <SaveButton onClick={handleSave} isSaving={saving} className="w-full justify-center py-3.5" />
+        <SaveButton
+          onClick={handleSave}
+          isSaving={saving}
+          className="w-full justify-center py-3.5"
+        />
       </form>
 
       <button

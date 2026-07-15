@@ -69,6 +69,7 @@ export default function Felhasznalok() {
       email: c.email,
       phone: c.phone,
       szerepkor: c.szerepkor,
+      ber: c.ber,
       isRoot: !c.tulajdonos_admin_id,
       isSelf: String(c.id) === String(user.id),
     }));
@@ -103,6 +104,28 @@ export default function Felhasznalok() {
     });
     if (result?.success) {
       toast.success("Szerepkör frissítve.");
+      load();
+    } else {
+      toast.error(result?.message || "Módosítás sikertelen.");
+    }
+  };
+
+  // Havi bérezés — kizárólag admin szerepkörnek látszik/szerkeszthető (ld.
+  // sql/24.sql), inline mentéssel (elhagyáskor ment, nincs külön "Mentés"
+  // gomb soronként — kevés, ritkán módosuló mezőnél ez egyszerűbb, mint
+  // egy teljes szerkesztő-form nyitása egyetlen számhoz).
+  const isOwnerAdmin = user.szerepkor === "admin";
+  const handleBerBlur = async (row, value) => {
+    const ujErtek = value.trim();
+    if (ujErtek === String(row.ber ?? "")) return;
+    const result = await fetchAction("updateCsapattagBer", {
+      id: row.id,
+      ceg_id: user.ceg_id,
+      kerelmezo_id: user.id,
+      ber: ujErtek === "" ? null : ujErtek,
+    });
+    if (result?.success) {
+      toast.success("Bérezés frissítve.");
       load();
     } else {
       toast.error(result?.message || "Módosítás sikertelen.");
@@ -229,6 +252,18 @@ export default function Felhasznalok() {
                   miatt) mindig saját, teljes szélességű sorba kerül, jobbra
                   igazítva, hogy ne préselődjön a névvel egy 320px-es sorba. */}
               <div className="flex w-full items-center justify-end gap-2 sm:w-auto">
+                {row.tipus === "csapattag" && isOwnerAdmin && (
+                  <div className="w-32 flex-shrink-0">
+                    <input
+                      type="number"
+                      defaultValue={row.ber ?? ""}
+                      onBlur={(e) => handleBerBlur(row, e.target.value)}
+                      placeholder="Havi bér"
+                      title="Havi bérezés (Ft) — csak te látod"
+                      className="w-full rounded-lg border border-ink-100 bg-slate-50 px-2.5 py-1.5 text-xs text-ink-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300"
+                    />
+                  </div>
+                )}
                 {row.tipus === "csapattag" ? (
                   row.isRoot ? (
                     <span

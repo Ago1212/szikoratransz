@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
-import { PiSteeringWheelLight } from "react-icons/pi";
+import { PiSteeringWheelLight, PiMapTrifoldLight } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
 import MobileHeader from "components/UI/MobileHeader.js";
@@ -20,6 +20,7 @@ export default function VezetesiIdo() {
   const [saving, setSaving] = useState(false);
   const [naplo, setNaplo] = useState([]);
   const [aktualisHet, setAktualisHet] = useState(null);
+  const [gpsLoading, setGpsLoading] = useState(false);
 
   const load = () => {
     fetchAction("getSajatVezetesiNaplo", { sofor_id: user.id }).then((result) => {
@@ -38,6 +39,32 @@ export default function VezetesiIdo() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Item 6: a "Vezetett ma" mezőt a flottakövető (GPSmart) útvonal-adatából
+  // is előtölthetjük, HA a mai (vagy megadott dátumú) napon a jelenlegi
+  // kamionodat vezetted — a rendszer nem tárolja, ki melyik kamiont vitte
+  // egy KORÁBBI napon (ld. backend komment), ezért ez csak becslés, amit a
+  // mentés előtt még módosíthatsz. A pihenő órát sosem tölti elő.
+  const handleGpsJavaslat = async () => {
+    setGpsLoading(true);
+    try {
+      const result = await fetchAction("getVezetesJavaslat", {
+        ceg_id: user.admin,
+        sofor_id: user.id,
+        datum: form.datum,
+      });
+      if (result?.success) {
+        setForm((prev) => ({ ...prev, vezetes_ora: result.vezetes_ora }));
+        toast.success(
+          `Becsült vezetési idő (${result.rendszam}): ${result.menetido_nyers} — ellenőrizd mentés előtt!`,
+        );
+      } else {
+        toast.error(result?.message || "Nem sikerült lekérni a GPS-adatot.");
+      }
+    } finally {
+      setGpsLoading(false);
+    }
   };
 
   const handleSave = async () => {
@@ -97,7 +124,15 @@ export default function VezetesiIdo() {
           onChange={handleChange}
           required
         />
-        <div />
+        <button
+          type="button"
+          onClick={handleGpsJavaslat}
+          disabled={gpsLoading}
+          className="flex items-center justify-center gap-1.5 self-end rounded-xl border border-ink-200 bg-white px-3 py-2.5 text-xs font-semibold text-ink-600 transition-colors duration-200 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <PiMapTrifoldLight className="h-4 w-4" />
+          {gpsLoading ? "Lekérdezés…" : "Kitöltés GPS alapján"}
+        </button>
         <FormField
           type="number"
           label="Vezetett ma (óra)"

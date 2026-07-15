@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { PiSteeringWheelLight, PiWarningCircleLight, PiTrashLight } from "react-icons/pi";
+import { PiSteeringWheelLight, PiWarningCircleLight, PiTrashLight, PiMapTrifoldLight } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
 import PageHeader from "components/UI/PageHeader.js";
@@ -54,6 +54,7 @@ export default function VezetesiIdo() {
   const [openDialog, setOpenDialog] = useState(false);
   const [form, setForm] = useState(emptyForm());
   const [isSaving, setIsSaving] = useState(false);
+  const [gpsLoading, setGpsLoading] = useState(false);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -151,6 +152,37 @@ export default function VezetesiIdo() {
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Item 6: a "Vezetés (óra)" mezőt a kiválasztott sofőr flottakövető
+  // (GPSmart) adatából is előtölthetjük — csak a sofőr JELENLEGI kamionjához
+  // tartozó GPS-adatot ismerjük (nincs napi bontású sofőr↔kamion history,
+  // ld. backend/interface/gpsmartInterface.php komment), ezért csak akkor
+  // pontos, ha a megadott napon is ugyanazt a kamiont vezette — ez csak egy
+  // becslés, amit mentés előtt még szerkeszthetsz.
+  const handleGpsJavaslat = async () => {
+    if (!form.sofor_id) {
+      toast.error("Előbb válassz sofőrt!");
+      return;
+    }
+    setGpsLoading(true);
+    try {
+      const result = await fetchAction("getVezetesJavaslat", {
+        ceg_id: user.ceg_id,
+        sofor_id: form.sofor_id,
+        datum: form.datum,
+      });
+      if (result?.success) {
+        setForm((prev) => ({ ...prev, vezetes_ora: result.vezetes_ora }));
+        toast.success(
+          `Becsült vezetési idő (${result.rendszam}): ${result.menetido_nyers} — ellenőrizd mentés előtt!`,
+        );
+      } else {
+        toast.error(result?.message || "Nem sikerült lekérni a GPS-adatot.");
+      }
+    } finally {
+      setGpsLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -322,6 +354,15 @@ export default function VezetesiIdo() {
               required
             />
           </FormSection>
+          <button
+            type="button"
+            onClick={handleGpsJavaslat}
+            disabled={gpsLoading || !form.sofor_id}
+            className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3 py-2 text-xs font-semibold text-ink-600 transition-colors duration-200 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <PiMapTrifoldLight className="h-4 w-4" />
+            {gpsLoading ? "Lekérdezés…" : "Vezetés kitöltése GPS alapján"}
+          </button>
           <FormField
             as="textarea"
             label="Megjegyzés"

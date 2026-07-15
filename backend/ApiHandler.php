@@ -35,6 +35,14 @@ class ApiHandler {
     // (validation() + resolveKerelmezo()).
     private ?array $session = null;
 
+    // A ténylegesen belépett admin-táblás felhasználó id-je (`kerelmezo_id`)
+    // — `process()` elején egyszer eltéve, hogy a `logAudit()`-nak ne
+    // kelljen minden (~35) hívási helyen külön átadni. A meglévő
+    // `admin`/`ceg_id` paraméter, amit a hívások eddig is átadtak, a CÉGET
+    // azonosítja (több csapattag is ugyanazt kapja) — ez itt viszont a
+    // konkrét személyt.
+    private $aktivKerelmezoId = null;
+
     // Ezek az akciók bejelentkezés (érvényes sessionToken) nélkül is
     // meghívhatók — a bejelentkezés maga, a jelszó-visszaállítás folyamata
     // (a felhasználó pont azért van itt, mert nincs érvényes munkamenete),
@@ -58,7 +66,7 @@ class ApiHandler {
     // `getListaElemek` szándékosan NINCS itt — a sofőr (user tábla) is
     // lekéri (pl. bejelentés típusának legördülőjéhez), csak a szerkesztés/
     // létrehozás/törlés admin-only.
-    const ADMIN_ONLY_ACTIONS = ['newCsapattag', 'updateCsapattagSzerepkor', 'deleteCsapattag', 'getJogosultsagok', 'saveJogosultsagok', 'newSzerepkor', 'deleteSzerepkor', 'newListaElem', 'updateListaElemNev', 'deleteListaElem'];
+    const ADMIN_ONLY_ACTIONS = ['newCsapattag', 'updateCsapattagSzerepkor', 'updateCsapattagBer', 'deleteCsapattag', 'getJogosultsagok', 'saveJogosultsagok', 'newSzerepkor', 'deleteSzerepkor', 'newListaElem', 'updateListaElemNev', 'deleteListaElem'];
 
     // Akció → [modul, jogtípus] térkép a konfigurálható modul-jogosultságokhoz
     // (ld. JogosultsagInterface::MODULOK). Csak a moduloknak megfelelő
@@ -120,6 +128,7 @@ class ApiHandler {
         'getAuditLog' => ['naplo', 'hozzaferes'],
 
         'getKoltsegOsszesito' => ['koltsegek', 'hozzaferes'],
+        'getVarhatoEredmeny' => ['koltsegek', 'hozzaferes'],
         'getEgyebKoltsegek' => ['koltsegek', 'hozzaferes'],
         'newEgyebKoltseg' => ['koltsegek', 'szerkesztes'],
         'updateEgyebKoltseg' => ['koltsegek', 'szerkesztes'],
@@ -215,6 +224,7 @@ class ApiHandler {
             'getCsapattagok' => ['id'],
             'newCsapattag' => ['ceg_id', 'name', 'email', 'password', 'kerelmezo_id'],
             'updateCsapattagSzerepkor' => ['id', 'ceg_id', 'szerepkor', 'kerelmezo_id'],
+            'updateCsapattagBer' => ['id', 'ceg_id', 'kerelmezo_id'],
             'deleteCsapattag' => ['id', 'ceg_id', 'kerelmezo_id'],
 
             'getHelyszinek' => ['id'],
@@ -236,6 +246,7 @@ class ApiHandler {
             'getAuditLog' => ['id', 'kerelmezo_id'],
 
             'getKoltsegOsszesito' => ['ceg_id', 'kerelmezo_id'],
+            'getVarhatoEredmeny' => ['ceg_id', 'kerelmezo_id'],
             'getEgyebKoltsegek' => ['ceg_id', 'kerelmezo_id'],
             'newEgyebKoltseg' => ['ceg_id', 'datum', 'megnevezes', 'osszeg', 'kerelmezo_id'],
             'updateEgyebKoltseg' => ['id', 'ceg_id', 'datum', 'megnevezes', 'osszeg', 'kerelmezo_id'],
@@ -261,6 +272,7 @@ class ApiHandler {
             'deleteVezetesiNaplo' => ['id', 'ceg_id', 'kerelmezo_id'],
             'getSajatVezetesiNaplo' => ['sofor_id'],
             'getSajatVezetesiAllapot' => ['sofor_id'],
+            'getVezetesJavaslat' => ['ceg_id', 'sofor_id', 'datum'],
             'getVezetesiOsszesito' => ['ceg_id', 'kerelmezo_id'],
 
             'torolErtesites' => ['kulcsok', 'kerelmezo_id'],
@@ -420,6 +432,21 @@ class ApiHandler {
         }
     }
 
+    // Nem dobó változat a `requireAdminRole()`-hoz — olyan akcióknál kell,
+    // amik NEM admin-only akciók (pl. egy sofőr adatlapjának megtekintése
+    // fuvarszervező szerepkörrel is engedélyezett), de van bennük egy
+    // rész-adat (bér), amit csak admin szerepkör láthat/szerkeszthet — ott
+    // nem a teljes műveletet kell letiltani, csak azt az egy mezőt kell
+    // szűrni/figyelmen kívül hagyni a válaszban/mentésben.
+    private function kerelmezoAdmin(array $request): bool {
+        try {
+            $kerelmezo = $this->resolveKerelmezo($request);
+            return $kerelmezo['is_root'] || $kerelmezo['szerepkor'] === 'admin';
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
     // Konfigurálható modul-jogosultság ellenőrzése (Jogosultsagok oldal) —
     // admin/gyökér mindig mindent tud, más szerepkörnél az adatbázisban
     // tárolt beállítást nézzük; hiányzó sor = alapértelmezett teljes
@@ -452,6 +479,12 @@ class ApiHandler {
         try {
             $this->validation($request);
             $action = $request['action'];
+            // A `logAudit()` ebből olvassa ki, KI (melyik admin-táblás
+            // bejelentkezés) végezte a műveletet — a hívási helyeken eddig
+            // átadott `admin`/`ceg_id` a CÉGET azonosítja, nem a tényleges
+            // aktort, ezért ezt külön, egyszer itt tesszük el, ahelyett
+            // hogy a naplózó hívás ~35 helyét kellene egyenként bővíteni.
+            $this->aktivKerelmezoId = $request['kerelmezo_id'] ?? null;
 
             switch ($action) {
                 case 'loginUser':
@@ -547,7 +580,7 @@ class ApiHandler {
                     echo json_encode($karbantartasInterface->getKarbantartasok($request['id'], $request['kamion_id'], $request['potkocsi_id'], $request['datumTol'], $request['datumIg'], $request['elvegezte'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null));
                     return;
                 case 'getSoforok':
-                    echo json_encode($soforokInterface->getSoforok($request['id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null));
+                    echo json_encode($soforokInterface->getSoforok($request['id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $this->kerelmezoAdmin($request)));
                     return;
                 case 'getSajatSofor':
                     echo json_encode($soforokInterface->getSajatSofor($request['id']));
@@ -560,7 +593,12 @@ class ApiHandler {
                     echo json_encode($result);
                     return;
                 case 'saveSoforData':
-                    $result = $soforokInterface->saveSoforData($request);
+                    // A `kerelmezoAdmin()` sofőr-munkamenetből (a sofőr saját
+                    // "Profil" oldala is ezt az akciót hívja) automatikusan
+                    // `false`-t ad — a `resolveKerelmezo()` sofőr-típusú
+                    // munkamenetre dob, amit itt csendben elnyelünk, tehát a
+                    // `ber` mezőt sofőr sosem tudja beállítani/felülírni.
+                    $result = $soforokInterface->saveSoforData($request, $this->kerelmezoAdmin($request));
                     if ($result['success']) {
                         $this->logAudit($request['admin'] ?? null, 'user', $request['id'], 'modositas', $request['name'] ?? null);
                     }
@@ -673,7 +711,7 @@ class ApiHandler {
                     return;
 
                 case 'getCsapattagok':
-                    echo json_encode($csapatInterface->getCsapattagok($request['id']));
+                    echo json_encode($csapatInterface->getCsapattagok($request['id'], $this->kerelmezoAdmin($request)));
                     return;
                 case 'newCsapattag':
                     $result = $csapatInterface->newCsapattag($request);
@@ -686,6 +724,13 @@ class ApiHandler {
                     $result = $csapatInterface->updateCsapattagSzerepkor($request['id'], $request['ceg_id'], $request['szerepkor']);
                     if ($result['success']) {
                         $this->logAudit($request['ceg_id'], 'admin', $request['id'], 'modositas', 'szerepkör: ' . $request['szerepkor']);
+                    }
+                    echo json_encode($result);
+                    return;
+                case 'updateCsapattagBer':
+                    $result = $csapatInterface->updateCsapattagBer($request['id'], $request['ceg_id'], $request['ber'] ?? null);
+                    if ($result['success']) {
+                        $this->logAudit($request['ceg_id'], 'admin', $request['id'], 'modositas', 'bérezés frissítve');
                     }
                     echo json_encode($result);
                     return;
@@ -832,7 +877,15 @@ class ApiHandler {
                     echo json_encode($koltsegInterface->getKoltsegOsszesito(
                         $request['ceg_id'],
                         $request['datumTol'] ?? null,
-                        $request['datumIg'] ?? null
+                        $request['datumIg'] ?? null,
+                        $this->kerelmezoAdmin($request)
+                    ));
+                    return;
+
+                case 'getVarhatoEredmeny':
+                    echo json_encode($koltsegInterface->getVarhatoEredmeny(
+                        $request['ceg_id'],
+                        $this->kerelmezoAdmin($request)
                     ));
                     return;
 
@@ -845,12 +898,13 @@ class ApiHandler {
                         $request['search'] ?? null,
                         $request['page'] ?? null,
                         $request['pageSize'] ?? null,
-                        $request['kategoria'] ?? null
+                        $request['kategoria'] ?? null,
+                        $this->kerelmezoAdmin($request)
                     ));
                     return;
 
                 case 'newEgyebKoltseg':
-                    $result = $koltsegInterface->newEgyebKoltseg($request);
+                    $result = $koltsegInterface->newEgyebKoltseg($request, $this->kerelmezoAdmin($request));
                     if ($result['success']) {
                         $iranyLabel = $result['irany'] === 'bevetel' ? 'bevétel' : 'kiadás';
                         $this->logAudit($request['ceg_id'], 'egyeb_koltsegek', $result['id'], 'letrehozas', "($iranyLabel) " . ($request['megnevezes'] ?? ''));
@@ -859,7 +913,7 @@ class ApiHandler {
                     return;
 
                 case 'updateEgyebKoltseg':
-                    $result = $koltsegInterface->updateEgyebKoltseg($request);
+                    $result = $koltsegInterface->updateEgyebKoltseg($request, $this->kerelmezoAdmin($request));
                     if ($result['success']) {
                         $iranyLabel = $result['irany'] === 'bevetel' ? 'bevétel' : 'kiadás';
                         $this->logAudit($request['ceg_id'], 'egyeb_koltsegek', $request['id'], 'modositas', "($iranyLabel) " . ($request['megnevezes'] ?? ''));
@@ -1025,6 +1079,14 @@ class ApiHandler {
 
                 case 'getSajatVezetesiAllapot':
                     echo json_encode($vezetesiIdoInterface->getSajatVezetesiAllapot($request['sofor_id'], $request['hetek'] ?? 1));
+                    return;
+
+                case 'getVezetesJavaslat':
+                    echo json_encode($gpsmartInterface->getVezetesJavaslat(
+                        $request['ceg_id'],
+                        $request['sofor_id'],
+                        $request['datum']
+                    ));
                     return;
 
                 case 'getVezetesiOsszesito':
@@ -1755,9 +1817,10 @@ class ApiHandler {
             return;
         }
         try {
-            $query = "INSERT INTO audit_log (admin_id, tabla, rowid, muvelet, leiras) VALUES (:admin_id, :tabla, :rowid, :muvelet, :leiras)";
+            $query = "INSERT INTO audit_log (admin_id, kerelmezo_id, tabla, rowid, muvelet, leiras) VALUES (:admin_id, :kerelmezo_id, :tabla, :rowid, :muvelet, :leiras)";
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(':admin_id', $adminId);
+            $stmt->bindValue(':kerelmezo_id', $this->aktivKerelmezoId);
             $stmt->bindValue(':tabla', $tabla);
             $stmt->bindValue(':rowid', $rowId);
             $stmt->bindValue(':muvelet', $muvelet);
@@ -1789,6 +1852,25 @@ class ApiHandler {
     // nem lapozott hívók felé változatlan viselkedést nyújtva), ha a hívó
     // nem küld `page`-et — a lapozott ág nem korlátozza mesterségesen a
     // teljes találati halmazt, a `page`/`pageSize` szabja meg, mennyi jön át.
+    // A `kerelmezo_id` (ld. `aktivKerelmezoId`/`logAudit()` komment) csak a
+    // konkrét admin-táblás bejelentkezés id-je — ezt PHP oldalon (a projekt
+    // JOIN-mentes konvenciója szerint) fordítjuk névre, nem SQL JOIN-nal.
+    // A régebbi (a mostani oszlop hozzáadása előtti) naplósoroknál ez NULL,
+    // ott a frontend "—"-t mutat, nem hibázik.
+    private function modositokNeveiCeghez($ceg_id) {
+        $stmt = $this->db->prepare(
+            "SELECT id, name FROM admin WHERE (id = :id OR tulajdonos_admin_id = :id2) AND torolt <> 'I'"
+        );
+        $stmt->bindValue(':id', $ceg_id);
+        $stmt->bindValue(':id2', $ceg_id);
+        $stmt->execute();
+        $nevek = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $nevek[$row['id']] = $row['name'];
+        }
+        return $nevek;
+    }
+
     private function getAuditLog($id, $search = null, $page = null, $pageSize = null) {
         try {
             $params = [':id' => $id];
@@ -1799,9 +1881,17 @@ class ApiHandler {
             }
             $query .= " ORDER BY datum DESC";
 
+            $nevek = $this->modositokNeveiCeghez($id);
+            $dusit = function ($sorok) use ($nevek) {
+                foreach ($sorok as &$sor) {
+                    $sor['modosito_nev'] = $nevek[$sor['kerelmezo_id']] ?? null;
+                }
+                return $sorok;
+            };
+
             if ($page !== null) {
                 [$naplo, $total, $page, $pageSize] = PaginationHelper::fetchPage($this->db, $query, $params, $page, $pageSize);
-                return ['success' => true, 'naplo' => $naplo, 'total' => $total, 'page' => $page, 'pageSize' => $pageSize];
+                return ['success' => true, 'naplo' => $dusit($naplo), 'total' => $total, 'page' => $page, 'pageSize' => $pageSize];
             }
 
             $query .= " LIMIT 200";
@@ -1811,7 +1901,7 @@ class ApiHandler {
             }
             $stmt->execute();
 
-            return ['success' => true, 'naplo' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
+            return ['success' => true, 'naplo' => $dusit($stmt->fetchAll(PDO::FETCH_ASSOC))];
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }

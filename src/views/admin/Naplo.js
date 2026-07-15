@@ -81,7 +81,12 @@ export default function Naplo() {
       render: (row) => TABLA_LABEL[row.tabla] || row.tabla,
       exportValue: (row) => TABLA_LABEL[row.tabla] || row.tabla,
     },
-    { key: "rowid", label: "Azonosító" },
+    {
+      key: "modosito_nev",
+      label: "Módosította",
+      render: (row) => row.modosito_nev || "—",
+      exportValue: (row) => row.modosito_nev || "—",
+    },
     {
       key: "muvelet",
       label: "Művelet",
