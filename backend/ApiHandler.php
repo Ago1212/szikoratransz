@@ -2036,10 +2036,7 @@ class ApiHandler {
             $stmt->execute();
 
             $resetUrl = "https://szikora-transz.hu/auth/jelszo-visszaallitas?token=" . $token;
-            $body = '<div style="font-family:sans-serif;"><p>Jelszó-visszaállítást kért a Szikora Transz flottakezelő rendszerben.</p>'
-                . '<p><a href="' . htmlspecialchars($resetUrl) . '">Kattintson ide az új jelszó beállításához</a></p>'
-                . '<p>A hivatkozás 1 óráig érvényes. Ha nem Ön kérte, hagyja figyelmen kívül ezt az e-mailt.</p></div>';
-            $emailInterface->sendNotification($email, 'Jelszó-visszaállítás — Szikora Transz', $body);
+            $emailInterface->sendJelszoVisszaallitas($email, $resetUrl);
 
             return ['success' => true];
         } catch (Exception $e) {

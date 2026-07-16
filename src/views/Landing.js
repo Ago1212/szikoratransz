@@ -709,11 +709,11 @@ export default function Landing() {
                   és ügyfélközpontú hozzáállásunkat.
                 </p>
                 <p className="text-lg text-[#23262B]/70 mb-8">
-                  Mára belföldi és nemzetközi fuvarokat egyaránt vállalunk,
-                  a rövid távú, sürgős megbízásoktól a rendszeres,
-                  hosszú távú partnerségekig. Minden ügyfelünket úgy
-                  szolgáljuk ki, mintha a saját árujuk lenne — legyen szó
-                  egyszeri fuvarról vagy folyamatos együttműködésről.
+                  Mára belföldi és nemzetközi fuvarokat egyaránt vállalunk, a
+                  rövid távú, sürgős megbízásoktól a rendszeres, hosszú távú
+                  partnerségekig. Minden ügyfelünket úgy szolgáljuk ki, mintha a
+                  saját árujuk lenne — legyen szó egyszeri fuvarról vagy
+                  folyamatos együttműködésről.
                 </p>
                 <div className="space-y-4">
                   <div className="flex items-center gap-4 border border-[#23262B]/10 rounded-xl p-4">
