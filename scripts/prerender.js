@@ -37,7 +37,16 @@ const http = require("http");
 
 const BUILD_DIR = path.join(__dirname, "..", "build");
 const PORT = 47821;
-const ROUTES_TO_PRERENDER = ["/"];
+const ROUTES_TO_PRERENDER = [
+  "/",
+  "/belfoldi-fuvarozas-arajanlat",
+  "/nemzetkozi-fuvarozas-vamugyintezessel",
+  "/biztositott-szallitas",
+  "/expressz-fuvarozas",
+  "/rendezveny-szallitas",
+  "/egyedi-arajanlat-fuvarozas",
+  "/adatvedelem",
+];
 
 const MIME = {
   ".html": "text/html", ".js": "application/javascript", ".css": "text/css",

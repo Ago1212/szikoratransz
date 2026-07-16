@@ -10,6 +10,13 @@ import { Link } from "react-router-dom";
 import Footer from "components/Footers/Footer.js";
 import { fetchAction } from "utils/fetchAction";
 import HungaryMapBackground from "components/UI/HungaryMapBackground.js";
+import QuoteForm from "components/Landing/QuoteForm.js";
+import {
+  FEATURES,
+  PROCESS_STEPS,
+  TESTIMONIALS,
+  FAQ_ITEMS,
+} from "data/landingContent.js";
 import {
   PiTruckLight,
   PiArrowRightLight,
@@ -17,12 +24,6 @@ import {
   PiUserCircleLight,
   PiQuotesLight,
   PiCaretDownLight,
-  PiEnvelopeLight,
-  PiGlobeLight,
-  PiShieldCheckLight,
-  PiWarehouseLight,
-  PiLightningLight,
-  PiFileTextLight,
 } from "react-icons/pi";
 
 // ---------------------------------------------------------------------------
@@ -125,133 +126,8 @@ function Reveal({ children, delay = 0, className = "", variant = "fade" }) {
   );
 }
 
-const FAQ_ITEMS = [
-  {
-    q: "Mennyi idő alatt kapok ajánlatot?",
-    a: "Általában 24 órán belül felvesszük Önnel a kapcsolatot egy részletes, az útvonalra és az áru jellegére szabott árajánlattal.",
-  },
-  {
-    q: "Mitől függ egy fuvar ára?",
-    a: "Elsősorban a távolság, a szállítandó áru mérete, súlya és jellege, valamint a vállalt határidő határozza meg az árat. Nincs egységes, fix díjszabásunk — minden ajánlatkérést egyedileg, tételesen árazunk, hogy a végösszeg pontosan tükrözze az adott fuvar valós igényeit.",
-  },
-  {
-    q: "Milyen járművekkel dolgoznak?",
-    a: "Modern, rendszeresen karbantartott kamionflottánkat a szállítandó áru jellegéhez igazítjuk. A fuvarhoz legmegfelelőbb jármű kiválasztása az ajánlatkérés során, az Ön igényei alapján történik.",
-  },
-  {
-    q: "Biztosított a szállított áru?",
-    a: "Igen, minden fuvarunk teljes körű biztosítási fedezettel történik, a felvételtől a kiszállításig.",
-  },
-  {
-    q: "Mi történik, ha kár keletkezik szállítás közben?",
-    a: "Ilyen esetben haladéktalanul jelezze felénk telefonon vagy e-mailben. Mivel minden fuvar biztosítási fedezet mellett zajlik, csapatunk a biztosítóval egyeztetve intézi a kárrendezés ügyintézését.",
-  },
-  {
-    q: "Vállalnak nemzetközi szállítást?",
-    a: "Igen, Európa-szerte végzünk nemzetközi fuvarozást, a szükséges vámügyintézés és okmányolás teljes körű intézésével. A pontos útvonalat és határidőt minden esetben egyeztetjük az ajánlatkérés során.",
-  },
-  {
-    q: "Kérhetek egyedi árajánlatot speciális igényekhez?",
-    a: "Igen, minden megrendelést egyedileg árazunk az útvonal, az áru jellege és a határidő alapján. Vegye fel velünk a kapcsolatot a részletekkel, és személyre szabott ajánlatot küldünk.",
-  },
-  {
-    q: "Milyen fizetési feltételeket fogadnak el?",
-    a: "Átutalást és számlás fizetést is biztosítunk, a fizetési határidőt az egyedi megrendelés alapján egyeztetjük.",
-  },
-  {
-    q: "Hogyan jelentkezhetek sofőrként?",
-    a: "Töltse ki az alábbi jelentkezési űrlapot a végzettségével és tapasztalatával. Amennyiben rendelkezik a szükséges jogosítvány-kategóriával, csapatunk hamarosan felveszi Önnel a kapcsolatot, és a pontos feltételekről személyesen egyeztetünk.",
-  },
-];
-
-const TESTIMONIALS = [
-  {
-    quote:
-      "A Szikora Transz csapatára mindig számíthatunk, akár sürgős, akár előre tervezett szállításról van szó. A kommunikáció gyors és pontos.",
-    name: "Nagy Péter",
-    role: "beszerzési vezető",
-    company: "Pannon Élelmiszer Zrt.",
-  },
-  {
-    quote:
-      "Nemzetközi fuvarjaink mindig időben és hiánytalanul érkeznek meg. A vámügyintézést is teljes egészében átvállalják tőlünk.",
-    name: "Tóth Andrea",
-    role: "logisztikai menedzser",
-    company: "ÉszakBau Kft.",
-  },
-  {
-    quote:
-      "Minden fuvarra gyorsan, az igényeinkre szabott árajánlatot kapunk, és bármikor el tudjuk érni a csapatot, ha kérdésünk van.",
-    name: "Kovács Gábor",
-    role: "ügyvezető",
-    company: "Dunapack Csomagolástechnika Kft.",
-  },
-];
-
-const FEATURES = [
-  {
-    icon: PiTruckLight,
-    title: "Belföldi fuvarozás",
-    desc: "Gyors és megbízható áruszállítás Magyarország egész területén, rugalmas árazással és pontos határidőkkel. Egyaránt vállalunk egyszeri megbízásokat és rendszeres, ismétlődő fuvarokat.",
-  },
-  {
-    icon: PiGlobeLight,
-    title: "Nemzetközi szállítás",
-    desc: "Határon átnyúló fuvarozási szolgáltatás Európa-szerte, teljes körű vámügyintézéssel és okmányolással. Az útvonalat és a határidőt minden esetben az adott fuvarhoz igazítjuk.",
-  },
-  {
-    icon: PiShieldCheckLight,
-    title: "Biztosított szállítás",
-    desc: "Minden fuvarunk teljes biztosítási fedezettel történik — az árukészlete nálunk biztos kezekben van. Esetleges kár esetén csapatunk intézi a biztosítóval a kárrendezést.",
-  },
-  {
-    icon: PiWarehouseLight,
-    title: "Raktározás és logisztika",
-    desc: "Rövid és hosszú távú tárolási kapacitás, áru-átcsomagolás és teljes körű logisztikai koordináció. Igény szerint a szállítási folyamat egészét kézben tartjuk, a felvételtől a kiszállításig.",
-  },
-  {
-    icon: PiLightningLight,
-    title: "Expressz szállítás",
-    desc: "Sürgős fuvarok soron kívüli kezelése, garantált kiszállítási idővel, ha az idő a legfontosabb tényező. Vegye fel velünk a kapcsolatot, és soron kívül egyeztetjük a részleteket.",
-  },
-  {
-    icon: PiFileTextLight,
-    title: "Egyedi árajánlat",
-    desc: "Minden megrendelést egyedileg árazunk az útvonal, az áru jellege és a határidő alapján — gyors, személyre szabott ajánlattal. Nincs rejtett költség, az ajánlatban minden tétel átlátható.",
-  },
-];
-
-const PROCESS_STEPS = [
-  {
-    n: "01",
-    title: "Megrendelés",
-    desc: "Küldje el ajánlatkérését az űrlapon, és 24 órán belül részletes választ kap tőlünk.",
-  },
-  {
-    n: "02",
-    title: "Tervezés",
-    desc: "Optimalizáljuk az útvonalat, és kiválasztjuk az áru jellegéhez illő járművet és sofőrt.",
-  },
-  {
-    n: "03",
-    title: "Szállítás",
-    desc: "Szakképzett sofőreink pontosan az ütemterv szerint szállítják az árut, az ország határain belül és kívül.",
-  },
-  {
-    n: "04",
-    title: "Kézbesítés",
-    desc: "Pontos, biztosított kiszállítás, írásos visszaigazolással a fuvar lezárásáról.",
-  },
-];
-
 export default function Landing() {
   const [activeSection, setActiveSection] = useState("home");
-  const [quoteForm, setQuoteForm] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    message: "",
-  });
   const [applicationForm, setApplicationForm] = useState({
     name: "",
     phone: "",
@@ -266,49 +142,12 @@ export default function Landing() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState(0);
 
-  const handleQuoteChange = (e) => {
-    const { name, value } = e.target;
-    setQuoteForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
   const handleApplicationChange = (e) => {
     const { name, value } = e.target;
     setApplicationForm((prev) => ({
       ...prev,
       [name]: value,
     }));
-  };
-
-  const submitQuoteRequest = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setSubmitStatus({ success: null, message: "" });
-
-    const result = await fetchAction("sendAjanlatkeres", {
-      name: quoteForm.name,
-      email: quoteForm.email,
-      phone: quoteForm.phone,
-      message: quoteForm.message,
-    });
-
-    if (result && result.success) {
-      setSubmitStatus({
-        success: true,
-        message:
-          "Ajánlatkérés sikeresen elküldve! Hamarosan felvesszük Önnel a kapcsolatot.",
-      });
-      setQuoteForm({ name: "", email: "", phone: "", message: "" });
-    } else {
-      setSubmitStatus({
-        success: false,
-        message:
-          result.message || "Hiba történt az ajánlatkérés küldése közben.",
-      });
-    }
-    setIsSubmitting(false);
   };
 
   const submitDriverApplication = async (e) => {
@@ -414,9 +253,13 @@ export default function Landing() {
             <div className="hidden md:block">
               <div className="ml-10 flex items-center space-x-8">
                 {navItems.map((item) => (
-                  <button
+                  <a
                     key={item.id}
-                    onClick={() => smoothScroll(item.id)}
+                    href={`#${item.id}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      smoothScroll(item.id);
+                    }}
                     className={`${
                       activeSection === item.id
                         ? "text-[#1E3AA8] border-b-2 border-[#1E3AA8]"
@@ -424,7 +267,7 @@ export default function Landing() {
                     } px-1 py-2 text-sm font-medium transition-colors duration-300`}
                   >
                     {item.label}
-                  </button>
+                  </a>
                 ))}
 
                 <Link
@@ -489,9 +332,13 @@ export default function Landing() {
         >
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-[#F2F3F5] border-t border-[#23262B]/8">
             {navItems.map((item) => (
-              <button
+              <a
                 key={item.id}
-                onClick={() => smoothScroll(item.id)}
+                href={`#${item.id}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  smoothScroll(item.id);
+                }}
                 className={`${
                   activeSection === item.id
                     ? "bg-[#23262B]/5 text-[#1E3AA8]"
@@ -499,7 +346,7 @@ export default function Landing() {
                 } block px-3 py-2 rounded-xl text-base font-medium w-full text-left`}
               >
                 {item.label}
-              </button>
+              </a>
             ))}
 
             <Link
@@ -601,13 +448,17 @@ export default function Landing() {
                 </Reveal>
 
                 <Reveal delay={780}>
-                  <button
-                    onClick={() => smoothScroll("services")}
+                  <a
+                    href="#services"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      smoothScroll("services");
+                    }}
                     className="mt-6 inline-flex items-center gap-2 text-[#23262B]/70 hover:text-[#23262B] text-sm font-[Overpass] font-semibold transition-colors duration-300"
                   >
                     Szolgáltatásaink megismerése
                     <PiArrowRightLight className="text-xs" />
-                  </button>
+                  </a>
                 </Reveal>
               </div>
 
@@ -724,21 +575,37 @@ export default function Landing() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {FEATURES.map((feature, index) => (
-                <Reveal key={feature.title} delay={index * 80}>
-                  <div className="bg-white border border-[#23262B]/10 rounded-xl p-8 h-full transition-all duration-300 hover:border-[#1E3AA8]/50 hover:shadow-xl hover:-translate-y-1">
-                    <div className="w-12 h-12 bg-[#1E3AA8]/10 text-[#1E3AA8] rounded-xl flex items-center justify-center mb-6">
-                      <feature.icon className="text-lg" />
-                    </div>
-                    <h3 className="font-[Overpass] font-bold text-xl text-[#23262B] mb-2">
-                      {feature.title}
-                    </h3>
-                    <p className="text-[#23262B]/70 leading-relaxed">
-                      {feature.desc}
-                    </p>
-                  </div>
-                </Reveal>
-              ))}
+              {FEATURES.map((feature, index) => {
+                // Csak azoknak a kártyáknak van `href`-je, amelyeknek van
+                // dedikált long-tail oldala (ld. data/landingContent.js) —
+                // azok kattinthatók, a többi egyszerű, nem kattintható kártya.
+                const CardTag = feature.href ? Link : "div";
+                const cardProps = feature.href ? { to: feature.href } : {};
+                return (
+                  <Reveal key={feature.title} delay={index * 80}>
+                    <CardTag
+                      {...cardProps}
+                      className="group block bg-white border border-[#23262B]/10 rounded-xl p-8 h-full transition-all duration-300 hover:border-[#1E3AA8]/50 hover:shadow-xl hover:-translate-y-1"
+                    >
+                      <div className="w-12 h-12 bg-[#1E3AA8]/10 text-[#1E3AA8] rounded-xl flex items-center justify-center mb-6">
+                        <feature.icon className="text-lg" />
+                      </div>
+                      <h3 className="font-[Overpass] font-bold text-xl text-[#23262B] mb-2">
+                        {feature.title}
+                      </h3>
+                      <p className="text-[#23262B]/70 leading-relaxed">
+                        {feature.desc}
+                      </p>
+                      {feature.href && (
+                        <span className="mt-4 inline-flex items-center gap-1 text-sm font-[Overpass] font-semibold text-[#1E3AA8] opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          Részletek
+                          <PiArrowRightLight className="text-xs" />
+                        </span>
+                      )}
+                    </CardTag>
+                  </Reveal>
+                );
+              })}
             </div>
 
             {/* Miért válasszon minket */}
@@ -1024,123 +891,11 @@ export default function Landing() {
             )}
 
             <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-8">
-              {/* Ajánlatkérés — elsődleges, kiemelt űrlap */}
-              <div className="bg-[#23262B] rounded-xl overflow-hidden">
-                <div className="p-8 md:p-10">
-                  <div className="flex items-center gap-4 mb-2">
-                    <div className="w-12 h-12 bg-[#2E3239]/15 text-white rounded-xl flex items-center justify-center flex-shrink-0">
-                      <PiEnvelopeLight className="text-lg" />
-                    </div>
-                    <h3 className="font-[Overpass] font-bold text-2xl text-white">
-                      Ingyenes ajánlatkérés
-                    </h3>
-                  </div>
-                  <p className="text-white/50 mb-8">
-                    Küldjön üzenetet, és 24 órán belül visszajelzünk részletes
-                    ajánlattal.
-                  </p>
-
-                  <form onSubmit={submitQuoteRequest}>
-                    <div className="space-y-5">
-                      <div>
-                        <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/55 mb-2">
-                          Teljes név
-                        </label>
-                        <input
-                          type="text"
-                          name="name"
-                          value={quoteForm.name}
-                          onChange={handleQuoteChange}
-                          className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-[#2F4DE0] focus:border-[#2F4DE0] transition duration-300"
-                          placeholder="Teljes név"
-                          required
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div>
-                          <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/55 mb-2">
-                            Telefonszám
-                          </label>
-                          <input
-                            type="tel"
-                            name="phone"
-                            value={quoteForm.phone}
-                            onChange={handleQuoteChange}
-                            className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-[#2F4DE0] focus:border-[#2F4DE0] transition duration-300"
-                            placeholder="Telefonszám"
-                            required
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/55 mb-2">
-                            Email cím
-                          </label>
-                          <input
-                            type="email"
-                            name="email"
-                            value={quoteForm.email}
-                            onChange={handleQuoteChange}
-                            className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-[#2F4DE0] focus:border-[#2F4DE0] transition duration-300"
-                            placeholder="Email cím"
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/55 mb-2">
-                          Üzenet
-                        </label>
-                        <textarea
-                          rows="4"
-                          name="message"
-                          value={quoteForm.message}
-                          onChange={handleQuoteChange}
-                          className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-[#2F4DE0] focus:border-[#2F4DE0] transition duration-300"
-                          placeholder="Üzenet szövege..."
-                          required
-                        ></textarea>
-                      </div>
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="w-full mt-7 px-6 py-4 bg-[#1E3AA8] hover:bg-[#172E86] text-white font-[Overpass] font-bold uppercase tracking-wide text-sm rounded-xl transition duration-300 disabled:opacity-50"
-                    >
-                      {isSubmitting ? (
-                        <span className="flex items-center justify-center">
-                          <svg
-                            className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            ></circle>
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
-                          </svg>
-                          Küldés...
-                        </span>
-                      ) : (
-                        "Ingyenes ajánlat kérése"
-                      )}
-                    </button>
-                  </form>
-                </div>
-              </div>
+              {/* Ajánlatkérés — elsődleges, kiemelt űrlap (kiemelve a
+                  components/Landing/QuoteForm.js komponensbe, hogy a
+                  szolgáltatás-specifikus long-tail oldalak is
+                  újrahasználhassák ugyanazt a submit-logikát). */}
+              <QuoteForm />
 
               {/* Sofőr jelentkezés — másodlagos, barátságosabb hangvételű űrlap */}
               <div className="bg-[#1E3AA8]/[0.04] border border-[#1E3AA8]/15 rounded-xl overflow-hidden">

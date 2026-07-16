@@ -167,7 +167,23 @@ class GpsmartClient {
             }
 
             if (strpos($class, 'allSummaryLine') !== false) {
-                $summaryTable = $sor->getElementsByTagName('table')->item(0);
+                // NEM az első <table> a sorban — CAN-busz/óraállás-adatú
+                // járműveknél GPSmart egy plusz, korábbi "CAN" táblát is
+                // beszúr (óraállás/táv/üzemanyag/tengelyterhelés) a valódi
+                // GPS-alapú Hivatali/Magán/Összesen tábla ELÉ, azonos
+                // "summaryTable" class-szal — item(0) ilyenkor a rossz
+                // táblát kapná el, és a sorAdat(2)/(3)/(4) index a CAN-
+                // tábla más alakú soraira mutatna (üres/hibás összesítőt
+                // eredményezve). A GPS táblát a "GPS" fejléc-cellája alapján
+                // azonosítjuk, nem a sorrendje alapján.
+                $summaryTable = null;
+                foreach ($sor->getElementsByTagName('table') as $jeloltTabla) {
+                    $fejlec = $xpath->query('.//td[normalize-space(text())="GPS"]', $jeloltTabla);
+                    if ($fejlec->length > 0) {
+                        $summaryTable = $jeloltTabla;
+                        break;
+                    }
+                }
                 if ($summaryTable) {
                     $sorAdat = function ($index) use ($summaryTable, $szoveg) {
                         $sorok = $summaryTable->getElementsByTagName('tr');

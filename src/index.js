@@ -7,8 +7,16 @@ import "assets/styles/tailwind.css";
 // views without layouts
 import Landing from "views/Landing.js";
 import NotFound from "views/NotFound.js";
+import BelfoldiFuvarozas from "views/landing/BelfoldiFuvarozas.js";
+import NemzetkoziFuvarozas from "views/landing/NemzetkoziFuvarozas.js";
+import BiztositottSzallitas from "views/landing/BiztositottSzallitas.js";
+import ExpresszFuvarozas from "views/landing/ExpresszFuvarozas.js";
+import RendezvenySzallitas from "views/landing/RendezvenySzallitas.js";
+import EgyediArajanlat from "views/landing/EgyediArajanlat.js";
+import Adatvedelem from "views/Adatvedelem.js";
 
 import ToastContainer from "components/UI/ToastContainer.js";
+import ScrollToTop from "components/UI/ScrollToTop.js";
 import UpdateBanner from "components/PWA/UpdateBanner.js";
 import { notifySwUpdate } from "utils/swUpdate";
 
@@ -31,6 +39,7 @@ serviceWorkerRegistration.register({
 const app = (
   <BrowserRouter>
     <Suspense fallback={null}>
+      <ScrollToTop />
       <Switch>
         {/* add routes with layouts */}
         <Route path="/admin" component={Admin} />
@@ -38,6 +47,29 @@ const app = (
         <Route path="/auth" component={Auth} />
         {/* add routes without layouts */}
         <Route path="/profile" exact component={Profile} />
+        {/* szolgáltatás-specifikus long-tail SEO oldalak — ld.
+            src/views/landing/*.js és src/components/Landing/ServicePage.js.
+            Ugyanide kell felvenni őket a scripts/prerender.js
+            ROUTES_TO_PRERENDER listájába és a public/sitemap.xml-be is. */}
+        <Route
+          path="/belfoldi-fuvarozas-arajanlat"
+          exact
+          component={BelfoldiFuvarozas}
+        />
+        <Route
+          path="/nemzetkozi-fuvarozas-vamugyintezessel"
+          exact
+          component={NemzetkoziFuvarozas}
+        />
+        <Route path="/biztositott-szallitas" exact component={BiztositottSzallitas} />
+        <Route path="/expressz-fuvarozas" exact component={ExpresszFuvarozas} />
+        <Route path="/rendezveny-szallitas" exact component={RendezvenySzallitas} />
+        <Route
+          path="/egyedi-arajanlat-fuvarozas"
+          exact
+          component={EgyediArajanlat}
+        />
+        <Route path="/adatvedelem" exact component={Adatvedelem} />
         <Route path="/" exact component={Landing} />
         {/* a /landing a főoldal korábbi, tartalmilag azonos duplikátuma volt
             — most a főoldalra irányít, hogy ne ossza meg a rangsorolási
