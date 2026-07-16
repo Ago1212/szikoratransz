@@ -150,9 +150,21 @@ class EmailInterface {
     }
 
     protected function sendEmail(string $from, string $to, string $subject, string $body) {
-        // Alap e-mail küldési logika
+        // A From domain SZÁNDÉKOSAN szikora-transz.hu, NEM ps.hu — a ps.hu
+        // domainnek van egy `_dmarc.ps.hu` TXT rekordja `p=quarantine`
+        // szabállyal, miközben a kimenő levelek nincsenek DKIM-mel aláírva
+        // egyik domainhez sem. Amíg a From ps.hu volt, ps.hu SAJÁT DMARC
+        // policy-je utasította a Gmailt (és minden DMARC-ot respektáló
+        // fogadó szervert), hogy a nem-illeszkedő (DKIM-hiányos) leveleket
+        // tegye spambe — élesben ellenőrizve: emiatt ment MIND a 4 kimenő
+        // e-mail-típus (ajánlatkérés, jelentkezés, jelszó-visszaállítás,
+        // lejárat-cron) egységesen spambe, nem csak egy-kettő.
+        // A szikora-transz.hu domainnek nincs DMARC rekordja (`dig TXT
+        // _dmarc.szikora-transz.hu` üres) és a saját SPF-je (`v=spf1 a mx
+        // -all`) explicit engedélyezi ezt a szervert — nincs tehát
+        // kényszerítő quarantine-szabály, amit a Gmailnek követnie kellene.
         $headers = [
-            'From' => "Szikora Transz <agoston@ps.hu>",
+            'From' => "Szikora Transz <noreply@szikora-transz.hu>",
             'Reply-To' => $from,
             'X-Mailer' => 'PHP/' . phpversion(),
             'Content-Type' => 'text/html; charset=utf-8'
