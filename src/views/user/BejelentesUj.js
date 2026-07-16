@@ -178,7 +178,7 @@ export default function BejelentesUj() {
   };
 
   return (
-    <div className="flex flex-col gap-3 pb-24 md:pb-20">
+    <div className="flex flex-col gap-3 pb-4">
       <MobileHeader title="Új bejelentés" />
 
       <div>
@@ -269,20 +269,13 @@ export default function BejelentesUj() {
         {locating ? "Helyzet lekérése…" : location ? "Helyzet rögzítve" : "Helyzet rögzítése"}
       </button>
 
-      {/* Rögzített gomb a lap alján, a mobil alsó navigáció fölött —
-          korábban a form aljára volt szerelve, hosszabb tartalomnál
-          (pl. sok csatolmány) csak legörgetve látszott. */}
-      <div className="fixed inset-x-0 bottom-16 z-30 border-t border-ink-100 bg-white/95 px-4 py-3 backdrop-blur md:bottom-0">
-        <div className="mx-auto max-w-lg md:max-w-3xl">
-          <SaveButton
-            onClick={handleSend}
-            isSaving={sending}
-            label="Bejelentés küldése"
-            savingLabel="Küldés…"
-            className="w-full justify-center py-3.5"
-          />
-        </div>
-      </div>
+      <SaveButton
+        onClick={handleSend}
+        isSaving={sending}
+        label="Bejelentés küldése"
+        savingLabel="Küldés…"
+        className="w-full justify-center py-3.5"
+      />
     </div>
   );
 }

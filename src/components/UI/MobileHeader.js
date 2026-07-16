@@ -27,7 +27,7 @@ export default function MobileHeader({ title, back = true, action }) {
         <button
           type="button"
           onClick={() => history.goBack()}
-          className="-ml-1.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-ink-500 transition-colors duration-150 hover:bg-white hover:text-ink-900"
+          className="-ml-2.5 flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-ink-500 transition-colors duration-150 hover:bg-white hover:text-ink-900"
           aria-label="Vissza"
         >
           <PiArrowLeftLight className="h-5 w-5" />

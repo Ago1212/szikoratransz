@@ -196,6 +196,7 @@ export default function Profil() {
           title="Felhasználó adatok"
           icon={PiIdentificationCardLight}
           columns={2}
+          mobileColumns={2}
         >
           <FormField
             label="Név"
@@ -264,6 +265,7 @@ export default function Profil() {
           title="Iratok"
           icon={PiIdentificationCardLight}
           columns={2}
+          mobileColumns={2}
         >
           <FormField
             label="Személyi igazolvány szám"

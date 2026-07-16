@@ -21,6 +21,7 @@ export default function VezetesiIdo() {
   const [naplo, setNaplo] = useState([]);
   const [aktualisHet, setAktualisHet] = useState(null);
   const [gpsLoading, setGpsLoading] = useState(false);
+  const [javaslatFrissitve, setJavaslatFrissitve] = useState(null);
 
   const load = () => {
     fetchAction("getSajatVezetesiNaplo", { sofor_id: user.id }).then((result) => {
@@ -28,6 +29,23 @@ export default function VezetesiIdo() {
     });
     fetchAction("getSajatVezetesiAllapot", { sofor_id: user.id, hetek: 1 }).then((result) => {
       if (result?.success) setAktualisHet(result.hetek?.[0] || null);
+    });
+    // A GPS-alapú javaslat mostantól automatikusan frissül a háttérben
+    // (napi cron + a Flottakövetés élő "Frissítés"-ének mellékhatása, ld.
+    // gpsmartInterface.php), a sofőrnek emiatt nem kell mindig a "Kitöltés
+    // GPS alapján" gombra kattintania — csak akkor, ha a gyorsítótárnál is
+    // frissebb értéket szeretne. Csak a MAI dátumnál és csak akkor töltjük
+    // elő, ha a mező még üres (a sofőr nem kezdett el gépelni bele) — így
+    // egy már megkezdett, kézi bevitelt sosem írunk felül.
+    fetchAction("getVezetesJavaslatCache", { sofor_id: user.id }).then((result) => {
+      if (result?.success && result.van_javaslat) {
+        setJavaslatFrissitve(result.frissitve);
+        setForm((prev) =>
+          prev.datum === ma() && prev.vezetes_ora === ""
+            ? { ...prev, vezetes_ora: result.vezetes_ora }
+            : prev,
+        );
+      }
     });
   };
 
@@ -115,7 +133,7 @@ export default function VezetesiIdo() {
         </div>
       )}
 
-      <FormSection icon={PiSteeringWheelLight} columns={2}>
+      <FormSection icon={PiSteeringWheelLight} columns={2} mobileColumns={2}>
         <FormField
           type="date"
           label="Dátum"
@@ -152,6 +170,11 @@ export default function VezetesiIdo() {
           required
         />
       </FormSection>
+      {javaslatFrissitve && (
+        <p className="-mt-2 text-[11px] text-ink-400">
+          A vezetett órák GPS alapján automatikusan frissítve: {javaslatFrissitve.slice(11, 16)}
+        </p>
+      )}
       <FormField
         as="textarea"
         label="Megjegyzés (opcionális)"

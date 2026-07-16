@@ -70,7 +70,7 @@ export default function Tankolas() {
     <div className="flex flex-col gap-4 pb-4">
       <MobileHeader title="Tankolás rögzítése" />
 
-      <FormSection icon={PiGasPumpLight} columns={2}>
+      <FormSection icon={PiGasPumpLight} columns={2} mobileColumns={2}>
         <FormField
           type="number"
           label="Mennyiség (liter)"

@@ -71,7 +71,17 @@ const gridColsClass = {
   5: "md:grid-cols-5",
 };
 
-export function FormSection({ id, title, icon: Icon, columns = 2, children, className = "" }) {
+const mobileGridColsClass = {
+  1: "grid-cols-1",
+  2: "grid-cols-2",
+};
+
+// `mobileColumns` opcionális, alapértelmezetten 1 (a korábbi, mindig
+// egyoszlopos mobil viselkedést megőrizve minden meglévő FormSection
+// hívónál) — csak ott adjunk `2`-t, ahol a szekció MINDEN mezője
+// egyformán rövid (pl. szám/dátum), így mobilon is párba állíthatók
+// hosszú mezők (cím, lakcím) torzítása nélkül.
+export function FormSection({ id, title, icon: Icon, columns = 2, mobileColumns = 1, children, className = "" }) {
   return (
     <div id={id} className={`scroll-mt-4 ${className}`}>
       {title && (
@@ -80,7 +90,11 @@ export function FormSection({ id, title, icon: Icon, columns = 2, children, clas
           {title}
         </h4>
       )}
-      <div className={`grid grid-cols-1 gap-x-4 gap-y-3 ${gridColsClass[columns] || gridColsClass[2]}`}>
+      <div
+        className={`grid gap-x-4 gap-y-3 ${mobileGridColsClass[mobileColumns] || mobileGridColsClass[1]} ${
+          gridColsClass[columns] || gridColsClass[2]
+        }`}
+      >
         {children}
       </div>
     </div>

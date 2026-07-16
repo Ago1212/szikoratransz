@@ -69,3 +69,27 @@ CREATE TABLE `piaci_arak_elozmeny` (
   `ertek` DECIMAL(12,4) NOT NULL,
   PRIMARY KEY (`kulcs`, `datum`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Feature: Vezetési idő GPS-alapú javaslat automatikus frissítése — eddig
+-- a sofőrnek a Vezetési idő oldalon MINDIG kézzel kellett a "Kitöltés GPS
+-- alapján" gombra kattintania. Ez a gyorsítótár sofőrönként tárolja a
+-- legutóbb ismert GPS-alapú vezetés-óra becslést a MAI napra — a frontend
+-- ebből tölti elő a mezőt, a gomb csak on-demand frissítésre marad. A
+-- cache-t két forrás írja: egy napi cron (biztonsági háló) és a
+-- Flottakövetés "Megtett út (ma)" élő lekérdezésének mellékhatása (ld.
+-- GpsmartInterface::lekerdezMegtettUtMa komment) — mindkettő ugyanazt az
+-- amúgy is lekért GPSmart-választ használja fel, nincs emiatt extra
+-- GPSmart-hívás. KIZÁRÓLAG a mai napra íródik/olvasható — a sofőr↔kamion
+-- hozzárendelés csak "most" megbízható, visszamenőlegesen nincs napi
+-- bontású history (ld. getVezetesJavaslat komment), ezért nincs
+-- dátumtartomány-lekérdezés/backfill rá. A `datum` oszlop csak azért kell,
+-- hogy éjfél után a tegnapi sor ne tűnjön friss adatnak, amíg az első mai
+-- frissítés meg nem történik.
+CREATE TABLE `gpsmart_vezetesi_javaslat` (
+  `sofor_id` INT(11) NOT NULL,
+  `datum` DATE NOT NULL,
+  `kamion_id` INT(11) NOT NULL,
+  `vezetes_ora` DECIMAL(4,2) NOT NULL,
+  `frissitve` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`sofor_id`, `datum`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

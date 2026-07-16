@@ -6,8 +6,6 @@ import MobileHeader from "components/UI/MobileHeader.js";
 import StatusBadge from "components/UI/StatusBadge.js";
 import Spinner from "components/UI/Spinner.js";
 
-const PRIORITAS_TONE = { magas: "danger", kozepes: "warning", alacsony: "neutral" };
-const PRIORITAS_LABEL = { magas: "Sürgős", kozepes: "Közepes", alacsony: "Alacsony" };
 const STATUSZ_TONE = { uj: "warning", folyamatban: "info", lezart: "success" };
 const STATUSZ_LABEL = { uj: "Új", folyamatban: "Folyamatban", lezart: "Lezárva" };
 
@@ -47,22 +45,24 @@ export default function Bejelentesek() {
                     {b.kamion_rendszam ? ` · ${b.kamion_rendszam}` : ""}
                   </p>
                 </div>
-                <StatusBadge tone={STATUSZ_TONE[b.statusz] || "neutral"}>
-                  {STATUSZ_LABEL[b.statusz] || b.statusz}
-                </StatusBadge>
+                <div className="flex flex-shrink-0 items-center gap-1.5">
+                  {b.admin_valasz && (
+                    <StatusBadge tone="success">Válaszolt</StatusBadge>
+                  )}
+                  <StatusBadge tone={STATUSZ_TONE[b.statusz] || "neutral"}>
+                    {STATUSZ_LABEL[b.statusz] || b.statusz}
+                  </StatusBadge>
+                </div>
               </div>
               {b.leiras && <p className="mt-2 text-sm text-ink-600">{b.leiras}</p>}
-              <div className="mt-2 flex items-center justify-between">
-                <StatusBadge tone={PRIORITAS_TONE[b.prioritas] || "neutral"}>
-                  {PRIORITAS_LABEL[b.prioritas] || b.prioritas}
-                </StatusBadge>
+              <div className="mt-2">
                 <span className="text-xs text-ink-400">
                   {(b.bejelentve || "").slice(0, 16).replace("T", " ")}
                 </span>
               </div>
               {b.admin_valasz && (
-                <div className="mt-2 rounded-xl bg-slate-50 p-2.5 text-xs text-ink-600">
-                  <span className="font-semibold text-ink-700">Válasz: </span>
+                <div className="mt-2 rounded-xl bg-emerald-50 p-2.5 text-xs text-ink-600">
+                  <span className="font-semibold text-emerald-700">Válasz: </span>
                   {b.admin_valasz}
                 </div>
               )}

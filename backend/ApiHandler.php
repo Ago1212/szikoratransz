@@ -265,6 +265,7 @@ class ApiHandler {
             'getSajatVezetesiNaplo' => ['sofor_id'],
             'getSajatVezetesiAllapot' => ['sofor_id'],
             'getVezetesJavaslat' => ['ceg_id', 'sofor_id', 'datum'],
+            'getVezetesJavaslatCache' => ['sofor_id'],
             'getVezetesiOsszesito' => ['ceg_id', 'kerelmezo_id'],
 
             'torolErtesites' => ['kulcsok', 'kerelmezo_id'],
@@ -1096,6 +1097,11 @@ class ApiHandler {
                         $request['sofor_id'],
                         $request['datum']
                     ));
+                    return;
+
+                case 'getVezetesJavaslatCache':
+                    $sajatSoforId = $this->resolveSajatSoforId($request);
+                    echo json_encode($gpsmartInterface->getVezetesJavaslatCache($sajatSoforId));
                     return;
 
                 case 'getVezetesiOsszesito':

@@ -182,6 +182,7 @@ class GpsmartInterface {
         }
 
         $ma = date('Y-m-d');
+        $soforIdKamionSzerint = $this->getSoforIdKamionSzerint($ceg_id);
         $eredmeny = [];
         foreach ($poziciok['poziciok'] as $p) {
             if (empty($p['kamion_id']) || empty($p['car_id'])) {
@@ -191,9 +192,26 @@ class GpsmartInterface {
             $megtettUt = null;
             try {
                 $utvonal = $this->lekerdezUtvonal($ceg_id, $p['car_id'], $ma, $ma);
-                $tavolsagSzoveg = $utvonal['success'] ? ($utvonal['osszesito']['tavolsag_osszesen'] ?? null) : null;
-                if ($tavolsagSzoveg !== null) {
-                    $megtettUt = $this->kmSzovegSzamra($tavolsagSzoveg);
+                if ($utvonal['success']) {
+                    $tavolsagSzoveg = $utvonal['osszesito']['tavolsag_osszesen'] ?? null;
+                    if ($tavolsagSzoveg !== null) {
+                        $megtettUt = $this->kmSzovegSzamra($tavolsagSzoveg);
+                    }
+
+                    // Ugyanebből a válaszból (nincs emiatt külön GPSmart-
+                    // hívás, ld. GpsmartClient "minden hívás saját loginnal
+                    // indul" komment fent) a Vezetési idő oldal GPS-javaslat
+                    // gyorsítótárát is frissítjük a kamionhoz JELENLEG
+                    // rendelt sofőrnél — ez a cache-frissítés egyik forrása,
+                    // a másik a napi cron (ld. gpsmart_vezetesi_javaslat
+                    // migráció komment).
+                    $soforId = $soforIdKamionSzerint[$p['kamion_id']] ?? null;
+                    if ($soforId !== null) {
+                        $menetidoOra = $this->idoSzovegOraDecimalra($utvonal['osszesito']['menetido'] ?? null);
+                        if ($menetidoOra !== null) {
+                            $this->frissitVezetesiJavaslatCache($soforId, $ma, $p['kamion_id'], $menetidoOra);
+                        }
+                    }
                 }
             } catch (Exception $e) {
                 // Egy jármű hibás/időtúllépéses lekérdezése ne dobja el a
@@ -209,6 +227,69 @@ class GpsmartInterface {
         }
 
         return ['success' => true, 'jarmuvek' => $eredmeny];
+    }
+
+    // [kamion_id => sofor_id] térkép — külön, saját lekérdezéssel a
+    // lekerdezPoziciok()-ban már meglévő (de csak NÉV-et tároló, `id`
+    // nélküli) sofőr-térképtől, hogy azt a metódust ne kelljen módosítani
+    // (a válaszát több helyen is felhasználják változatlan alakban).
+    private function getSoforIdKamionSzerint($ceg_id) {
+        $stmt = $this->db->prepare("SELECT id, kamion FROM user WHERE admin = :admin AND torolt <> 'I' AND kamion IS NOT NULL");
+        $stmt->bindValue(':admin', $ceg_id);
+        $stmt->execute();
+        $map = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $map[$row['kamion']] = $row['id'];
+        }
+        return $map;
+    }
+
+    // A `datum`-ot mindig PHP-oldali `date('Y-m-d')`-ként kapjuk a hívótól
+    // (sosem MySQL CURDATE()-tel számoljuk itt) — ugyanaz az óvatosság, mint
+    // a piaci_arak cache-freshness számításnál (ld. CLAUDE.md PHP/MySQL
+    // timezone-eltérés gotcha): a szerver-timezone és a PHP timezone
+    // eltérése miatt a kettő éjfél körül különböző napot adhatna.
+    private function frissitVezetesiJavaslatCache($sofor_id, $datum, $kamion_id, $vezetes_ora) {
+        $stmt = $this->db->prepare(
+            'INSERT INTO gpsmart_vezetesi_javaslat (sofor_id, datum, kamion_id, vezetes_ora, frissitve)
+             VALUES (:sofor_id, :datum, :kamion_id, :vezetes_ora, NOW())
+             ON DUPLICATE KEY UPDATE kamion_id = VALUES(kamion_id), vezetes_ora = VALUES(vezetes_ora), frissitve = NOW()'
+        );
+        $stmt->bindValue(':sofor_id', $sofor_id, PDO::PARAM_INT);
+        $stmt->bindValue(':datum', $datum);
+        $stmt->bindValue(':kamion_id', $kamion_id, PDO::PARAM_INT);
+        $stmt->bindValue(':vezetes_ora', $vezetes_ora);
+        $stmt->execute();
+    }
+
+    // Sofőr-oldali olvasás — a Vezetési idő oldal ebből tölti elő a
+    // vezetés_ora mezőt élő GPSmart-hívás nélkül. A cache-t a napi cron és
+    // lekerdezMegtettUtMa() mellékhatása írja. Csak a MAI napra ad vissza
+    // adatot — egy tegnapi/korábbi sor sosem tekinthető aktuálisnak, mert a
+    // sofőr azóta kamiont válthatott (ld. gpsmart_vezetesi_javaslat migráció
+    // komment).
+    public function getVezetesJavaslatCache($sofor_id) {
+        try {
+            $ma = date('Y-m-d');
+            $stmt = $this->db->prepare('SELECT vezetes_ora, frissitve FROM gpsmart_vezetesi_javaslat WHERE sofor_id = :sofor_id AND datum = :ma');
+            $stmt->bindValue(':sofor_id', $sofor_id, PDO::PARAM_INT);
+            $stmt->bindValue(':ma', $ma);
+            $stmt->execute();
+            $sor = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$sor) {
+                return ['success' => true, 'van_javaslat' => false];
+            }
+
+            return [
+                'success' => true,
+                'van_javaslat' => true,
+                'vezetes_ora' => (float) $sor['vezetes_ora'],
+                'frissitve' => $sor['frissitve'],
+            ];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
     }
 
     // Egy jármű útvonal-előzménye egy dátumtartományra. A `carId` a

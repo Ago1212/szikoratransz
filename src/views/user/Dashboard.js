@@ -20,11 +20,6 @@ import {
   daysUntil,
 } from "utils/documentStatus.js";
 
-const PRIORITAS_TONE = {
-  magas: "danger",
-  kozepes: "warning",
-  alacsony: "neutral",
-};
 const STATUSZ_TONE = { uj: "warning", folyamatban: "info", lezart: "success" };
 const STATUSZ_LABEL = {
   uj: "Új",
@@ -32,13 +27,10 @@ const STATUSZ_LABEL = {
   lezart: "Lezárva",
 };
 
+// A "Bejelentés" csempe szándékosan NINCS itt — a BottomNav középső,
+// mindig piros FAB-ja már ugyanoda vezet, egy második, azonos célú
+// csempe a Gyors műveletek rácsban felesleges duplikáció lenne.
 const quickActions = [
-  {
-    to: "/user/bejelentes/uj",
-    icon: PiWarningCircleLight,
-    label: "Bejelentés",
-    tone: "danger",
-  },
   {
     to: "/user/jarmu-valaszto",
     icon: PiTruckLight,
@@ -219,8 +211,8 @@ export default function UserDashboard() {
             </p>
           )}
           {pendingKamion && (
-            <p className="mt-1.5 truncate text-[11px] font-semibold text-amber-600">
-              Jóváhagyásra vár: {pendingKamion.jarmu_rendszam}
+            <p className="mt-1.5 text-[11px] font-semibold text-amber-600">
+              Vár jóváhagyásra
             </p>
           )}
         </Link>
@@ -247,8 +239,8 @@ export default function UserDashboard() {
             </p>
           )}
           {pendingPotkocsi && (
-            <p className="mt-1.5 truncate text-[11px] font-semibold text-amber-600">
-              Jóváhagyásra vár: {pendingPotkocsi.jarmu_rendszam}
+            <p className="mt-1.5 text-[11px] font-semibold text-amber-600">
+              Vár jóváhagyásra
             </p>
           )}
         </Link>
@@ -343,14 +335,7 @@ export default function UserDashboard() {
                     {STATUSZ_LABEL[b.statusz] || b.statusz}
                   </StatusBadge>
                 </div>
-                <div className="mt-1 flex items-center gap-2">
-                  <StatusBadge tone={PRIORITAS_TONE[b.prioritas] || "neutral"}>
-                    {b.prioritas === "magas"
-                      ? "Sürgős"
-                      : b.prioritas === "kozepes"
-                        ? "Közepes"
-                        : "Alacsony"}
-                  </StatusBadge>
+                <div className="mt-1">
                   <span className="text-xs text-ink-400">
                     {(b.bejelentve || "").slice(0, 16).replace("T", " ")}
                   </span>
