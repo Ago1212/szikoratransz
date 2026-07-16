@@ -28,7 +28,6 @@ class JogosultsagInterface {
         'ugyfelek' => ['hozzaferes', 'szerkesztes', 'torles'],
         'naplo' => ['hozzaferes'],
         'koltsegek' => ['hozzaferes', 'szerkesztes', 'torles'],
-        'fuvarok' => ['hozzaferes', 'szerkesztes', 'torles'],
         'vezetesi_ido' => ['hozzaferes', 'szerkesztes', 'torles'],
     ];
 

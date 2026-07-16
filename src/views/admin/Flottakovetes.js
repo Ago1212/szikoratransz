@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useMediaQuery } from "react-responsive";
 import { useHistory } from "react-router-dom";
-import { PiArrowClockwiseLight, PiMapTrifoldLight } from "react-icons/pi";
+import { PiArrowClockwiseLight, PiMapTrifoldLight, PiGaugeLight } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
 import PageHeader from "components/UI/PageHeader.js";
@@ -12,6 +12,7 @@ import JarmuLista from "components/Flottakovetes/JarmuLista.js";
 import FlottaTerkep from "components/Flottakovetes/FlottaTerkep.js";
 import JarmuReszletek from "components/Flottakovetes/JarmuReszletek.js";
 import ElozmenyekModal from "components/Flottakovetes/ElozmenyekModal.js";
+import KihasznaltsagiModal from "components/Flottakovetes/KihasznaltsagiModal.js";
 import { dusitottPoziciok } from "utils/gpsmartHelpers.js";
 
 const FRISSITES_MS = 60000; // pozíció-lekérdezés gyakorisága
@@ -64,6 +65,18 @@ export default function Flottakovetes() {
   const [now, setNow] = useState(() => new Date());
   const [elozmenyekOpen, setElozmenyekOpen] = useState(false);
   const [utvonalPontok, setUtvonalPontok] = useState(null);
+  const [kihasznaltsagOpen, setKihasznaltsagOpen] = useState(false);
+
+  // "Megtett út (ma)" — SZÁNDÉKOSAN külön állapot/hívás a pozícióktól. A
+  // gpsmartMegtettUtMa action jármű-önkénti élő útvonal-lekérdezést futtat
+  // (ld. gpsmartInterface.php komment), ami érezhetően lassabb lehet, mint
+  // az egyetlen HTML-táblát betöltő pozíció-lekérdezés — ezért ez NEM
+  // csatlakozik az automatikus 60mp-es projekthez, csak a kézi "Frissítés"
+  // gombhoz (ld. handleFrissites lent), hogy a lista/térkép frissülése
+  // sosem várjon meg rá.
+  const [megtettUtLoading, setMegtettUtLoading] = useState(false);
+  const [megtettUtAdatok, setMegtettUtAdatok] = useState({});
+  const [megtettUtFrissitve, setMegtettUtFrissitve] = useState(null);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), ORA_FRISSITES_MS);
@@ -88,6 +101,36 @@ export default function Flottakovetes() {
     }
   };
 
+  const loadMegtettUt = async () => {
+    setMegtettUtLoading(true);
+    try {
+      const result = await fetchAction("gpsmartMegtettUtMa", {
+        ceg_id: user.ceg_id,
+        kerelmezo_id: user.id,
+      });
+      if (result?.success) {
+        const terkep = {};
+        (result.jarmuvek || []).forEach((j) => {
+          terkep[j.kamion_id] = j.megtettUtMa;
+        });
+        setMegtettUtAdatok(terkep);
+        setMegtettUtFrissitve(new Date());
+      } else {
+        toast.error(result?.message || "Nem sikerült lekérdezni a megtett utat.");
+      }
+    } finally {
+      setMegtettUtLoading(false);
+    }
+  };
+
+  // A fejléc "Frissítés" gombja mindkettőt elindítja, de két FÜGGETLEN
+  // hívásként (nem `await`-elik egymást) — a lassabb megtett-út-lekérdezés
+  // sosem tartja vissza a pozíciók/térkép frissülését.
+  const handleFrissites = () => {
+    loadPoziciok();
+    loadMegtettUt();
+  };
+
   useEffect(() => {
     fetchAction("getGpsmartBeallitasokStatusz", {
       ceg_id: user.ceg_id,
@@ -102,18 +145,31 @@ export default function Flottakovetes() {
   useEffect(() => {
     if (checking || !vanBeallitva) return;
     loadPoziciok();
+    loadMegtettUt();
     // A kamionok folyamatosan mozognak, de ehhez nem kell élő, másodperces
     // push — egy perces automatikus újratöltés elég ahhoz, hogy ne kelljen
-    // kézzel nyomogatni a frissítés gombot.
+    // kézzel nyomogatni a frissítés gombot. A "Megtett út" NINCS ebben az
+    // intervallumban — csak induláskor tölt egyszer, utána a kézi
+    // "Frissítés" gomb (handleFrissites) tölti újra, ld. fenti komment.
     const id = setInterval(loadPoziciok, FRISSITES_MS);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checking, vanBeallitva]);
 
   // Egyetlen helyen számoljuk ki minden levezetett mezőt (állapot, relatív
-  // idő, számmá alakított sebesség/üzemanyag) — a KPI-k, a lista, a térkép
-  // és a részletek panel mind ugyanazt a "dúsított" tömböt kapja.
-  const dusitett = useMemo(() => dusitottPoziciok(poziciok, now), [poziciok, now]);
+  // idő, számmá alakított sebesség) — a KPI-k, a lista, a térkép és a
+  // részletek panel mind ugyanazt a "dúsított" tömböt kapja. A
+  // "megtettUtMa" a KÜLÖN állapotból kerül ide (ld. fent) — a pozíció-
+  // lekérdezés önmagában nem tartalmazza.
+  const dusitett = useMemo(() => {
+    const alap = dusitottPoziciok(poziciok, now);
+    return alap.map((p) => ({
+      ...p,
+      megtettUtMa: p.kamion_id != null && megtettUtAdatok[p.kamion_id] !== undefined
+        ? megtettUtAdatok[p.kamion_id]
+        : null,
+    }));
+  }, [poziciok, now, megtettUtAdatok]);
 
   const szurt = useMemo(() => {
     const keresesLower = kereses.trim().toLowerCase();
@@ -160,7 +216,15 @@ export default function Flottakovetes() {
               )}
               <button
                 type="button"
-                onClick={loadPoziciok}
+                onClick={() => setKihasznaltsagOpen(true)}
+                className="flex items-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-ink-600 shadow-soft transition-all duration-300 ease-fluid hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 active:scale-95"
+              >
+                <PiGaugeLight className="h-4 w-4" />
+                Kihasználtság
+              </button>
+              <button
+                type="button"
+                onClick={handleFrissites}
                 disabled={loading}
                 className="flex items-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-ink-600 shadow-soft transition-all duration-300 ease-fluid hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 active:scale-95 disabled:cursor-wait disabled:opacity-60"
               >
@@ -206,7 +270,11 @@ export default function Flottakovetes() {
         </>
       ) : (
         <>
-          <FlottaKpiKartyak dusitett={dusitett} />
+          <FlottaKpiKartyak
+            dusitett={dusitett}
+            megtettUtLoading={megtettUtLoading}
+            megtettUtFrissitve={megtettUtFrissitve}
+          />
 
           <FlottaSzurok
             kereses={kereses}
@@ -217,11 +285,16 @@ export default function Flottakovetes() {
           />
 
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-            <div className="order-2 h-[360px] xl:order-1 xl:col-span-3 xl:h-[640px]">
+            {/* xl:col-span-4 (a korábbi 3 helyett) — az 5. oszlop
+                ("Megtett út") hozzáadása után 3/12-nél a rendszám
+                csonkolódott/az oszlopok nem fértek ki (élőben ellenőrizve).
+                A térkép 6→5-re csökkent, hogy a lista extra helye ne a
+                jármű-részletek rovására menjen. */}
+            <div className="order-2 h-[360px] xl:order-1 xl:col-span-4 xl:h-[640px]">
               <JarmuLista rows={szurt} kivalasztott={kivalasztott} onSelect={valasszJarmuvet} />
             </div>
 
-            <div className="order-1 h-[420px] md:h-[520px] xl:order-2 xl:col-span-6 xl:h-[640px]">
+            <div className="order-1 h-[420px] md:h-[520px] xl:order-2 xl:col-span-5 xl:h-[640px]">
               <FlottaTerkep
                 dusitett={szurt}
                 kivalasztott={kivalasztott}
@@ -270,6 +343,13 @@ export default function Flottakovetes() {
         cegId={user.ceg_id}
         kerelmezoId={user.id}
         onUtvonalBetoltve={setUtvonalPontok}
+      />
+
+      <KihasznaltsagiModal
+        open={kihasznaltsagOpen}
+        onClose={() => setKihasznaltsagOpen(false)}
+        cegId={user.ceg_id}
+        kerelmezoId={user.id}
       />
     </div>
   );

@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { fetchAction } from "utils/fetchAction";
 
 import CardTable from "components/Table/CardTableForUgyfelek.js";
+import PageHeader from "components/UI/PageHeader.js";
 
 const PAGE_SIZE = 10;
 
@@ -55,6 +56,7 @@ export default function Ugyfelek() {
 
   return (
     <>
+      <PageHeader eyebrow="Partnerek" title="Ügyfelek" />
       <div className="flex flex-wrap mt-0">
         <div className="w-full mb-12 px-0 md:px-4">
           <CardTable

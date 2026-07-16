@@ -78,7 +78,20 @@ export default function Profil() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Gyors, kliens oldali visszajelzés — a mentés gomb `type="button"` (ld.
+  // SaveButton.js), az űrlap `onSubmit`-ja pedig le van tiltva, tehát az
+  // `<input type="email">` böngésző-natív formátum-ellenőrzése SOHA nem
+  // fut le magától; enélkül a felhasználó csak egy szerver-kör után
+  // (a backend `validation()`-je) tudta meg, hogy hibás a cím. Ugyanaz a
+  // szabály, mint szerver oldalon: csak akkor vizsgáljuk, ha van megadott
+  // érték — az üres email cím megengedett.
+  const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
   const handleSave = async () => {
+    if (form.email && !isValidEmail(form.email)) {
+      toast.error("Érvénytelen email cím formátum.");
+      return;
+    }
     setSaving(true);
     try {
       const result = await fetchAction("saveSoforData", {
@@ -102,7 +115,7 @@ export default function Profil() {
     const user = JSON.parse(sessionStorage.getItem("user"));
     await fetchAction("logoutUser", { id: user?.id });
     sessionStorage.removeItem("user");
-    history.push("/login");
+    history.push("/auth/login");
   };
 
   if (!form) {
@@ -232,14 +245,14 @@ export default function Profil() {
             onChange={handleChange}
           />
           <FormField
-            label="Cím"
+            label="Levelezési cím"
             name="cim"
             value={form.cim || ""}
             onChange={handleChange}
             className="md:col-span-2"
           />
           <FormField
-            label="Lakcím"
+            label="Állandó lakcím"
             name="lakcim"
             value={form.lakcim || ""}
             onChange={handleChange}

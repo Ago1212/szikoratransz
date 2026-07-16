@@ -22,8 +22,6 @@ import Szabadsagok from "views/admin/Szabadsagok.js";
 import Naplo from "views/admin/Naplo.js";
 import Koltsegek from "views/admin/Koltsegek.js";
 import Flottakovetes from "views/admin/Flottakovetes.js";
-import Fuvarok from "views/admin/Fuvarok.js";
-import Fuvartervezo from "views/admin/Fuvartervezo.js";
 import VezetesiIdo from "views/admin/VezetesiIdo.js";
 import Ugyfelek from "views/admin/Ugyfelek.js";
 import UgyfelForm from "views/admin/UgyfelForm.js";
@@ -33,6 +31,7 @@ import Helyszinek from "views/admin/Helyszinek.js";
 import HelyszinForm from "views/admin/HelyszinForm.js";
 import Jogosultsagok from "views/admin/Jogosultsagok.js";
 import Listak from "views/admin/Listak.js";
+import Devizak from "views/admin/Devizak.js";
 
 const PrivateRoute = ({ component: Component, ...rest }) => {
   const isAuthenticated = sessionStorage.getItem("user") !== null;
@@ -57,7 +56,7 @@ export default function Admin() {
       <Sidebar />
 
       {/* Háttér — fix réteg, nem görgethető, a Sidebar-hoz igazítva */}
-      <div className="fixed inset-y-0 right-0 left-0 overflow-hidden bg-slate-50 md:left-72">
+      <div className="fixed inset-y-0 right-0 left-0 overflow-hidden bg-slate-50 md:left-64">
         <div
           className="absolute inset-0 opacity-60"
           style={{
@@ -69,7 +68,7 @@ export default function Admin() {
       </div>
 
       {/* Tartalom — fix magasságú, csak ez görgethető, a böngészőoldal maga nem */}
-      <div className="fixed inset-y-0 right-0 left-0 overflow-y-auto md:left-72">
+      <div className="fixed inset-y-0 right-0 left-0 overflow-y-auto md:left-64">
         <div className="mx-auto h-full w-full px-4 pt-8 pb-16 md:px-10 md:pb-8">
           <Switch>
             <PrivateRoute path="/admin/dashboard" exact component={Dashboard} />
@@ -122,12 +121,6 @@ export default function Admin() {
               exact
               component={Flottakovetes}
             />
-            <PrivateRoute path="/admin/fuvarok" exact component={Fuvarok} />
-            <PrivateRoute
-              path="/admin/fuvartervezo"
-              exact
-              component={Fuvartervezo}
-            />
             <PrivateRoute path="/admin/ugyfelek" exact component={Ugyfelek} />
             <PrivateRoute
               path="/admin/ugyfelForm"
@@ -150,6 +143,7 @@ export default function Admin() {
               component={Jogosultsagok}
             />
             <PrivateRoute path="/admin/listak" exact component={Listak} />
+            <PrivateRoute path="/admin/devizak" exact component={Devizak} />
             <PrivateRoute
               path="/admin/helyszinek"
               exact

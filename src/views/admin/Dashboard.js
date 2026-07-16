@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
+import moment from "moment";
 import {
   PiUsersLight,
   PiTruckLight,
@@ -9,6 +10,7 @@ import {
   PiTrendUpLight,
   PiCoinsLight,
   PiArrowRightLight,
+  PiCalendarCheckLight,
 } from "react-icons/pi";
 
 // components
@@ -70,8 +72,21 @@ function NettoCard({ className, cashflow, onClick }) {
 // mínusz fix költségek). A bérek csak adminnak számítanak bele a
 // fixköltségekbe (a backend nem-admin hívónak már eleve nem küldi vissza az
 // `aktivBer` mezőt) — a felirat ezért attól függően más ("biztosítás" vagy
-// "biztosítás + bérek"), hogy a kérelmező admin-e.
+// "biztosítás + bérek"), hogy a kérelmező admin-e. Item 9: a jövő hónapra
+// ütemezett, még el nem végzett karbantartások becsült költsége (nem
+// privát adat, mindenkinek látszik) csak akkor kerül a feliratba, ha
+// ténylegesen van ilyen tétel — üres flottánál ne zavarjon egy "+
+// karbantartás" felirat, ha épp semmi nincs betervezve.
 function VarhatoCard({ className, adat, onClick, isAdmin }) {
+  const vanKarbantartas = adat.tervezettKarbantartasTetelSzam > 0;
+  const fixKoltsegLabel = [
+    "biztosítás",
+    vanKarbantartas ? "karbantartás" : null,
+    isAdmin ? "bérek" : null,
+  ]
+    .filter(Boolean)
+    .join(" + ");
+
   return (
     <button
       type="button"
@@ -100,18 +115,104 @@ function VarhatoCard({ className, adat, onClick, isAdmin }) {
             </span>
             <span className="flex items-center gap-1.5 text-ink-500">
               <PiCoinsLight className="h-4 w-4 text-red-600" />
-              Fix költségek ({isAdmin ? "biztosítás + bérek" : "biztosítás"}){" "}
+              Fix költségek ({fixKoltsegLabel}){" "}
               <span className="font-semibold tabular-nums text-ink-800">
                 {formatHuf(adat.fixKoltsegek)}
               </span>
             </span>
           </div>
+          {vanKarbantartas && (
+            <p className="mt-2 text-xs text-ink-400">
+              Ebből {formatHuf(adat.tervezettKarbantartas)} {adat.tervezettKarbantartasTetelSzam} tervezett, még el nem végzett karbantartás becsült költsége (jármű saját, vagy annak hiányában a flotta átlagos karbantartás-ára alapján).
+            </p>
+          )}
         </div>
         <span className="hidden flex-shrink-0 items-center gap-1 text-xs font-semibold text-brand-600 group-hover:underline sm:flex">
           Pénzforgalom <PiArrowRightLight className="h-3.5 w-3.5" />
         </span>
       </div>
     </button>
+  );
+}
+
+// A naptár mellett (md+, fél szélesség) megjelenő lista — a "Lejáró
+// határidők" statkártya eddig csak egy csupasz számot mutatott (pl. "9"),
+// a mögötte lévő tételeket csak az Események oldalra belépve lehetett
+// megnézni. Ugyanazt az `events` tömböt használja, amit a CardCalender már
+// amúgy is lekért (ld. `onEventsChange` callback lent) — nincs külön
+// backend-hívás. Lejárt (start < ma) → piros "Lejárt", 7 napon belüli →
+// amber (ugyanaz a figyelmeztetés-nyelv, mint a statkártyákon), távolabbi →
+// semleges — csak a ténylegesen közelgő/lejárt tételek kapnak hangsúlyt.
+function KozelgoHataridokCard({ events, onNavigate, className = "" }) {
+  const ma = moment().startOf("day");
+  const tetelek = events
+    .map((e) => ({ ...e, _napok: moment(e.start).startOf("day").diff(ma, "days") }))
+    .filter((e) => e._napok <= 30)
+    .sort((a, b) => a._napok - b._napok)
+    .slice(0, 8);
+
+  const napCimke = (napok) => {
+    if (napok < 0) return "Lejárt";
+    if (napok === 0) return "Ma";
+    if (napok === 1) return "Holnap";
+    return `${napok} nap múlva`;
+  };
+
+  const toneClass = (napok) => {
+    if (napok < 0) return { dot: "bg-red-500", label: "text-red-700", bg: "bg-red-50" };
+    if (napok <= 7) return { dot: "bg-amber-500", label: "text-amber-700", bg: "bg-amber-50" };
+    return { dot: "bg-ink-300", label: "text-ink-500", bg: "bg-slate-50" };
+  };
+
+  return (
+    <div
+      className={`flex flex-col rounded-3xl border border-ink-100 bg-white shadow-soft md:min-h-[420px] ${className}`}
+    >
+      <div className="flex flex-shrink-0 items-center justify-between border-b border-ink-100 px-4 py-3 md:px-6 md:py-4">
+        <h3 className="flex items-center gap-2 font-display text-base font-semibold text-brand-900 md:text-lg">
+          <PiCalendarCheckLight className="h-5 w-5 text-brand-600" />
+          Közelgő határidők
+        </h3>
+        <button
+          type="button"
+          onClick={onNavigate}
+          className="flex items-center gap-1 text-xs font-semibold text-brand-600 hover:underline"
+        >
+          Összes <PiArrowRightLight className="h-3.5 w-3.5" />
+        </button>
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto p-3 md:p-4">
+        {tetelek.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center gap-2 py-10 text-center">
+            <PiCalendarCheckLight className="h-8 w-8 text-ink-300" />
+            <p className="text-sm text-ink-400">Nincs közelgő határidő a következő 30 napban.</p>
+          </div>
+        ) : (
+          <ul className="space-y-1.5">
+            {tetelek.map((e, idx) => {
+              const tone = toneClass(e._napok);
+              return (
+                <li
+                  key={idx}
+                  className={`flex items-center gap-3 rounded-xl px-3 py-2.5 ${tone.bg}`}
+                >
+                  <span className={`h-2 w-2 flex-shrink-0 rounded-full ${tone.dot}`} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-ink-800">{e.title}</p>
+                    <p className="text-xs text-ink-400">
+                      {moment(e.start).format("YYYY. MM. DD.")}
+                    </p>
+                  </div>
+                  <span className={`flex-shrink-0 text-xs font-semibold ${tone.label}`}>
+                    {napCimke(e._napok)}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -140,10 +241,17 @@ export default function Dashboard() {
     atlagBevetel: 0,
     fixKoltsegek: 0,
     varhatoEredmeny: 0,
+    tervezettKarbantartas: 0,
+    tervezettKarbantartasTetelSzam: 0,
   });
   const [varhatoLoading, setVarhatoLoading] = useState(true);
   const isOwnerAdmin =
     JSON.parse(sessionStorage.getItem("user") || "null")?.szerepkor === "admin";
+
+  // A CardCalender saját maga tölti be az eseményeket (getEsemenyek) — ezt
+  // a callback-et adja neki, hogy a "Közelgő határidők" oldalsáv ugyanazt a
+  // listát használhassa fel, külön backend-hívás nélkül.
+  const [calendarEvents, setCalendarEvents] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -204,6 +312,8 @@ export default function Dashboard() {
           atlagBevetel: result.atlagBevetel,
           fixKoltsegek: result.fixKoltsegek,
           varhatoEredmeny: result.varhatoEredmeny,
+          tervezettKarbantartas: result.tervezettKarbantartas || 0,
+          tervezettKarbantartasTetelSzam: result.tervezettKarbantartasTetelSzam || 0,
         });
       }
       setVarhatoLoading(false);
@@ -253,6 +363,10 @@ export default function Dashboard() {
       value: stats.hatarido,
       icon: PiCalendarBlankLight,
       path: "/admin/esemenyek",
+      // UX-audit: ez az egyetlen a négy közül, ami valódi, cselekvést
+      // igénylő állapotot jelez, nem semleges létszámot — csak akkor kap
+      // amber hangsúlyt, ha ténylegesen van lejáró tétel.
+      tone: stats.hatarido > 0 ? "warning" : "brand",
     },
   ];
 
@@ -269,10 +383,18 @@ export default function Dashboard() {
             key={card.title}
             type="button"
             onClick={() => navigateTo(card.path)}
-            className="flex flex-col items-center gap-0.5 rounded-xl bg-white py-2 shadow-soft ring-1 ring-ink-100 transition-transform duration-150 active:scale-95"
+            className={`flex flex-col items-center gap-0.5 rounded-xl bg-white py-2 shadow-soft ring-1 transition-transform duration-150 active:scale-95 ${
+              card.tone === "warning" ? "ring-amber-200" : "ring-ink-100"
+            }`}
           >
-            <card.icon className="h-4 w-4 flex-shrink-0 text-brand-600" />
-            <span className="font-display text-base font-bold tabular-nums text-brand-900">
+            <card.icon
+              className={`h-4 w-4 flex-shrink-0 ${card.tone === "warning" ? "text-amber-600" : "text-brand-600"}`}
+            />
+            <span
+              className={`font-display text-base font-bold tabular-nums ${
+                card.tone === "warning" ? "text-amber-700" : "text-brand-900"
+              }`}
+            >
               {card.value}
             </span>
             <span className="w-full px-0.5 text-center text-[8px] font-semibold uppercase leading-tight tracking-wide text-ink-400">
@@ -332,6 +454,7 @@ export default function Dashboard() {
             statTitle={card.value}
             statIcon={card.icon}
             onClick={() => navigateTo(card.path)}
+            tone={card.tone}
           />
         ))}
       </div>
@@ -348,15 +471,30 @@ export default function Dashboard() {
         />
       )}
 
-      <div className="flex flex-col rounded-3xl border border-ink-100 bg-white shadow-soft md:min-h-[420px] md:flex-1 md:overflow-hidden">
-        <div className="flex-shrink-0 border-b border-ink-100 px-4 py-3 md:px-6 md:py-4">
-          <h3 className="font-display text-base font-semibold text-brand-900 md:text-lg">
-            Eseménynaptár
-          </h3>
+      {/* md+: a naptár és a "Közelgő határidők" lista egymás mellett, fél-
+          fél szélességben (2-oszlopos grid — a grid `items-stretch` alap
+          viselkedése miatt automatikusan egyenlő magasak, nem kell külön
+          flex-trükk hozzá). Mobilon a lista rejtve marad (`hidden md:...`):
+          a CardCalender saját mobil-ága már megjeleníti a kiválasztott nap
+          eseményeit a naptár alatt, egy külön "Közelgő" lista csak
+          duplikálná ugyanazt a szűk mobil képernyőn. */}
+      <div className="flex flex-1 flex-col md:grid md:min-h-0 md:grid-cols-2 md:gap-6">
+        <div className="flex flex-col rounded-3xl border border-ink-100 bg-white shadow-soft md:min-h-[420px] md:overflow-hidden">
+          <div className="flex-shrink-0 border-b border-ink-100 px-4 py-3 md:px-6 md:py-4">
+            <h3 className="font-display text-base font-semibold text-brand-900 md:text-lg">
+              Eseménynaptár
+            </h3>
+          </div>
+          <div className="min-h-0 flex-1 p-2">
+            <CardCalender onEventsChange={setCalendarEvents} />
+          </div>
         </div>
-        <div className="min-h-0 flex-1 p-2">
-          <CardCalender />
-        </div>
+
+        <KozelgoHataridokCard
+          className="hidden md:flex md:h-full"
+          events={calendarEvents}
+          onNavigate={() => navigateTo("/admin/esemenyek")}
+        />
       </div>
 
       {/* Valódi (nem margin) térköz mobilon — ez a lap gyökere `h-full`, így

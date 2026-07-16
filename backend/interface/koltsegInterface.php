@@ -5,12 +5,13 @@
 // `potkocsi_karbantartars.koltseg`), a tankolások (`tankolasok.osszeg`), a
 // biztosítási díjak (`kamion`/`potkocsi.kot_biz_dij`/`kaszko_dij`, a
 // fizetési ütem alapján ON-THE-FLY generált eltelt esedékességekkel, ld.
-// getBiztositasKiadasok()) és a lezárt fuvarok díja (`fuvarok.dij`, mint
-// bevétel) összegzése havi bontásban (grafikon) és jármű szerinti
-// bontásban (táblázat), kiegészítve a kézzel rögzített, immár kétirányú
-// (`irany` = 'bevetel'/'kiado') `egyeb_koltsegek` tételekkel. A projekt
-// JOIN-mentes konvenciója szerint (ld. bejelentesekInterface.php komment)
-// minden tábla saját lekérdezést kap, PHP oldalon fűzzük össze.
+// getBiztositasKiadasok()) összegzése havi bontásban (grafikon) és jármű
+// szerinti bontásban (táblázat), kiegészítve a kézzel rögzített, kétirányú
+// (`irany` = 'bevetel'/'kiado') `egyeb_koltsegek` tételekkel — ez utóbbi
+// az EGYETLEN bevétel-forrás (a Fuvarok modul eltávolítása előtt a lezárt
+// fuvarok díja is ide folyt be automatikusan). A projekt JOIN-mentes
+// konvenciója szerint (ld. bejelentesekInterface.php komment) minden
+// tábla saját lekérdezést kap, PHP oldalon fűzzük össze.
 class KoltsegInterface {
     protected $db;
 
@@ -158,63 +159,6 @@ class KoltsegInterface {
         return (float) ($stmt->fetch(PDO::FETCH_ASSOC)['osszeg'] ?? 0);
     }
 
-    // Lezárt fuvarok díja, mint bevétel — a bevétel dátuma a lerakás
-    // dátuma (ha van), különben a felrakás dátuma, különben a rögzítés
-    // dátuma. SZÁNDÉKOSAN csak a HUF-ban (vagy deviza nélkül) rögzített
-    // fuvarok kerülnek összegzésre — nincs árfolyam-forrás az appban,
-    // hamis pontosság helyett az EUR-fuvarok kimaradnak az Ft-alapú
-    // riportból (a frontend erről külön jelez, ha van ilyen fuvar).
-    private function fuvarBevetelHavonta($datumTol, $datumIg, $ceg_id) {
-        $datumKif = "COALESCE(lerakas_datum, felrakas_datum, DATE(letrehozva))";
-        [$szuresSql, $szuresParams] = $this->datumSzures($datumKif, $datumTol, $datumIg);
-        $query = "SELECT DATE_FORMAT($datumKif, '%Y-%m') AS honap, SUM(dij) AS osszeg
-                  FROM fuvarok WHERE admin = :ceg_id AND torolt <> 'I' AND statusz = 'lezart' AND dij IS NOT NULL
-                  AND (devizanem = 'HUF' OR devizanem IS NULL)$szuresSql
-                  GROUP BY honap";
-        $stmt = $this->db->prepare($query);
-        $stmt->bindValue(':ceg_id', $ceg_id);
-        foreach ($szuresParams as $k => $v) {
-            $stmt->bindValue($k, $v);
-        }
-        $stmt->execute();
-        $map = [];
-        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $map[$row['honap']] = (float) $row['osszeg'];
-        }
-        return $map;
-    }
-
-    private function fuvarBevetelJarmuvenkent($datumTol, $datumIg, $ceg_id) {
-        $datumKif = "COALESCE(lerakas_datum, felrakas_datum, DATE(letrehozva))";
-        [$szuresSql, $szuresParams] = $this->datumSzures($datumKif, $datumTol, $datumIg);
-        $query = "SELECT kamion_id AS jarmu_id, SUM(dij) AS osszeg
-                  FROM fuvarok WHERE admin = :ceg_id AND torolt <> 'I' AND statusz = 'lezart' AND dij IS NOT NULL
-                  AND (devizanem = 'HUF' OR devizanem IS NULL) AND kamion_id IS NOT NULL$szuresSql
-                  GROUP BY kamion_id";
-        $stmt = $this->db->prepare($query);
-        $stmt->bindValue(':ceg_id', $ceg_id);
-        foreach ($szuresParams as $k => $v) {
-            $stmt->bindValue($k, $v);
-        }
-        $stmt->execute();
-        $map = [];
-        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $map[$row['jarmu_id']] = (float) $row['osszeg'];
-        }
-        return $map;
-    }
-
-    private function vanDevizasLezartFuvar($ceg_id) {
-        $stmt = $this->db->prepare(
-            "SELECT COUNT(*) AS db FROM fuvarok
-             WHERE admin = :ceg_id AND torolt <> 'I' AND statusz = 'lezart' AND dij IS NOT NULL
-             AND devizanem IS NOT NULL AND devizanem <> 'HUF'"
-        );
-        $stmt->bindValue(':ceg_id', $ceg_id);
-        $stmt->execute();
-        return (int) ($stmt->fetch(PDO::FETCH_ASSOC)['db'] ?? 0) > 0;
-    }
-
     // A `kot_biz_dij`/`kaszko_dij` mezők varchar-ok, a valós adat gyakran
     // üres string, néha "Nincs", néha tiszta szám — ez a nem-numerikus
     // szemetet levágja, `null`-t ad vissza, ha nincs érdemi összeg.
@@ -228,6 +172,39 @@ class KoltsegInterface {
         }
         $szam = (float) $tisztitott;
         return $szam > 0 ? $szam : null;
+    }
+
+    // Ft/km fajlagos mutató forrása — TISZTÁN a `gpsmart_napi_km` cache-t
+    // olvassa (SUM+COUNT), sosem hív élő GPSmart-lekérdezést. A cache-t a
+    // `gpsmart_km_cache_frissites.php` cron tölti fel a háttérben (ld. ott
+    // a komment) — ha egy jármű még egyáltalán nincs cache-elve, vagy a
+    // kért tartomány nagy része hiányzik, ez egyszerűen `km = 0`-t és
+    // alacsony/0 `lefedettNapok`-ot ad vissza, a hívó (getKoltsegOsszesito)
+    // pedig emiatt `null`-t tesz a fajlagos mezőkbe explicit szám helyett —
+    // sosem mutatunk hiányos adatból számolt, hamis pontosságú Ft/km-et.
+    // A mai nap szándékosan kimarad az `osszesNap` nevezőből is (ld.
+    // GpsmartInterface::frissitNapiKm komment — a mai nap sosem cache-elt).
+    private function kmOsszesito($kamion_id, $datumTol, $datumIg) {
+        $tegnap = date('Y-m-d', strtotime('-1 day'));
+        $zartVegDatum = $datumIg && $datumIg < $tegnap ? $datumIg : $tegnap;
+        if (!$datumTol || !$zartVegDatum || $zartVegDatum < $datumTol) {
+            return ['km' => 0.0, 'lefedettNapok' => 0, 'osszesNap' => 0];
+        }
+        $stmt = $this->db->prepare(
+            'SELECT COALESCE(SUM(km), 0) AS km, COUNT(*) AS lefedettNapok
+             FROM gpsmart_napi_km WHERE kamion_id = :kamion_id AND datum BETWEEN :tol AND :ig'
+        );
+        $stmt->bindValue(':kamion_id', $kamion_id, PDO::PARAM_INT);
+        $stmt->bindValue(':tol', $datumTol);
+        $stmt->bindValue(':ig', $zartVegDatum);
+        $stmt->execute();
+        $sor = $stmt->fetch(PDO::FETCH_ASSOC);
+        $osszesNap = (int) ((strtotime($zartVegDatum) - strtotime($datumTol)) / 86400) + 1;
+        return [
+            'km' => (float) $sor['km'],
+            'lefedettNapok' => (int) $sor['lefedettNapok'],
+            'osszesNap' => $osszesNap,
+        ];
     }
 
     private function periodInterval($utem) {
@@ -390,7 +367,6 @@ class KoltsegInterface {
 
             $egyebKiadasHavonta = $this->egyebHavonta('kiado', $datumTol, $datumIg, $ceg_id, 'egyeb');
             $egyebBevetelHavonta = $this->egyebHavonta('bevetel', $datumTol, $datumIg, $ceg_id);
-            $fuvarBevetelHavonta = $this->fuvarBevetelHavonta($datumTol, $datumIg, $ceg_id);
 
             // A 4 kézzel is választható kategória (Üzemanyag/Karbantartás/
             // Biztosítás/Fizetés) — az így megjelölt kézi/NAV-importált
@@ -425,10 +401,7 @@ class KoltsegInterface {
                 $berHavonta[$honap] = ($berHavonta[$honap] ?? 0) + $osszeg;
             }
 
-            $bevetelHavonta = $fuvarBevetelHavonta;
-            foreach ($egyebBevetelHavonta as $honap => $osszeg) {
-                $bevetelHavonta[$honap] = ($bevetelHavonta[$honap] ?? 0) + $osszeg;
-            }
+            $bevetelHavonta = $egyebBevetelHavonta;
 
             $honapok = array_unique(array_merge(
                 array_keys($karbHavonta),
@@ -484,7 +457,6 @@ class KoltsegInterface {
             $egyebKiadasPotkocsinkent = $this->egyebJarmuvenkent('kiado', 'potkocsi_id', $datumTol, $datumIg, $ceg_id, 'egyeb');
             $egyebBevetelKamiononkent = $this->egyebJarmuvenkent('bevetel', 'kamion_id', $datumTol, $datumIg, $ceg_id);
             $egyebBevetelPotkocsinkent = $this->egyebJarmuvenkent('bevetel', 'potkocsi_id', $datumTol, $datumIg, $ceg_id);
-            $fuvarBevetelKamiononkent = $this->fuvarBevetelJarmuvenkent($datumTol, $datumIg, $ceg_id);
 
             // Az 'uzemanyag'/'karbantartas'/'biztositas' kategóriájú, jármühöz
             // kötött kiadás-tételek a saját forrásuk jármű szerinti bontása
@@ -518,10 +490,7 @@ class KoltsegInterface {
                 $biztositasPotkocsinkent[$id] = ($biztositasPotkocsinkent[$id] ?? 0) + $osszeg;
             }
 
-            $bevetelKamiononkent = $fuvarBevetelKamiononkent;
-            foreach ($egyebBevetelKamiononkent as $id => $osszeg) {
-                $bevetelKamiononkent[$id] = ($bevetelKamiononkent[$id] ?? 0) + $osszeg;
-            }
+            $bevetelKamiononkent = $egyebBevetelKamiononkent;
 
             $kamionRendszamok = $this->getRendszamok('kamion', $ceg_id);
             $potkocsiRendszamok = $this->getRendszamok('potkocsi', $ceg_id);
@@ -544,6 +513,7 @@ class KoltsegInterface {
                 $egyeb = $egyebKiadasKamiononkent[$id] ?? 0;
                 $bevetel = $bevetelKamiononkent[$id] ?? 0;
                 $kiadasOsszesen = $karbantartas + $uzemanyag + $biztositas + $egyeb;
+                $km = $this->kmOsszesito($id, $datumTol, $datumIg);
                 $jarmuvenkent[] = [
                     'tipus' => 'kamion',
                     'id' => $id,
@@ -555,6 +525,15 @@ class KoltsegInterface {
                     'egyeb' => $egyeb,
                     'kiadasOsszesen' => $kiadasOsszesen,
                     'netto' => $bevetel - $kiadasOsszesen,
+                    // Ft/km — csak akkor számoljuk, ha van legalább 1 lezárt,
+                    // gyorsítótárazott nap km-adata (ld. kmOsszesito()); a
+                    // `kmLefedettseg` jelzi, ha a cache még hiányos a kért
+                    // tartományhoz képest, hogy a frontend ne mutasson
+                    // hamis pontosságú, valójában hiányos adatból számolt
+                    // fajlagos mutatót magyarázat nélkül.
+                    'bevetelPerKm' => $km['km'] > 0 ? round($bevetel / $km['km'], 1) : null,
+                    'kiadasPerKm' => $km['km'] > 0 ? round($kiadasOsszesen / $km['km'], 1) : null,
+                    'kmLefedettseg' => $km['osszesNap'] > 0 ? round($km['lefedettNapok'] / $km['osszesNap'] * 100) : null,
                 ];
             }
             $potkocsiIdk = array_unique(array_merge(
@@ -618,7 +597,6 @@ class KoltsegInterface {
                 'havi' => $havi,
                 'jarmuvenkent' => $jarmuvenkent,
                 'egyebNemKotott' => ['bevetel' => $egyebNemKotottBevetel, 'kiado' => $egyebNemKotottKiado],
-                'vanDevizasFuvar' => $this->vanDevizasLezartFuvar($ceg_id),
                 'osszesen' => [
                     'bevetel' => $osszesenBevetel,
                     'karbantartas' => $osszesenKarbantartas,
@@ -657,6 +635,79 @@ class KoltsegInterface {
         return $soforBer + $csapatBer;
     }
 
+    // Item 9: a jövő hónapra ütemezett, még el nem végzett karbantartások
+    // (a `kamion_karbantartars`/`potkocsi_karbantartars` azon sorai, amiket
+    // egy korábbi karbantartás rögzítésekor a "következő karbantartás"
+    // dátummezője automatikusan generált — ld. karbantartasokInterface.php
+    // `updateKamionKarbantartas()` — ezeknek a `datum`-juk a jövőben van,
+    // `koltseg`-jük pedig NULL, mert még nem történtek meg) várható
+    // költségének becslése. Mivel egy még el nem végzett karbantartásnak
+    // definíció szerint nincs rögzített ára, a becslés az adott JÁRMŰ saját
+    // korábbi (elvégzett, koltseg IS NOT NULL) karbantartásainak átlagából
+    // indul ki; ha a járműnek nincs még egyetlen árazott karbantartása sem,
+    // a teljes flotta átlagára esünk vissza — jobb egy durva becslés, mint
+    // szó szerint 0 Ft (ami hamis biztonságérzetet adna az előrejelzésben).
+    private function getTervezettKarbantartasBecsult($ceg_id, $datumTol, $datumIg) {
+        $tetelek = [];
+        foreach ([['kamion_karbantartars', 'kamion_id', 'kamion'], ['potkocsi_karbantartars', 'potkocsi_id', 'potkocsi']] as [$tabla, $oszlop, $tipus]) {
+            $stmt = $this->db->prepare(
+                "SELECT $oszlop AS jarmu_id, log, datum FROM `$tabla`
+                 WHERE admin = :ceg_id AND torolt <> 'I' AND koltseg IS NULL AND datum BETWEEN :datumTol AND :datumIg"
+            );
+            $stmt->bindValue(':ceg_id', $ceg_id);
+            $stmt->bindValue(':datumTol', $datumTol);
+            $stmt->bindValue(':datumIg', $datumIg);
+            $stmt->execute();
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $row['tipus'] = $tipus;
+                $row['tabla'] = $tabla;
+                $tetelek[] = $row;
+            }
+        }
+
+        if (empty($tetelek)) {
+            return ['osszeg' => 0, 'tetelSzam' => 0];
+        }
+
+        $jarmuAtlag = [];
+        foreach (['kamion_karbantartars' => 'kamion_id', 'potkocsi_karbantartars' => 'potkocsi_id'] as $tabla => $oszlop) {
+            $stmt = $this->db->prepare(
+                "SELECT $oszlop AS jarmu_id, AVG(koltseg) AS atlag FROM `$tabla`
+                 WHERE admin = :ceg_id AND torolt <> 'I' AND koltseg IS NOT NULL GROUP BY $oszlop"
+            );
+            $stmt->bindValue(':ceg_id', $ceg_id);
+            $stmt->execute();
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $jarmuAtlag[$tabla . ':' . $row['jarmu_id']] = (float) $row['atlag'];
+            }
+        }
+
+        // A teljes flotta átlaga — a projekt JOIN/UNION-mentes konvenciója
+        // szerint két önálló SELECT, PHP-ban összegezve (nem SQL UNION-nal).
+        $flottaOsszeg = 0;
+        $flottaDb = 0;
+        foreach (['kamion_karbantartars', 'potkocsi_karbantartars'] as $tabla) {
+            $stmt = $this->db->prepare(
+                "SELECT koltseg FROM `$tabla` WHERE admin = :ceg_id AND torolt <> 'I' AND koltseg IS NOT NULL"
+            );
+            $stmt->bindValue(':ceg_id', $ceg_id);
+            $stmt->execute();
+            foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $koltseg) {
+                $flottaOsszeg += (float) $koltseg;
+                $flottaDb++;
+            }
+        }
+        $flottaAtlag = $flottaDb > 0 ? $flottaOsszeg / $flottaDb : 0;
+
+        $osszeg = 0;
+        foreach ($tetelek as $t) {
+            $kulcs = $t['tabla'] . ':' . $t['jarmu_id'];
+            $osszeg += $jarmuAtlag[$kulcs] ?? $flottaAtlag;
+        }
+
+        return ['osszeg' => round($osszeg, 2), 'tetelSzam' => count($tetelek)];
+    }
+
     // Item 3: "várható eredmény" a következő hónapra — a bevételt az elmúlt
     // 6 LEZÁRT (nem a folyó, részleges) hónap átlagából becsüljük, mert a
     // bevétel hónapról hónapra ingadozik (nincs jobb előrejelzési forrás,
@@ -690,6 +741,14 @@ class KoltsegInterface {
             $atlagBevetel = round($osszesito['osszesen']['bevetel'] / $honapokSzama, 2);
             $atlagBiztositas = round($osszesito['osszesen']['biztositas'] / $honapokSzama, 2);
 
+            // Item 9: a következő naptári hónapra ütemezett, még el nem
+            // végzett karbantartások becsült költsége — nem privát adat
+            // (ellentétben a bérrel), tehát nem-admin kérelmezőnek is
+            // megmutatjuk.
+            $kovHonapEleje = (clone $honapEleje)->modify('+1 month');
+            $kovHonapVege = (clone $kovHonapEleje)->modify('+1 month')->modify('-1 day');
+            $karbantartasBecsult = $this->getTervezettKarbantartasBecsult($ceg_id, $kovHonapEleje->format('Y-m-d'), $kovHonapVege->format('Y-m-d'));
+
             $result = [
                 'success' => true,
                 'honapokSzama' => $honapokSzama,
@@ -697,16 +756,18 @@ class KoltsegInterface {
                 'datumIg' => $datumIg->format('Y-m-d'),
                 'atlagBevetel' => $atlagBevetel,
                 'atlagBiztositas' => $atlagBiztositas,
+                'tervezettKarbantartas' => $karbantartasBecsult['osszeg'],
+                'tervezettKarbantartasTetelSzam' => $karbantartasBecsult['tetelSzam'],
             ];
 
             if ($isAdmin) {
                 $aktivBer = $this->getAktivBerOsszeg($ceg_id);
                 $result['aktivBer'] = $aktivBer;
-                $result['fixKoltsegek'] = round($atlagBiztositas + $aktivBer, 2);
-                $result['varhatoEredmeny'] = round($atlagBevetel - $atlagBiztositas - $aktivBer, 2);
+                $result['fixKoltsegek'] = round($atlagBiztositas + $aktivBer + $karbantartasBecsult['osszeg'], 2);
+                $result['varhatoEredmeny'] = round($atlagBevetel - $atlagBiztositas - $aktivBer - $karbantartasBecsult['osszeg'], 2);
             } else {
-                $result['fixKoltsegek'] = $atlagBiztositas;
-                $result['varhatoEredmeny'] = round($atlagBevetel - $atlagBiztositas, 2);
+                $result['fixKoltsegek'] = round($atlagBiztositas + $karbantartasBecsult['osszeg'], 2);
+                $result['varhatoEredmeny'] = round($atlagBevetel - $atlagBiztositas - $karbantartasBecsult['osszeg'], 2);
             }
 
             return $result;
@@ -735,11 +796,46 @@ class KoltsegInterface {
         return in_array($kategoria, self::KATEGORIAK, true) ? $kategoria : null;
     }
 
+    // Deviza-feloldás új/szerkesztett tételhez — HUF esetén (alapértelmezett,
+    // ha a `deviza` mező hiányzik) semmi nem változik a korábbi
+    // viselkedéshez képest, az `osszeg` mezőt közvetlenül a hívó adja meg.
+    // Nem-HUF esetén a `eredeti_osszeg`-et a rögzítés PILLANATÁBAN érvényes
+    // MNB-árfolyamon (Piaci árak cache, tetszőleges devizára — ld.
+    // piaciArakInterface.php getArfolyam()) váltjuk HUF-ra, és ezt fagyasztjuk
+    // be az `osszeg` mezőbe — a Pénzforgalom minden riportja továbbra is
+    // egyszerűen ezt az egy HUF-mezőt összegzi, semmilyen aggregáló logikát
+    // nem kellett emiatt módosítani.
+    private function resolveDevizaOsszeg($data) {
+        $deviza = strtoupper(trim($data['deviza'] ?? 'HUF')) ?: 'HUF';
+        if ($deviza === 'HUF') {
+            return ['osszeg' => $data['osszeg'], 'deviza' => 'HUF', 'eredeti_osszeg' => null, 'arfolyam' => null];
+        }
+
+        $eredetiOsszeg = (float) ($data['eredeti_osszeg'] ?? 0);
+        if ($eredetiOsszeg <= 0) {
+            throw new Exception('Devizás tételnél az eredeti összeg megadása kötelező.');
+        }
+
+        global $piaciArakInterface;
+        $arfolyam = $piaciArakInterface->getArfolyam($deviza);
+        if ($arfolyam === null) {
+            throw new Exception("Nem sikerült árfolyamot lekérni ehhez a devizához: $deviza.");
+        }
+
+        return [
+            'osszeg' => round($eredetiOsszeg * $arfolyam, 2),
+            'deviza' => $deviza,
+            'eredeti_osszeg' => $eredetiOsszeg,
+            'arfolyam' => $arfolyam,
+        ];
+    }
+
     public function newEgyebKoltseg($data, $isAdmin = false) {
         try {
             $irany = in_array($data['irany'] ?? null, ['bevetel', 'kiado'], true) ? $data['irany'] : 'kiado';
-            $query = "INSERT INTO egyeb_koltsegek (admin, irany, kategoria, kamion_id, potkocsi_id, datum, megnevezes, szamlaszam, osszeg, megjegyzes)
-                      VALUES (:admin, :irany, :kategoria, :kamion_id, :potkocsi_id, :datum, :megnevezes, :szamlaszam, :osszeg, :megjegyzes)";
+            $deviza = $this->resolveDevizaOsszeg($data);
+            $query = "INSERT INTO egyeb_koltsegek (admin, irany, kategoria, kamion_id, potkocsi_id, datum, megnevezes, szamlaszam, osszeg, deviza, eredeti_osszeg, arfolyam, megjegyzes)
+                      VALUES (:admin, :irany, :kategoria, :kamion_id, :potkocsi_id, :datum, :megnevezes, :szamlaszam, :osszeg, :deviza, :eredeti_osszeg, :arfolyam, :megjegyzes)";
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(':admin', $data['ceg_id']);
             $stmt->bindValue(':irany', $irany);
@@ -749,7 +845,10 @@ class KoltsegInterface {
             $stmt->bindValue(':datum', $data['datum']);
             $stmt->bindValue(':megnevezes', $data['megnevezes']);
             $stmt->bindValue(':szamlaszam', $data['szamlaszam'] ?: null);
-            $stmt->bindValue(':osszeg', $data['osszeg']);
+            $stmt->bindValue(':osszeg', $deviza['osszeg']);
+            $stmt->bindValue(':deviza', $deviza['deviza']);
+            $stmt->bindValue(':eredeti_osszeg', $deviza['eredeti_osszeg']);
+            $stmt->bindValue(':arfolyam', $deviza['arfolyam']);
             $stmt->bindValue(':megjegyzes', $data['megjegyzes'] ?? null);
             $stmt->execute();
 
@@ -774,10 +873,11 @@ class KoltsegInterface {
     public function updateEgyebKoltseg($data, $isAdmin = false) {
         try {
             $irany = in_array($data['irany'] ?? null, ['bevetel', 'kiado'], true) ? $data['irany'] : 'kiado';
+            $deviza = $this->resolveDevizaOsszeg($data);
             $query = "UPDATE egyeb_koltsegek SET
                         irany = :irany, kategoria = :kategoria, kamion_id = :kamion_id, potkocsi_id = :potkocsi_id,
                         datum = :datum, megnevezes = :megnevezes, szamlaszam = :szamlaszam,
-                        osszeg = :osszeg, megjegyzes = :megjegyzes
+                        osszeg = :osszeg, deviza = :deviza, eredeti_osszeg = :eredeti_osszeg, arfolyam = :arfolyam, megjegyzes = :megjegyzes
                       WHERE id = :id AND admin = :admin";
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(':id', $data['id']);
@@ -789,7 +889,10 @@ class KoltsegInterface {
             $stmt->bindValue(':datum', $data['datum']);
             $stmt->bindValue(':megnevezes', $data['megnevezes']);
             $stmt->bindValue(':szamlaszam', $data['szamlaszam'] ?: null);
-            $stmt->bindValue(':osszeg', $data['osszeg']);
+            $stmt->bindValue(':osszeg', $deviza['osszeg']);
+            $stmt->bindValue(':deviza', $deviza['deviza']);
+            $stmt->bindValue(':eredeti_osszeg', $deviza['eredeti_osszeg']);
+            $stmt->bindValue(':arfolyam', $deviza['arfolyam']);
             $stmt->bindValue(':megjegyzes', $data['megjegyzes'] ?? null);
             $stmt->execute();
 

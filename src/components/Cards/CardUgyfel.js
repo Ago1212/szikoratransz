@@ -46,6 +46,7 @@ export default function CardUgyfel({ initialUgyfel }) {
       const action = formData.id ? "saveUgyfelData" : "newUgyfel";
       const result = await fetchAction(action, {
         admin: storedUserData.ceg_id,
+        ceg_id: storedUserData.ceg_id,
         ...formData,
         kerelmezo_id: storedUserData.id,
       });

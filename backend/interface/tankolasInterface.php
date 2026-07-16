@@ -47,6 +47,139 @@ class TankolasInterface {
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
+
+    // Item 1: üzemanyag-fogyasztás anomália-detektálás. Két egymást követő
+    // (km_oraallas szerint rendezett) tankolás km_oraallas-különbségéből és
+    // a MÁSODIK tankolás literéből számoljuk a köztes szakasz fogyasztását
+    // (L/100km) — ez a klasszikus "két tankolás közötti fogyasztás" módszer,
+    // nem igényel GPS-adatot. Egy adott jármű saját, összes érvényes
+    // szakaszának átlagához viszonyítva jelöljük "anomáliának" azokat a
+    // szakaszokat, amik `ANOMALIA_KUSZOB_SZAZALEK`-nál jobban eltérnek —
+    // ez tipikusan üzemanyag-lopás/kártyavisszaélés vagy hibás km-rögzítés
+    // jele lehet, nem feltétlenül bizonyíték, ezért csak jelzésre, nem
+    // automatikus döntésre szolgál.
+    const ANOMALIA_KUSZOB_SZAZALEK = 20;
+
+    public function getFogyasztasElemzes($ceg_id, $kamion_id = null) {
+        try {
+            $query = "SELECT id, kamion_id, datum, liter, km_oraallas
+                      FROM tankolasok
+                      WHERE admin = :ceg_id AND torolt <> 'I' AND kamion_id IS NOT NULL AND km_oraallas IS NOT NULL";
+            $params = [':ceg_id' => $ceg_id];
+            if (!empty($kamion_id)) {
+                $query .= " AND kamion_id = :kamion_id";
+                $params[':kamion_id'] = $kamion_id;
+            }
+            $query .= " ORDER BY kamion_id ASC, km_oraallas ASC";
+            $stmt = $this->db->prepare($query);
+            foreach ($params as $k => $v) {
+                $stmt->bindValue($k, $v);
+            }
+            $stmt->execute();
+            $sorok = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $kamionRendszamok = $this->getKamionRendszamok($ceg_id);
+
+            $csoportok = [];
+            foreach ($sorok as $sor) {
+                $csoportok[$sor['kamion_id']][] = $sor;
+            }
+
+            $eredmeny = [];
+            foreach ($csoportok as $kamionId => $tetelek) {
+                $szakaszok = [];
+                for ($i = 1; $i < count($tetelek); $i++) {
+                    $elozo = $tetelek[$i - 1];
+                    $aktualis = $tetelek[$i];
+                    $kmKulonbseg = (int) $aktualis['km_oraallas'] - (int) $elozo['km_oraallas'];
+                    if ($kmKulonbseg <= 0) {
+                        continue;
+                    }
+                    $fogyasztas = round(((float) $aktualis['liter'] / $kmKulonbseg) * 100, 2);
+                    $szakaszok[] = [
+                        'tankolas_id' => $aktualis['id'],
+                        'datum' => $aktualis['datum'],
+                        'km_tol' => (int) $elozo['km_oraallas'],
+                        'km_ig' => (int) $aktualis['km_oraallas'],
+                        'liter' => (float) $aktualis['liter'],
+                        'fogyasztas_100km' => $fogyasztas,
+                    ];
+                }
+
+                if (empty($szakaszok)) {
+                    // Van tankolás-adat, de nincs két, egymást követő
+                    // érvényes km-óraállás — nem tudunk fogyasztást számolni.
+                    $eredmeny[] = [
+                        'kamion_id' => $kamionId,
+                        'rendszam' => $kamionRendszamok[$kamionId] ?? null,
+                        'atlagFogyasztas' => null,
+                        'szakaszok' => [],
+                    ];
+                    continue;
+                }
+
+                // A MEDIÁN a viszonyítási alap, nem az átlag — egyetlen
+                // valódi anomália (pont amit keresünk) a sima átlagot magával
+                // rántaná, ami visszafelé az ÖSSZES normál szakaszt is
+                // "anomáliának" mutatná a torzult átlaghoz képest. A medián
+                // ezzel szemben ellenálló egy-két szélsőséges értékkel
+                // szemben, tehát a normál szakaszok normálisnak, csak a
+                // valódi kiugrás anomáliának látszik.
+                $tipikusFogyasztas = $this->median(array_column($szakaszok, 'fogyasztas_100km'));
+                foreach ($szakaszok as &$sz) {
+                    $elteres = $tipikusFogyasztas > 0
+                        ? round((($sz['fogyasztas_100km'] - $tipikusFogyasztas) / $tipikusFogyasztas) * 100, 1)
+                        : 0;
+                    $sz['elteres_szazalek'] = $elteres;
+                    $sz['anomalia'] = abs($elteres) >= self::ANOMALIA_KUSZOB_SZAZALEK;
+                }
+                unset($sz);
+
+                $eredmeny[] = [
+                    'kamion_id' => $kamionId,
+                    'rendszam' => $kamionRendszamok[$kamionId] ?? null,
+                    'atlagFogyasztas' => round($tipikusFogyasztas, 2),
+                    'szakaszok' => array_reverse($szakaszok), // legújabb elöl
+                ];
+            }
+
+            // A legtöbb/legsúlyosabb anomáliával rendelkező jármű elöl —
+            // ez adja a leginkább releváns sorrendet egy admin számára.
+            usort($eredmeny, function ($a, $b) {
+                $aSzam = count(array_filter($a['szakaszok'], fn($s) => $s['anomalia']));
+                $bSzam = count(array_filter($b['szakaszok'], fn($s) => $s['anomalia']));
+                return $bSzam <=> $aSzam;
+            });
+
+            return ['success' => true, 'jarmuvek' => $eredmeny];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    private function median(array $ertekek) {
+        sort($ertekek);
+        $db = count($ertekek);
+        if ($db === 0) {
+            return 0;
+        }
+        $kozep = (int) floor($db / 2);
+        if ($db % 2 === 0) {
+            return ($ertekek[$kozep - 1] + $ertekek[$kozep]) / 2;
+        }
+        return $ertekek[$kozep];
+    }
+
+    private function getKamionRendszamok($ceg_id) {
+        $stmt = $this->db->prepare("SELECT id, rendszam FROM kamion WHERE admin = :ceg_id AND torolt <> 'I'");
+        $stmt->bindValue(':ceg_id', $ceg_id);
+        $stmt->execute();
+        $map = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $map[$row['id']] = $row['rendszam'];
+        }
+        return $map;
+    }
 }
 
 $tankolasInterface = new TankolasInterface();

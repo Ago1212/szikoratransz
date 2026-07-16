@@ -21,6 +21,7 @@ import {
   PiPlusLight,
   PiChartBarLight,
   PiWalletLight,
+  PiArrowsOutLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
@@ -29,6 +30,7 @@ import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import Modal from "components/UI/Modal.js";
 import FormField, { FormSection } from "components/UI/FormField.js";
 import Spinner from "components/UI/Spinner.js";
+import CardUzemanyagElemzes from "components/Cards/CardUzemanyagElemzes.js";
 
 const formatHuf = (value) =>
   new Intl.NumberFormat("hu-HU", {
@@ -36,6 +38,12 @@ const formatHuf = (value) =>
     currency: "HUF",
     maximumFractionDigits: 0,
   }).format(value || 0);
+
+// Devizás tétel eredeti (nem HUF) összegének megjelenítése — csak
+// tájékoztató jellegű, a riportok mindig a fagyasztott `osszeg` (HUF)
+// mezőt használják, ld. koltsegInterface.php resolveDevizaOsszeg komment.
+const formatDeviza = (value, deviza) =>
+  new Intl.NumberFormat("hu-HU", { maximumFractionDigits: 2 }).format(value || 0) + " " + deviza;
 
 const formatHonap = (honap) => {
   const [ev, ho] = (honap || "").split("-");
@@ -76,6 +84,8 @@ const emptyEgyebTetel = (irany = "kiado") => ({
   megnevezes: "",
   szamlaszam: "",
   osszeg: "",
+  deviza: "HUF",
+  eredeti_osszeg: "",
   kamion_id: "",
   potkocsi_id: "",
   megjegyzes: "",
@@ -245,6 +255,33 @@ function CashflowChart({ havi, simplified, isAdmin }) {
   );
 }
 
+// Ft/km fajlagos mutató cellája (Jármű szerinti bontás). `ertek === null`
+// azt jelenti, hogy vagy pótkocsi-sor (nincs saját GPS), vagy nincs
+// gyorsítótárazott km-adat erre az időszakra (ld. koltsegInterface.php
+// kmOsszesito() — a cache-t a gpsmart_km_cache_frissites.php cron tölti
+// fel a háttérben). Ha VAN érték, de a `lefedettseg` 100% alatti, ~ jellel
+// és tooltippel jelezzük, hogy a mutató a hiányos km-adat miatt csak
+// becslés — sosem mutatunk hamis pontosságot hiányos adatból számolva.
+function PerKmErtek({ ertek, lefedettseg }) {
+  if (ertek === null || ertek === undefined) {
+    return <span className="text-ink-400">—</span>;
+  }
+  const hianyos = lefedettseg !== null && lefedettseg !== undefined && lefedettseg < 100;
+  return (
+    <span
+      className={hianyos ? "text-ink-500" : undefined}
+      title={
+        hianyos
+          ? `A km-adat csak ${lefedettseg}%-ban áll rendelkezésre ebben az időszakban — a mutató becslés.`
+          : undefined
+      }
+    >
+      {hianyos && "~"}
+      {formatHuf(ertek)}
+    </span>
+  );
+}
+
 export default function Koltsegek() {
   const user = JSON.parse(sessionStorage.getItem("user"));
   const history = useHistory();
@@ -259,6 +296,11 @@ export default function Koltsegek() {
   // görgetés nélkül elsőként) — a `useMediaQuery`-s kezdőállapot minta már
   // bevált a Karbantartasok.js mobil szűrőpaneljénél is.
   const [chartOpen, setChartOpen] = useState(!isMobile);
+  // A kabinba került diagram szándékosan mindig `simplified` (2 oszlop) —
+  // a szűk kabin-oszlopba nem fér el olvashatóan a teljes, 6 datasetes
+  // kategória-bontás. Ez a gomb egy Modalban nyitja meg a diagramot teljes
+  // méretben/részletességgel, azoknak, akiknek kell a finomabb bontás.
+  const [chartModalOpen, setChartModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   // Alapból a folyó év (Jan 1 – Dec 31) — enélkül a lekérdezés "mindenkori"
   // lenne, ami egy régebb óta futó cégnél sok hónapos grafikont/sok sort
@@ -282,7 +324,6 @@ export default function Koltsegek() {
     havi: [],
     jarmuvenkent: [],
     egyebNemKotott: { bevetel: 0, kiado: 0 },
-    vanDevizasFuvar: false,
     osszesen: {
       bevetel: 0,
       karbantartas: 0,
@@ -297,6 +338,7 @@ export default function Koltsegek() {
 
   const [kamionok, setKamionok] = useState([]);
   const [potkocsik, setPotkocsik] = useState([]);
+  const [devizak, setDevizak] = useState([]);
 
   // Várható eredmény (Item 3) — ld. koltsegInterface.php getVarhatoEredmeny.
   // Független a fenti `filter` dátumtartománytól (mindig a "jövő hónapra"
@@ -342,6 +384,14 @@ export default function Koltsegek() {
   const [navTetelek, setNavTetelek] = useState([]);
   const [navKivalasztott, setNavKivalasztott] = useState(() => new Set());
   const [navImportLoading, setNavImportLoading] = useState(false);
+  // Jelvény a "NAV számlák" gombon — kizárólag a felhasználó UTOLSÓ manuális
+  // lekérdezésének eredményét tükrözi (hány importálható tétel maradt),
+  // NEM egy automatikus háttér-lekérdezésből jön. A NAV Online Számla
+  // integráció szándékosan kézi jóváhagyós (ld. a modal fenti kommentje) —
+  // egy proaktív, oldalbetöltéskori NAV-hívás ezt az elvet sértené, ezért
+  // amíg a felhasználó nem kérdez le legalább egyszer ebben a munkamenetben,
+  // nincs jelvény.
+  const [navUjSzam, setNavUjSzam] = useState(0);
 
   const loadOsszesito = () => {
     setLoading(true);
@@ -355,7 +405,6 @@ export default function Koltsegek() {
           havi: result.havi || [],
           jarmuvenkent: result.jarmuvenkent || [],
           egyebNemKotott: result.egyebNemKotott || { bevetel: 0, kiado: 0 },
-          vanDevizasFuvar: !!result.vanDevizasFuvar,
           osszesen: result.osszesen,
         });
       }
@@ -419,6 +468,9 @@ export default function Koltsegek() {
     }).then((result) => {
       if (result?.success) setNavVanBeallitva(!!result.van_beallitva);
     });
+    fetchAction("getListaElemek", { id: user.ceg_id, tipus: "deviza" }).then((result) => {
+      if (result?.success) setDevizak(result.elemek || []);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -443,11 +495,12 @@ export default function Koltsegek() {
       if (result?.success) {
         // A `kategoria_javaslat` (partnernév-egyezés alapján, pl. "MOL") csak
         // egy előre kitöltött javaslat — a felhasználó importálás előtt
-        // soronként felülbírálhatja a review-listában.
-        const tetelek = (result.tetelek || []).map((t) => ({
-          ...t,
-          kategoria: t.kategoria_javaslat || "",
-        }));
+        // soronként felülbírálhatja a review-listában. Dátum szerint
+        // csökkenő sorrend — a legutóbbi számla legyen legfelül, ne a
+        // NAV válaszának saját (nem garantáltan rendezett) sorrendje.
+        const tetelek = (result.tetelek || [])
+          .map((t) => ({ ...t, kategoria: t.kategoria_javaslat || "" }))
+          .sort((a, b) => (b.datum || "").localeCompare(a.datum || ""));
         setNavTetelek(tetelek);
         // Alapból minden ÚJ (még nem importált, forint-összeggel rendelkező)
         // tétel ki van pipálva — a felhasználó itt egyesével lemondhatja
@@ -458,6 +511,7 @@ export default function Koltsegek() {
           ),
         );
         setNavLekerdezve(true);
+        setNavUjSzam(tetelek.filter((t) => t.importalhato).length);
       } else {
         toast.error(result?.message || "Lekérdezés sikertelen.");
       }
@@ -501,6 +555,7 @@ export default function Koltsegek() {
       });
       if (result?.success) {
         toast.success(result.message || "Import sikeres.");
+        setNavUjSzam((prev) => Math.max(0, prev - kivalasztottTetelek.length));
         setNavModalOpen(false);
         loadOsszesito();
         loadTetelek();
@@ -531,8 +586,13 @@ export default function Koltsegek() {
 
   const handleAddSubmit = async (e) => {
     e.preventDefault();
-    if (!ujTetel.datum || !ujTetel.megnevezes.trim() || !ujTetel.osszeg) {
-      toast.error("Add meg a dátumot, a megnevezést és az összeget!");
+    const devizas = ujTetel.deviza && ujTetel.deviza !== "HUF";
+    if (!ujTetel.datum || !ujTetel.megnevezes.trim()) {
+      toast.error("Add meg a dátumot és a megnevezést!");
+      return;
+    }
+    if (devizas ? !ujTetel.eredeti_osszeg : !ujTetel.osszeg) {
+      toast.error(devizas ? "Add meg az eredeti (deviza) összeget!" : "Add meg az összeget!");
       return;
     }
     setIsSaving(true);
@@ -552,7 +612,12 @@ export default function Koltsegek() {
         datum: ujTetel.datum,
         megnevezes: ujTetel.megnevezes.trim(),
         szamlaszam: ujTetel.szamlaszam.trim() || null,
-        osszeg: ujTetel.osszeg,
+        // Devizás tételnél az `osszeg`-et a backend maga számítja ki
+        // (resolveDevizaOsszeg, aznapi MNB-árfolyamon) — a `0` itt csak a
+        // kötelező paraméter kitöltése, ténylegesen figyelmen kívül marad.
+        osszeg: devizas ? 0 : ujTetel.osszeg,
+        deviza: ujTetel.deviza || "HUF",
+        eredeti_osszeg: devizas ? ujTetel.eredeti_osszeg : null,
         kamion_id: ujTetel.kamion_id || null,
         potkocsi_id: ujTetel.potkocsi_id || null,
         megjegyzes: ujTetel.megjegyzes.trim() || null,
@@ -590,6 +655,8 @@ export default function Koltsegek() {
       megnevezes: row.megnevezes,
       szamlaszam: row.szamlaszam || "",
       osszeg: row.osszeg,
+      deviza: row.deviza || "HUF",
+      eredeti_osszeg: row.eredeti_osszeg || "",
       kamion_id: row.kamion_id || "",
       potkocsi_id: row.potkocsi_id || "",
       megjegyzes: row.megjegyzes || "",
@@ -670,6 +737,22 @@ export default function Koltsegek() {
         </span>
       ),
     },
+    {
+      key: "bevetelPerKm",
+      label: "Bevétel/km",
+      align: "right",
+      className: "tabular-nums",
+      mobileHidden: true,
+      render: (row) => <PerKmErtek ertek={row.bevetelPerKm} lefedettseg={row.kmLefedettseg} />,
+    },
+    {
+      key: "kiadasPerKm",
+      label: "Kiadás/km",
+      align: "right",
+      className: "tabular-nums",
+      mobileHidden: true,
+      render: (row) => <PerKmErtek ertek={row.kiadasPerKm} lefedettseg={row.kmLefedettseg} />,
+    },
   ];
 
   const exportColumns = [
@@ -686,6 +769,21 @@ export default function Koltsegek() {
     { key: "egyeb", label: "Egyéb (Ft)" },
     { key: "kiadasOsszesen", label: "Kiadás összesen (Ft)" },
     { key: "netto", label: "Nettó (Ft)" },
+    {
+      key: "bevetelPerKm",
+      label: "Bevétel/km (Ft)",
+      exportValue: (row) => (row.bevetelPerKm ?? ""),
+    },
+    {
+      key: "kiadasPerKm",
+      label: "Kiadás/km (Ft)",
+      exportValue: (row) => (row.kiadasPerKm ?? ""),
+    },
+    {
+      key: "kmLefedettseg",
+      label: "Km-adat lefedettsége (%)",
+      exportValue: (row) => (row.kmLefedettseg ?? ""),
+    },
   ];
 
   // Az egykor külön Bevételek/Kiadások táblázat mostantól egy közös lista —
@@ -741,6 +839,11 @@ export default function Koltsegek() {
           }
         >
           {formatHuf(row.osszeg)}
+          {row.deviza && row.deviza !== "HUF" && row.eredeti_osszeg && (
+            <span className="block text-xs font-normal text-ink-400">
+              {formatDeviza(row.eredeti_osszeg, row.deviza)}
+            </span>
+          )}
         </span>
       ),
     },
@@ -787,6 +890,8 @@ export default function Koltsegek() {
     },
     { key: "megnevezes", label: "Megnevezés" },
     { key: "osszeg", label: "Összeg (Ft)" },
+    { key: "deviza", label: "Deviza" },
+    { key: "eredeti_osszeg", label: "Eredeti összeg" },
     { key: "rendszam", label: "Jármű" },
     { key: "szamlaszam", label: "Számlaszám" },
     { key: "megjegyzes", label: "Megjegyzés" },
@@ -866,6 +971,34 @@ export default function Koltsegek() {
       "Nincs megjeleníthető tétel"
     );
 
+  // Kabin "Figyelmeztetések" kártya — kizárólag a már betöltött `varhato`
+  // becslésből (nincs hozzá új backend-hívás). Szándékosan NEM tartalmaz
+  // kintlévőség-/fizetési-határidő-alapú jelzést — ehhez nincs megbízható
+  // adatforrás (ld. CLAUDE.md "Removed: Fuvarok / Fuvartervező modulok").
+  const figyelmeztetesek = [];
+  if (varhato && varhato.varhatoEredmeny < 0) {
+    figyelmeztetesek.push({
+      key: "negativ-varhato",
+      text: (
+        <>
+          Következő hónapra <b>negatív várható eredmény</b> becsült (
+          {formatHuf(varhato.varhatoEredmeny)}).
+        </>
+      ),
+    });
+  }
+  if (varhato && varhato.tervezettKarbantartasTetelSzam > 0) {
+    figyelmeztetesek.push({
+      key: "tervezett-karbantartas",
+      text: (
+        <>
+          <b>{varhato.tervezettKarbantartasTetelSzam} tervezett karbantartás</b>{" "}
+          várható, becsült összesen {formatHuf(varhato.tervezettKarbantartas)}.
+        </>
+      ),
+    });
+  }
+
   const kategoriaChipek = [
     {
       key: "karbantartas",
@@ -914,7 +1047,7 @@ export default function Koltsegek() {
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
       <PageHeader
-        eyebrow="Járművek"
+        eyebrow="Pénzügyek"
         title="Pénzforgalom"
         className="mb-0"
         action={
@@ -935,76 +1068,118 @@ export default function Koltsegek() {
               onChange={handleFilterChange}
               className="w-40"
             />
-            <button
-              type="button"
-              onClick={openNavModal}
-              title={
-                navVanBeallitva
-                  ? undefined
-                  : "A NAV-kapcsolat még nincs beállítva — lásd Beállítások"
-              }
-              className="flex items-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-ink-600 shadow-soft transition-all duration-300 ease-fluid hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 active:scale-95"
-            >
-              <PiCloudArrowDownLight className="h-4 w-4" />
-              NAV számlák lekérdezése
-            </button>
           </div>
         }
       />
 
-      {/* Várható eredmény (Item 3) — a "Havi alakulás" grafikon FELETT, mert
-          ez egy előretekintő becslés (jövő hónap), nem a `filter`
-          dátumtartományra vonatkozó, visszatekintő adat, mint minden más
-          ezen az oldalon — a `loading` (a `filter`-hez kötött) állapottól
-          függetlenül, saját `varhato !== null` őrfeltétellel jelenik meg. */}
-      {varhato && (
-        <div className="rounded-3xl bg-white p-5 shadow-soft ring-1 ring-ink-100">
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
-            Várható eredmény (jövő hónap, becslés)
-          </p>
-          <p
-            className={`mt-1 font-display text-3xl font-bold tabular-nums ${
-              varhato.varhatoEredmeny >= 0 ? "text-emerald-600" : "text-red-600"
-            }`}
-          >
-            {formatHuf(varhato.varhatoEredmeny)}
-          </p>
-          <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm">
-            <span className="flex items-center gap-1.5 text-ink-500">
-              <PiTrendUpLight className="h-4 w-4 text-emerald-600" />
-              Bevétel ({varhato.honapokSzama} havi átlag){" "}
-              <span className="font-semibold tabular-nums text-ink-800">
-                {formatHuf(varhato.atlagBevetel)}
-              </span>
-            </span>
-            <span className="flex items-center gap-1.5 text-ink-500">
-              <PiCoinsLight className="h-4 w-4 text-red-600" />
-              Fix költségek ({varhato.aktivBer !== undefined ? "biztosítás + bérek" : "biztosítás"}){" "}
-              <span className="font-semibold tabular-nums text-ink-800">
-                {formatHuf(varhato.fixKoltsegek)}
-              </span>
-            </span>
-          </div>
-          <p className="mt-3 text-xs text-ink-400">
-            Becslés: az elmúlt {varhato.honapokSzama} lezárt hónap bevétel-átlagából
-            {varhato.aktivBer !== undefined
-              ? " levonva az aktuális havi bérezést és a biztosítási díjak átlagát."
-              : " levonva a biztosítási díjak átlagát."}
-          </p>
-        </div>
-      )}
+      {/* "Kabin" elrendezés (UX-audit, kabin-alternatíva): a bal oldali sáv
+          (Várható eredmény, időszak-összesítő, Figyelmeztetések, üzemanyag-
+          anomáliák) `lg:sticky` — görgetés közben is végig látszik, nem egy
+          nézet, aminek el kell tűnnie, ha a felhasználó a tételeken
+          dolgozik. Mobilon (`lg:` alatt) a grid egy oszlopra esik vissza,
+          a kabin egyszerűen a lap tetején, normál dokumentum-folyásban
+          jelenik meg. */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[300px_1fr] lg:items-start">
+        <div className="flex flex-col gap-4 lg:sticky lg:top-6">
+          {/* Várható eredmény (Item 3) — a `filter` dátumtartománytól
+              függetlenül, saját `varhato !== null` őrfeltétellel jelenik
+              meg, a `loading`-tól sem függ, hogy a kabin görgetés közben
+              se tűnjön el, amíg a jobb oldali tartalom épp töltődik. */}
+          {varhato && (
+            <div className="rounded-3xl bg-white p-5 shadow-soft ring-1 ring-ink-100">
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
+                Várható eredmény (jövő hónap, becslés)
+              </p>
+              <p
+                className={`mt-1 font-display text-2xl font-bold tabular-nums ${
+                  varhato.varhatoEredmeny >= 0 ? "text-emerald-600" : "text-red-600"
+                }`}
+              >
+                {formatHuf(varhato.varhatoEredmeny)}
+              </p>
+              <div className="mt-3 space-y-1.5 text-xs">
+                <div className="flex items-center justify-between text-ink-500">
+                  <span className="flex items-center gap-1.5">
+                    <PiTrendUpLight className="h-3.5 w-3.5 text-emerald-600" />
+                    Bevétel ({varhato.honapokSzama} havi átlag)
+                  </span>
+                  <span className="font-semibold tabular-nums text-ink-800">
+                    {formatHuf(varhato.atlagBevetel)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-ink-500">
+                  <span className="flex items-center gap-1.5">
+                    <PiCoinsLight className="h-3.5 w-3.5 text-red-600" />
+                    Fix költségek
+                  </span>
+                  <span className="font-semibold tabular-nums text-ink-800">
+                    {formatHuf(varhato.fixKoltsegek)}
+                  </span>
+                </div>
+              </div>
+              {varhato.tervezettKarbantartasTetelSzam > 0 && (
+                <p className="mt-2 text-xs text-ink-400">
+                  Ebből {formatHuf(varhato.tervezettKarbantartas)} {varhato.tervezettKarbantartasTetelSzam} tervezett,
+                  még el nem végzett karbantartás becsült költsége.
+                </p>
+              )}
+            </div>
+          )}
 
-      {loading ? (
-        <Spinner wrapperClassName="flex justify-center py-16" />
-      ) : (
-        <>
-          {/* Havi alakulás — összecsukható diagram-kártya, ismét felül,
-              alapból nyitva asztalon (rögtön látszik a havi trend), alapból
-              csukva mobilon (ott a tétel-lista férjen el felül, görgetés
-              nélkül). A fejléc (cím/nyitó-csukó nyíl + Bevétel/Kiadás/Nettó
-              + év-váltó) mindig látszik, összecsukott állapotban is — így a
-              legfontosabb 3 szám akkor is egy pillantásra elérhető, ha
-              maga a grafikon épp be van csukva. */}
+          {/* Bevétel/Kiadás/Nettó — korábban a "Havi alakulás" grafikon
+              fejlécében élt, most a kabinban, mert így görgetés közben is
+              látszik, nem csak akkor, ha épp a grafikon-kártyánál tart a
+              felhasználó. */}
+          <div className="rounded-3xl bg-white p-5 shadow-soft ring-1 ring-ink-100">
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
+              Kiválasztott időszak
+            </p>
+            <div className="mt-3 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-sm text-ink-500">
+                  <PiTrendUpLight className="h-4 w-4 text-emerald-600" />
+                  Bevétel
+                </span>
+                <span className="font-display text-base font-bold tabular-nums text-emerald-600">
+                  {formatHuf(adat.osszesen.bevetel)}
+                </span>
+              </div>
+              <div className="border-t border-ink-100" />
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-sm text-ink-500">
+                  <PiCoinsLight className="h-4 w-4 text-red-600" />
+                  Kiadás
+                </span>
+                <span className="font-display text-base font-bold tabular-nums text-red-600">
+                  {formatHuf(adat.osszesen.kiadas)}
+                </span>
+              </div>
+              <div className="border-t border-ink-100" />
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-ink-500">Nettó</span>
+                <span
+                  className={`font-display text-base font-bold tabular-nums ${
+                    adat.osszesen.netto >= 0 ? "text-emerald-600" : "text-red-600"
+                  }`}
+                >
+                  {formatHuf(adat.osszesen.netto)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Havi alakulás — a kabinba került (nem a tartalom-oszlopba, a
+              Tételek táblázat alá), hogy a felhasználó ne kényszerüljön
+              görgetésre a diagramért, és a Tételek táblázat mérete se
+              csökkenjen a helykímélés miatt — ez a két, egymásnak
+              ellentmondó igény csak úgy elégíthető ki egyszerre, ha a
+              diagram egy MÁSIK, mindig látható (sticky) oszlopba kerül,
+              nem a tartalom-oszlop tetejére/aljára. Mindig `simplified`
+              (2 oszlop: Bevétel/Kiadás), mert a 300px-es kabin-oszlop
+              szélessége nem fér el 6 datasetes csoportosított oszlopdiagram
+              + jelmagyarázat — a kategóriánkénti bontás egyébként is megvan
+              a chip-rácsban a tartalom-oszlopban (ld. UX-visszajelzés: azt
+              külön, változatlanul szeretné megtartani). */}
           <div className="rounded-3xl bg-white p-5 shadow-soft ring-1 ring-ink-100">
             <div className="flex flex-wrap items-center gap-3">
               <button
@@ -1013,7 +1188,7 @@ export default function Koltsegek() {
                 className="flex flex-shrink-0 items-center gap-2 text-left"
               >
                 <PiChartBarLight className="h-4 w-4 flex-shrink-0 text-ink-400" />
-                <h3 className="font-display text-base font-semibold text-brand-900">
+                <h3 className="font-display text-sm font-semibold text-brand-900">
                   Havi alakulás
                 </h3>
                 {chartOpen ? (
@@ -1022,54 +1197,39 @@ export default function Koltsegek() {
                   <PiCaretDownLight className="h-4 w-4 flex-shrink-0 text-ink-400" />
                 )}
               </button>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-                <span className="flex items-center gap-1.5 text-ink-500">
-                  <PiTrendUpLight className="h-4 w-4 text-emerald-600" />
-                  <span className="font-semibold tabular-nums text-ink-800">
-                    {formatHuf(adat.osszesen.bevetel)}
-                  </span>
-                </span>
-                <span className="flex items-center gap-1.5 text-ink-500">
-                  <PiCoinsLight className="h-4 w-4 text-red-600" />
-                  <span className="font-semibold tabular-nums text-ink-800">
-                    {formatHuf(adat.osszesen.kiadas)}
-                  </span>
-                </span>
-                <span className="flex items-center gap-1.5 text-ink-500">
-                  Nettó
-                  <span
-                    className={`font-semibold tabular-nums ${
-                      adat.osszesen.netto >= 0
-                        ? "text-emerald-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {formatHuf(adat.osszesen.netto)}
-                  </span>
-                </span>
-              </div>
               {chartOpen && (
-                <div className="ml-auto flex flex-shrink-0 items-center gap-0.5 rounded-lg bg-slate-100 p-0.5">
+                <div className="ml-auto flex flex-shrink-0 items-center gap-1.5">
+                  <div className="flex items-center gap-0.5 rounded-lg bg-slate-100 p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => changeYear(-1)}
+                      className="flex h-6 w-6 items-center justify-center rounded-md text-ink-500 transition-colors duration-150 hover:bg-white hover:text-brand-600"
+                      aria-label="Előző év"
+                      title="Előző év"
+                    >
+                      <PiCaretLeftLight className="h-3.5 w-3.5" />
+                    </button>
+                    <span className="w-11 text-center text-xs font-bold tabular-nums text-ink-700">
+                      {displayedYear}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => changeYear(1)}
+                      className="flex h-6 w-6 items-center justify-center rounded-md text-ink-500 transition-colors duration-150 hover:bg-white hover:text-brand-600"
+                      aria-label="Következő év"
+                      title="Következő év"
+                    >
+                      <PiCaretRightLight className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                   <button
                     type="button"
-                    onClick={() => changeYear(-1)}
-                    className="flex h-6 w-6 items-center justify-center rounded-md text-ink-500 transition-colors duration-150 hover:bg-white hover:text-brand-600"
-                    aria-label="Előző év"
-                    title="Előző év"
+                    onClick={() => setChartModalOpen(true)}
+                    className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-ink-400 transition-colors duration-150 hover:bg-slate-100 hover:text-brand-600"
+                    aria-label="Diagram megnyitása nagyban"
+                    title="Diagram megnyitása nagyban, teljes kategória-bontással"
                   >
-                    <PiCaretLeftLight className="h-3.5 w-3.5" />
-                  </button>
-                  <span className="w-11 text-center text-xs font-bold tabular-nums text-ink-700">
-                    {displayedYear}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => changeYear(1)}
-                    className="flex h-6 w-6 items-center justify-center rounded-md text-ink-500 transition-colors duration-150 hover:bg-white hover:text-brand-600"
-                    aria-label="Következő év"
-                    title="Következő év"
-                  >
-                    <PiCaretRightLight className="h-3.5 w-3.5" />
+                    <PiArrowsOutLight className="h-4 w-4" />
                   </button>
                 </div>
               )}
@@ -1081,123 +1241,182 @@ export default function Koltsegek() {
                     Nincs megjeleníthető adat ebben az időszakban.
                   </p>
                 ) : (
-                  <CashflowChart
-                    havi={adat.havi}
-                    simplified={isMobile}
-                    isAdmin={isOwnerAdmin}
-                  />
-                )}
-                {adat.vanDevizasFuvar && (
-                  <p className="mt-3 text-xs text-ink-400">
-                    Devizás (nem HUF) fuvarok díja nem szerepel az
-                    összesítésben — nincs árfolyam-forrás az appban.
-                  </p>
+                  <CashflowChart havi={adat.havi} simplified isAdmin={isOwnerAdmin} />
                 )}
               </div>
             )}
           </div>
 
-          {/* Kategória-chip rács — Bevétel/Kiadás/Nettó a fenti grafikon-
-              fejlécbe került, itt a 4 kiadás-kategória tölti ki a teljes
-              rendelkezésre álló szélességet (2 oszlop mobilon, 4 oszlop
-              sm+ felett). */}
-          <div
-            className={`grid grid-cols-2 gap-2 rounded-3xl bg-white p-4 shadow-soft ring-1 ring-ink-100 ${
-              isOwnerAdmin ? "sm:grid-cols-5" : "sm:grid-cols-4"
-            }`}
-          >
-            {kategoriaChipek.map((chip) => (
-              <CategoryChip
-                key={chip.key}
-                icon={chip.icon}
-                label={chip.label}
-                value={chip.value}
-                dotClass={chip.dotClass}
-                active={kategoriaSzuro === chip.key}
-                onClick={() => toggleKategoriaSzuro(chip.key)}
-              />
-            ))}
-          </div>
-
-          {/* Mind/Bevétel/Kiadás szegmens */}
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-0.5 rounded-xl bg-slate-100 p-1">
-              {[
-                { key: "mind", label: "Mind" },
-                { key: "bevetel", label: "Bevétel" },
-                { key: "kiado", label: "Kiadás" },
-              ].map((opt) => (
-                <button
-                  key={opt.key}
-                  type="button"
-                  onClick={() => changeIranySzuro(opt.key)}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors duration-150 ${
-                    iranySzuro === opt.key
-                      ? "bg-white text-brand-700 shadow-soft"
-                      : "text-ink-500 hover:text-ink-700"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {(adat.egyebNemKotott.bevetel > 0 || adat.egyebNemKotott.kiado > 0) && (
-            <div className="flex flex-wrap gap-2">
-              {adat.egyebNemKotott.bevetel > 0 && (
-                <p className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs text-ink-500">
-                  Ebből járműhöz nem köthető bevétel:{" "}
-                  {formatHuf(adat.egyebNemKotott.bevetel)}
-                </p>
-              )}
-              {adat.egyebNemKotott.kiado > 0 && (
-                <p className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs text-ink-500">
-                  Ebből járműhöz nem köthető kiadás:{" "}
-                  {formatHuf(adat.egyebNemKotott.kiado)}
-                </p>
-              )}
+          {/* Figyelmeztetések — kizárólag a `varhato` becslésből számolt,
+              már meglévő adatból épül (negatív jövő havi eredmény,
+              tervezett-de-el-nem-végzett karbantartás), nem hoz be új
+              backend-hívást. Üres esetben nem jelenik meg üres doboz. */}
+          {figyelmeztetesek.length > 0 && (
+            <div className="rounded-3xl bg-white p-5 shadow-soft ring-1 ring-ink-100">
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
+                Figyelmeztetések
+              </p>
+              <ul className="mt-3 space-y-2.5">
+                {figyelmeztetesek.map((f) => (
+                  <li key={f.key} className="flex items-start gap-2 text-sm text-ink-700">
+                    <span className="mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white">
+                      !
+                    </span>
+                    <span>{f.text}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 
-          <DataTable
-            icon={PiReceiptLight}
-            title="Tételek"
-            headerAction={tetelekHeaderAction}
-            exportFilename="penzforgalom_tetelek"
-            exportColumns={egyebTetelExportColumns}
-            columns={egyebTetelColumns}
-            rows={tetelek}
-            mobileTitleKey="megnevezes"
-            emptyLabel={ledgerEmptyLabel}
-            searchable
-            searchPlaceholder="Keresés a tételek közt..."
-            serverSide
-            totalRows={tetelekTotal}
-            page={tetelekPage}
-            pageSize={TETEL_PAGE_SIZE}
-            onPageChange={setTetelekPage}
-            onSearchChange={setTetelekSearch}
-            onExportAll={handleTetelekExportAll}
-          />
+          {/* Üzemanyag-anomáliák — tartalmilag is "mire figyeljek" jellegű,
+              mint a Figyelmeztetések, ezért került alá a kabinba (a
+              komponens saját, önálló adatbetöltése/összecsukhatósága
+              változatlan, csak a helye más). */}
+          <CardUzemanyagElemzes />
+        </div>
 
-          {/* Jármű szerinti bontás — elemző jellegű, ezért a napi
-              munkafelület (tétel-lista) alatt, a lap alján kap helyet. */}
-          <DataTable
-            icon={PiCoinsLight}
-            title="Jármű szerinti bontás"
-            exportFilename="penzforgalom"
-            exportColumns={exportColumns}
-            columns={columns}
-            rows={adat.jarmuvenkent}
-            mobileTitleKey="rendszam"
-            emptyLabel="Nincs megjeleníthető adat"
-            searchable
-            searchPlaceholder="Keresés rendszám vagy típus szerint..."
-            pageSize={8}
-          />
-        </>
-      )}
+        <div className="flex min-w-0 flex-col gap-6">
+          {loading ? (
+            <Spinner wrapperClassName="flex justify-center py-16" />
+          ) : (
+            <>
+              {/* Mind/Bevétel/Kiadás szegmens + NAV import gomb — a gomb a
+                  sor jobb szélén (`ml-auto`), jelvénnyel, ha az utolsó
+                  manuális lekérdezésből maradt még importálatlan tétel.
+                  `pr-16 md:pr-0`: a Sidebar globális mobil kereső-/
+                  értesítés-FAB-jai (`right-4`, `bottom-20`/`bottom-36`,
+                  `md:hidden`) fixen a jobb szél utolsó ~64px-es sávjában
+                  lebegnek minden mobil oldalon — enélkül a jobbra igazított
+                  NAV gomb betöltéskor (görgetés nélkül is) pont e mögé
+                  csúszott, gyakorlatilag eltakarva/kattinthatatlanná téve
+                  azt. A jobb margó biztosítja, hogy semmi ne kerüljön ebbe a
+                  sávba; asztali nézetben (`md:`+) a FAB-ok nincsenek jelen,
+                  ott nem kell hely. */}
+              <div className="flex flex-wrap items-center gap-2 pr-16 md:pr-0">
+                <div className="flex items-center gap-0.5 rounded-xl bg-slate-100 p-1">
+                  {[
+                    { key: "mind", label: "Mind" },
+                    { key: "bevetel", label: "Bevétel" },
+                    { key: "kiado", label: "Kiadás" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => changeIranySzuro(opt.key)}
+                      className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors duration-150 ${
+                        iranySzuro === opt.key
+                          ? "bg-white text-brand-700 shadow-soft"
+                          : "text-ink-500 hover:text-ink-700"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={openNavModal}
+                  title={
+                    navVanBeallitva
+                      ? undefined
+                      : "A NAV-kapcsolat még nincs beállítva — lásd Beállítások"
+                  }
+                  className="ml-auto flex items-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-ink-600 shadow-soft transition-all duration-300 ease-fluid hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 active:scale-95"
+                >
+                  <PiCloudArrowDownLight className="h-4 w-4" />
+                  NAV számlák
+                  {navUjSzam > 0 && (
+                    <span className="flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                      {navUjSzam}
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              {/* Kategória-chip rács — a 4(-5) kiadás-kategória tölti ki a
+                  teljes rendelkezésre álló szélességet (2 oszlop mobilon,
+                  4-5 oszlop sm+ felett). */}
+              <div
+                className={`grid grid-cols-2 gap-2 rounded-3xl bg-white p-4 shadow-soft ring-1 ring-ink-100 ${
+                  isOwnerAdmin ? "sm:grid-cols-5" : "sm:grid-cols-4"
+                }`}
+              >
+                {kategoriaChipek.map((chip) => (
+                  <CategoryChip
+                    key={chip.key}
+                    icon={chip.icon}
+                    label={chip.label}
+                    value={chip.value}
+                    dotClass={chip.dotClass}
+                    active={kategoriaSzuro === chip.key}
+                    onClick={() => toggleKategoriaSzuro(chip.key)}
+                  />
+                ))}
+              </div>
+
+              {(adat.egyebNemKotott.bevetel > 0 || adat.egyebNemKotott.kiado > 0) && (
+                <div className="flex flex-wrap gap-2">
+                  {adat.egyebNemKotott.bevetel > 0 && (
+                    <p className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs text-ink-500">
+                      Ebből járműhöz nem köthető bevétel:{" "}
+                      {formatHuf(adat.egyebNemKotott.bevetel)}
+                    </p>
+                  )}
+                  {adat.egyebNemKotott.kiado > 0 && (
+                    <p className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs text-ink-500">
+                      Ebből járműhöz nem köthető kiadás:{" "}
+                      {formatHuf(adat.egyebNemKotott.kiado)}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Tételek — legfelül, közvetlenül a szűrők/chipek alatt: ez a
+                  leggyakrabban használt tábla (a bevétel ma kizárólag ide
+                  vagy a NAV-importba kerül kézzel), ezért a legközelebb
+                  legyen a szűrőkhöz, ne kelljen hozzá görgetni. */}
+              <DataTable
+                icon={PiReceiptLight}
+                title="Tételek"
+                headerAction={tetelekHeaderAction}
+                exportFilename="penzforgalom_tetelek"
+                exportColumns={egyebTetelExportColumns}
+                columns={egyebTetelColumns}
+                rows={tetelek}
+                mobileTitleKey="megnevezes"
+                emptyLabel={ledgerEmptyLabel}
+                searchable
+                searchPlaceholder="Keresés a tételek közt..."
+                serverSide
+                totalRows={tetelekTotal}
+                page={tetelekPage}
+                pageSize={TETEL_PAGE_SIZE}
+                onPageChange={setTetelekPage}
+                onSearchChange={setTetelekSearch}
+                onExportAll={handleTetelekExportAll}
+              />
+
+              {/* Jármű szerinti bontás — elemző, összesítő jellegű tábla,
+                  amit ritkábban néz meg valaki, mint a nyers tételeket,
+                  ezért a lap legalján kap helyet. */}
+              <DataTable
+                icon={PiCoinsLight}
+                title="Jármű szerinti bontás"
+                exportFilename="penzforgalom"
+                exportColumns={exportColumns}
+                columns={columns}
+                rows={adat.jarmuvenkent}
+                mobileTitleKey="rendszam"
+                emptyLabel="Nincs megjeleníthető adat"
+                searchable
+                searchPlaceholder="Keresés rendszám vagy típus szerint..."
+                pageSize={8}
+              />
+            </>
+          )}
+        </div>
+      </div>
 
       <Modal
         open={adding}
@@ -1217,7 +1436,7 @@ export default function Koltsegek() {
         }
       >
         <form onSubmit={handleAddSubmit} className="space-y-4">
-          <FormSection columns={2}>
+          <FormSection columns={3}>
             <FormField
               type="date"
               label="Dátum"
@@ -1227,14 +1446,44 @@ export default function Koltsegek() {
               required
             />
             <FormField
-              type="number"
-              label="Összeg (Ft)"
-              name="osszeg"
-              value={ujTetel.osszeg}
+              as="select"
+              label="Deviza"
+              name="deviza"
+              value={ujTetel.deviza}
               onChange={handleUjTetelChange}
-              required
-            />
+            >
+              {devizak.map((d) => (
+                <option key={d.kulcs} value={d.kulcs}>
+                  {d.kulcs}
+                </option>
+              ))}
+            </FormField>
+            {ujTetel.deviza && ujTetel.deviza !== "HUF" ? (
+              <FormField
+                type="number"
+                label={`Eredeti összeg (${ujTetel.deviza})`}
+                name="eredeti_osszeg"
+                value={ujTetel.eredeti_osszeg}
+                onChange={handleUjTetelChange}
+                required
+              />
+            ) : (
+              <FormField
+                type="number"
+                label="Összeg (Ft)"
+                name="osszeg"
+                value={ujTetel.osszeg}
+                onChange={handleUjTetelChange}
+                required
+              />
+            )}
           </FormSection>
+          {ujTetel.deviza && ujTetel.deviza !== "HUF" && (
+            <p className="-mt-2 text-xs text-ink-400">
+              A forint-egyenérték a rögzítés pillanatában érvényes MNB-árfolyamon, automatikusan
+              számítódik.
+            </p>
+          )}
           <FormField
             label="Megnevezés"
             name="megnevezes"
@@ -1451,7 +1700,7 @@ export default function Koltsegek() {
                                   <option value="biztositas">Biztosítás</option>
                                 </select>
                               ) : (
-                                <span className="text-ink-300">—</span>
+                                <span className="text-ink-400">—</span>
                               )}
                             </td>
                             <td className="px-3 py-2 text-xs text-ink-400">
@@ -1490,6 +1739,47 @@ export default function Koltsegek() {
               </>
             )}
           </div>
+        )}
+      </Modal>
+
+      {/* A kabin-diagram "nagyban megnyitás" gombja — ugyanaz a `CashflowChart`,
+          csak `simplified` NÉLKÜL (teljes, 6 datasetes kategória-bontás),
+          mert itt nincs a kabin 300px-es szélesség-korlátja. */}
+      <Modal
+        open={chartModalOpen}
+        onClose={() => setChartModalOpen(false)}
+        title="Havi alakulás"
+        maxWidth="max-w-4xl"
+      >
+        <div className="flex items-center justify-end gap-0.5 rounded-lg bg-slate-100 p-0.5 mb-2 w-fit ml-auto">
+          <button
+            type="button"
+            onClick={() => changeYear(-1)}
+            className="flex h-7 w-7 items-center justify-center rounded-md text-ink-500 transition-colors duration-150 hover:bg-white hover:text-brand-600"
+            aria-label="Előző év"
+            title="Előző év"
+          >
+            <PiCaretLeftLight className="h-4 w-4" />
+          </button>
+          <span className="w-12 text-center text-sm font-bold tabular-nums text-ink-700">
+            {displayedYear}
+          </span>
+          <button
+            type="button"
+            onClick={() => changeYear(1)}
+            className="flex h-7 w-7 items-center justify-center rounded-md text-ink-500 transition-colors duration-150 hover:bg-white hover:text-brand-600"
+            aria-label="Következő év"
+            title="Következő év"
+          >
+            <PiCaretRightLight className="h-4 w-4" />
+          </button>
+        </div>
+        {adat.havi.length === 0 ? (
+          <p className="py-10 text-center text-sm text-ink-400">
+            Nincs megjeleníthető adat ebben az időszakban.
+          </p>
+        ) : (
+          <CashflowChart havi={adat.havi} simplified={false} isAdmin={isOwnerAdmin} />
         )}
       </Modal>
     </div>

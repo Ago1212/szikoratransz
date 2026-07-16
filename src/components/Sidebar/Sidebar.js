@@ -20,8 +20,6 @@ import {
   PiMagnifyingGlassLight,
   PiCoinsLight,
   PiBellLight,
-  PiPackageLight,
-  PiCalendarCheckLight,
   PiSteeringWheelLight,
   PiCaretDownLight,
   PiMapTrifoldLight,
@@ -29,6 +27,7 @@ import {
 
 import NotificationDropdown from "components/Dropdowns/NotificationDropdown.js";
 import GlobalSearch from "components/UI/GlobalSearch.js";
+import PiaciArakPanel from "components/Sidebar/PiaciArakPanel.js";
 import { fetchAction } from "utils/fetchAction";
 
 const initials = (name) =>
@@ -55,7 +54,6 @@ const initials = (name) =>
 // nem napi flotta- vagy csapatmunka.
 const mobileDirectLinks = [
   { to: "/admin/dashboard", icon: PiSquaresFourLight, text: "Menü" },
-  { to: "/admin/fuvarok", icon: PiPackageLight, text: "Fuvarok" },
   { to: "/admin/settings", icon: PiGearLight, text: "Profil" },
 ];
 
@@ -69,11 +67,6 @@ const mobileGroups = [
         to: "/admin/flottakovetes",
         icon: PiMapTrifoldLight,
         text: "Flottakövetés",
-      },
-      {
-        to: "/admin/fuvartervezo",
-        icon: PiCalendarCheckLight,
-        text: "Fuvartervező",
       },
       { to: "/admin/kamionok", icon: PiTruckLight, text: "Kamionok" },
       { to: "/admin/potkocsi", icon: PiTruckTrailerLight, text: "Pótkocsik" },
@@ -148,6 +141,17 @@ const mobileGroups = [
         text: "Listák",
         adminOnly: true,
       },
+      // Pénzforgalom deviza-kezelés (ld. koltsegInterface.php
+      // resolveDevizaOsszeg) — ugyanaz az admin-only listaelemek-minta,
+      // mint a Listák, csak saját, dedikált oldalon (Devizak.js), mert a
+      // devizakód nem szlugosítható egy megjelenítendő névből (ISO 4217
+      // kódnak kell lennie az MNB-lekérdezéshez).
+      {
+        to: "/admin/devizak",
+        icon: PiCoinsLight,
+        text: "Devizák",
+        adminOnly: true,
+      },
     ],
   },
 ];
@@ -163,6 +167,19 @@ export default function Sidebar() {
   const history = useHistory();
 
   const isActive = (path) => location.pathname.includes(path);
+
+  // Ctrl+K / Cmd+K globális gyorsbillentyű a kereséshez — a lenti, a lábléc
+  // fölötti keresősáv "Ctrl+K" jelvénye csak ígéret lenne funkció nélkül.
+  React.useEffect(() => {
+    const handler = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   let user = null;
   try {
@@ -244,15 +261,37 @@ export default function Sidebar() {
   // sehonnan nem értesült, csak ha manuálisan megnyitotta a Bejelentések
   // oldalt és kiválasztott egy kamiont. Ugyanez a szám ad jelvényt a
   // "Bejelentések" menüpontra a napi zónában és a mobil "Csapat" fülre is.
+  //
+  // A Sidebar egy állandó layout-komponens, a Bejelentések oldal (ahol a
+  // státusz ténylegesen változik: új bejelentés, admin válasz, törlés) egy
+  // teljesen külön, útvonalon élő komponens — a kettő között nincs közös
+  // állapot/prop, ezért korábban ez a szám csak egyszer, a Sidebar
+  // felépülésekor töltődött be, és semmilyen későbbi változásra nem
+  // frissült (csak egy teljes oldal-újratöltésre). Két, egymást kiegészítő
+  // trigger oldja meg: (1) minden útvonalváltásra újratöltjük — a
+  // leggyakoribb eset pont az, hogy az admin megnyitja/lezárja a
+  // bejelentést, majd elnavigál onnan; (2) egy 60mp-es időzítő azt az
+  // esetet fedi, amikor az admin a Bejelentések oldalon marad és több
+  // tételt is megválaszol egymás után navigáció nélkül.
   const [nyitottBejelentesek, setNyitottBejelentesek] = React.useState([]);
-  React.useEffect(() => {
+  const loadNyitottBejelentesek = React.useCallback(() => {
     if (!user?.ceg_id) return;
     fetchAction("getNyitottBejelentesek", { id: user.ceg_id }).then(
       (result) => {
         if (result?.success) setNyitottBejelentesek(result.bejelentesek || []);
       },
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.ceg_id]);
+
+  React.useEffect(() => {
+    loadNyitottBejelentesek();
+  }, [loadNyitottBejelentesek, location.pathname]);
+
+  React.useEffect(() => {
+    const intervalId = setInterval(loadNyitottBejelentesek, 60000);
+    return () => clearInterval(intervalId);
+  }, [loadNyitottBejelentesek]);
 
   // A menüpontok elrejtéséhez a fuvarszervező a SAJÁT jogosultságait kéri le
   // (nem a admin-only `getJogosultsagok`-ot) — ld. ApiHandler `getSajatJogosultsagok`
@@ -287,8 +326,6 @@ export default function Sidebar() {
     "/admin/ugyfelek": "ugyfelek",
     "/admin/naplo": "naplo",
     "/admin/koltsegek": "koltsegek",
-    "/admin/fuvarok": "fuvarok",
-    "/admin/fuvartervezo": "fuvarok",
   };
   // Helyszínek/Fájlok/Események szándékosan nincs a fenti térképben — ezeket
   // a backend (megosztott sofőr-hozzáférés miatt) nem korlátozza, ld.
@@ -424,17 +461,15 @@ export default function Sidebar() {
       <span className="text-xs font-bold uppercase tracking-[0.1em] text-ink-500 group-hover:text-ink-800">
         {label}
       </span>
-      <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 text-ink-400 transition-colors duration-200 group-hover:bg-white group-hover:text-brand-600">
-        <PiCaretDownLight
-          className={`h-3.5 w-3.5 transition-transform duration-200 ${open ? "" : "-rotate-90"}`}
-        />
-      </span>
+      <PiCaretDownLight
+        className={`h-3.5 w-3.5 flex-shrink-0 text-ink-400 transition-all duration-200 group-hover:text-brand-600 ${open ? "" : "-rotate-90"}`}
+      />
     </button>
   );
 
   return (
     <>
-      <nav className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col border-r border-ink-100 bg-white md:flex">
+      <nav className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-ink-100 bg-white md:flex">
         {/* Fejléc — logó + név, mindig fixen fent */}
         <div className="flex flex-shrink-0 items-center justify-between gap-2 border-b border-ink-100 px-5 py-4">
           <Link to="/admin/dashboard" className="flex items-center gap-2.5">
@@ -445,15 +480,6 @@ export default function Sidebar() {
             />
           </Link>
           <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => setSearchOpen(true)}
-              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-ink-400 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-700"
-              title="Keresés"
-              aria-label="Keresés"
-            >
-              <PiMagnifyingGlassLight className="h-[18px] w-[18px]" />
-            </button>
             <button
               type="button"
               onClick={() => setNotifOpen(true)}
@@ -526,16 +552,6 @@ export default function Sidebar() {
                   to="/admin/potkocsi"
                   icon={PiTruckTrailerLight}
                   text="Pótkocsik"
-                />
-                <NavItem
-                  to="/admin/fuvarok"
-                  icon={PiPackageLight}
-                  text="Fuvarok"
-                />
-                <NavItem
-                  to="/admin/fuvartervezo"
-                  icon={PiCalendarCheckLight}
-                  text="Fuvartervező"
                 />
               </ul>
             )}
@@ -630,11 +646,44 @@ export default function Sidebar() {
                       icon={PiListBulletsLight}
                       text="Listák"
                     />
+                    <NavItem
+                      to="/admin/devizak"
+                      icon={PiCoinsLight}
+                      text="Devizák"
+                    />
                   </>
                 )}
               </ul>
             )}
           </div>
+        </div>
+
+        {/* Piaci árak (EUR/USD árfolyam + benzinár) — a görgethető
+            nav-listától ELKÜLÖNÜLVE, saját `flex-shrink-0` sávban, közvetlen
+            a lábléc fölött, hogy görgetéstől függetlenül mindig látszódjon
+            (a felhasználó kifejezett kérése: "mindig könnyen elérhető, de
+            ne zavarja a fő tartalom használatát"). Az egész `<nav>` maga
+            `hidden md:flex` (ld. lentebb), tehát ez a panel eleve csak
+            asztali nézetben renderelődik — mobilon nincs is a DOM-ban,
+            nem csak vizuálisan van elrejtve. */}
+        <PiaciArakPanel />
+
+        {/* Keresősáv — korábban egy ikon-gomb volt a fejlécben; most egy
+            tényleges, mindig látható mező, a "Ctrl+K" jelvénnyel jelezve a
+            gyorsbillentyűt (ld. fent a globális keydown-listener). Ugyanazt
+            a `GlobalSearch` overlay-t nyitja, mint korábban a fejléc-gomb. */}
+        <div className="flex-shrink-0 border-t border-ink-100 px-3 py-2.5">
+          <button
+            type="button"
+            onClick={() => setSearchOpen(true)}
+            className="flex w-full items-center gap-2 rounded-xl border border-ink-100 bg-slate-50 px-3 py-2 text-left text-ink-400 transition-colors duration-200 hover:border-brand-200 hover:bg-white"
+          >
+            <PiMagnifyingGlassLight className="h-4 w-4 flex-shrink-0" />
+            <span className="flex-1 truncate text-sm">Keresés</span>
+            <span className="flex-shrink-0 rounded-md border border-ink-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-ink-400">
+              Ctrl+K
+            </span>
+          </button>
         </div>
 
         {/* Lábléc — fiók + kijelentkezés, mindig fixen lent és mindig látszik.

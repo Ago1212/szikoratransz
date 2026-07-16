@@ -1,31 +1,47 @@
 import React, { useMemo, useState } from "react";
-import {
-  PiTruckLight,
-  PiCaretUpLight,
-  PiCaretDownLight,
-  PiGasPumpLight,
-} from "react-icons/pi";
+import { PiTruckLight, PiCaretUpLight, PiCaretDownLight } from "react-icons/pi";
 import { GradientCardHeader } from "components/UI/PageCard.js";
 import StatusBadge from "components/UI/StatusBadge.js";
+import { formatKm } from "utils/gpsmartHelpers.js";
 
+// Nincs `table-fixed` + kényszerített százalék-szélesség — egy 5 oszlopos
+// táblázat egy keskeny (~300px-es) lista-panelben ezzel elkerülhetetlenül
+// levágta/csonkolta volna a rendszámot (élőben ellenőrizve, kipróbálva:
+// "A..." "R..." jelent meg teljes rendszám helyett). Helyette az
+// oszlopok a tartalmuk szerint méreteződnek (auto table layout), a
+// Rendszám kap egy `min-w`-t (hogy "kicsit szélesebb" legyen a puszta
+// tartalom-igényénél), a táblázatot körülvevő doboz pedig `overflow-x-auto`
+// — ha egy nagyon keskeny nézetben mégsem férne ki minden oszlop
+// egy sorban csonkolás nélkül, inkább vízszintesen görgethető legyen,
+// mint hogy bármelyik adat levágódjon.
 const OSZLOPOK = [
-  { kulcs: "rendszam", label: "Rendszám" },
-  { kulcs: "_allapot", label: "Státusz" },
-  { kulcs: "_sebessegSzam", label: "Sebesség" },
-  { kulcs: "_datum", label: "Utolsó jelzés" },
+  { kulcs: "rendszam", label: "Rendszám", thClass: "min-w-[100px]" },
+  { kulcs: "_allapot", label: "Státusz", thClass: "min-w-[80px]" },
+  { kulcs: "_sebessegSzam", label: "Sebesség", thClass: "min-w-[72px]" },
+  { kulcs: "megtettUtMa", label: "Km ma", thClass: "min-w-[78px]" },
+  { kulcs: "_datum", label: "Jelzés", thClass: "min-w-[68px]" },
 ];
 
+// Alapértelmezett rendezés: Mozgásban elöl, utána Áll, utána Offline
+// (`_statuszPrioritas`, ld. gpsmartHelpers.js — NEM a `_allapot.label`
+// ábécésorrendje, ami rossz sorrendet adna), azonos státuszon belül pedig
+// rendszám szerint — ez a `_allapot` oszlopra kattintva is ez marad az
+// összehasonlítás alapja, csak megfordítva `desc` esetén.
 function rendez(rows, rendezes) {
   if (!rendezes) return rows;
   const { kulcs, irany } = rendezes;
   const masolat = [...rows];
   masolat.sort((a, b) => {
+    if (kulcs === "_allapot") {
+      const av = a._statuszPrioritas;
+      const bv = b._statuszPrioritas;
+      if (av !== bv) {
+        return irany === "asc" ? av - bv : bv - av;
+      }
+      return a.rendszam.localeCompare(b.rendszam, "hu");
+    }
     let av = a[kulcs];
     let bv = b[kulcs];
-    if (kulcs === "_allapot") {
-      av = a._allapot.label;
-      bv = b._allapot.label;
-    }
     if (av == null && bv == null) return 0;
     if (av == null) return 1;
     if (bv == null) return -1;
@@ -50,7 +66,7 @@ function rendez(rows, rendezes) {
 // sor-renderelés itt, egyetlen `JarmuSor` függvényben van elkülönítve,
 // könnyen cserélhető egy virtualizált motorra.
 export default function JarmuLista({ rows, kivalasztott, onSelect }) {
-  const [rendezes, setRendezes] = useState({ kulcs: "rendszam", irany: "asc" });
+  const [rendezes, setRendezes] = useState({ kulcs: "_allapot", irany: "asc" });
 
   const rendezettSorok = useMemo(() => rendez(rows, rendezes), [rows, rendezes]);
 
@@ -95,6 +111,7 @@ export default function JarmuLista({ rows, kivalasztott, onSelect }) {
                 <span className="truncate text-xs text-ink-500">{p.cim || "—"}</span>
                 <div className="flex items-center justify-between text-[11px] text-ink-400">
                   <span>{p.sebesseg}</span>
+                  <span>{p.megtettUtMa != null ? `${formatKm(p.megtettUtMa)} km ma` : "—"}</span>
                   <span>{p._relativIdo}</span>
                 </div>
               </button>
@@ -103,15 +120,18 @@ export default function JarmuLista({ rows, kivalasztott, onSelect }) {
         )}
       </div>
 
-      {/* Asztali táblázat — sticky fejléc, zebra, hover, oszloprendezés */}
-      <div className="hidden flex-1 overflow-y-auto md:block">
+      {/* Asztali táblázat — sticky fejléc, zebra, hover, oszloprendezés.
+          `overflow-x-auto`: ld. OSZLOPOK fenti komment — biztonsági háló,
+          ha egy nagyon keskeny nézetben az 5 oszlop tartalma összesen
+          szélesebb lenne a panelnál. */}
+      <div className="hidden flex-1 overflow-auto md:block">
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr>
               {OSZLOPOK.map((col) => (
                 <th
                   key={col.kulcs}
-                  className="sticky top-0 z-10 whitespace-nowrap border-b border-ink-100 bg-white px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-ink-400"
+                  className={`sticky top-0 z-10 whitespace-nowrap border-b border-ink-100 bg-white px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-ink-400 ${col.thClass}`}
                 >
                   <button
                     type="button"
@@ -151,23 +171,22 @@ export default function JarmuLista({ rows, kivalasztott, onSelect }) {
                         : "hover:bg-brand-50/40"
                   }`}
                 >
-                  <td className="px-4 py-2.5 font-semibold text-brand-900">
+                  <td className="whitespace-nowrap px-3 py-2.5 font-semibold text-brand-900">
                     <span className="flex items-center gap-1.5">
                       <PiTruckLight className="h-4 w-4 flex-shrink-0 text-ink-400" />
-                      {p.rendszam}
-                      {p._alacsonyUzemanyag && (
-                        <PiGasPumpLight
-                          className="h-3.5 w-3.5 flex-shrink-0 text-amber-500"
-                          title="Alacsony üzemanyagszint"
-                        />
-                      )}
+                      <span className="truncate">{p.rendszam}</span>
                     </span>
                   </td>
-                  <td className="px-4 py-2.5">
+                  <td className="whitespace-nowrap px-3 py-2.5">
                     <StatusBadge tone={p._allapot.tone}>{p._allapot.label}</StatusBadge>
                   </td>
-                  <td className="px-4 py-2.5 tabular-nums text-ink-600">{p.sebesseg}</td>
-                  <td className="px-4 py-2.5 text-ink-500">
+                  <td className="whitespace-nowrap px-3 py-2.5 tabular-nums text-ink-600">
+                    {p.sebesseg}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-2.5 tabular-nums text-ink-600">
+                    {p.megtettUtMa != null ? `${formatKm(p.megtettUtMa)} km` : "—"}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-2.5 text-ink-500">
                     <span title={p.idopont}>{p._relativIdo}</span>
                   </td>
                 </tr>

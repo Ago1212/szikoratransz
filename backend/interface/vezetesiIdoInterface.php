@@ -1,9 +1,9 @@
 <?php
 
 // Vezetési idő/pihenőidő nyilvántartás — a sofőr NAPI ÖSSZESÍTŐT rögzít
-// (ma hány órát vezetett / pihent, nem pontos időszakokat), ld. Fuvarok
-// modul "gyors rögzítés" elve, itt ugyanaz a döntés (AskUserQuestion
-// alapján). Emiatt a heti pihenő-ellenőrzés egy TUDATOS KÖZELÍTÉS: mivel
+// (ma hány órát vezetett / pihent, nem pontos időszakokat) — szándékosan
+// egyszerű, gyors rögzítés, nem pontos időszak-nyilvántartás. Emiatt a
+// heti pihenő-ellenőrzés egy TUDATOS KÖZELÍTÉS: mivel
 // nincs pontos időszak-adat, egy héten belüli "van-e nap, ahol a pihenés
 // eléri a 24/45 órát" kérdésre egyszerűsödik a valódi, folyamatos
 // pihenő-időszak ellenőrzése helyett. Ez az interfész EU 561/2006

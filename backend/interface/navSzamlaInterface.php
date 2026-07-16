@@ -193,8 +193,8 @@ class NavSzamlaInterface {
     public function importalSzamlak($ceg_id, $tetelek) {
         try {
             $mar_importalt = $this->marImportaltSzamlaszamok($ceg_id);
-            $query = "INSERT INTO egyeb_koltsegek (admin, irany, kategoria, kamion_id, potkocsi_id, datum, megnevezes, szamlaszam, osszeg, megjegyzes)
-                      VALUES (:admin, :irany, :kategoria, NULL, NULL, :datum, :megnevezes, :szamlaszam, :osszeg, :megjegyzes)";
+            $query = "INSERT INTO egyeb_koltsegek (admin, irany, kategoria, kamion_id, potkocsi_id, datum, megnevezes, szamlaszam, osszeg, deviza, eredeti_osszeg, arfolyam, megjegyzes)
+                      VALUES (:admin, :irany, :kategoria, NULL, NULL, :datum, :megnevezes, :szamlaszam, :osszeg, :deviza, :eredeti_osszeg, :arfolyam, :megjegyzes)";
             $stmt = $this->db->prepare($query);
 
             $importalva = 0;
@@ -212,6 +212,17 @@ class NavSzamlaInterface {
                 // (`kategoria`), az számít, nem az eredeti javaslat.
                 $kategoria = ($t['kategoria'] ?? null) === 'uzemanyag' ? 'uzemanyag' : null;
 
+                // Deviza-mezők: a NAV digest saját EREDETI (nem HUF-ra váltott)
+                // összegét (`osszeg_eredeti`, ld. NavSzamlaClient::digestSorFeldolgozas)
+                // és a NAV-tól kapott HUF-egyenértékből visszaszámolt tényleges
+                // árfolyamot mentjük — NEM egy friss MNB-lekérdezést, mert a
+                // számla kiállítási dátumára érvényes, NAV-hivatalos árfolyam
+                // pontosabb/hitelesebb, mint egy mai napi MNB-érték egy régebbi
+                // számlához.
+                $penznem = strtoupper($t['penznem'] ?? 'HUF');
+                $osszegEredeti = $penznem !== 'HUF' ? ($t['osszeg_eredeti'] ?? null) : null;
+                $arfolyam = ($osszegEredeti !== null && $osszegEredeti > 0) ? round($osszeg / $osszegEredeti, 4) : null;
+
                 $stmt->bindValue(':admin', $ceg_id);
                 $stmt->bindValue(':irany', $irany);
                 $stmt->bindValue(':kategoria', $kategoria);
@@ -219,6 +230,9 @@ class NavSzamlaInterface {
                 $stmt->bindValue(':megnevezes', $t['partner_nev'] ?: 'NAV számla');
                 $stmt->bindValue(':szamlaszam', $szamlaszam);
                 $stmt->bindValue(':osszeg', $osszeg);
+                $stmt->bindValue(':deviza', $penznem !== 'HUF' && $osszegEredeti !== null ? $penznem : 'HUF');
+                $stmt->bindValue(':eredeti_osszeg', $osszegEredeti);
+                $stmt->bindValue(':arfolyam', $arfolyam);
                 $stmt->bindValue(':megjegyzes', 'NAV Online Számlából importálva');
                 $stmt->execute();
 

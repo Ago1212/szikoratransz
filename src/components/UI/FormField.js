@@ -75,7 +75,7 @@ export function FormSection({ id, title, icon: Icon, columns = 2, children, clas
   return (
     <div id={id} className={`scroll-mt-4 ${className}`}>
       {title && (
-        <h4 className="mb-2.5 flex items-center gap-1.5 border-b border-ink-100 pb-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-ink-300">
+        <h4 className="mb-2.5 flex items-center gap-1.5 border-b border-ink-100 pb-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-ink-400">
           {Icon && <Icon className="h-3.5 w-3.5" />}
           {title}
         </h4>
