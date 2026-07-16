@@ -14,19 +14,53 @@ import {
 import { fetchAction } from "utils/fetchAction";
 import StatusBadge from "components/UI/StatusBadge.js";
 import Spinner from "components/UI/Spinner.js";
-import { DOCUMENT_FIELDS, getDocumentStatus, daysUntil } from "utils/documentStatus.js";
+import {
+  DOCUMENT_FIELDS,
+  getDocumentStatus,
+  daysUntil,
+} from "utils/documentStatus.js";
 
-const PRIORITAS_TONE = { magas: "danger", kozepes: "warning", alacsony: "neutral" };
 const STATUSZ_TONE = { uj: "warning", folyamatban: "info", lezart: "success" };
-const STATUSZ_LABEL = { uj: "Új", folyamatban: "Folyamatban", lezart: "Lezárva" };
+const STATUSZ_LABEL = {
+  uj: "Új",
+  folyamatban: "Folyamatban",
+  lezart: "Lezárva",
+};
 
+// A "Bejelentés" csempe szándékosan NINCS itt — a BottomNav középső,
+// mindig piros FAB-ja már ugyanoda vezet, egy második, azonos célú
+// csempe a Gyors műveletek rácsban felesleges duplikáció lenne.
 const quickActions = [
-  { to: "/user/bejelentes/uj", icon: PiWarningCircleLight, label: "Bejelentés", tone: "danger" },
-  { to: "/user/jarmu-valaszto", icon: PiTruckLight, label: "Kamion", tone: "brand" },
-  { to: "/user/potkocsi-valaszto", icon: PiTruckTrailerLight, label: "Pótkocsi", tone: "brand" },
-  { to: "/user/helyszinek", icon: PiMapPinLight, label: "Helyszínek", tone: "brand" },
-  { to: "/user/tankolas", icon: PiGasPumpLight, label: "Tankolás", tone: "brand" },
-  { to: "/user/vezetesi-ido", icon: PiSteeringWheelLight, label: "Vezetési idő", tone: "brand" },
+  {
+    to: "/user/jarmu-valaszto",
+    icon: PiTruckLight,
+    label: "Kamion",
+    tone: "brand",
+  },
+  {
+    to: "/user/potkocsi-valaszto",
+    icon: PiTruckTrailerLight,
+    label: "Pótkocsi",
+    tone: "brand",
+  },
+  {
+    to: "/user/helyszinek",
+    icon: PiMapPinLight,
+    label: "Helyszínek",
+    tone: "brand",
+  },
+  {
+    to: "/user/tankolas",
+    icon: PiGasPumpLight,
+    label: "Tankolás",
+    tone: "brand",
+  },
+  {
+    to: "/user/vezetesi-ido",
+    icon: PiSteeringWheelLight,
+    label: "Vezetési idő",
+    tone: "brand",
+  },
 ];
 
 const TILE_TONE = {
@@ -49,7 +83,7 @@ export default function UserDashboard() {
   useEffect(() => {
     const userData = JSON.parse(sessionStorage.getItem("user"));
     if (!userData) {
-      history.push("/login");
+      history.push("/auth/login");
       return;
     }
     setUser(userData);
@@ -59,7 +93,15 @@ export default function UserDashboard() {
       // ha időközben az admin jóváhagyott egy jármű-váltási kérést, ez
       // frissíti a kamion/aktiv_potkocsi mezőket anélkül, hogy ki kellene
       // jelentkezni.
-      const [freshRes, kamionRes, potkocsiRes, bejelentesRes, adminRes, kerelemRes, elbiraltRes] = await Promise.all([
+      const [
+        freshRes,
+        kamionRes,
+        potkocsiRes,
+        bejelentesRes,
+        adminRes,
+        kerelemRes,
+        elbiraltRes,
+      ] = await Promise.all([
         fetchAction("getSajatSofor", { id: userData.id }),
         fetchAction("getKamionok", { id: userData.admin }),
         fetchAction("getPotkocsik", { id: userData.admin }),
@@ -78,11 +120,14 @@ export default function UserDashboard() {
       if (bejelentesRes?.success) {
         const osszes = bejelentesRes.bejelentesek || [];
         setSajatBejelentesek(osszes.slice(0, 3));
-        setBejelentesValaszolt(osszes.some((b) => b.statusz !== "uj" || b.admin_valasz));
+        setBejelentesValaszolt(
+          osszes.some((b) => b.statusz !== "uj" || b.admin_valasz),
+        );
       }
       if (adminRes?.success) setAdmin(adminRes);
       if (kerelemRes?.success) setKerelmek(kerelemRes.kerelmek || []);
-      if (elbiraltRes?.success) setElbiraltJarmuValtasok(elbiraltRes.kerelmek || []);
+      if (elbiraltRes?.success)
+        setElbiraltJarmuValtasok(elbiraltRes.kerelmek || []);
       setLoading(false);
     };
     load();
@@ -92,8 +137,12 @@ export default function UserDashboard() {
     return <Spinner wrapperClassName="flex justify-center py-24" />;
   }
 
-  const aktivKamion = kamionok.find((k) => String(k.id) === String(user.kamion));
-  const aktivPotkocsi = potkocsik.find((p) => String(p.id) === String(user.aktiv_potkocsi));
+  const aktivKamion = kamionok.find(
+    (k) => String(k.id) === String(user.kamion),
+  );
+  const aktivPotkocsi = potkocsik.find(
+    (p) => String(p.id) === String(user.aktiv_potkocsi),
+  );
   const pendingKamion = kerelmek.find((k) => k.tipus === "kamion");
   const pendingPotkocsi = kerelmek.find((k) => k.tipus === "potkocsi");
 
@@ -107,7 +156,9 @@ export default function UserDashboard() {
   // megválaszolt bejelentéseket és az elbírált jármű-váltási kérelmeket is,
   // ugyanúgy, mint az Ertesitesek.js oldal (ld. useSajatErtesitesek.js).
   const vanErtesitesJelzes =
-    lejaroDokumentumok.length > 0 || bejelentesValaszolt || elbiraltJarmuValtasok.length > 0;
+    lejaroDokumentumok.length > 0 ||
+    bejelentesValaszolt ||
+    elbiraltJarmuValtasok.length > 0;
 
   const firstName = (user.name || "").split(" ")[0];
 
@@ -116,8 +167,12 @@ export default function UserDashboard() {
       {/* Üdvözlés + értesítés */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">Szia,</p>
-          <h1 className="font-display text-xl font-bold text-brand-900">{firstName || user.name}</h1>
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
+            Szia,
+          </p>
+          <h1 className="font-display text-xl font-bold text-brand-900">
+            {firstName || user.name}
+          </h1>
         </div>
         <Link
           to="/user/ertesitesek"
@@ -143,15 +198,21 @@ export default function UserDashboard() {
           </div>
           {aktivKamion ? (
             <>
-              <p className="mt-1.5 font-display text-lg font-bold text-brand-900">{aktivKamion.rendszam}</p>
-              <p className="truncate text-xs text-ink-500">{aktivKamion.tipus || "—"}</p>
+              <p className="mt-1.5 font-display text-lg font-bold text-brand-900">
+                {aktivKamion.rendszam}
+              </p>
+              <p className="truncate text-xs text-ink-500">
+                {aktivKamion.tipus || "—"}
+              </p>
             </>
           ) : (
-            <p className="mt-2 text-sm font-medium text-brand-600">Válassz kamiont</p>
+            <p className="mt-2 text-sm font-medium text-brand-600">
+              Válassz kamiont
+            </p>
           )}
           {pendingKamion && (
-            <p className="mt-1.5 truncate text-[11px] font-semibold text-amber-600">
-              Jóváhagyásra vár: {pendingKamion.jarmu_rendszam}
+            <p className="mt-1.5 text-[11px] font-semibold text-amber-600">
+              Vár jóváhagyásra
             </p>
           )}
         </Link>
@@ -165,15 +226,21 @@ export default function UserDashboard() {
           </div>
           {aktivPotkocsi ? (
             <>
-              <p className="mt-1.5 font-display text-lg font-bold text-brand-900">{aktivPotkocsi.rendszam}</p>
-              <p className="truncate text-xs text-ink-500">{aktivPotkocsi.tipus || "—"}</p>
+              <p className="mt-1.5 font-display text-lg font-bold text-brand-900">
+                {aktivPotkocsi.rendszam}
+              </p>
+              <p className="truncate text-xs text-ink-500">
+                {aktivPotkocsi.tipus || "—"}
+              </p>
             </>
           ) : (
-            <p className="mt-2 text-sm font-medium text-brand-600">Válassz pótkocsit</p>
+            <p className="mt-2 text-sm font-medium text-brand-600">
+              Válassz pótkocsit
+            </p>
           )}
           {pendingPotkocsi && (
-            <p className="mt-1.5 truncate text-[11px] font-semibold text-amber-600">
-              Jóváhagyásra vár: {pendingPotkocsi.jarmu_rendszam}
+            <p className="mt-1.5 text-[11px] font-semibold text-amber-600">
+              Vár jóváhagyásra
             </p>
           )}
         </Link>
@@ -191,7 +258,8 @@ export default function UserDashboard() {
             {lejaroDokumentumok[0].days < 0
               ? "lejárt"
               : `${lejaroDokumentumok[0].days} nap múlva lejár`}
-            {lejaroDokumentumok.length > 1 && ` (+${lejaroDokumentumok.length - 1} további)`}
+            {lejaroDokumentumok.length > 1 &&
+              ` (+${lejaroDokumentumok.length - 1} további)`}
           </p>
           <PiCaretRightLight className="h-4 w-4 flex-shrink-0 text-amber-500" />
         </Link>
@@ -199,7 +267,9 @@ export default function UserDashboard() {
 
       {/* Gyors műveletek */}
       <div>
-        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">Gyors műveletek</h2>
+        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">
+          Gyors műveletek
+        </h2>
         <div className="grid grid-cols-3 gap-3">
           {quickActions.map((action) => (
             <Link
@@ -207,10 +277,14 @@ export default function UserDashboard() {
               to={action.to}
               className="flex flex-col items-center gap-2 rounded-2xl border border-ink-100 bg-white py-4 text-center shadow-soft"
             >
-              <span className={`flex h-10 w-10 items-center justify-center rounded-full ${TILE_TONE[action.tone]}`}>
+              <span
+                className={`flex h-10 w-10 items-center justify-center rounded-full ${TILE_TONE[action.tone]}`}
+              >
                 <action.icon className="h-5 w-5" />
               </span>
-              <span className="text-xs font-semibold text-ink-700">{action.label}</span>
+              <span className="text-xs font-semibold text-ink-700">
+                {action.label}
+              </span>
             </Link>
           ))}
           {admin?.phone ? (
@@ -221,7 +295,9 @@ export default function UserDashboard() {
               <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
                 <PiPhoneLight className="h-5 w-5" />
               </span>
-              <span className="text-xs font-semibold text-ink-700">Diszpécser</span>
+              <span className="text-xs font-semibold text-ink-700">
+                Diszpécser
+              </span>
             </a>
           ) : null}
         </div>
@@ -230,8 +306,13 @@ export default function UserDashboard() {
       {/* Legutóbbi bejelentéseim */}
       <div>
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-400">Legutóbbi bejelentéseim</h2>
-          <Link to="/user/bejelentesek" className="text-xs font-semibold text-brand-600">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-400">
+            Legutóbbi bejelentéseim
+          </h2>
+          <Link
+            to="/user/bejelentesek"
+            className="text-xs font-semibold text-brand-600"
+          >
             Összes
           </Link>
         </div>
@@ -242,18 +323,22 @@ export default function UserDashboard() {
         ) : (
           <div className="flex flex-col gap-2">
             {sajatBejelentesek.map((b) => (
-              <div key={b.id} className="rounded-2xl border border-ink-100 bg-white p-3 shadow-soft">
+              <div
+                key={b.id}
+                className="rounded-2xl border border-ink-100 bg-white p-3 shadow-soft"
+              >
                 <div className="flex items-center justify-between gap-2">
-                  <p className="truncate text-sm font-semibold text-ink-900">{b.cim}</p>
+                  <p className="truncate text-sm font-semibold text-ink-900">
+                    {b.cim}
+                  </p>
                   <StatusBadge tone={STATUSZ_TONE[b.statusz] || "neutral"}>
                     {STATUSZ_LABEL[b.statusz] || b.statusz}
                   </StatusBadge>
                 </div>
-                <div className="mt-1 flex items-center gap-2">
-                  <StatusBadge tone={PRIORITAS_TONE[b.prioritas] || "neutral"}>
-                    {b.prioritas === "magas" ? "Sürgős" : b.prioritas === "kozepes" ? "Közepes" : "Alacsony"}
-                  </StatusBadge>
-                  <span className="text-xs text-ink-400">{(b.bejelentve || "").slice(0, 16).replace("T", " ")}</span>
+                <div className="mt-1">
+                  <span className="text-xs text-ink-400">
+                    {(b.bejelentve || "").slice(0, 16).replace("T", " ")}
+                  </span>
                 </div>
               </div>
             ))}

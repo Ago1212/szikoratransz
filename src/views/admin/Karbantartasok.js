@@ -436,7 +436,8 @@ const Karbantartasok = () => {
     <div className="mx-auto flex h-full w-full max-w-7xl flex-col">
       <div className="flex-shrink-0">
         <PageHeader
-          title="Karbantartások kezelése"
+          eyebrow="Flotta"
+          title="Karbantartások"
           action={
             <button
               type="button"

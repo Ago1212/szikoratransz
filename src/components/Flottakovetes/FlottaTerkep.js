@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { MapContainer, TileLayer, Marker, Tooltip, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Tooltip, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import {
@@ -41,6 +41,21 @@ function KovetesIllesztes({ dusitett, kivalasztott, kovetesEnabled }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dusitett, kivalasztott, kovetesEnabled]);
+  return null;
+}
+
+// Ha van betöltött útvonal-előzmény (ld. ElozmenyekModal.js), a térkép
+// erre igazítja a nézetet, hogy a teljes megtett út egyszerre látszódjon
+// — csak akkor fut le újra, ha maguk a pontok változnak (új lekérdezés),
+// nem minden renderelésnél.
+function UtvonalIllesztes({ utvonalPontok }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!utvonalPontok || utvonalPontok.length === 0) return;
+    const bounds = L.latLngBounds(utvonalPontok.map((p) => [p.lat, p.lon]));
+    map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [utvonalPontok]);
   return null;
 }
 
@@ -129,6 +144,7 @@ export default function FlottaTerkep({
   onSelect,
   kovetesEnabled,
   onKovetesToggle,
+  utvonalPontok,
 }) {
   const wrapperRef = useRef(null);
   const mapRef = useRef(null);
@@ -187,7 +203,19 @@ export default function FlottaTerkep({
   return (
     <div
       ref={wrapperRef}
-      className={`relative h-full w-full overflow-hidden ${isFullscreen ? "bg-white" : ""}`}
+      // A `z-0` itt NEM esztétikai réteg-sorrend, hanem hogy ez a doboz
+      // saját, önálló verem-kontextust (stacking context) hozzon létre —
+      // enélkül a Leaflet saját belső rétegei (csempék, jelölők — ezek
+      // mind 200-700 közötti valódi z-index értékeket kapnak) és a saját
+      // lebegő gombjaink (z-[1000]) "kiszöknek" ebből a dobozból, és a
+      // lapon BÁRMI elé kerülhetnek, aminek alacsonyabb a z-indexe — pl.
+      // egy Modal (z-50) elé, teljesen eltakarva a tartalmát. `position:
+      // relative` önmagában NEM hoz létre verem-kontextust, csak explicit
+      // z-index-szel párosítva (ugyanaz a jelenség, mint a layouts/Auth.js
+      // AuthNavbar-bugjánál, csak fordított irányban: ott egy FELESLEGES
+      // verem-kontextust kellett megszüntetni, itt egy HIÁNYZÓT kellett
+      // pótolni).
+      className={`relative z-0 h-full w-full overflow-hidden ${isFullscreen ? "bg-white" : ""}`}
     >
       <MapContainer
         center={MAGYARORSZAG_KOZEPPONT}
@@ -206,6 +234,13 @@ export default function FlottaTerkep({
           kivalasztott={kivalasztott}
           kovetesEnabled={kovetesEnabled}
         />
+        <UtvonalIllesztes utvonalPontok={utvonalPontok} />
+        {utvonalPontok && utvonalPontok.length > 0 && (
+          <Polyline
+            positions={utvonalPontok.map((p) => [p.lat, p.lon])}
+            pathOptions={{ color: "#2451B5", weight: 4, opacity: 0.75 }}
+          />
+        )}
         <TerkepVezerlok
           isFullscreen={isFullscreen}
           onFullscreenToggle={toggleFullscreen}

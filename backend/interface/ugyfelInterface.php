@@ -34,20 +34,6 @@ class UgyfelInterface {
         }
     }
 
-    // Könnyű választó — pl. egy fuvar/megrendelés ügyfél-mezőjéhez, csak
-    // id+név, nem a teljes rekord.
-    public function getUgyfelValaszto($id) {
-        try {
-            $query = "SELECT id, nev FROM ugyfelek WHERE admin = :id AND torolt <> 'I' ORDER BY nev ASC";
-            $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':id', $id);
-            $stmt->execute();
-            return ['success' => true, 'ugyfelek' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
-        } catch (Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
-        }
-    }
-
     public function newUgyfel($data) {
         try {
             $query = "INSERT INTO ugyfelek (admin, nev, adoszam, cim, irsz, varos, kapcsolattarto_nev, kapcsolattarto_email, kapcsolattarto_telefon, megjegyzes)
@@ -72,15 +58,21 @@ class UgyfelInterface {
         }
     }
 
+    // `$ceg_id` nélkül egy másik cég ügyfél-rekordja is módosítható/
+    // törölhető lenne az `id` eltalálásával (a hívó oldalon eddig csak az
+    // audit-naplózáshoz oldottuk fel a tulajdonos céget, magát a
+    // műveletet nem korlátozta) — most már a WHERE feltétel is kikényszeríti.
     public function saveUgyfelData($data) {
         try {
             $query = "UPDATE ugyfelek SET
-                      nev = :nev, adoszam = :adoszam, cim = :cim, irsz = :irsz, varos = :varos,
+                      nev = :nev, adoszam = :adoszam,
+                      cim = :cim, irsz = :irsz, varos = :varos,
                       kapcsolattarto_nev = :kapcsolattarto_nev, kapcsolattarto_email = :kapcsolattarto_email,
                       kapcsolattarto_telefon = :kapcsolattarto_telefon, megjegyzes = :megjegyzes
-                      WHERE id = :id";
+                      WHERE id = :id AND admin = :ceg_id";
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(':id', $data['id']);
+            $stmt->bindValue(':ceg_id', $data['ceg_id']);
             $stmt->bindValue(':nev', $data['nev']);
             $stmt->bindValue(':adoszam', $data['adoszam'] ?? null);
             $stmt->bindValue(':cim', $data['cim'] ?? null);
@@ -98,11 +90,12 @@ class UgyfelInterface {
         }
     }
 
-    public function deleteUgyfel($id) {
+    public function deleteUgyfel($id, $ceg_id) {
         try {
-            $query = "UPDATE ugyfelek SET torolt = 'I' WHERE id = :id";
+            $query = "UPDATE ugyfelek SET torolt = 'I' WHERE id = :id AND admin = :ceg_id";
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(':id', $id);
+            $stmt->bindValue(':ceg_id', $ceg_id);
             $stmt->execute();
             return ['success' => true, 'message' => 'Ügyfél törölve.'];
         } catch (Exception $e) {

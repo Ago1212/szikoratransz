@@ -48,7 +48,7 @@ const EventModal = ({ event, onClose }) => {
   );
 };
 
-export default function CustomCalendar() {
+export default function CustomCalendar({ onEventsChange }) {
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -71,13 +71,18 @@ export default function CustomCalendar() {
             end: new Date(event.end),
           }));
         setEvents(formattedEvents || []);
+        // A Dashboard "Közelgő határidők" oldalsávja ugyanezt a már
+        // lekérdezett listát használja fel (nem hívja meg újra a
+        // getEsemenyek-et) — ez a callback adja át neki, a naptár marad az
+        // egyetlen adatforrás.
+        onEventsChange?.(formattedEvents || []);
       } else {
         console.error("Hiba az események lekérésekor:", result.message);
       }
     };
 
     fetchData();
-  }, []);
+  }, [onEventsChange]);
 
   const handleEventClick = (event) => {
     setSelectedEvent(event);

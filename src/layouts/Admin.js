@@ -22,8 +22,6 @@ import Szabadsagok from "views/admin/Szabadsagok.js";
 import Naplo from "views/admin/Naplo.js";
 import Koltsegek from "views/admin/Koltsegek.js";
 import Flottakovetes from "views/admin/Flottakovetes.js";
-import Fuvarok from "views/admin/Fuvarok.js";
-import Fuvartervezo from "views/admin/Fuvartervezo.js";
 import VezetesiIdo from "views/admin/VezetesiIdo.js";
 import Ugyfelek from "views/admin/Ugyfelek.js";
 import UgyfelForm from "views/admin/UgyfelForm.js";
@@ -33,6 +31,7 @@ import Helyszinek from "views/admin/Helyszinek.js";
 import HelyszinForm from "views/admin/HelyszinForm.js";
 import Jogosultsagok from "views/admin/Jogosultsagok.js";
 import Listak from "views/admin/Listak.js";
+import Devizak from "views/admin/Devizak.js";
 
 const PrivateRoute = ({ component: Component, ...rest }) => {
   const isAuthenticated = sessionStorage.getItem("user") !== null;
@@ -40,7 +39,11 @@ const PrivateRoute = ({ component: Component, ...rest }) => {
     <Route
       {...rest}
       render={(props) =>
-        isAuthenticated ? <Component {...props} /> : <Redirect to="/login" />
+        isAuthenticated ? (
+          <Component {...props} />
+        ) : (
+          <Redirect to="/auth/login" />
+        )
       }
     />
   );
@@ -53,7 +56,7 @@ export default function Admin() {
       <Sidebar />
 
       {/* Háttér — fix réteg, nem görgethető, a Sidebar-hoz igazítva */}
-      <div className="fixed inset-y-0 right-0 left-0 overflow-hidden bg-slate-50 md:left-72">
+      <div className="fixed inset-y-0 right-0 left-0 overflow-hidden bg-slate-50 md:left-64">
         <div
           className="absolute inset-0 opacity-60"
           style={{
@@ -65,7 +68,7 @@ export default function Admin() {
       </div>
 
       {/* Tartalom — fix magasságú, csak ez görgethető, a böngészőoldal maga nem */}
-      <div className="fixed inset-y-0 right-0 left-0 overflow-y-auto md:left-72">
+      <div className="fixed inset-y-0 right-0 left-0 overflow-y-auto md:left-64">
         <div className="mx-auto h-full w-full px-4 pt-8 pb-16 md:px-10 md:pb-8">
           <Switch>
             <PrivateRoute path="/admin/dashboard" exact component={Dashboard} />
@@ -88,7 +91,11 @@ export default function Admin() {
               component={Karbantartasok}
             />
             <PrivateRoute path="/admin/soforok" exact component={Soforok} />
-            <PrivateRoute path="/admin/vezetesi-ido" exact component={VezetesiIdo} />
+            <PrivateRoute
+              path="/admin/vezetesi-ido"
+              exact
+              component={VezetesiIdo}
+            />
             <PrivateRoute path="/admin/soforForm" exact component={SoforForm} />
             <PrivateRoute path="/admin/fajlok" exact component={Fajlok} />
             <PrivateRoute path="/admin/esemenyek" exact component={Esemenyek} />
@@ -102,21 +109,52 @@ export default function Admin() {
               exact
               component={BejelentesekForm}
             />
-            <PrivateRoute path="/admin/szabadsagok" exact component={Szabadsagok} />
+            <PrivateRoute
+              path="/admin/szabadsagok"
+              exact
+              component={Szabadsagok}
+            />
             <PrivateRoute path="/admin/naplo" exact component={Naplo} />
             <PrivateRoute path="/admin/koltsegek" exact component={Koltsegek} />
-            <PrivateRoute path="/admin/flottakovetes" exact component={Flottakovetes} />
-            <PrivateRoute path="/admin/fuvarok" exact component={Fuvarok} />
-            <PrivateRoute path="/admin/fuvartervezo" exact component={Fuvartervezo} />
+            <PrivateRoute
+              path="/admin/flottakovetes"
+              exact
+              component={Flottakovetes}
+            />
             <PrivateRoute path="/admin/ugyfelek" exact component={Ugyfelek} />
-            <PrivateRoute path="/admin/ugyfelForm" exact component={UgyfelForm} />
-            <PrivateRoute path="/admin/felhasznalok" exact component={Felhasznalok} />
-            <PrivateRoute path="/admin/felhasznalok/uj" exact component={UjFelhasznalo} />
-            <PrivateRoute path="/admin/jogosultsagok" exact component={Jogosultsagok} />
+            <PrivateRoute
+              path="/admin/ugyfelForm"
+              exact
+              component={UgyfelForm}
+            />
+            <PrivateRoute
+              path="/admin/felhasznalok"
+              exact
+              component={Felhasznalok}
+            />
+            <PrivateRoute
+              path="/admin/felhasznalok/uj"
+              exact
+              component={UjFelhasznalo}
+            />
+            <PrivateRoute
+              path="/admin/jogosultsagok"
+              exact
+              component={Jogosultsagok}
+            />
             <PrivateRoute path="/admin/listak" exact component={Listak} />
-            <PrivateRoute path="/admin/helyszinek" exact component={Helyszinek} />
-            <PrivateRoute path="/admin/helyszinForm" exact component={HelyszinForm} />
-            <Route path="/login" exact component={LoginPage} />
+            <PrivateRoute path="/admin/devizak" exact component={Devizak} />
+            <PrivateRoute
+              path="/admin/helyszinek"
+              exact
+              component={Helyszinek}
+            />
+            <PrivateRoute
+              path="/admin/helyszinForm"
+              exact
+              component={HelyszinForm}
+            />
+            <Route path="/auth/login" exact component={LoginPage} />
             <Redirect from="/admin" to="/admin/dashboard" />
           </Switch>
           {/* Garantált térköz a mobil alsó navigáció alatt — valódi blokk-magasság,

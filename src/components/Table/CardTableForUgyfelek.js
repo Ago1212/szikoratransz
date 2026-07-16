@@ -23,7 +23,7 @@ const CardTable = ({ ugyfelek, loading, total, page, pageSize, onPageChange, onS
     confirmMessage: "Biztosan törölni szeretnéd az ügyfelet?",
     successMessage: "Az ügyfél sikeresen törölve.",
     listPath: "/admin/ugyfelek",
-    extraParams: { kerelmezo_id: user.id },
+    extraParams: { ceg_id: user.ceg_id, kerelmezo_id: user.id },
   });
 
   const columns = [

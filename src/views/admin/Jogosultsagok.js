@@ -16,7 +16,6 @@ const MODUL_LABEL = {
   ugyfelek: "Ügyfelek",
   naplo: "Napló",
   koltsegek: "Pénzforgalom",
-  fuvarok: "Fuvarok",
   vezetesi_ido: "Vezetési idő",
 };
 

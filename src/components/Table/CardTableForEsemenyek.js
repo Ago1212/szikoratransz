@@ -45,7 +45,7 @@ const CardTableForEsemenyek = ({ id }) => {
   const handleEsemenyDelete = async (esemeny_id) => {
     if (!window.confirm("Biztosan törölni szeretné ezt az eseményt?")) return;
 
-    const result = await fetchAction("deleteEgyediHatarido", { id: esemeny_id });
+    const result = await fetchAction("deleteEgyediHatarido", { id: esemeny_id, ceg_id: id });
     if (result?.success) {
       await fetchEsemenyek();
     } else {
@@ -62,7 +62,7 @@ const CardTableForEsemenyek = ({ id }) => {
     e.preventDefault();
     const action = currentEsemeny ? "updateEgyediHatarido" : "createEgyediHatarido";
     const data = currentEsemeny
-      ? { ...formData, id: currentEsemeny.sorszam }
+      ? { ...formData, id: currentEsemeny.sorszam, ceg_id: id }
       : { ...formData, id };
 
     const result = await fetchAction(action, data);

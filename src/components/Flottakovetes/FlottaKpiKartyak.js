@@ -5,43 +5,27 @@ import {
   PiPauseCircleLight,
   PiWifiSlashLight,
   PiGaugeLight,
-  PiGasPumpLight,
+  PiRoadHorizonLight,
 } from "react-icons/pi";
+import CardStats from "components/Cards/CardStats";
+import { formatKm } from "utils/gpsmartHelpers.js";
 
-const KpiKartya = React.memo(function KpiKartya({
-  icon: Icon,
-  label,
-  value,
-  masodlagos,
-  accentClass,
-}) {
-  return (
-    <div className="group flex items-center gap-3 rounded-2xl bg-white p-4 shadow-soft ring-1 ring-ink-100 transition-all duration-300 ease-fluid hover:-translate-y-0.5 hover:shadow-soft-lg">
-      <span
-        className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl transition-transform duration-300 ease-fluid group-hover:scale-105 ${accentClass}`}
-      >
-        <Icon className="h-5 w-5" />
-      </span>
-      <div className="min-w-0">
-        <p className="font-display text-xl font-bold leading-tight tabular-nums text-brand-900">
-          {value}
-        </p>
-        <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-ink-400">
-          {label}
-        </p>
-        {masodlagos && (
-          <p className="truncate text-xs text-ink-500">{masodlagos}</p>
-        )}
-      </div>
-    </div>
-  );
-});
-
-// A 6 KPI mindegyike a ténylegesen visszakapott GPSmart-mezőkből (sebesség,
-// üzemanyag %, utolsó jelzés időbélyege) számolható — nincs köztük olyan,
-// ami sofőr-, akkumulátor- vagy riasztás-adatot igényelne, amit a jelenlegi
-// integráció nem ad vissza (ld. gpsmartHelpers.js fejléc-kommentje).
-export default function FlottaKpiKartyak({ dusitett }) {
+// A kártyák a Dashboard-dal közös `CardStats` komponenst használják
+// (`layout="row"`, ld. UX-audit: "KPI cards differ across pages") — csak
+// az "Offline" kap `danger` tónust, és csak akkor, ha ténylegesen van
+// offline jármű; a többi (Aktív járművek, Mozgásban, Álló, Átlagsebesség,
+// Megtett út) végig semleges/informatív marad. Az üzemanyag-szint NEM
+// jelenik meg (felhasználói kérésre eltávolítva) — sem itt, sem a jármű-
+// listában, sem a jármű részletei panelen.
+//
+// "Megtett út (ma)" — a `megtettUtMa` mező a `dusitett` tömbön a hívó
+// (Flottakovetes.js) egy KÜLÖN, kézi "Frissítés"-hez kötött action
+// (`gpsmartMegtettUtMa`) válaszából kerül rá, NEM ennek a komponensnek a
+// dolga lekérni. Csak azok a járművek számítanak bele az összegbe,
+// amelyekhez van adat — egy hiányzó/lekérdezetlen jármű kimarad, nem
+// nullaként számít, különben a flotta-szintű szám hamisan alacsonyabbnak
+// tűnne, mint a valóság.
+export default function FlottaKpiKartyak({ dusitett, megtettUtLoading, megtettUtFrissitve }) {
   const osszesen = dusitett.length;
   const mozgasban = dusitett.filter((p) => p._allapot.kulcs === "mozgasban").length;
   const allo = dusitett.filter((p) => p._allapot.kulcs === "all").length;
@@ -56,54 +40,73 @@ export default function FlottaKpiKartyak({ dusitett }) {
       )
     : null;
 
-  const alacsonyUzemanyagSzam = dusitett.filter((p) => p._alacsonyUzemanyag).length;
+  const megtettUtSorok = dusitett.filter((p) => p.megtettUtMa != null);
+  const megtettUtOsszesen = megtettUtSorok.reduce((sum, p) => sum + p.megtettUtMa, 0);
+  const megtettUtCaption = megtettUtLoading
+    ? "frissítés…"
+    : megtettUtFrissitve
+      ? `${megtettUtSorok.length}/${osszesen} jármű · frissítve ${megtettUtFrissitve.toLocaleTimeString("hu-HU", { hour: "2-digit", minute: "2-digit" })}`
+      : "még nincs lekérdezve";
 
   const kartyak = [
     {
       icon: PiTruckLight,
       label: "Aktív járművek",
       value: osszesen,
-      accentClass: "bg-brand-50 text-brand-600",
+      tone: "brand",
     },
     {
       icon: PiNavigationArrowLight,
       label: "Mozgásban",
       value: mozgasban,
-      accentClass: "bg-emerald-50 text-emerald-600",
+      tone: "positive",
     },
     {
       icon: PiPauseCircleLight,
       label: "Álló",
       value: allo,
-      accentClass: "bg-amber-50 text-amber-600",
+      tone: "neutral",
     },
     {
       icon: PiWifiSlashLight,
       label: "Offline",
       value: offline,
-      masodlagos: offline > 0 ? "30 percnél régebbi jelzés" : undefined,
-      accentClass: "bg-red-50 text-red-600",
+      caption: offline > 0 ? "30 percnél régebbi jelzés" : undefined,
+      tone: offline > 0 ? "danger" : "neutral",
     },
     {
       icon: PiGaugeLight,
       label: "Átlagsebesség",
       value: atlagSebesseg !== null ? `${atlagSebesseg} km/h` : "—",
-      masodlagos: "mozgásban lévők közt",
-      accentClass: "bg-ink-100 text-ink-600",
+      caption: "mozgásban lévők közt",
+      tone: "neutral",
     },
     {
-      icon: PiGasPumpLight,
-      label: "Alacsony üzemanyag",
-      value: alacsonyUzemanyagSzam,
-      masodlagos: "20% alatt, ahol van adat",
-      accentClass: "bg-amber-50 text-amber-600",
+      icon: PiRoadHorizonLight,
+      label: "Megtett út (ma)",
+      value:
+        megtettUtLoading && megtettUtSorok.length === 0
+          ? "…"
+          : megtettUtSorok.length > 0
+            ? `${formatKm(megtettUtOsszesen)} km`
+            : "—",
+      caption: megtettUtCaption,
+      tone: "neutral",
     },
   ];
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
       {kartyak.map((k) => (
-        <KpiKartya key={k.label} {...k} />
+        <CardStats
+          key={k.label}
+          layout="row"
+          statIcon={k.icon}
+          statSubtitle={k.label}
+          statTitle={k.value}
+          statCaption={k.caption}
+          tone={k.tone}
+        />
       ))}
     </div>
   );

@@ -13,6 +13,7 @@ import {
   PiShieldCheckLight,
   PiTruckLight,
   PiTruckTrailerLight,
+  PiWalletLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import FormField, { FormSection } from "components/UI/FormField.js";
@@ -22,6 +23,14 @@ const CardSoforAdatokForm = ({ sofor, setFormData, handleSave }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [kamionok, setKamionok] = useState([]);
   const [potkocsik, setPotkocsik] = useState([]);
+  // A havi bérezés kizárólag admin szerepkörnek látszik/szerkeszthető —
+  // se a sofőr saját magánál (az egy külön oldal/session típus, ott ez a
+  // form eleve nem fut le), se más csapattag (pl. fuvarszervező) itt nem
+  // láthatja. A backend is önállóan kikényszeríti ezt (ld.
+  // soforokInterface.php saveSoforData/getSoforok `$isAdmin` paramétere) —
+  // ez a frontend-oldali elrejtés csak UX, nem az egyetlen védelmi vonal.
+  const isOwnerAdmin =
+    (JSON.parse(sessionStorage.getItem("user") || "null")?.szerepkor) === "admin";
 
   useEffect(() => {
     const admin = JSON.parse(sessionStorage.getItem("user") || "null");
@@ -190,6 +199,24 @@ const CardSoforAdatokForm = ({ sofor, setFormData, handleSave }) => {
           <p className="md:col-span-2 text-xs text-ink-500">
             A sofőr innentől ezt látja aktív járműként — más kamionra/pótkocsira csak kérést küldhet,
             amit itt, a jármű-váltási kérések között hagyhatsz jóvá.
+          </p>
+        </FormSection>
+      )}
+
+      {sofor.id && isOwnerAdmin && (
+        <FormSection id="berezes" title="Bérezés" columns={2}>
+          <FormField
+            icon={PiWalletLight}
+            type="number"
+            label="Havi bérezés (Ft)"
+            name="ber"
+            value={sofor.ber ?? ""}
+            onChange={handleInputChange}
+            placeholder="pl. 450000"
+          />
+          <p className="md:col-span-2 text-xs text-ink-500">
+            Csak te látod — ez a Pénzforgalom oldalon minden hónapban
+            automatikusan megjelenik "Fizetés" kiadásként.
           </p>
         </FormSection>
       )}

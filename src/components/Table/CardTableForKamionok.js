@@ -31,7 +31,7 @@ const CardTable = ({ kamionok, loading, total, page, pageSize, onPageChange, onS
     { key: "rendszam", label: "Rendszám", className: "font-semibold text-brand-900" },
     { key: "tipus", label: "Típus", render: (row) => row.tipus || "Nincs" },
     { key: "meret", label: "Méret", render: (row) => row.meret || "Nincs" },
-    { key: "potkocsi", label: "Pótkocsi", render: (row) => row.potkocsi || "Nincs" },
+    { key: "potkocsi", label: "Pótkocsi", render: (row) => row.potkocsi_rendszam || "Nincs" },
     {
       key: "allapot",
       label: "Állapot",
@@ -67,7 +67,7 @@ const CardTable = ({ kamionok, loading, total, page, pageSize, onPageChange, onS
     { key: "rendszam", label: "Rendszám" },
     { key: "tipus", label: "Típus" },
     { key: "meret", label: "Méret" },
-    { key: "potkocsi", label: "Pótkocsi" },
+    { key: "potkocsi_rendszam", label: "Pótkocsi" },
     { key: "allapot", label: "Állapot" },
     { key: "aktualis_km", label: "Km óraállás" },
     { key: "muszaki_lejarat", label: "Műszaki vizsga lejárata" },

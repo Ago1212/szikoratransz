@@ -141,6 +141,16 @@ class NavSzamlaClient {
         $afaHuf = isset($tetel->invoiceVatAmountHUF) ? (float) $tetel->invoiceVatAmountHUF : null;
         $bruttoHuf = ($nettoHuf !== null && $afaHuf !== null) ? round($nettoHuf + $afaHuf, 2) : null;
 
+        // A számla EREDETI (nem HUF-ra váltott) nettó+ÁFA összege is szerepel
+        // a digestben (`invoiceNetAmount`/`invoiceVatAmount`, élő NAV-teszttel
+        // megerősítve) — ez kell a deviza-kezeléshez (ld. koltsegInterface.php
+        // resolveDevizaOsszeg), hogy egy importált devizás tételnél ne csak a
+        // HUF-egyenértéket lássa a felhasználó, hanem az eredeti "500 EUR"
+        // összeget is, és a kettőből visszaszámolt tényleges NAV-árfolyamot.
+        $nettoEredeti = isset($tetel->invoiceNetAmount) ? (float) $tetel->invoiceNetAmount : null;
+        $afaEredeti = isset($tetel->invoiceVatAmount) ? (float) $tetel->invoiceVatAmount : null;
+        $bruttoEredeti = ($nettoEredeti !== null && $afaEredeti !== null) ? round($nettoEredeti + $afaEredeti, 2) : null;
+
         $penznem = isset($tetel->currency) ? (string) $tetel->currency : 'HUF';
         $partnerNev = $irany === 'OUTBOUND'
             ? (string) ($tetel->customerName ?? '')
@@ -151,6 +161,7 @@ class NavSzamlaClient {
             'datum' => (string) $tetel->invoiceIssueDate,
             'partner_nev' => $partnerNev !== '' ? $partnerNev : null,
             'osszeg_huf' => $bruttoHuf,
+            'osszeg_eredeti' => $bruttoEredeti,
             'penznem' => $penznem,
             'irany' => $irany === 'OUTBOUND' ? 'bevetel' : 'kiado',
         ];

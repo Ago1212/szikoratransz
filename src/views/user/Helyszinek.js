@@ -124,6 +124,12 @@ export default function Helyszinek() {
               <PiCaretRightLight className="h-4 w-4 flex-shrink-0 text-ink-300" />
             </button>
           ))}
+          {!search.trim() && filtered.length <= 2 && (
+            <p className="mt-2 text-center text-xs text-ink-400">
+              Tipp: koppints a <PiPlusLight className="inline h-3.5 w-3.5 align-text-bottom" />{" "}
+              gombra új helyszín hozzáadásához.
+            </p>
+          )}
         </div>
       )}
     </div>

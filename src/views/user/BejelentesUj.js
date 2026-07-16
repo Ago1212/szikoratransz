@@ -2,8 +2,6 @@ import React, { useRef, useState } from "react";
 import { useHistory } from "react-router-dom";
 import {
   PiWrenchLight,
-  PiFirstAidLight,
-  PiWarningLight,
   PiTireLight,
   PiToolboxLight,
   PiPackageLight,
@@ -26,10 +24,15 @@ import SaveButton from "components/UI/SaveButton.js";
 // Az eredeti 8 típushoz tartozó ikonok megmaradnak, egy admin által
 // hozzáadott egyéni típus pedig az általános PiDotsThreeLight ikont kapja
 // (ld. views/admin/Listak.js — a típusok listája mostantól bővíthető).
+//
+// "Sérülés"/"Baleset" SZÁNDÉKOSAN nincs a lenti térképben — felhasználói
+// kérésre a sofőr-oldali bejelentés-létrehozásból eltávolítva (ld.
+// REJECTED_TIPUSOK lent), gyorsabb/egyszerűbb választást adva. Az admin-
+// oldali `listaelemek` sorokat és a meglévő, már ezekkel a típusokkal
+// létrehozott bejelentéseket ez nem érinti — csak az ÚJ bejelentés
+// típus-választója szűri ki őket.
 const TYPE_ICONS = {
   muszaki: PiWrenchLight,
-  serules: PiFirstAidLight,
-  baleset: PiWarningLight,
   gumi: PiTireLight,
   szerviz: PiWrenchLight,
   felszereles: PiToolboxLight,
@@ -37,11 +40,7 @@ const TYPE_ICONS = {
   egyeb: PiDotsThreeLight,
 };
 
-const PRIORITIES = [
-  { key: "alacsony", label: "Alacsony" },
-  { key: "kozepes", label: "Közepes" },
-  { key: "magas", label: "Sürgős" },
-];
+const REJECTED_TIPUSOK = ["serules", "baleset"];
 
 function VoiceRecorder({ onRecorded, recording, setRecording }) {
   const mediaRecorderRef = useRef(null);
@@ -89,7 +88,6 @@ export default function BejelentesUj() {
   const history = useHistory();
   const [tipus, setTipus] = useState(null);
   const [leiras, setLeiras] = useState("");
-  const [prioritas, setPrioritas] = useState("kozepes");
   const [photo, setPhoto] = useState(null);
   const [video, setVideo] = useState(null);
   const [audioBlob, setAudioBlob] = useState(null);
@@ -97,7 +95,8 @@ export default function BejelentesUj() {
   const [location, setLocation] = useState(null);
   const [locating, setLocating] = useState(false);
   const [sending, setSending] = useState(false);
-  const { elemek: TYPES } = useListaElemek("bejelentes_tipus");
+  const { elemek: TYPES_NYERS } = useListaElemek("bejelentes_tipus");
+  const TYPES = TYPES_NYERS.filter((t) => !REJECTED_TIPUSOK.includes(t.kulcs));
 
   const captureLocation = () => {
     if (!navigator.geolocation) {
@@ -147,7 +146,13 @@ export default function BejelentesUj() {
         tipus,
         cim: typeLabel,
         leiras: leiras.trim() || typeLabel,
-        prioritas,
+        // A backend `prioritas` mezője NEM kötelező (ld. ApiHandler.php
+        // `getActions()`) — üres/hiányzó érték esetén a
+        // `bejelentesekInterface::newBejelentes()` automatikusan
+        // "kozepes"-re állítja. A sofőr-oldali létrehozás felhasználói
+        // kérésre szándékosan nem kérdez rá — egy adminisztrátor a
+        // bejelentés admin-oldali szerkesztésekor tudja állítani, ha
+        // szükséges.
         lat: location?.lat ?? null,
         lng: location?.lng ?? null,
       });
@@ -173,7 +178,7 @@ export default function BejelentesUj() {
   };
 
   return (
-    <div className="flex flex-col gap-3 pb-24 md:pb-20">
+    <div className="flex flex-col gap-3 pb-4">
       <MobileHeader title="Új bejelentés" />
 
       <div>
@@ -264,42 +269,13 @@ export default function BejelentesUj() {
         {locating ? "Helyzet lekérése…" : location ? "Helyzet rögzítve" : "Helyzet rögzítése"}
       </button>
 
-      <div>
-        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">Prioritás</h2>
-        <div className="flex gap-2">
-          {PRIORITIES.map((p) => (
-            <button
-              key={p.key}
-              type="button"
-              onClick={() => setPrioritas(p.key)}
-              className={`flex-1 rounded-xl border py-2.5 text-sm font-bold ${
-                prioritas === p.key
-                  ? p.key === "magas"
-                    ? "border-red-500 bg-red-600 text-white"
-                    : "border-brand-500 bg-brand-600 text-white"
-                  : "border-ink-100 bg-white text-ink-600"
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Rögzített gomb a lap alján, a mobil alsó navigáció fölött —
-          korábban a form aljára volt szerelve, hosszabb tartalomnál
-          (pl. sok csatolmány) csak legörgetve látszott. */}
-      <div className="fixed inset-x-0 bottom-16 z-30 border-t border-ink-100 bg-white/95 px-4 py-3 backdrop-blur md:bottom-0">
-        <div className="mx-auto max-w-lg md:max-w-3xl">
-          <SaveButton
-            onClick={handleSend}
-            isSaving={sending}
-            label="Bejelentés küldése"
-            savingLabel="Küldés…"
-            className="w-full justify-center py-3.5"
-          />
-        </div>
-      </div>
+      <SaveButton
+        onClick={handleSend}
+        isSaving={sending}
+        label="Bejelentés küldése"
+        savingLabel="Küldés…"
+        className="w-full justify-center py-3.5"
+      />
     </div>
   );
 }

@@ -15,7 +15,7 @@
 class ListaInterface {
     protected $db;
 
-    const TIPUSOK = ['kamion_meret', 'jarmu_allapot', 'biztositas_utem', 'bejelentes_tipus', 'szabadsag_tipus'];
+    const TIPUSOK = ['kamion_meret', 'jarmu_allapot', 'biztositas_utem', 'bejelentes_tipus', 'szabadsag_tipus', 'deviza'];
 
     const TIPUS_TABLAK = [
         'kamion_meret' => [['kamion', 'meret']],
@@ -26,6 +26,7 @@ class ListaInterface {
         ],
         'bejelentes_tipus' => [['bejelentesek', 'tipus']],
         'szabadsag_tipus' => [['sofor_szabadsag', 'tipus']],
+        'deviza' => [['egyeb_koltsegek', 'deviza']],
     ];
 
     public function __construct() {

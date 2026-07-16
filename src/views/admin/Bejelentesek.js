@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 // components
 import { fetchAction } from "utils/fetchAction";
 import CardTable from "components/Table/CardTableForBejelentesek.js";
+import PageHeader from "components/UI/PageHeader.js";
 
 const PAGE_SIZE = 15;
 
@@ -80,6 +81,7 @@ export default function Bejelentesek() {
   return (
     <>
       <div className="mx-auto w-full max-w-7xl">
+        <PageHeader eyebrow="Csapat" title="Bejelentések" />
         <div className="w-full">
           <div className="mb-6 rounded-3xl bg-white p-6 shadow-soft ring-1 ring-ink-100">
             <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-400">

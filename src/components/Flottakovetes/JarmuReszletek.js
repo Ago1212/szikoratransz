@@ -3,18 +3,18 @@ import { useHistory } from "react-router-dom";
 import {
   PiTruckLight,
   PiNavigationArrowLight,
-  PiArrowSquareOutLight,
+  PiClockCounterClockwiseLight,
   PiSteeringWheelLight,
   PiCrosshairSimpleLight,
   PiMapPinLight,
-  PiCompassLight,
   PiGaugeLight,
-  PiGasPumpLight,
   PiRoadHorizonLight,
   PiXLight,
+  PiUserLight,
 } from "react-icons/pi";
 import { GradientCardHeader } from "components/UI/PageCard.js";
 import StatusBadge from "components/UI/StatusBadge.js";
+import { formatKm } from "utils/gpsmartHelpers.js";
 
 function Mezo({ icon: Icon, label, value }) {
   return (
@@ -35,18 +35,19 @@ function Mezo({ icon: Icon, label, value }) {
 // ban jeleníti meg ugyanezt a tartalmat (`kompakt` prop: nincs saját
 // kártya-fejléc/keret, mert azt már a Modal adja).
 //
-// Az "Előzmények" és "Vezetési idő" gomb SZÁNDÉKOSAN nem ezen az oldalon
-// mutat adatot: a GPSmart jelenlegi (pillanatnyi pozíciót adó) lekérdezése
-// nem tartalmaz út-előzményt, a vezetési idő pedig egy teljesen más
-// adatforrásból (tachográf, "Vezetési idő" menüpont) származik — ahelyett,
-// hogy ezekhez kitalált adatot mutatnánk, a gombok a valódi forráshoz
-// visznek (a GPSmart saját felülete, illetve a app saját Vezetési idő
-// oldala).
+// Az "Előzmények" gomb a `waybill.pl` GPSmart-végpontra épülő valódi
+// útvonal-előzményt nyitja meg (ld. ElozmenyekModal.js) — ehhez a jármű
+// GPSmart saját `car_id`-je kell, amit a `lekerdezPoziciok()` válasz már
+// tartalmaz. A "Vezetési idő" gomb viszont TUDATOSAN nem mutat adatot
+// ezen az oldalon: az egy teljesen más adatforrásból (tachográf, "Vezetési
+// idő" menüpont) származik, ide belinkelni a valódi oldalra egyszerűbb és
+// őszintébb, mint egy második, párhuzamos vezetési-idő nézetet építeni.
 export default function JarmuReszletek({
   jarmu,
   kompakt = false,
   kovetesEnabled,
   onKovetesToggle,
+  onElozmenyekOpen,
   onClose,
 }) {
   const history = useHistory();
@@ -72,26 +73,46 @@ export default function JarmuReszletek({
         </div>
       </div>
 
+      {jarmu.kamion_id && (
+        <Mezo
+          icon={PiUserLight}
+          label="Jelenlegi sofőr"
+          value={jarmu.sofor_nev || "Nincs hozzárendelve"}
+        />
+      )}
+
       <div className="grid grid-cols-2 gap-2.5">
         <Mezo icon={PiGaugeLight} label="Sebesség" value={jarmu.sebesseg || "—"} />
-        <Mezo icon={PiCompassLight} label="Irány" value={typeof jarmu.irany === "number" ? `${jarmu.irany}°` : "—"} />
-        <Mezo icon={PiGasPumpLight} label="Üzemanyag" value={jarmu.uzemanyag || "—"} />
         <Mezo icon={PiRoadHorizonLight} label="Óraállás" value={jarmu.km || "nincs adat"} />
+        <Mezo
+          icon={PiRoadHorizonLight}
+          label="Megtett út (ma)"
+          value={jarmu.megtettUtMa != null ? `${formatKm(jarmu.megtettUtMa)} km` : "nincs adat"}
+        />
       </div>
 
       <Mezo icon={PiMapPinLight} label="Cím" value={jarmu.cim || "—"} />
-      <Mezo
-        icon={PiCrosshairSimpleLight}
-        label="Pozíció"
-        value={
-          jarmu.lat != null && jarmu.lon != null
-            ? `${jarmu.lat.toFixed(5)}, ${jarmu.lon.toFixed(5)}`
-            : "—"
-        }
-      />
       <Mezo icon={PiGaugeLight} label="Utolsó frissítés" value={`${jarmu.idopont} (${jarmu._relativIdo})`} />
 
-      <div className="mt-1 grid grid-cols-2 gap-2">
+      {/* Előzmények — SZÁNDÉKOSAN önálló, kitöltött (brand) sorban, a
+          Navigálás/Követés/Vezetési idő fölött, nem velük egyenrangú
+          4. gombként — ez egy gyakran használt funkció, ami a korábbi
+          4-gombos 2×2 rácsban vizuálisan elveszett (sőt, a panel
+          korábban túl sok mezőt tartalmazott ahhoz, hogy a gombsor
+          egyáltalán látszódjon görgetés nélkül — ld. a Pozíció/Irány
+          mezők fenti eltávolítása). */}
+      <button
+        type="button"
+        onClick={onElozmenyekOpen}
+        disabled={!jarmu.car_id}
+        title={!jarmu.car_id ? "Ehhez a járműhöz nincs GPSmart azonosító" : undefined}
+        className="mt-1 flex items-center justify-center gap-1.5 rounded-xl bg-brand-600 px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-ink-200 disabled:text-ink-400"
+      >
+        <PiClockCounterClockwiseLight className="h-4 w-4" />
+        Előzmények
+      </button>
+
+      <div className="grid grid-cols-3 gap-2">
         <a
           href={
             jarmu.lat != null && jarmu.lon != null
@@ -121,15 +142,6 @@ export default function JarmuReszletek({
           <PiCrosshairSimpleLight className="h-4 w-4" />
           Követés
         </button>
-        <a
-          href="https://flottanavigacio.gpsmart.eu"
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center justify-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink-600 shadow-soft transition-colors duration-200 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
-        >
-          <PiArrowSquareOutLight className="h-4 w-4" />
-          Előzmények
-        </a>
         <button
           type="button"
           onClick={() => history.push("/admin/vezetesi-ido")}

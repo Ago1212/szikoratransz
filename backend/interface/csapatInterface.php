@@ -25,9 +25,15 @@ class CsapatInterface {
 
     // Minden fiók, ami egy céghez tartozik — a gyökér (tulajdonos) admin
     // saját maga is szerepel a listában, hogy lássa a teljes csapatot.
-    public function getCsapattagok($ceg_id) {
+    // `$isAdmin`: a `ber` (havi bérezés) csak admin szerepkörnek jár —
+    // ezt a mezőt csak akkor kérjük le/adjuk vissza egyáltalán, ha a
+    // hívó igazoltan admin (ld. ApiHandler::kerelmezoAdmin()).
+    public function getCsapattagok($ceg_id, $isAdmin = false) {
         try {
-            $query = "SELECT id, name, email, phone, szerepkor, tulajdonos_admin_id, createdAt
+            $mezok = $isAdmin
+                ? "id, name, email, phone, szerepkor, tulajdonos_admin_id, createdAt, ber"
+                : "id, name, email, phone, szerepkor, tulajdonos_admin_id, createdAt";
+            $query = "SELECT $mezok
                       FROM admin
                       WHERE (id = :ceg_id OR tulajdonos_admin_id = :ceg_id2) AND torolt <> 'I'
                       ORDER BY id ASC";
@@ -36,6 +42,26 @@ class CsapatInterface {
             $stmt->bindValue(':ceg_id2', $ceg_id);
             $stmt->execute();
             return ['success' => true, 'csapattagok' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    // Csak admin szerepkör hívhatja (ld. ApiHandler::ADMIN_ONLY_ACTIONS) —
+    // a szerepkör-váltáshoz hasonló, önálló, kis akció, nem egy általános
+    // "csapattag adatai" szerkesztő form része (olyan ma nincs is, a
+    // csapattag saját magát a saját Profil oldalán szerkeszti).
+    public function updateCsapattagBer($id, $ceg_id, $ber) {
+        try {
+            $query = "UPDATE admin SET ber = :ber
+                      WHERE id = :id AND (id = :ceg_id OR tulajdonos_admin_id = :ceg_id2)";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindValue(':ber', $ber !== '' && $ber !== null ? $ber : null);
+            $stmt->bindValue(':id', $id);
+            $stmt->bindValue(':ceg_id', $ceg_id);
+            $stmt->bindValue(':ceg_id2', $ceg_id);
+            $stmt->execute();
+            return ['success' => true];
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }

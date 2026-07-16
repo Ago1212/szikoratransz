@@ -17,6 +17,7 @@ import {
 import FormField, { FormSection } from "components/UI/FormField.js";
 import SaveButton from "components/UI/SaveButton.js";
 import { useListaElemek } from "utils/useListaElemek.js";
+import { fetchAction } from "utils/fetchAction";
 
 const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
   const { elemek: meretOptions } = useListaElemek("kamion_meret");
@@ -29,6 +30,18 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
   const [kotBizDijValue, setKotBizDijValue] = useState("");
   const [kaszkoDijValue, setKaszkoDijValue] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+
+  // A pótkocsi-választóhoz szükséges lista — ugyanúgy töltjük be, mint a
+  // Sofőr adatlapon (CardSoforAdatokForm.js). A mező opcionális (nem minden
+  // kamionhoz van hozzárendelve pótkocsi, ld. backend/sql/25.sql).
+  const [potkocsik, setPotkocsik] = useState([]);
+  useEffect(() => {
+    const admin = JSON.parse(sessionStorage.getItem("user") || "null");
+    if (!admin) return;
+    fetchAction("getPotkocsiRendszamok", { id: admin.ceg_id }).then((result) => {
+      if (result?.success) setPotkocsik(result.potkocsik || []);
+    });
+  }, []);
 
   useEffect(() => {
     if (kamion.kot_biz_dij) {
@@ -239,12 +252,20 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
           ))}
         </FormField>
         <FormField
+          as="select"
           icon={PiTruckTrailerLight}
           label="Pótkocsi"
-          id="kamion"
-          value={kamion.kamion}
+          id="potkocsi"
+          value={kamion.potkocsi || ""}
           onChange={handleFormChange}
-        />
+        >
+          <option value="">Nincs hozzárendelve</option>
+          {potkocsik.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.tipus ? `${p.rendszam} (${p.tipus})` : p.rendszam}
+            </option>
+          ))}
+        </FormField>
         <FormField
           as="select"
           icon={PiMapPinLight}

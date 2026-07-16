@@ -8,7 +8,12 @@ class SoforokInterface {
         $this->db = $database->connect();
     }
 
-    public function getSoforok($id, $search = null, $page = null, $pageSize = null) {
+    // `$isAdmin`: a sofőr havi bére (`ber` oszlop) kizárólag admin
+    // szerepkörnek jár — más (pl. fuvarszervező) szerepkör lekérdezéskor a
+    // mezőt itt, szerver oldalon vágjuk ki a válaszból, nem a frontendre
+    // bízzuk, hogy egyszerűen nem jeleníti meg (a nyers API-válasz
+    // böngésző dev toolsból amúgy is látszódna).
+    public function getSoforok($id, $search = null, $page = null, $pageSize = null, $isAdmin = false) {
 
         try {
             $params = [':id' => $id];
@@ -19,9 +24,19 @@ class SoforokInterface {
             }
             $query .= " ORDER BY name ASC";
 
+            $szur = function ($sorok) use ($isAdmin) {
+                if ($isAdmin) {
+                    return $sorok;
+                }
+                foreach ($sorok as &$sor) {
+                    unset($sor['ber']);
+                }
+                return $sorok;
+            };
+
             if ($page !== null) {
                 [$soforok, $total, $page, $pageSize] = PaginationHelper::fetchPage($this->db, $query, $params, $page, $pageSize);
-                return ['success' => true, 'soforok' => $soforok, 'total' => $total, 'page' => $page, 'pageSize' => $pageSize];
+                return ['success' => true, 'soforok' => $szur($soforok), 'total' => $total, 'page' => $page, 'pageSize' => $pageSize];
             }
 
             $stmt = $this->db->prepare($query);
@@ -31,12 +46,16 @@ class SoforokInterface {
             $stmt->execute();
             $soforok = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            return ['success' => true, 'soforok' => $soforok];
+            return ['success' => true, 'soforok' => $szur($soforok)];
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
-    public function saveSoforData($data) {
+    // `$isAdmin`: a `ber` mezőt csak admin szerepkör küldheti/módosíthatja
+    // — nem-admin kérelmezőnél a mezőt EGYSZERŰEN figyelmen kívül hagyjuk
+    // (a meglévő adatbázis-érték megmarad), nem a kliens oldali
+    // formmezőre bízzuk, hogy nem is jelenik meg neki.
+    public function saveSoforData($data, $isAdmin = false) {
         try {
             $query = "UPDATE user
                       SET name = :name,
@@ -53,7 +72,8 @@ class SoforokInterface {
                           gki_lejarat = :gki_lejarat,
                           adr_lejarat = :adr_lejarat,
                           kamion = :kamion,
-                          aktiv_potkocsi = :aktiv_potkocsi
+                          aktiv_potkocsi = :aktiv_potkocsi"
+                      . ($isAdmin ? ", ber = :ber" : "") . "
                       WHERE id = :id";
 
             $stmt = $this->db->prepare($query);
@@ -80,6 +100,9 @@ class SoforokInterface {
             $aktivPotkocsi = !empty($data['aktiv_potkocsi']) ? $data['aktiv_potkocsi'] : null;
             $stmt->bindValue(':kamion', $kamion);
             $stmt->bindValue(':aktiv_potkocsi', $aktivPotkocsi);
+            if ($isAdmin) {
+                $stmt->bindValue(':ber', $data['ber'] !== '' && $data['ber'] !== null ? $data['ber'] : null);
+            }
 
             // Lekérdezés végrehajtása
             $stmt->execute();
@@ -157,6 +180,11 @@ class SoforokInterface {
             return ['success' => false, 'message' => 'Sofőr nem található.'];
         }
         unset($sofor['password']);
+        // A sofőr SOSEM láthatja a saját bérét ezen a felületen (ld.
+        // sql/24.sql komment) — ez a saját-magát-lekérdező végpont,
+        // eltérően a getSoforok()-tól, nem kap `$isAdmin` paramétert, mert
+        // sofőr-munkamenetből sosem admin.
+        unset($sofor['ber']);
         return ['success' => true, 'user' => $sofor];
     }
 }

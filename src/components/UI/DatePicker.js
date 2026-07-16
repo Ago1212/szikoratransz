@@ -132,7 +132,7 @@ export default function DatePicker({
         className="flex w-full items-center gap-2 rounded-lg border border-ink-100 bg-slate-50 px-3 py-2 text-left text-sm text-brand-900 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300 disabled:cursor-not-allowed disabled:opacity-60"
       >
         <PiCalendarBlankLight className="h-3.5 w-3.5 flex-shrink-0 text-ink-400" />
-        <span className={`truncate ${selected ? "" : "text-ink-300"}`}>
+        <span className={`truncate ${selected ? "" : "text-ink-400"}`}>
           {selected ? format(selected, "yyyy. MM. dd.") : placeholder}
         </span>
       </button>
@@ -189,7 +189,7 @@ export default function DatePicker({
                           ? "bg-brand-50 font-semibold text-brand-700"
                           : inMonth
                             ? "text-ink-700 hover:bg-slate-100"
-                            : "text-ink-300 hover:bg-slate-50"
+                            : "text-ink-400 hover:bg-slate-50"
                     }`}
                   >
                     {format(day, "d")}
