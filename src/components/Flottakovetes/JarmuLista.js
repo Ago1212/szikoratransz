@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { PiTruckLight, PiCaretUpLight, PiCaretDownLight } from "react-icons/pi";
+import { PiTruckLight, PiVanLight, PiCaretUpLight, PiCaretDownLight } from "react-icons/pi";
 import { GradientCardHeader } from "components/UI/PageCard.js";
 import StatusBadge from "components/UI/StatusBadge.js";
 import { formatKm } from "utils/gpsmartHelpers.js";
@@ -65,6 +65,18 @@ function rendez(rows, rendezes) {
 // flottánál nincs szükség virtualizációra — ha ez a jövőben nőne, a
 // sor-renderelés itt, egyetlen `JarmuSor` függvényben van elkülönítve,
 // könnyen cserélhető egy virtualizált motorra.
+// A GPSmart-pozíció mindkét jármű-típust visszaadhatja (ld. gpsmartInterface.php
+// lekerdezPoziciok) — az ikon a `jarmu_tipus` mező alapján kamion/furgon
+// között vált, ugyanaz a minta, mint Koltsegek.js "Jármű szerinti bontás"
+// oszlopában.
+function JarmuIkon({ jarmu, className }) {
+  return jarmu.jarmu_tipus === "furgon" ? (
+    <PiVanLight className={className} />
+  ) : (
+    <PiTruckLight className={className} />
+  );
+}
+
 export default function JarmuLista({ rows, kivalasztott, onSelect }) {
   const [rendezes, setRendezes] = useState({ kulcs: "_allapot", irany: "asc" });
 
@@ -79,11 +91,23 @@ export default function JarmuLista({ rows, kivalasztott, onSelect }) {
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-white shadow-soft ring-1 ring-ink-100">
+    // `md:h-full md:overflow-hidden` (nem feltétel nélküli): a szülő
+    // (Flottakovetes.js) mobilon NEM ad fix magasságot ennek a dobozna
+    // (ld. ottani komment) — enélkül a `h-full` mobilon egy 0 magasságú,
+    // összeomlott dobozt eredményezne, mert a szülőnek nincs explicit
+    // magassága. `md:`-től (a táblázat-nézet szélessége) a szülő ismét fix
+    // magasságú, ott a `h-full`/`overflow-hidden` visszaáll.
+    <div className="flex min-h-0 flex-col rounded-2xl bg-white shadow-soft ring-1 ring-ink-100 md:h-full md:overflow-hidden">
       <GradientCardHeader icon={PiTruckLight} title="Járművek" />
 
-      {/* Mobil kártyalista */}
-      <div className="flex-1 overflow-y-auto md:hidden">
+      {/* Mobil kártyalista — SZÁNDÉKOSAN nincs itt saját `overflow-y-auto`/
+          `flex-1` (korábban volt): a szülő dobozon egy fix `h-[360px]` ült,
+          ami ezt a kártyalistát egy alacsony, önmagában görgethető dobozba
+          zárta — pontosan az a "scroll a scrollban" csapda, amit a
+          `DataTable.js` saját kommentje szerint a projekt tudatosan elkerül
+          mindenhol máshol. Mostantól ez a lista is a lap normál görgetési
+          folyásába illeszkedik, mint minden más mobil kártyalista. */}
+      <div className="md:hidden">
         {rendezettSorok.length === 0 ? (
           <p className="px-4 py-8 text-center text-sm text-ink-400">
             Nincs a szűrésnek megfelelő jármű.
@@ -103,7 +127,7 @@ export default function JarmuLista({ rows, kivalasztott, onSelect }) {
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="flex items-center gap-1.5 font-semibold text-brand-900">
-                    <PiTruckLight className="h-4 w-4 flex-shrink-0 text-ink-400" />
+                    <JarmuIkon jarmu={p} className="h-4 w-4 flex-shrink-0 text-ink-400" />
                     {p.rendszam}
                   </span>
                   <StatusBadge tone={p._allapot.tone}>{p._allapot.label}</StatusBadge>
@@ -173,7 +197,7 @@ export default function JarmuLista({ rows, kivalasztott, onSelect }) {
                 >
                   <td className="whitespace-nowrap px-3 py-2.5 font-semibold text-brand-900">
                     <span className="flex items-center gap-1.5">
-                      <PiTruckLight className="h-4 w-4 flex-shrink-0 text-ink-400" />
+                      <JarmuIkon jarmu={p} className="h-4 w-4 flex-shrink-0 text-ink-400" />
                       <span className="truncate">{p.rendszam}</span>
                     </span>
                   </td>

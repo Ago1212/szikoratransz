@@ -25,6 +25,7 @@ const emptyKarbantartas = (adminId) => ({
   admin: adminId,
   kamion_id: "",
   potkocsi_id: "",
+  furgon_id: "",
   datum: "",
   log: "",
   km_oraallas: "",
@@ -50,9 +51,11 @@ const Karbantartasok = () => {
   const [karbantartasok, setKarbantartasok] = useState([]);
   const [kamionok, setKamionok] = useState([]);
   const [potkocsik, setPotkocsik] = useState([]);
+  const [furgonok, setFurgonok] = useState([]);
   const [filter, setFilter] = useState({
     kamion_id: "",
     potkocsi_id: "",
+    furgon_id: "",
     datumTol: "",
     datumIg: "",
     elvegezte: "",
@@ -61,7 +64,7 @@ const Karbantartasok = () => {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [osszesKoltseg, setOsszesKoltseg] = useState(0);
-  const user = JSON.parse(sessionStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user"));
   const [openDialog, setOpenDialog] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [newKarbantartas, setNewKarbantartas] = useState(emptyKarbantartas(user.ceg_id));
@@ -155,6 +158,11 @@ const Karbantartasok = () => {
       if (potkocsiResult?.success) {
         setPotkocsik(potkocsiResult.potkocsik);
       }
+
+      const furgonResult = await fetchAction("getFurgonRendszamok", { id: user.ceg_id });
+      if (furgonResult?.success) {
+        setFurgonok(furgonResult.furgonok);
+      }
     };
 
     fetchJarmuvek();
@@ -222,11 +230,12 @@ const Karbantartasok = () => {
 
   const handleEditKarbantartas = (karb) => {
     setEditingId(karb.id);
-    setJarmuTipus(karb.potkocsi_id ? "potkocsi" : "kamion");
+    setJarmuTipus(karb.potkocsi_id ? "potkocsi" : karb.furgon_id ? "furgon" : "kamion");
     setNewKarbantartas({
       admin: user.ceg_id,
       kamion_id: karb.kamion_id || "",
       potkocsi_id: karb.potkocsi_id || "",
+      furgon_id: karb.furgon_id || "",
       datum: karb.datum,
       log: karb.log,
       km_oraallas: karb.km_oraallas || "",
@@ -256,7 +265,11 @@ const Karbantartasok = () => {
   const handleAddKarbantartas = async (e) => {
     e.preventDefault();
     const action =
-      jarmuTipus === "kamion" ? "updateKarbantartas" : "updatePotkocsiKarbantartas";
+      jarmuTipus === "kamion"
+        ? "updateKarbantartas"
+        : jarmuTipus === "furgon"
+        ? "updateFurgonKarbantartas"
+        : "updatePotkocsiKarbantartas";
 
     const result = await fetchAction(action, {
       ...newKarbantartas,
@@ -279,12 +292,14 @@ const Karbantartasok = () => {
     }
   };
 
-  const getJarmuRendszam = (id, isPotkocsi = false) => {
-    const jarmuLista = isPotkocsi ? potkocsik : kamionok;
+  const getJarmuRendszam = (id, tipus = "kamion") => {
+    const jarmuLista = tipus === "potkocsi" ? potkocsik : tipus === "furgon" ? furgonok : kamionok;
     const jarmu = jarmuLista.find((j) => j.id === id);
     if (!jarmu) return "Ismeretlen";
     return jarmu.tipus ? `${jarmu.rendszam} (${jarmu.tipus})` : jarmu.rendszam;
   };
+
+  const getKarbTipus = (row) => (row.potkocsi_id ? "potkocsi" : row.furgon_id ? "furgon" : "kamion");
 
   const getStatus = (karb) => {
     const today = new Date().toISOString().split("T")[0];
@@ -337,16 +352,17 @@ const Karbantartasok = () => {
     {
       key: "tipus",
       label: "Jármű típusa",
-      render: (row) => (row.potkocsi_id ? "Pótkocsi" : "Kamion"),
+      render: (row) =>
+        row.potkocsi_id ? "Pótkocsi" : row.furgon_id ? "Furgon" : "Kamion",
     },
     {
       key: "rendszam",
       label: "Rendszám",
       className: "font-semibold text-brand-900",
-      render: (row) =>
-        row.potkocsi_id
-          ? getJarmuRendszam(row.potkocsi_id, true)
-          : getJarmuRendszam(row.kamion_id),
+      render: (row) => {
+        const tipus = getKarbTipus(row);
+        return getJarmuRendszam(row[`${tipus}_id`], tipus);
+      },
     },
     { key: "datum", label: "Dátum" },
     { key: "log", label: "Leírás", className: "whitespace-normal break-words max-w-xs" },
@@ -403,15 +419,16 @@ const Karbantartasok = () => {
     {
       key: "tipus",
       label: "Jármű típusa",
-      exportValue: (row) => (row.potkocsi_id ? "Pótkocsi" : "Kamion"),
+      exportValue: (row) =>
+        row.potkocsi_id ? "Pótkocsi" : row.furgon_id ? "Furgon" : "Kamion",
     },
     {
       key: "rendszam",
       label: "Rendszám",
-      exportValue: (row) =>
-        row.potkocsi_id
-          ? getJarmuRendszam(row.potkocsi_id, true)
-          : getJarmuRendszam(row.kamion_id),
+      exportValue: (row) => {
+        const tipus = getKarbTipus(row);
+        return getJarmuRendszam(row[`${tipus}_id`], tipus);
+      },
     },
     { key: "datum", label: "Dátum" },
     { key: "log", label: "Leírás" },
@@ -494,7 +511,7 @@ const Karbantartasok = () => {
 
         {filtersOpen && (
           <div className="mt-5">
-            <FormSection columns={5}>
+            <FormSection columns={6}>
               <FormField
                 as="select"
                 label="Kamion"
@@ -520,6 +537,20 @@ const Karbantartasok = () => {
                 {potkocsik.map((potkocsi) => (
                   <option key={potkocsi.id} value={potkocsi.id}>
                     {potkocsi.tipus ? `${potkocsi.rendszam} (${potkocsi.tipus})` : potkocsi.rendszam}
+                  </option>
+                ))}
+              </FormField>
+              <FormField
+                as="select"
+                label="Furgon"
+                name="furgon_id"
+                value={filter.furgon_id}
+                onChange={handleFilterChange}
+              >
+                <option value="">Összes furgon</option>
+                {furgonok.map((furgon) => (
+                  <option key={furgon.id} value={furgon.id}>
+                    {furgon.tipus ? `${furgon.rendszam} (${furgon.tipus})` : furgon.rendszam}
                   </option>
                 ))}
               </FormField>
@@ -551,6 +582,7 @@ const Karbantartasok = () => {
                 setFilter({
                   kamion_id: "",
                   potkocsi_id: "",
+                  furgon_id: "",
                   datumTol: "",
                   datumIg: "",
                   elvegezte: "",
@@ -617,6 +649,7 @@ const Karbantartasok = () => {
                       ...prev,
                       kamion_id: "",
                       potkocsi_id: null,
+                      furgon_id: null,
                     }));
                   }}
                   className="h-4 w-4 text-brand-600"
@@ -635,11 +668,31 @@ const Karbantartasok = () => {
                       ...prev,
                       kamion_id: null,
                       potkocsi_id: "",
+                      furgon_id: null,
                     }));
                   }}
                   className="h-4 w-4 text-brand-600"
                 />
                 Pótkocsi
+              </label>
+              <label className="inline-flex items-center gap-2 text-sm text-ink-600">
+                <input
+                  type="radio"
+                  name="jarmu_tipus"
+                  value="furgon"
+                  checked={jarmuTipus === "furgon"}
+                  onChange={() => {
+                    setJarmuTipus("furgon");
+                    setNewKarbantartas((prev) => ({
+                      ...prev,
+                      kamion_id: null,
+                      potkocsi_id: null,
+                      furgon_id: "",
+                    }));
+                  }}
+                  className="h-4 w-4 text-brand-600"
+                />
+                Furgon
               </label>
             </div>
           </div>
@@ -657,6 +710,22 @@ const Karbantartasok = () => {
               {kamionok.map((kamion) => (
                 <option key={kamion.id} value={kamion.id}>
                   {kamion.tipus ? `${kamion.rendszam} (${kamion.tipus})` : kamion.rendszam}
+                </option>
+              ))}
+            </FormField>
+          ) : jarmuTipus === "furgon" ? (
+            <FormField
+              as="select"
+              label="Furgon"
+              name="furgon_id"
+              value={newKarbantartas.furgon_id || ""}
+              onChange={handleNewKarbantartasChange}
+              required
+            >
+              <option value="">Válassz furgont</option>
+              {furgonok.map((furgon) => (
+                <option key={furgon.id} value={furgon.id}>
+                  {furgon.tipus ? `${furgon.rendszam} (${furgon.tipus})` : furgon.rendszam}
                 </option>
               ))}
             </FormField>

@@ -6,9 +6,9 @@ import { PiPencilSimpleLight, PiTrashLight, PiBuildingsLight } from "react-icons
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
 
-const CardTable = ({ ugyfelek, loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll }) => {
+const CardTable = ({ ugyfelek = [], loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll }) => {
   const history = useHistory();
-  const user = JSON.parse(sessionStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user"));
 
   const handleNewUgyfel = () => {
     history.push("/admin/ugyfelForm", { data: {} });
@@ -98,11 +98,7 @@ CardTable.propTypes = {
       id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
       nev: PropTypes.string.isRequired,
     }),
-  ).isRequired,
-};
-
-CardTable.defaultProps = {
-  ugyfelek: [],
+  ),
 };
 
 export default CardTable;

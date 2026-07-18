@@ -4,12 +4,12 @@ import {
   PiBellLight,
   PiTruckLight,
   PiTruckTrailerLight,
+  PiVanLight,
   PiWarningCircleLight,
   PiGasPumpLight,
   PiPhoneLight,
   PiCaretRightLight,
   PiMapPinLight,
-  PiSteeringWheelLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import StatusBadge from "components/UI/StatusBadge.js";
@@ -44,6 +44,12 @@ const quickActions = [
     tone: "brand",
   },
   {
+    to: "/user/furgon-valaszto",
+    icon: PiVanLight,
+    label: "Furgon",
+    tone: "brand",
+  },
+  {
     to: "/user/helyszinek",
     icon: PiMapPinLight,
     label: "Helyszínek",
@@ -53,12 +59,6 @@ const quickActions = [
     to: "/user/tankolas",
     icon: PiGasPumpLight,
     label: "Tankolás",
-    tone: "brand",
-  },
-  {
-    to: "/user/vezetesi-ido",
-    icon: PiSteeringWheelLight,
-    label: "Vezetési idő",
     tone: "brand",
   },
 ];
@@ -73,6 +73,7 @@ export default function UserDashboard() {
   const [user, setUser] = useState(null);
   const [kamionok, setKamionok] = useState([]);
   const [potkocsik, setPotkocsik] = useState([]);
+  const [furgonok, setFurgonok] = useState([]);
   const [sajatBejelentesek, setSajatBejelentesek] = useState([]);
   const [bejelentesValaszolt, setBejelentesValaszolt] = useState(false);
   const [elbiraltJarmuValtasok, setElbiraltJarmuValtasok] = useState([]);
@@ -81,7 +82,7 @@ export default function UserDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const userData = JSON.parse(sessionStorage.getItem("user"));
+    const userData = JSON.parse(localStorage.getItem("user"));
     if (!userData) {
       history.push("/auth/login");
       return;
@@ -89,7 +90,7 @@ export default function UserDashboard() {
     setUser(userData);
 
     const load = async () => {
-      // A sessionStorage-ban tárolt `user` a bejelentkezéskori állapot —
+      // A localStorage-ban tárolt `user` a bejelentkezéskori állapot —
       // ha időközben az admin jóváhagyott egy jármű-váltási kérést, ez
       // frissíti a kamion/aktiv_potkocsi mezőket anélkül, hogy ki kellene
       // jelentkezni.
@@ -97,6 +98,7 @@ export default function UserDashboard() {
         freshRes,
         kamionRes,
         potkocsiRes,
+        furgonRes,
         bejelentesRes,
         adminRes,
         kerelemRes,
@@ -105,6 +107,7 @@ export default function UserDashboard() {
         fetchAction("getSajatSofor", { id: userData.id }),
         fetchAction("getKamionok", { id: userData.admin }),
         fetchAction("getPotkocsik", { id: userData.admin }),
+        fetchAction("getFurgonok", { id: userData.admin }),
         fetchAction("getBejelentesekSofor", { sofor_id: userData.id }),
         fetchAction("getAdminElerhetoseg", { id: userData.admin }),
         fetchAction("getSajatJarmuValtasKerelmek", { sofor_id: userData.id }),
@@ -112,11 +115,12 @@ export default function UserDashboard() {
       ]);
       if (freshRes?.success && freshRes.user) {
         const merged = { ...userData, ...freshRes.user };
-        sessionStorage.setItem("user", JSON.stringify(merged));
+        localStorage.setItem("user", JSON.stringify(merged));
         setUser(merged);
       }
       if (kamionRes?.success) setKamionok(kamionRes.kamionok || []);
       if (potkocsiRes?.success) setPotkocsik(potkocsiRes.potkocsik || []);
+      if (furgonRes?.success) setFurgonok(furgonRes.furgonok || []);
       if (bejelentesRes?.success) {
         const osszes = bejelentesRes.bejelentesek || [];
         setSajatBejelentesek(osszes.slice(0, 3));
@@ -143,8 +147,12 @@ export default function UserDashboard() {
   const aktivPotkocsi = potkocsik.find(
     (p) => String(p.id) === String(user.aktiv_potkocsi),
   );
+  const aktivFurgon = furgonok.find(
+    (f) => String(f.id) === String(user.furgon),
+  );
   const pendingKamion = kerelmek.find((k) => k.tipus === "kamion");
   const pendingPotkocsi = kerelmek.find((k) => k.tipus === "potkocsi");
+  const pendingFurgon = kerelmek.find((k) => k.tipus === "furgon");
 
   const lejaroDokumentumok = DOCUMENT_FIELDS.map((field) => ({
     ...field,
@@ -187,7 +195,7 @@ export default function UserDashboard() {
       </div>
 
       {/* Aktív jármű */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <Link
           to="/user/jarmu-valaszto"
           className="rounded-2xl border border-ink-100 bg-white p-4 shadow-soft"
@@ -239,6 +247,34 @@ export default function UserDashboard() {
             </p>
           )}
           {pendingPotkocsi && (
+            <p className="mt-1.5 text-[11px] font-semibold text-amber-600">
+              Vár jóváhagyásra
+            </p>
+          )}
+        </Link>
+        <Link
+          to="/user/furgon-valaszto"
+          className="rounded-2xl border border-ink-100 bg-white p-4 shadow-soft"
+        >
+          <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-400">
+            <PiVanLight className="h-4 w-4" />
+            Furgon
+          </div>
+          {aktivFurgon ? (
+            <>
+              <p className="mt-1.5 font-display text-lg font-bold text-brand-900">
+                {aktivFurgon.rendszam}
+              </p>
+              <p className="truncate text-xs text-ink-500">
+                {aktivFurgon.tipus || "—"}
+              </p>
+            </>
+          ) : (
+            <p className="mt-2 text-sm font-medium text-brand-600">
+              Válassz furgont
+            </p>
+          )}
+          {pendingFurgon && (
             <p className="mt-1.5 text-[11px] font-semibold text-amber-600">
               Vár jóváhagyásra
             </p>

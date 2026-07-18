@@ -9,8 +9,8 @@
 const SESSION_EXPIRED_MESSAGE = "A munkamenet lejárt, jelentkezz be újra.";
 
 function handleExpiredSession() {
-  sessionStorage.removeItem("user");
-  sessionStorage.removeItem("sessionToken");
+  localStorage.removeItem("user");
+  localStorage.removeItem("sessionToken");
   if (!window.location.pathname.startsWith("/auth")) {
     window.location.assign("/auth/login");
   }
@@ -33,7 +33,7 @@ export const fetchAction = async (action, payload) => {
       },
       body: JSON.stringify({
         authHash: authHash,
-        sessionToken: sessionStorage.getItem("sessionToken") || "",
+        sessionToken: localStorage.getItem("sessionToken") || "",
         action,
         ...payload,
       }),

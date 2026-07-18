@@ -30,10 +30,10 @@ const CardSoforAdatokForm = ({ sofor, setFormData, handleSave }) => {
   // soforokInterface.php saveSoforData/getSoforok `$isAdmin` paramétere) —
   // ez a frontend-oldali elrejtés csak UX, nem az egyetlen védelmi vonal.
   const isOwnerAdmin =
-    (JSON.parse(sessionStorage.getItem("user") || "null")?.szerepkor) === "admin";
+    (JSON.parse(localStorage.getItem("user") || "null")?.szerepkor) === "admin";
 
   useEffect(() => {
-    const admin = JSON.parse(sessionStorage.getItem("user") || "null");
+    const admin = JSON.parse(localStorage.getItem("user") || "null");
     if (!admin) return;
     fetchAction("getKamionRendszamok", { id: admin.ceg_id }).then((result) => {
       if (result?.success) setKamionok(result.kamionok || []);

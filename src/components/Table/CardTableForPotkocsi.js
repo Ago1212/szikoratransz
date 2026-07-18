@@ -11,9 +11,9 @@ import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
 import AllapotBadge from "components/UI/AllapotBadge.js";
 
-const CardTable = ({ potkocsik, loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll }) => {
+const CardTable = ({ potkocsik = [], loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll }) => {
   const history = useHistory();
-  const user = JSON.parse(sessionStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user"));
 
   const handleNewPotkocsi = () => {
     history.push("/admin/potkocsiForm", { data: {} });
@@ -116,11 +116,7 @@ CardTable.propTypes = {
       rendszam: PropTypes.string.isRequired,
       tipus: PropTypes.string,
     })
-  ).isRequired,
-};
-
-CardTable.defaultProps = {
-  potkocsik: [],
+  ),
 };
 
 export default CardTable;

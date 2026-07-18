@@ -27,13 +27,14 @@ export default function Tankolas() {
       toast.error("Add meg a tankolt literek számát!");
       return;
     }
-    const user = JSON.parse(sessionStorage.getItem("user"));
+    const user = JSON.parse(localStorage.getItem("user"));
     setSaving(true);
     try {
       const result = await fetchAction("newTankolas", {
         admin: user.admin,
         sofor_id: user.id,
         kamion_id: user.kamion || null,
+        furgon_id: !user.kamion && user.furgon ? user.furgon : null,
         liter: form.liter,
         egysegar: form.egysegar || null,
         km_oraallas: form.km_oraallas || null,

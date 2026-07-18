@@ -1,6 +1,32 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+
+  # A `scripts/prerender.js` (ld. `postbuild` npm hook) mostantól lapos
+  # `build/<route>.html` fájlokat hoz létre minden route-hoz (pl.
+  # build/belfoldi-fuvarozas-arajanlat.html), hogy a nem-JS crawlerek is
+  # lássák a tényleges tartalmat. Ez a lenti szabály a kiterjesztés nélküli
+  # URL-t erre a fájlra képezi le belsőleg (redirect nélkül).
+  #
+  # KÉT KORÁBBI MEGKÖZELÍTÉS ÉLESBEN NEM MŰKÖDÖTT, EZ MIATT LETT LAPOS FÁJL
+  # (2026-07-17, élő Apache-példányon, ugyanazzal az AllowOverride-dal
+  # leellenőrizve, nem csak feltételezve): a script eredetileg alkönyvtárba
+  # írt (`build/<route>/index.html`), amit Apache mod_dir-je 301-gyel a
+  # per-jeles verzióra irányított át (mert a route valódi könyvtárrá vált a
+  # lemezen) — ez eltért a sitemap.xml/canonical/OG tagekben szereplő, per
+  # nélküli URL-formától. Sem a `DirectorySlash Off` (a hoszt
+  # `AllowOverride`-ja nem ad `Indexes` kontextust — a lenti `Header`
+  # irányelv viszont működik, az `FileInfo`-t igényel, ami engedélyezett),
+  # sem egy könyvtár-alapú `RewriteRule` (a .htaccess-szintű RewriteRule
+  # ezen a hoszton később fut le, mint mod_dir saját átirányítás-logikája)
+  # nem tudta megkerülni ezt. Lapos `.html` fájllal a route sosem lesz
+  # valódi könyvtár, így mod_dir-nek nincs mit átirányítania. Mivel minden
+  # statikus asset abszolút, gyökér-relatív útvonalon hivatkozik (pl.
+  # `/static/js/main.js`), ez nem tör el semmilyen relatív hivatkozást.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME}.html -f
+  RewriteRule ^(.*)$ $1.html [L]
+
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d

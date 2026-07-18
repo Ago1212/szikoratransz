@@ -45,7 +45,7 @@ const CardTableForPotkocsiElvegzettKarbantartas = ({ potkocsi_id, refresh, onRef
     if (!window.confirm("Biztosan törölni szeretnéd a karbantartást?")) return;
 
     try {
-      const user = JSON.parse(sessionStorage.getItem("user"));
+      const user = JSON.parse(localStorage.getItem("user"));
       const result = await fetchAction("deletePotkocsiKarbantartas", { id, kerelmezo_id: user.id });
 
       if (result?.success) {

@@ -36,7 +36,7 @@ const FILTERS = [
 // (ld. a felhasználókezelés-elemzés 02. és 09. pontját).
 export default function Felhasznalok() {
   const history = useHistory();
-  const user = JSON.parse(sessionStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user"));
   const [csapattagok, setCsapattagok] = useState([]);
   const [soforok, setSoforok] = useState([]);
   const [szerepkorok, setSzerepkorok] = useState([{ kulcs: "admin", nev: "Adminisztrátor" }]);

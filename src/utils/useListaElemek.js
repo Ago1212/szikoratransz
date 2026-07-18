@@ -18,7 +18,7 @@ export function useListaElemek(tipus) {
   useEffect(() => {
     let user = null;
     try {
-      user = JSON.parse(sessionStorage.getItem("user"));
+      user = JSON.parse(localStorage.getItem("user"));
     } catch (e) {
       user = null;
     }

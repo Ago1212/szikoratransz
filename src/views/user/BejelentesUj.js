@@ -135,7 +135,7 @@ export default function BejelentesUj() {
       toast.error("Válassz típust!");
       return;
     }
-    const user = JSON.parse(sessionStorage.getItem("user"));
+    const user = JSON.parse(localStorage.getItem("user"));
     setSending(true);
     try {
       const typeLabel = TYPES.find((t) => t.kulcs === tipus)?.nev || "Bejelentés";

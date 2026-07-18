@@ -7,9 +7,9 @@ import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
 import AllapotBadge from "components/UI/AllapotBadge.js";
 
-const CardTable = ({ kamionok, loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll }) => {
+const CardTable = ({ kamionok = [], loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll }) => {
   const history = useHistory();
-  const user = JSON.parse(sessionStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user"));
 
   const handleNewKamion = () => {
     history.push("/admin/kamionForm", { data: {} });
@@ -112,19 +112,17 @@ const CardTable = ({ kamionok, loading, total, page, pageSize, onPageChange, onS
 };
 
 CardTable.propTypes = {
+  // `potkocsi` (nyers pótkocsi FK, number) szándékosan nincs itt validálva —
+  // a megjelenített mező a `potkocsi_rendszam` (ld. fenti columns), ez a
+  // nyers FK sosem kerül kirenderelésre.
   kamionok: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
       rendszam: PropTypes.string.isRequired,
       tipus: PropTypes.string,
       meret: PropTypes.string,
-      potkocsi: PropTypes.string,
     })
-  ).isRequired,
-};
-
-CardTable.defaultProps = {
-  kamionok: [],
+  ),
 };
 
 export default CardTable;

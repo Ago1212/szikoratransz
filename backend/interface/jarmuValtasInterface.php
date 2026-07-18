@@ -31,7 +31,8 @@ class JarmuValtasInterface {
             }
             $ceg_id = $sofor['admin'];
 
-            $tabla = $tipus === 'kamion' ? 'kamion' : 'potkocsi';
+            $tablak = ['kamion' => 'kamion', 'potkocsi' => 'potkocsi', 'furgon' => 'furgon'];
+            $tabla = $tablak[$tipus] ?? 'potkocsi';
             $jarmuStmt = $this->db->prepare("SELECT id FROM `$tabla` WHERE id = :id AND admin = :ceg_id AND torolt <> 'I'");
             $jarmuStmt->bindValue(':id', $jarmu_id);
             $jarmuStmt->bindValue(':ceg_id', $ceg_id);
@@ -92,10 +93,13 @@ class JarmuValtasInterface {
 
             $kamionRendszamok = $this->getRendszamok('kamion');
             $potkocsiRendszamok = $this->getRendszamok('potkocsi');
+            $furgonRendszamok = $this->getRendszamok('furgon');
             foreach ($kerelmek as &$k) {
                 $k['jarmu_rendszam'] = $k['tipus'] === 'kamion'
                     ? ($kamionRendszamok[$k['jarmu_id']] ?? null)
-                    : ($potkocsiRendszamok[$k['jarmu_id']] ?? null);
+                    : ($k['tipus'] === 'furgon'
+                        ? ($furgonRendszamok[$k['jarmu_id']] ?? null)
+                        : ($potkocsiRendszamok[$k['jarmu_id']] ?? null));
             }
 
             return ['success' => true, 'kerelmek' => $kerelmek];
@@ -123,10 +127,13 @@ class JarmuValtasInterface {
 
             $kamionRendszamok = $this->getRendszamok('kamion');
             $potkocsiRendszamok = $this->getRendszamok('potkocsi');
+            $furgonRendszamok = $this->getRendszamok('furgon');
             foreach ($kerelmek as &$k) {
                 $k['jarmu_rendszam'] = $k['tipus'] === 'kamion'
                     ? ($kamionRendszamok[$k['jarmu_id']] ?? null)
-                    : ($potkocsiRendszamok[$k['jarmu_id']] ?? null);
+                    : ($k['tipus'] === 'furgon'
+                        ? ($furgonRendszamok[$k['jarmu_id']] ?? null)
+                        : ($potkocsiRendszamok[$k['jarmu_id']] ?? null));
             }
 
             return ['success' => true, 'kerelmek' => $kerelmek];
@@ -149,11 +156,14 @@ class JarmuValtasInterface {
             $soforNevek = $this->getSoforNevek();
             $kamionRendszamok = $this->getRendszamok('kamion');
             $potkocsiRendszamok = $this->getRendszamok('potkocsi');
+            $furgonRendszamok = $this->getRendszamok('furgon');
             foreach ($kerelmek as &$k) {
                 $k['sofor_nev'] = $soforNevek[$k['sofor_id']] ?? null;
                 $k['jarmu_rendszam'] = $k['tipus'] === 'kamion'
                     ? ($kamionRendszamok[$k['jarmu_id']] ?? null)
-                    : ($potkocsiRendszamok[$k['jarmu_id']] ?? null);
+                    : ($k['tipus'] === 'furgon'
+                        ? ($furgonRendszamok[$k['jarmu_id']] ?? null)
+                        : ($potkocsiRendszamok[$k['jarmu_id']] ?? null));
             }
 
             return ['success' => true, 'kerelmek' => $kerelmek];
@@ -195,7 +205,8 @@ class JarmuValtasInterface {
             }
 
             if ($allapot === 'jovahagyva') {
-                $column = $kerelem['tipus'] === 'kamion' ? 'kamion' : 'aktiv_potkocsi';
+                $oszlopok = ['kamion' => 'kamion', 'potkocsi' => 'aktiv_potkocsi', 'furgon' => 'furgon'];
+                $column = $oszlopok[$kerelem['tipus']] ?? 'aktiv_potkocsi';
                 $update = $this->db->prepare("UPDATE user SET $column = :jarmu_id WHERE id = :sofor_id");
                 $update->bindValue(':jarmu_id', $kerelem['jarmu_id']);
                 $update->bindValue(':sofor_id', $kerelem['sofor_id']);

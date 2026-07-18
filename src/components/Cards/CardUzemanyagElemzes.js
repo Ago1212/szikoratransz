@@ -27,7 +27,7 @@ export default function CardUzemanyagElemzes() {
   useEffect(() => {
     if (!open || loaded) return;
     setLoading(true);
-    const user = JSON.parse(sessionStorage.getItem("user"));
+    const user = JSON.parse(localStorage.getItem("user"));
     fetchAction("getFogyasztasElemzes", { ceg_id: user.ceg_id, kerelmezo_id: user.id }).then((result) => {
       if (result?.success) {
         setJarmuvek(result.jarmuvek || []);
@@ -37,11 +37,19 @@ export default function CardUzemanyagElemzes() {
     });
   }, [open, loaded]);
 
-  const toggleKibontva = (kamionId) => {
+  // A jármű azonosítója kamionnál `kamion_id`, furgonnál `furgon_id` (a
+  // másik mindig null a backend válaszában, ld. tankolasInterface.php
+  // getFogyasztasElemzes) — a react-kulcs és a kinyitott-állapot ezért a
+  // `jarmu_tipus:id` kombinált kulcsot használja, nem a puszta `kamion_id`-t,
+  // különben két furgon összecsúszna ugyanazon (mindkettőnél `undefined`)
+  // toggle-kulcson.
+  const jarmuKulcs = (jarmu) => `${jarmu.jarmu_tipus}:${jarmu.kamion_id ?? jarmu.furgon_id}`;
+
+  const toggleKibontva = (kulcs) => {
     setKibontott((prev) => {
       const uj = new Set(prev);
-      if (uj.has(kamionId)) uj.delete(kamionId);
-      else uj.add(kamionId);
+      if (uj.has(kulcs)) uj.delete(kulcs);
+      else uj.add(kulcs);
       return uj;
     });
   };
@@ -98,15 +106,16 @@ export default function CardUzemanyagElemzes() {
               </p>
               {vanAdat.map((jarmu) => {
                 const anomaliaSzam = jarmu.szakaszok.filter((s) => s.anomalia).length;
-                const kibontva = kibontott.has(jarmu.kamion_id);
+                const kulcs = jarmuKulcs(jarmu);
+                const kibontva = kibontott.has(kulcs);
                 return (
-                  <div key={jarmu.kamion_id} className="rounded-xl border border-ink-100">
+                  <div key={kulcs} className="rounded-xl border border-ink-100">
                     <button
                       type="button"
-                      onClick={() => toggleKibontva(jarmu.kamion_id)}
+                      onClick={() => toggleKibontva(kulcs)}
                       className="flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left"
                     >
-                      <span className="font-semibold text-ink-800">{jarmu.rendszam || `#${jarmu.kamion_id}`}</span>
+                      <span className="font-semibold text-ink-800">{jarmu.rendszam || `#${jarmu.kamion_id ?? jarmu.furgon_id}`}</span>
                       <span className="flex items-center gap-3">
                         <span className="text-sm tabular-nums text-ink-600">
                           {formatHuf(jarmu.atlagFogyasztas)} L/100km (tipikus)

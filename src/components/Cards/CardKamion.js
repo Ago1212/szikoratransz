@@ -45,7 +45,7 @@ export default function CardKamion({ initialKamion }) {
 
   const handleSave = async () => {
     try {
-      const storedUserData = JSON.parse(sessionStorage.getItem("user"));
+      const storedUserData = JSON.parse(localStorage.getItem("user"));
       const action = formData.id ? "saveKamionData" : "newKamion";
       const result = await fetchAction(action, {
         admin: storedUserData.ceg_id,

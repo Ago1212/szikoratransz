@@ -13,9 +13,9 @@ const PRIORITAS_LABEL = { alacsony: "Alacsony", kozepes: "Közepes", magas: "Mag
 const STATUSZ_TONE = { uj: "info", folyamatban: "warning", lezart: "success" };
 const STATUSZ_LABEL = { uj: "Új", folyamatban: "Folyamatban", lezart: "Lezárt" };
 
-export default function CardTable({ bejelentesek, isLoading, selectedKamion, total, page, pageSize, onPageChange, onSearchChange, onExportAll }) {
+export default function CardTable({ bejelentesek = [], isLoading = false, selectedKamion = "", total, page, pageSize, onPageChange, onSearchChange, onExportAll }) {
   const history = useHistory();
-  const user = JSON.parse(sessionStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user"));
 
   const handleNewBejelentes = () => {
     history.push("/admin/bejelentesForm", { data: { kamion_id: selectedKamion || "" } });
@@ -139,10 +139,4 @@ CardTable.propTypes = {
   ),
   isLoading: PropTypes.bool,
   selectedKamion: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-};
-
-CardTable.defaultProps = {
-  bejelentesek: [],
-  isLoading: false,
-  selectedKamion: "",
 };

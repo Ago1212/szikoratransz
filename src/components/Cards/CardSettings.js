@@ -24,7 +24,7 @@ import SaveButton from "components/UI/SaveButton.js";
 import FormField, { FormSection } from "components/UI/FormField.js";
 
 export default function CardSettings() {
-  const storedUserData = sessionStorage.getItem("user");
+  const storedUserData = localStorage.getItem("user");
   const initialUserData = storedUserData ? JSON.parse(storedUserData) : {};
   const [userData, setUserData] = useState(initialUserData);
   const [isSaving, setIsSaving] = useState(false);
@@ -205,7 +205,7 @@ export default function CardSettings() {
       });
 
       if (result?.success) {
-        sessionStorage.setItem("user", JSON.stringify(result.user));
+        localStorage.setItem("user", JSON.stringify(result.user));
         toast.success("Adatok sikeresen mentve!");
       } else {
         throw new Error(result?.message || "Mentés sikertelen");

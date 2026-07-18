@@ -36,7 +36,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
   // kamionhoz van hozzárendelve pótkocsi, ld. backend/sql/25.sql).
   const [potkocsik, setPotkocsik] = useState([]);
   useEffect(() => {
-    const admin = JSON.parse(sessionStorage.getItem("user") || "null");
+    const admin = JSON.parse(localStorage.getItem("user") || "null");
     if (!admin) return;
     fetchAction("getPotkocsiRendszamok", { id: admin.ceg_id }).then((result) => {
       if (result?.success) setPotkocsik(result.potkocsik || []);

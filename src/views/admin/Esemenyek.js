@@ -5,7 +5,7 @@ import React from "react";
 // components
 
 export default function Esemenyek() {
-  const storedUserData = sessionStorage.getItem("user");
+  const storedUserData = localStorage.getItem("user");
   const initialUserData = storedUserData ? JSON.parse(storedUserData) : {};
   return (
     <>

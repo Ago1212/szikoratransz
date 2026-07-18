@@ -38,14 +38,14 @@ export default function JarmuValaszto() {
   };
 
   useEffect(() => {
-    const userData = JSON.parse(sessionStorage.getItem("user"));
+    const userData = JSON.parse(localStorage.getItem("user"));
     setUser(userData);
-    // A sessionStorage-beli user.kamion elavult lehet, ha időközben egy
+    // A localStorage-beli user.kamion elavult lehet, ha időközben egy
     // korábbi kérést jóváhagytak — frissítjük, mielőtt a listát kirajzolnánk.
     fetchAction("getSajatSofor", { id: userData.id }).then((result) => {
       if (result?.success && result.user) {
         const merged = { ...userData, ...result.user };
-        sessionStorage.setItem("user", JSON.stringify(merged));
+        localStorage.setItem("user", JSON.stringify(merged));
         setUser(merged);
       }
     });

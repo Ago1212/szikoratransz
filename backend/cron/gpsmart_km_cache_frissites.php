@@ -54,11 +54,17 @@ foreach ($cegek as $cegId) {
     }
 
     foreach ($poziciok['poziciok'] as $p) {
-        if (empty($p['kamion_id']) || empty($p['car_id'])) {
+        // A furgon önhajtó jármű, mint a kamion — ugyanúgy feldolgozzuk a
+        // napi km-gyorsítótár szempontjából (ld. GpsmartInterface komment).
+        if ((empty($p['kamion_id']) && empty($p['furgon_id'])) || empty($p['car_id'])) {
             continue;
         }
+        $jarmuTipus = !empty($p['furgon_id']) ? 'furgon' : 'kamion';
+        $jarmuId = !empty($p['furgon_id']) ? $p['furgon_id'] : $p['kamion_id'];
 
-        $hianyzoNapok = $gpsmartInterface->getNapiKmHianyzoNapok($p['kamion_id'], $datumTol, $datumIg);
+        $hianyzoNapok = $jarmuTipus === 'furgon'
+            ? $gpsmartInterface->getNapiKmHianyzoNapok(null, $datumTol, $datumIg, $jarmuId)
+            : $gpsmartInterface->getNapiKmHianyzoNapok($jarmuId, $datumTol, $datumIg);
         if (empty($hianyzoNapok)) {
             continue;
         }
@@ -87,15 +93,17 @@ foreach ($cegek as $cegId) {
                 break;
             }
             try {
-                $eredmeny = $gpsmartInterface->frissitNapiKm($cegId, $p['car_id'], $p['kamion_id'], $csomagTol, $csomagIg);
+                $eredmeny = $jarmuTipus === 'furgon'
+                    ? $gpsmartInterface->frissitNapiKm($cegId, $p['car_id'], null, $csomagTol, $csomagIg, $jarmuId)
+                    : $gpsmartInterface->frissitNapiKm($cegId, $p['car_id'], $jarmuId, $csomagTol, $csomagIg);
                 if ($eredmeny['success']) {
                     $feltoltottCsomagok++;
-                    echo date('Y-m-d H:i:s') . " OK ceg={$cegId} kamion={$p['kamion_id']} {$csomagTol}..{$csomagIg} ({$eredmeny['cachelt_napok']} nap)\n";
+                    echo date('Y-m-d H:i:s') . " OK ceg={$cegId} {$jarmuTipus}={$jarmuId} {$csomagTol}..{$csomagIg} ({$eredmeny['cachelt_napok']} nap)\n";
                 } else {
-                    echo date('Y-m-d H:i:s') . " HIBA ceg={$cegId} kamion={$p['kamion_id']} {$csomagTol}..{$csomagIg}: {$eredmeny['message']}\n";
+                    echo date('Y-m-d H:i:s') . " HIBA ceg={$cegId} {$jarmuTipus}={$jarmuId} {$csomagTol}..{$csomagIg}: {$eredmeny['message']}\n";
                 }
             } catch (Exception $e) {
-                echo date('Y-m-d H:i:s') . " KIVÉTEL ceg={$cegId} kamion={$p['kamion_id']} {$csomagTol}..{$csomagIg}: {$e->getMessage()}\n";
+                echo date('Y-m-d H:i:s') . " KIVÉTEL ceg={$cegId} {$jarmuTipus}={$jarmuId} {$csomagTol}..{$csomagIg}: {$e->getMessage()}\n";
             }
         }
     }

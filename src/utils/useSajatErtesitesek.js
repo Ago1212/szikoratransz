@@ -6,7 +6,7 @@ import { DOCUMENT_FIELDS, getDocumentStatus, daysUntil } from "utils/documentSta
 // kell" állapotot — ugyanezt korábban 3 külön helyen (Dashboard.js,
 // Ertesitesek.js, és a DesktopNav haranG-ja) kellett volna külön-külön
 // lekérdezni/szűrni. Három forrásból áll össze:
-//  - lejáró/lejárt dokumentumok (a sessionStorage user objektumból, nincs
+//  - lejáró/lejárt dokumentumok (a localStorage user objektumból, nincs
 //    hozzá külön API-hívás — ld. utils/documentStatus.js, ugyanaz a logika,
 //    amit eddig is használt a Dashboard/Ertesitesek);
 //  - megválaszolt/lezárt bejelentések (getBejelentesekSofor);
@@ -22,7 +22,7 @@ export function useSajatErtesitesek() {
   useEffect(() => {
     let user = null;
     try {
-      user = JSON.parse(sessionStorage.getItem("user"));
+      user = JSON.parse(localStorage.getItem("user"));
     } catch (e) {
       user = null;
     }

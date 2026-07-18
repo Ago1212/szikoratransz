@@ -27,7 +27,7 @@ import SaveButton from "components/UI/SaveButton.js";
 export default function CardBejelentesek({ initBejelentesek }) {
   const history = useHistory();
   const isNew = !initBejelentesek?.id;
-  const user = JSON.parse(sessionStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user"));
 
   const [form, setForm] = useState({
     cim: initBejelentesek?.cim || "",

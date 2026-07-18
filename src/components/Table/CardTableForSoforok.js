@@ -6,9 +6,9 @@ import { PiPencilSimpleLight, PiTrashLight, PiUsersLight } from "react-icons/pi"
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
 
-const CardTable = ({ soforok, loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll }) => {
+const CardTable = ({ soforok = [], loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll }) => {
   const history = useHistory();
-  const user = JSON.parse(sessionStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user"));
 
   const handleNewSofor = () => {
     history.push("/admin/soforForm", { data: {} });
@@ -107,11 +107,7 @@ CardTable.propTypes = {
       phone: PropTypes.string.isRequired,
       lakcim: PropTypes.string.isRequired,
     })
-  ).isRequired,
-};
-
-CardTable.defaultProps = {
-  soforok: [],
+  ),
 };
 
 export default CardTable;

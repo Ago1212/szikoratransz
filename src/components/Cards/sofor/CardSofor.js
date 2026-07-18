@@ -39,7 +39,7 @@ export default function CardSoforok({ initSofor }) {
 
   const handleSave = async () => {
     try {
-      const storedUserData = JSON.parse(sessionStorage.getItem("user"));
+      const storedUserData = JSON.parse(localStorage.getItem("user"));
       const action = formData.id ? "saveSoforData" : "newSofor";
       const result = await fetchAction(action, {
         admin: storedUserData.ceg_id,

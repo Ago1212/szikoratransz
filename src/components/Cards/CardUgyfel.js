@@ -42,7 +42,7 @@ export default function CardUgyfel({ initialUgyfel }) {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const storedUserData = JSON.parse(sessionStorage.getItem("user"));
+      const storedUserData = JSON.parse(localStorage.getItem("user"));
       const action = formData.id ? "saveUgyfelData" : "newUgyfel";
       const result = await fetchAction(action, {
         admin: storedUserData.ceg_id,

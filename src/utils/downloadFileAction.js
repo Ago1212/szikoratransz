@@ -14,7 +14,7 @@ export const downloadFileAction = async (id, filename) => {
       },
       body: JSON.stringify({
         authHash: authHash,
-        sessionToken: sessionStorage.getItem("sessionToken") || "",
+        sessionToken: localStorage.getItem("sessionToken") || "",
         action: "downloadFile",
         id,
       }),

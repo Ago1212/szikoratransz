@@ -26,7 +26,7 @@ export default function CardHelyszin({ initialHelyszin }) {
   const [formData, setFormData] = useState({ ...emptyHelyszin, ...initialHelyszin });
   const [activeTab, setActiveTab] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
-  const user = JSON.parse(sessionStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user"));
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -36,7 +36,7 @@ export default function CardHelyszin({ initialHelyszin }) {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const storedUserData = JSON.parse(sessionStorage.getItem("user"));
+      const storedUserData = JSON.parse(localStorage.getItem("user"));
       const action = formData.id ? "saveHelyszinData" : "newHelyszin";
       const result = await fetchAction(action, {
         admin: storedUserData.ceg_id,

@@ -18,7 +18,7 @@ export default function Ugyfelek() {
     let cancelled = false;
     const fetchData = async () => {
       setLoading(true);
-      const user = JSON.parse(sessionStorage.getItem("user"));
+      const user = JSON.parse(localStorage.getItem("user"));
       const result = await fetchAction("getUgyfelek", {
         id: user.ceg_id,
         kerelmezo_id: user.id,
@@ -45,7 +45,7 @@ export default function Ugyfelek() {
   }, [page, search]);
 
   const handleExportAll = useCallback(async () => {
-    const user = JSON.parse(sessionStorage.getItem("user"));
+    const user = JSON.parse(localStorage.getItem("user"));
     const result = await fetchAction("getUgyfelek", {
       id: user.ceg_id,
       kerelmezo_id: user.id,
