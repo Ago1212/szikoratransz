@@ -42,7 +42,7 @@ export default function Profil() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const user = JSON.parse(sessionStorage.getItem("user"));
+    const user = JSON.parse(localStorage.getItem("user"));
     if (!user) {
       history.push("/auth/login");
       return;
@@ -99,7 +99,7 @@ export default function Profil() {
         id: form.id,
       });
       if (result?.success) {
-        sessionStorage.setItem("user", JSON.stringify(form));
+        localStorage.setItem("user", JSON.stringify(form));
         toast.success("Adatok mentve!");
       } else {
         throw new Error(result?.message || "Mentés sikertelen.");
@@ -112,9 +112,9 @@ export default function Profil() {
   };
 
   const handleLogout = async () => {
-    const user = JSON.parse(sessionStorage.getItem("user"));
+    const user = JSON.parse(localStorage.getItem("user"));
     await fetchAction("logoutUser", { id: user?.id });
-    sessionStorage.removeItem("user");
+    localStorage.removeItem("user");
     history.push("/auth/login");
   };
 

@@ -5,6 +5,7 @@ import {
   PiXLight,
   PiTruckLight,
   PiTruckTrailerLight,
+  PiVanLight,
   PiUsersLight,
   PiBuildingsLight,
   PiMapPinLight,
@@ -14,6 +15,7 @@ import { fetchAction } from "utils/fetchAction";
 const TIPUS_ICON = {
   kamion: PiTruckLight,
   potkocsi: PiTruckTrailerLight,
+  furgon: PiVanLight,
   sofor: PiUsersLight,
   ugyfel: PiBuildingsLight,
   helyszin: PiMapPinLight,
@@ -47,7 +49,7 @@ export default function GlobalSearch({ open, onClose }) {
     }
     let user = null;
     try {
-      user = JSON.parse(sessionStorage.getItem("user"));
+      user = JSON.parse(localStorage.getItem("user"));
     } catch (e) {
       user = null;
     }

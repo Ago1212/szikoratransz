@@ -48,7 +48,7 @@ function TartalomVaz() {
 }
 
 export default function Flottakovetes() {
-  const user = JSON.parse(sessionStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user"));
   const history = useHistory();
   const isXl = useMediaQuery({ minWidth: 1280 });
 
@@ -109,9 +109,15 @@ export default function Flottakovetes() {
         kerelmezo_id: user.id,
       });
       if (result?.success) {
+        // A `kamion_id`/`furgon_id` külön-külön ütközhetne (pl. 1-es
+        // kamion és 1-es furgon egyaránt létezik) — a térkép kulcsa ezért
+        // `jarmu_tipus:id` összetett kulcs, ugyanaz a minta, mint a
+        // gpsmart_napi_km táblánál és a CardUzemanyagElemzes.js-ben.
         const terkep = {};
         (result.jarmuvek || []).forEach((j) => {
-          terkep[j.kamion_id] = j.megtettUtMa;
+          const tipus = j.jarmu_tipus || (j.kamion_id ? "kamion" : "furgon");
+          const id = j.kamion_id ?? j.furgon_id;
+          terkep[`${tipus}:${id}`] = j.megtettUtMa;
         });
         setMegtettUtAdatok(terkep);
         setMegtettUtFrissitve(new Date());
@@ -163,12 +169,15 @@ export default function Flottakovetes() {
   // lekérdezés önmagában nem tartalmazza.
   const dusitett = useMemo(() => {
     const alap = dusitottPoziciok(poziciok, now);
-    return alap.map((p) => ({
-      ...p,
-      megtettUtMa: p.kamion_id != null && megtettUtAdatok[p.kamion_id] !== undefined
-        ? megtettUtAdatok[p.kamion_id]
-        : null,
-    }));
+    return alap.map((p) => {
+      const tipus = p.jarmu_tipus || (p.kamion_id != null ? "kamion" : "furgon");
+      const id = p.kamion_id ?? p.furgon_id;
+      const kulcs = id != null ? `${tipus}:${id}` : null;
+      return {
+        ...p,
+        megtettUtMa: kulcs && megtettUtAdatok[kulcs] !== undefined ? megtettUtAdatok[kulcs] : null,
+      };
+    });
   }, [poziciok, now, megtettUtAdatok]);
 
   const szurt = useMemo(() => {
@@ -236,8 +245,8 @@ export default function Flottakovetes() {
         }
       />
       <p className="-mt-3 max-w-2xl text-sm text-ink-500">
-        A kamionok pillanatnyi pozíciója a GPSmart flottakövető rendszerből,
-        percenként automatikusan frissítve.
+        A kamionok és furgonok pillanatnyi pozíciója a GPSmart flottakövető
+        rendszerből, percenként automatikusan frissítve.
       </p>
 
       {checking ? (
@@ -269,55 +278,75 @@ export default function Flottakovetes() {
           <TartalomVaz />
         </>
       ) : (
-        <>
-          <FlottaKpiKartyak
-            dusitett={dusitett}
-            megtettUtLoading={megtettUtLoading}
-            megtettUtFrissitve={megtettUtFrissitve}
-          />
+        // EGYETLEN rács minden méretnél (a korábbi különálló flex-col
+        // KPI+Szűrők szekció + beágyazott Lista/Térkép/Részletek rács
+        // helyett) — ez kell ahhoz, hogy a `order-*` mobilon a térképet a
+        // KPI-csempék és a szűrők ELÉ tudja hozni: a CSS `order` csak
+        // ugyanazon a rács-/flex-szülőn belüli testvérek között rendez át,
+        // két különálló konténer között nem. Mobilon a sorrend Térkép →
+        // KPI → Szűrők → Lista (a térkép, a lap fő funkciója, ne kerüljön
+        // ~700px görgetés mögé, ahogy élőben, UX-audit során kiderült).
+        // `xl:`-től (1280px+) az `xl:order-*`/`xl:col-span-*` visszaállítja
+        // az eredeti, 3 oszlopos elrendezést (Lista/Térkép/Részletek egy
+        // sorban, KPI és Szűrők fölötte, teljes szélességben).
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+          <div className="order-2 xl:order-1 xl:col-span-12">
+            <FlottaKpiKartyak
+              dusitett={dusitett}
+              megtettUtLoading={megtettUtLoading}
+              megtettUtFrissitve={megtettUtFrissitve}
+            />
+          </div>
 
-          <FlottaSzurok
-            kereses={kereses}
-            onKeresesChange={setKereses}
-            statuszSzuro={statuszSzuro}
-            onStatuszSzuroChange={setStatuszSzuro}
-            talalatSzam={szurt.length}
-          />
+          <div className="order-3 xl:order-1 xl:col-span-12">
+            <FlottaSzurok
+              kereses={kereses}
+              onKeresesChange={setKereses}
+              statuszSzuro={statuszSzuro}
+              onStatuszSzuroChange={setStatuszSzuro}
+              talalatSzam={szurt.length}
+            />
+          </div>
 
-          <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-            {/* xl:col-span-4 (a korábbi 3 helyett) — az 5. oszlop
-                ("Megtett út") hozzáadása után 3/12-nél a rendszám
-                csonkolódott/az oszlopok nem fértek ki (élőben ellenőrizve).
-                A térkép 6→5-re csökkent, hogy a lista extra helye ne a
-                jármű-részletek rovására menjen. */}
-            <div className="order-2 h-[360px] xl:order-1 xl:col-span-4 xl:h-[640px]">
-              <JarmuLista rows={szurt} kivalasztott={kivalasztott} onSelect={valasszJarmuvet} />
-            </div>
+          {/* xl:col-span-4 (a korábbi 3 helyett) — az 5. oszlop
+              ("Megtett út") hozzáadása után 3/12-nél a rendszám
+              csonkolódott/az oszlopok nem fértek ki (élőben ellenőrizve).
+              A térkép 6→5-re csökkent, hogy a lista extra helye ne a
+              jármű-részletek rovására menjen.
+              `md:h-[360px]` (nem feltétel nélküli `h-[360px]`): mobilon
+              (<768px) a JarmuLista a saját kártyalistáját a lap normál
+              folyásába illeszti (nincs belső görgetés, ld. JarmuLista.js
+              komментje) — egy itt ráerőltetett fix magasság ezt a mobil
+              nézetet zárná vissza egy alacsony, önmagában görgethető
+              dobozba. `md:`-től (táblázat-nézet) a fix magasság + belső
+              görgetés helyénvaló, ott visszaáll. */}
+          <div className="order-4 md:h-[360px] xl:order-1 xl:col-span-4 xl:h-[640px]">
+            <JarmuLista rows={szurt} kivalasztott={kivalasztott} onSelect={valasszJarmuvet} />
+          </div>
 
-            <div className="order-1 h-[420px] md:h-[520px] xl:order-2 xl:col-span-5 xl:h-[640px]">
-              <FlottaTerkep
-                dusitett={szurt}
-                kivalasztott={kivalasztott}
-                onSelect={valasszJarmuvet}
+          <div className="order-1 h-[420px] md:h-[520px] xl:order-2 xl:col-span-5 xl:h-[640px]">
+            <FlottaTerkep
+              dusitett={szurt}
+              kivalasztott={kivalasztott}
+              onSelect={valasszJarmuvet}
+              kovetesEnabled={kovetesEnabled}
+              onKovetesToggle={toggleKoveses}
+              utvonalPontok={utvonalPontok}
+            />
+          </div>
+
+          {isXl && (
+            <div className="order-5 xl:col-span-3 xl:h-[640px]">
+              <JarmuReszletek
+                jarmu={kivalasztottJarmu}
                 kovetesEnabled={kovetesEnabled}
                 onKovetesToggle={toggleKoveses}
-                utvonalPontok={utvonalPontok}
+                onClose={torolKivalasztast}
+                onElozmenyekOpen={() => setElozmenyekOpen(true)}
               />
             </div>
-
-            {isXl && (
-              <div className="order-3 xl:col-span-3 xl:h-[640px]">
-                <JarmuReszletek
-                  jarmu={kivalasztottJarmu}
-                  kovetesEnabled={kovetesEnabled}
-                  onKovetesToggle={toggleKoveses}
-                  onClose={torolKivalasztast}
-                  onElozmenyekOpen={() => setElozmenyekOpen(true)}
-                />
-              </div>
-            )}
-          </div>
-        </>
+          )}
+        </div>
       )}
 
       {!isXl && (

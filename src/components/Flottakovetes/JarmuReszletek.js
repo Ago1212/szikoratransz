@@ -1,10 +1,9 @@
 import React from "react";
-import { useHistory } from "react-router-dom";
 import {
   PiTruckLight,
+  PiVanLight,
   PiNavigationArrowLight,
   PiClockCounterClockwiseLight,
-  PiSteeringWheelLight,
   PiCrosshairSimpleLight,
   PiMapPinLight,
   PiGaugeLight,
@@ -38,10 +37,7 @@ function Mezo({ icon: Icon, label, value }) {
 // Az "Előzmények" gomb a `waybill.pl` GPSmart-végpontra épülő valódi
 // útvonal-előzményt nyitja meg (ld. ElozmenyekModal.js) — ehhez a jármű
 // GPSmart saját `car_id`-je kell, amit a `lekerdezPoziciok()` válasz már
-// tartalmaz. A "Vezetési idő" gomb viszont TUDATOSAN nem mutat adatot
-// ezen az oldalon: az egy teljesen más adatforrásból (tachográf, "Vezetési
-// idő" menüpont) származik, ide belinkelni a valódi oldalra egyszerűbb és
-// őszintébb, mint egy második, párhuzamos vezetési-idő nézetet építeni.
+// tartalmaz.
 export default function JarmuReszletek({
   jarmu,
   kompakt = false,
@@ -50,8 +46,6 @@ export default function JarmuReszletek({
   onElozmenyekOpen,
   onClose,
 }) {
-  const history = useHistory();
-
   const tartalom = !jarmu ? (
     <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 py-12 text-center">
       <PiTruckLight className="h-8 w-8 text-ink-200" />
@@ -63,7 +57,11 @@ export default function JarmuReszletek({
     <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
       <div className="flex items-center gap-3">
         <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
-          <PiTruckLight className="h-6 w-6" />
+          {jarmu.jarmu_tipus === "furgon" ? (
+            <PiVanLight className="h-6 w-6" />
+          ) : (
+            <PiTruckLight className="h-6 w-6" />
+          )}
         </span>
         <div className="min-w-0">
           <p className="truncate font-display text-lg font-bold text-brand-900">
@@ -73,7 +71,7 @@ export default function JarmuReszletek({
         </div>
       </div>
 
-      {jarmu.kamion_id && (
+      {(jarmu.kamion_id || jarmu.furgon_id) && (
         <Mezo
           icon={PiUserLight}
           label="Jelenlegi sofőr"
@@ -95,12 +93,11 @@ export default function JarmuReszletek({
       <Mezo icon={PiGaugeLight} label="Utolsó frissítés" value={`${jarmu.idopont} (${jarmu._relativIdo})`} />
 
       {/* Előzmények — SZÁNDÉKOSAN önálló, kitöltött (brand) sorban, a
-          Navigálás/Követés/Vezetési idő fölött, nem velük egyenrangú
-          4. gombként — ez egy gyakran használt funkció, ami a korábbi
-          4-gombos 2×2 rácsban vizuálisan elveszett (sőt, a panel
-          korábban túl sok mezőt tartalmazott ahhoz, hogy a gombsor
-          egyáltalán látszódjon görgetés nélkül — ld. a Pozíció/Irány
-          mezők fenti eltávolítása). */}
+          Navigálás/Követés fölött, nem velük egyenrangú gombként — ez
+          egy gyakran használt funkció, ami a korábbi 4-gombos 2×2
+          rácsban vizuálisan elveszett (sőt, a panel korábban túl sok
+          mezőt tartalmazott ahhoz, hogy a gombsor egyáltalán látszódjon
+          görgetés nélkül — ld. a Pozíció/Irány mezők fenti eltávolítása). */}
       <button
         type="button"
         onClick={onElozmenyekOpen}
@@ -112,7 +109,7 @@ export default function JarmuReszletek({
         Előzmények
       </button>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <a
           href={
             jarmu.lat != null && jarmu.lon != null
@@ -141,14 +138,6 @@ export default function JarmuReszletek({
         >
           <PiCrosshairSimpleLight className="h-4 w-4" />
           Követés
-        </button>
-        <button
-          type="button"
-          onClick={() => history.push("/admin/vezetesi-ido")}
-          className="flex items-center justify-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink-600 shadow-soft transition-colors duration-200 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
-        >
-          <PiSteeringWheelLight className="h-4 w-4" />
-          Vezetési idő
         </button>
       </div>
     </div>

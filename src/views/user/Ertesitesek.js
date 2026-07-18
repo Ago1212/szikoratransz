@@ -5,6 +5,7 @@ import {
   PiChatCircleTextLight,
   PiBellSlashLight,
   PiTruckLight,
+  PiVanLight,
   PiCheckCircleLight,
   PiXCircleLight,
 } from "react-icons/pi";
@@ -34,7 +35,7 @@ function useUjElemek(dokumentumEsemenyek, bejelentesEsemenyek, jarmuValtasok, lo
     if (loading) return;
     let user = null;
     try {
-      user = JSON.parse(sessionStorage.getItem("user"));
+      user = JSON.parse(localStorage.getItem("user"));
     } catch (e) {
       user = null;
     }
@@ -141,7 +142,13 @@ export default function Ertesitesek() {
             return (
               <Link
                 key={k.id}
-                to={k.tipus === "kamion" ? "/user/jarmu-valaszto" : "/user/potkocsi-valaszto"}
+                to={
+                  k.tipus === "kamion"
+                    ? "/user/jarmu-valaszto"
+                    : k.tipus === "furgon"
+                    ? "/user/furgon-valaszto"
+                    : "/user/potkocsi-valaszto"
+                }
                 className="relative flex items-center gap-3 rounded-2xl border border-ink-100 bg-white p-3.5 shadow-soft"
               >
                 {ujIdk.has(`jv-${k.id}`) && <UjPont />}
@@ -158,14 +165,18 @@ export default function Ertesitesek() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-ink-900">
-                    {k.tipus === "kamion" ? "Kamion" : "Pótkocsi"}-váltási kérésed {jovahagyva ? "jóváhagyva" : "elutasítva"}
+                    {k.tipus === "kamion" ? "Kamion" : k.tipus === "furgon" ? "Furgon" : "Pótkocsi"}-váltási kérésed {jovahagyva ? "jóváhagyva" : "elutasítva"}
                   </p>
                   <p className="truncate text-xs text-ink-500">
                     {k.jarmu_rendszam ? `Kért jármű: ${k.jarmu_rendszam}` : " "}
                   </p>
                 </div>
                 <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-slate-50 text-ink-400">
-                  <PiTruckLight className="h-4 w-4" />
+                  {k.tipus === "furgon" ? (
+                    <PiVanLight className="h-4 w-4" />
+                  ) : (
+                    <PiTruckLight className="h-4 w-4" />
+                  )}
                 </span>
               </Link>
             );

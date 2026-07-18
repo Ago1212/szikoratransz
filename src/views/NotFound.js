@@ -1,19 +1,18 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useNoindex } from "utils/useSeo.js";
 
 // Valódi "oldal nem található" nézet a korábbi csendes "*" → "/" redirect
 // helyett — az utóbbi minden érvénytelen URL-t szó nélkül a főoldalra
 // küldött (soft-404: a szerver mindig 200-at adott, a keresőmotorok nem
-// tudták megkülönböztetni a törött linket a valós tartalomtól). Ez a nézet
-// `noindex`-et állít be, hogy a keresők ezt sose indexeljék tartalomként.
+// tudták megkülönböztetni a törött linket a valós tartalomtól). `useNoindex()`
+// (ugyanaz a megosztott hook, amit a Login oldal is használ) állítja
+// `noindex`-re a meglévő, `public/index.html`-be beégetett robots meta taget,
+// ahelyett hogy egy másodikat hozna létre mellette.
 export default function NotFound() {
+  useNoindex();
   useEffect(() => {
     document.title = "Az oldal nem található | Szikora Transz Kft.";
-    const meta = document.createElement("meta");
-    meta.name = "robots";
-    meta.content = "noindex, follow";
-    document.head.appendChild(meta);
-    return () => document.head.removeChild(meta);
   }, []);
 
   return (

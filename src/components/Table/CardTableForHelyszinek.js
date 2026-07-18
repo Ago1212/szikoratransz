@@ -6,7 +6,7 @@ import { PiPencilSimpleLight, PiTrashLight, PiMapPinLight } from "react-icons/pi
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
 
-const CardTable = ({ helyszinek, loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll }) => {
+const CardTable = ({ helyszinek = [], loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll }) => {
   const history = useHistory();
 
   const handleNewHelyszin = () => {
@@ -78,11 +78,7 @@ CardTable.propTypes = {
       id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
       nev: PropTypes.string.isRequired,
     }),
-  ).isRequired,
-};
-
-CardTable.defaultProps = {
-  helyszinek: [],
+  ),
 };
 
 export default CardTable;

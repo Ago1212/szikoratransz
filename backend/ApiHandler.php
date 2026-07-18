@@ -3,6 +3,7 @@ require 'db.php';
 require 'PaginationHelper.php';
 require 'interface/kamionInterface.php';
 require 'interface/potkocsiInterface.php';
+require 'interface/furgonInterface.php';
 require 'interface/soforokInterface.php';
 require 'interface/filesInterface.php';
 require 'interface/emailInterface.php';
@@ -20,7 +21,6 @@ require 'interface/listaInterface.php';
 require 'interface/keresesInterface.php';
 require 'interface/koltsegInterface.php';
 require 'interface/ertesitesInterface.php';
-require 'interface/vezetesiIdoInterface.php';
 require 'interface/navSzamlaInterface.php';
 require 'interface/gpsmartInterface.php';
 require 'interface/piaciArakInterface.php';
@@ -101,6 +101,10 @@ class ApiHandler {
         'savePotkocsiData' => ['potkocsik', 'szerkesztes'],
         'deletePotkocsi' => ['potkocsik', 'torles'],
 
+        'newFurgon' => ['furgonok', 'szerkesztes'],
+        'saveFurgonData' => ['furgonok', 'szerkesztes'],
+        'deleteFurgon' => ['furgonok', 'torles'],
+
         'getKarbantartasok' => ['karbantartasok', 'hozzaferes'],
         'updateKarbantartas' => ['karbantartasok', 'szerkesztes'],
         'deleteKarbantartas' => ['karbantartasok', 'torles'],
@@ -145,9 +149,6 @@ class ApiHandler {
         'getKihasznaltsagiRiport' => ['kamionok', 'hozzaferes'],
         'saveGpsmartBeallitasok' => ['kamionok', 'szerkesztes'],
         'importNavSzamlak' => ['koltsegek', 'szerkesztes'],
-
-        'getVezetesiOsszesito' => ['vezetesi_ido', 'hozzaferes'],
-        'deleteVezetesiNaplo' => ['vezetesi_ido', 'torles'],
     ];
 
     public function __construct(string $auth_hash) {
@@ -179,13 +180,23 @@ class ApiHandler {
             'deletePotkocsi' => ['id', 'kerelmezo_id'],
             'getPotkocsiRendszamok' => ['id'],
 
+            'newFurgon' => ['rendszam', 'kerelmezo_id'],
+            'saveFurgonData' => ['id', 'kerelmezo_id'],
+            'getFurgonok' => ['id'],
+            'getFurgonValaszto' => ['ceg_id'],
+            'deleteFurgon' => ['id', 'kerelmezo_id'],
+            'getFurgonRendszamok' => ['id'],
+
             'deleteKarbantartas' => ['id', 'kerelmezo_id'],
             'updateKarbantartas' => ['admin', 'log', 'kamion_id', 'datum', 'km_oraallas', 'elvegezte', 'kerelmezo_id'],
             'getKarbantartas' => ['kamion_id'],
             'deletePotkocsiKarbantartas' => ['id', 'kerelmezo_id'],
             'updatePotkocsiKarbantartas' => ['admin', 'log', 'potkocsi_id', 'datum', 'km_oraallas', 'elvegezte', 'kerelmezo_id'],
             'getPotkocsiKarbantartas' => ['potkocsi_id'],
-            'getKarbantartasok' => ['id', 'kamion_id', 'potkocsi_id',  'datumTol', 'datumIg', 'elvegezte', 'kerelmezo_id'],
+            'deleteFurgonKarbantartas' => ['id', 'kerelmezo_id'],
+            'updateFurgonKarbantartas' => ['admin', 'log', 'furgon_id', 'datum', 'km_oraallas', 'elvegezte', 'kerelmezo_id'],
+            'getFurgonKarbantartas' => ['furgon_id'],
+            'getKarbantartasok' => ['id', 'kamion_id', 'potkocsi_id', 'furgon_id', 'datumTol', 'datumIg', 'elvegezte', 'kerelmezo_id'],
 
             'getSoforok' => ['id', 'kerelmezo_id'],
             'getSajatSofor' => ['id'],
@@ -259,14 +270,6 @@ class ApiHandler {
             'gpsmartUtvonal' => ['ceg_id', 'kerelmezo_id', 'carId', 'datumTol', 'datumIg'],
             'getKihasznaltsagiRiport' => ['ceg_id', 'kerelmezo_id', 'datumTol', 'datumIg'],
             'importNavSzamlak' => ['ceg_id', 'kerelmezo_id', 'tetelek'],
-
-            'newVezetesiNaplo' => ['ceg_id', 'sofor_id', 'datum', 'vezetes_ora', 'pihenes_ora'],
-            'deleteVezetesiNaplo' => ['id', 'ceg_id', 'kerelmezo_id'],
-            'getSajatVezetesiNaplo' => ['sofor_id'],
-            'getSajatVezetesiAllapot' => ['sofor_id'],
-            'getVezetesJavaslat' => ['ceg_id', 'sofor_id', 'datum'],
-            'getVezetesJavaslatCache' => ['sofor_id'],
-            'getVezetesiOsszesito' => ['ceg_id', 'kerelmezo_id'],
 
             'torolErtesites' => ['kulcsok', 'kerelmezo_id'],
             'getToroltErtesitesek' => ['kerelmezo_id'],
@@ -520,7 +523,7 @@ class ApiHandler {
     }
 
     public function process(?array $request) {
-        global $kamionInterface, $potkocsiInterface, $soforokInterface, $filesInterface, $emailInterface, $bejelentesekInterface, $karbantartasInterface, $szabadsagInterface, $tankolasInterface, $jarmuValtasInterface, $ugyfelInterface, $csapatInterface, $helyszinInterface, $jogosultsagInterface, $szerepkorInterface, $listaInterface, $keresesInterface, $koltsegInterface, $ertesitesInterface, $vezetesiIdoInterface, $navSzamlaInterface, $gpsmartInterface, $piaciArakInterface;
+        global $kamionInterface, $potkocsiInterface, $furgonInterface, $soforokInterface, $filesInterface, $emailInterface, $bejelentesekInterface, $karbantartasInterface, $szabadsagInterface, $tankolasInterface, $jarmuValtasInterface, $ugyfelInterface, $csapatInterface, $helyszinInterface, $jogosultsagInterface, $szerepkorInterface, $listaInterface, $keresesInterface, $koltsegInterface, $ertesitesInterface, $navSzamlaInterface, $gpsmartInterface, $piaciArakInterface;
         try {
             $this->validation($request);
             $action = $request['action'];
@@ -584,6 +587,46 @@ class ApiHandler {
                 case 'deleteKarbantartas':
                     echo json_encode($karbantartasInterface->deleteKamionKarbantartas($request['id']));
                     return;
+                case 'saveFurgonData':
+                    $result = $furgonInterface->saveFurgonData($request);
+                    if ($result['success']) {
+                        $this->logAudit($request['admin'] ?? null, 'furgon', $request['id'], 'modositas', $request['rendszam'] ?? null);
+                    }
+                    echo json_encode($result);
+                    return;
+                case 'newFurgon':
+                    $result = $furgonInterface->newFurgon($request);
+                    if ($result['success']) {
+                        $this->logAudit($request['admin'] ?? null, 'furgon', $result['furgon']['id'] ?? null, 'letrehozas', $request['rendszam'] ?? null);
+                    }
+                    echo json_encode($result);
+                    return;
+                case 'getFurgonok':
+                    echo json_encode($furgonInterface->getFurgonok($request['id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null));
+                    return;
+                case 'getFurgonValaszto':
+                    echo json_encode($furgonInterface->getFurgonValaszto($request['ceg_id']));
+                    return;
+                case 'getFurgonRendszamok':
+                    echo json_encode($furgonInterface->getFurgonRendszamok($request['id']));
+                    return;
+                case 'deleteFurgon':
+                    $ownerAdmin = $this->resolveOwnerAdmin('furgon', $request['id']);
+                    $result = $furgonInterface->deleteFurgon($request['id']);
+                    if ($result['success']) {
+                        $this->logAudit($ownerAdmin, 'furgon', $request['id'], 'torles');
+                    }
+                    echo json_encode($result);
+                    return;
+                case 'getFurgonKarbantartas':
+                    echo json_encode($karbantartasInterface->getFurgonKarbantartas($request['furgon_id']));
+                    return;
+                case 'updateFurgonKarbantartas':
+                    echo json_encode($karbantartasInterface->updateFurgonKarbantartas(isset($request['id']) ? $request['id'] : 0, $request['admin'], $request['furgon_id'], $request['datum'], $request['log'], empty($request['km_oraallas']) ? null : $request['km_oraallas'], $request['elvegezte'], $request['kovetkezo_karbantartas'], $request['koltseg'] ?? null));
+                    return;
+                case 'deleteFurgonKarbantartas':
+                    echo json_encode($karbantartasInterface->deleteFurgonKarbantartas($request['id']));
+                    return;
                 case 'savePotkocsiData':
                     $result = $potkocsiInterface->savePotkocsiData($request);
                     if ($result['success']) {
@@ -622,7 +665,7 @@ class ApiHandler {
                     echo json_encode($karbantartasInterface->deletePotkocsiKarbantartas($request['id']));
                     return;
                 case 'getKarbantartasok':
-                    echo json_encode($karbantartasInterface->getKarbantartasok($request['id'], $request['kamion_id'], $request['potkocsi_id'], $request['datumTol'], $request['datumIg'], $request['elvegezte'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null));
+                    echo json_encode($karbantartasInterface->getKarbantartasok($request['id'], $request['kamion_id'], $request['potkocsi_id'], $request['datumTol'], $request['datumIg'], $request['elvegezte'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['furgon_id']));
                     return;
                 case 'getSoforok':
                     echo json_encode($soforokInterface->getSoforok($request['id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $this->kerelmezoAdmin($request)));
@@ -732,7 +775,7 @@ class ApiHandler {
                     return;
 
                 case 'getFogyasztasElemzes':
-                    echo json_encode($tankolasInterface->getFogyasztasElemzes($request['ceg_id'], $request['kamion_id'] ?? null));
+                    echo json_encode($tankolasInterface->getFogyasztasElemzes($request['ceg_id'], $request['kamion_id'] ?? null, $request['furgon_id'] ?? null));
                     return;
 
                 case 'getAdminElerhetoseg':
@@ -1060,58 +1103,6 @@ class ApiHandler {
                         $request['ceg_id'],
                         $request['datumTol'],
                         $request['datumIg']
-                    ));
-                    return;
-
-                case 'newVezetesiNaplo':
-                    $result = $vezetesiIdoInterface->newVezetesiNaplo($request);
-                    if ($result['success']) {
-                        $this->logAudit($request['ceg_id'], 'vezetesi_naplo', $result['id'], 'letrehozas', $request['datum'] . ': ' . $request['vezetes_ora'] . 'ó vezetés / ' . $request['pihenes_ora'] . 'ó pihenő');
-                    }
-                    echo json_encode($result);
-                    return;
-
-                case 'deleteVezetesiNaplo':
-                    $result = $vezetesiIdoInterface->deleteVezetesiNaplo($request['id'], $request['ceg_id']);
-                    if ($result['success']) {
-                        $this->logAudit($request['ceg_id'], 'vezetesi_naplo', $request['id'], 'torles');
-                    }
-                    echo json_encode($result);
-                    return;
-
-                case 'getSajatVezetesiNaplo':
-                    echo json_encode($vezetesiIdoInterface->getSajatVezetesiNaplo(
-                        $request['sofor_id'],
-                        $request['naptol'] ?? null,
-                        $request['nameddig'] ?? null
-                    ));
-                    return;
-
-                case 'getSajatVezetesiAllapot':
-                    echo json_encode($vezetesiIdoInterface->getSajatVezetesiAllapot($request['sofor_id'], $request['hetek'] ?? 1));
-                    return;
-
-                case 'getVezetesJavaslat':
-                    echo json_encode($gpsmartInterface->getVezetesJavaslat(
-                        $request['ceg_id'],
-                        $request['sofor_id'],
-                        $request['datum']
-                    ));
-                    return;
-
-                case 'getVezetesJavaslatCache':
-                    $sajatSoforId = $this->resolveSajatSoforId($request);
-                    echo json_encode($gpsmartInterface->getVezetesJavaslatCache($sajatSoforId));
-                    return;
-
-                case 'getVezetesiOsszesito':
-                    echo json_encode($vezetesiIdoInterface->getVezetesiOsszesito(
-                        $request['ceg_id'],
-                        $request['sofor_id'] ?? null,
-                        $request['hetek'] ?? 8,
-                        $request['search'] ?? null,
-                        $request['page'] ?? null,
-                        $request['pageSize'] ?? null
                     ));
                     return;
 
@@ -1636,6 +1627,12 @@ class ApiHandler {
             $stmt->execute();
             $sum_potkocsi = $stmt->fetch(PDO::FETCH_ASSOC)['id'];
 
+            $query = "SELECT IFNULL(COUNT(id),0) as id FROM furgon WHERE admin = :id AND torolt <> 'I'";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            $sum_furgon = $stmt->fetch(PDO::FETCH_ASSOC)['id'];
+
 
             $currentMonthStart = new DateTime('first day of this month'); // Az aktuális hónap első napja
             $currentMonthEnd = new DateTime('last day of this month');   // Az aktuális hónap utolsó napja
@@ -1673,7 +1670,7 @@ class ApiHandler {
                 $sum_hatarido = count($szurt_datumok);
             }
 
-            return ['success' => true, 'sofor' => $sum_soforok, 'kamion' => $sum_kamion, 'potkocsi' => $sum_potkocsi, 'hatarido' => $sum_hatarido];
+            return ['success' => true, 'sofor' => $sum_soforok, 'kamion' => $sum_kamion, 'potkocsi' => $sum_potkocsi, 'furgon' => $sum_furgon, 'hatarido' => $sum_hatarido];
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }

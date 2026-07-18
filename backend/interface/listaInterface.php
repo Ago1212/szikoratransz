@@ -15,14 +15,19 @@
 class ListaInterface {
     protected $db;
 
-    const TIPUSOK = ['kamion_meret', 'jarmu_allapot', 'biztositas_utem', 'bejelentes_tipus', 'szabadsag_tipus', 'deviza'];
+    const TIPUSOK = ['kamion_meret', 'furgon_meret', 'jarmu_allapot', 'biztositas_utem', 'bejelentes_tipus', 'szabadsag_tipus', 'deviza'];
 
     const TIPUS_TABLAK = [
         'kamion_meret' => [['kamion', 'meret']],
-        'jarmu_allapot' => [['kamion', 'allapot'], ['potkocsi', 'allapot']],
+        // A furgon méretkategóriái eltérnek a kamionokétól (nem nyerges-
+        // vontató méretosztályok), ezért külön, admin által feltölthető
+        // lista, nem a meglévő `kamion_meret` újrafelhasználása.
+        'furgon_meret' => [['furgon', 'meret']],
+        'jarmu_allapot' => [['kamion', 'allapot'], ['potkocsi', 'allapot'], ['furgon', 'allapot']],
         'biztositas_utem' => [
             ['kamion', 'kot_biz_utem'], ['kamion', 'kaszko_fizetesi_utem'],
             ['potkocsi', 'kot_biz_utem'], ['potkocsi', 'kaszko_fizetesi_utem'],
+            ['furgon', 'kot_biz_utem'], ['furgon', 'kaszko_fizetesi_utem'],
         ],
         'bejelentes_tipus' => [['bejelentesek', 'tipus']],
         'szabadsag_tipus' => [['sofor_szabadsag', 'tipus']],

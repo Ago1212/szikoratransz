@@ -15,7 +15,7 @@ export default function Bejelentesek() {
   const { elemek: tipusok } = useListaElemek("bejelentes_tipus");
 
   useEffect(() => {
-    const user = JSON.parse(sessionStorage.getItem("user"));
+    const user = JSON.parse(localStorage.getItem("user"));
     fetchAction("getBejelentesekSofor", { sofor_id: user.id }).then((result) => {
       if (result?.success) setBejelentesek(result.bejelentesek || []);
       setLoading(false);

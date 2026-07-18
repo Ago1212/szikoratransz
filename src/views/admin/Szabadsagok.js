@@ -21,7 +21,7 @@ const emptySzabadsag = (adminId) => ({
 });
 
 export default function Szabadsagok() {
-  const user = JSON.parse(sessionStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user"));
   const [szabadsagok, setSzabadsagok] = useState([]);
   const [soforok, setSoforok] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);

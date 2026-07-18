@@ -10,6 +10,7 @@ import Spinner from "components/UI/Spinner.js";
 // típusokon BELÜLI elemek bővíthetők/nevezhetők át egyénileg cégenként.
 const LISTA_TIPUSOK = [
   { tipus: "kamion_meret", nev: "Kamion méret" },
+  { tipus: "furgon_meret", nev: "Furgon méret" },
   { tipus: "jarmu_allapot", nev: "Jármű állapota" },
   { tipus: "biztositas_utem", nev: "Biztosítás fizetési ütem" },
   { tipus: "bejelentes_tipus", nev: "Bejelentés típusa" },
@@ -29,7 +30,7 @@ const slugify = (str) =>
     .slice(0, 50);
 
 export default function Listak() {
-  const user = JSON.parse(sessionStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user"));
   const [selected, setSelected] = useState(LISTA_TIPUSOK[0].tipus);
   const [elemek, setElemek] = useState([]);
   const [loading, setLoading] = useState(true);

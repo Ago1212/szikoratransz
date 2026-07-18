@@ -37,6 +37,22 @@ export default function BiztositottSzallitas() {
         "Mi történik, ha kár keletkezik szállítás közben?",
         "Mennyi idő alatt kapok ajánlatot?",
       )}
-    />
+    >
+      <section className="py-10 border-t border-[#23262B]/10">
+        <p className="text-sm text-[#23262B]/60">
+          A fuvarozói felelősségbiztosításról és a kárrendezés általános
+          menetéről a{" "}
+          <a
+            href="https://mabisz.hu"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#6D28D9] underline hover:text-[#5B21B6] transition-colors duration-300"
+          >
+            Magyar Biztosítók Szövetsége (MABISZ)
+          </a>{" "}
+          oldalán tájékozódhat bővebben — a konkrét kárügyintézést fuvarjainknál mi végezzük Ön helyett.
+        </p>
+      </section>
+    </ServicePage>
   );
 }

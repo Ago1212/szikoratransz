@@ -43,7 +43,7 @@ export default function Naplo() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    const user = JSON.parse(sessionStorage.getItem("user"));
+    const user = JSON.parse(localStorage.getItem("user"));
     setLoading(true);
     fetchAction("getAuditLog", {
       id: user.ceg_id,
@@ -64,7 +64,7 @@ export default function Naplo() {
   }, [page, search]);
 
   const handleExportAll = useCallback(async () => {
-    const user = JSON.parse(sessionStorage.getItem("user"));
+    const user = JSON.parse(localStorage.getItem("user"));
     const result = await fetchAction("getAuditLog", {
       id: user.ceg_id,
       kerelmezo_id: user.id,

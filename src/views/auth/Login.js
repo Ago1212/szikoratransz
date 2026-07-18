@@ -1,8 +1,9 @@
-import { React, useState } from "react";
+import { React, useState, useEffect } from "react";
 import { useHistory } from "react-router-dom";
 import { useMediaQuery } from "react-responsive";
 import { fetchAction } from "utils/fetchAction";
 import HungaryMapBackground from "components/UI/HungaryMapBackground.js";
+import { useNoindex } from "utils/useSeo.js";
 
 // ---------------------------------------------------------------------------
 // Apró, függőségmentes ikonok (inline SVG) — ugyanazt a stroke-stílust
@@ -178,6 +179,28 @@ export default function Bejelentkezes() {
   // mobil nézetre — laptopon/desktopon az eredeti kétoszlopos, világos
   // hátterű elrendezés marad változatlanul.
   const isMobile = useMediaQuery({ maxWidth: 1023 });
+  useNoindex();
+
+  // A PWA `start_url`-ja (public/manifest.json) mindig `/auth/login` — enélkül
+  // egy már bejelentkezett felhasználó minden alkalommal, amikor mobilon a
+  // telefonja kilövi a háttérfolyamatot és újraindítja az appot, ide futna ki
+  // és újra be kellene írnia az adatait, holott a munkamenet (`localStorage`,
+  // ld. lentebb) valójában még érvényes. Mountkor egyszer ellenőrizzük, és ha
+  // van mentett `user`, azonnal továbbküldjük a saját kezdőlapjára — a
+  // `history.replace` (nem `push`) miatt a böngésző "vissza" gombja sem tud
+  // ide visszaugrani.
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (!storedUser) return;
+    try {
+      const user = JSON.parse(storedUser);
+      history.replace(user.is_admin ? "/admin/dashboard" : "/user/dashboard");
+    } catch {
+      localStorage.removeItem("user");
+      localStorage.removeItem("sessionToken");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -194,8 +217,8 @@ export default function Bejelentkezes() {
         password: password,
       });
       if (result && result.success) {
-        sessionStorage.setItem("user", JSON.stringify(result.user));
-        sessionStorage.setItem("sessionToken", result.token);
+        localStorage.setItem("user", JSON.stringify(result.user));
+        localStorage.setItem("sessionToken", result.token);
 
         if (result.user.is_admin) {
           history.push("/admin/dashboard");

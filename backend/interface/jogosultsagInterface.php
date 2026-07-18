@@ -21,6 +21,7 @@ class JogosultsagInterface {
     const MODULOK = [
         'kamionok' => ['hozzaferes', 'szerkesztes', 'torles'],
         'potkocsik' => ['hozzaferes', 'szerkesztes', 'torles'],
+        'furgonok' => ['hozzaferes', 'szerkesztes', 'torles'],
         'karbantartasok' => ['hozzaferes', 'szerkesztes', 'torles'],
         'soforok' => ['hozzaferes', 'szerkesztes', 'torles'],
         'bejelentesek' => ['hozzaferes', 'szerkesztes', 'torles'],
@@ -28,7 +29,6 @@ class JogosultsagInterface {
         'ugyfelek' => ['hozzaferes', 'szerkesztes', 'torles'],
         'naplo' => ['hozzaferes'],
         'koltsegek' => ['hozzaferes', 'szerkesztes', 'torles'],
-        'vezetesi_ido' => ['hozzaferes', 'szerkesztes', 'torles'],
     ];
 
     public function __construct() {

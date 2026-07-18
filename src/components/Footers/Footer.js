@@ -24,6 +24,8 @@ export default function Footer() {
             <img
               src="/logo2.svg"
               alt="Szikora Transz Kft"
+              width="1600"
+              height="578"
               className="h-8 w-auto mb-4"
             />
             <p className="text-sm text-white/60 leading-relaxed mb-5">

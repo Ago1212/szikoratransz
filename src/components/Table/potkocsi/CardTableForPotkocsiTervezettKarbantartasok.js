@@ -12,7 +12,7 @@ const CardTableForPotkocsiTervezettKarbantartasok = ({ potkocsi_id, refresh, onR
   const [openDialog, setOpenDialog] = useState(false);
   const [karbantartasok, setKarbantartasok] = useState([]);
   const [selectedKarbantartas, setSelectedKarbantartas] = useState(null);
-  const user = JSON.parse(sessionStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user"));
 
   const fetchKarbantartasok = async () => {
     const result = await fetchAction("getPotkocsiKarbantartas", {

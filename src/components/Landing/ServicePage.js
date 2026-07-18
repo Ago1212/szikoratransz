@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { PiArrowRightLight, PiCheckLight, PiQuotesLight } from "react-icons/pi";
 import Footer from "components/Footers/Footer.js";
 import QuoteForm from "components/Landing/QuoteForm.js";
+import Breadcrumb from "components/Landing/Breadcrumb.js";
 import { TESTIMONIALS, SERVICE_PAGES } from "data/landingContent.js";
 import { useSeo } from "utils/useSeo.js";
 
@@ -25,7 +26,18 @@ export default function ServicePage({
   path,
   children,
 }) {
-  useSeo({ title: metaTitle, description: metaDescription, path, faqItems });
+  const currentService = SERVICE_PAGES.find((s) => s.path === path);
+  const breadcrumbItems = currentService
+    ? [{ name: currentService.label, path: currentService.path }]
+    : [];
+  useSeo({
+    title: metaTitle,
+    description: metaDescription,
+    path,
+    faqItems,
+    breadcrumb: breadcrumbItems.length > 0 ? breadcrumbItems : undefined,
+    service: currentService ? { name: currentService.label, description: metaDescription } : undefined,
+  });
 
   const otherServices = SERVICE_PAGES.filter((s) => s.path !== path);
 
@@ -50,7 +62,7 @@ export default function ServicePage({
       <nav className="border-b border-[#23262B]/8 bg-[#F2F3F5]/90 backdrop-blur-sm">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link to="/">
-            <img src="/logo2.svg" alt="Szikora Transz Kft" className="h-9 w-auto" />
+            <img src="/logo2.svg" alt="Szikora Transz Kft" width="1600" height="578" className="h-9 w-auto" />
           </Link>
           <Link
             to="/"
@@ -62,6 +74,8 @@ export default function ServicePage({
       </nav>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        {breadcrumbItems.length > 0 && <Breadcrumb items={breadcrumbItems} />}
+
         {/* HERO — a `Icon`/`accent` adja a szolgáltatásra jellemző vizuális
             identitást: halványított, nagyméretű háttér-ikon + színezett
             jelvény, hogy az oldal ne csak szövegében, de látványban is
@@ -151,6 +165,10 @@ export default function ServicePage({
               </div>
             ))}
           </div>
+          <p className="text-xs text-[#23262B]/35 mt-6 max-w-2xl">
+            * A fenti referenciák minta-szövegek — érdemes őket valós ügyfelek
+            visszajelzéseire cserélni a publikálás előtt.
+          </p>
         </section>
 
         {/* GYIK */}
@@ -162,9 +180,9 @@ export default function ServicePage({
             <div className="divide-y divide-[#23262B]/10 border-t border-b border-[#23262B]/10">
               {faqItems.map((item) => (
                 <details key={item.q} className="group py-5">
-                  <summary className="cursor-pointer list-none flex items-center justify-between gap-4 font-[Overpass] font-semibold text-[#23262B]">
-                    {item.q}
-                    <span className="text-[#1E3AA8] text-sm transition-transform duration-300 group-open:rotate-180">
+                  <summary className="cursor-pointer list-none flex items-center justify-between gap-4">
+                    <h3 className="font-[Overpass] font-semibold text-[#23262B] m-0">{item.q}</h3>
+                    <span className="text-[#1E3AA8] text-sm flex-shrink-0 transition-transform duration-300 group-open:rotate-180">
                       ▾
                     </span>
                   </summary>

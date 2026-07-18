@@ -1,0 +1,137 @@
+import React, { useState } from "react";
+import { useHistory } from "react-router-dom";
+import {
+  PiVanLight,
+  PiArrowLeftLight,
+  PiNotePencilLight,
+  PiFolderLight,
+} from "react-icons/pi";
+import CardFurgonAdatokForm from "./CardFurgonAdatokForm";
+import CardFurgonEsemenyekForm from "./CardFurgonEsemenyekForm";
+import CardFurgonFajlok from "./CardFurgonFajlok";
+import { fetchAction } from "utils/fetchAction";
+import { toast } from "utils/toast";
+import PageCard from "components/UI/PageCard.js";
+import TabButton from "components/UI/TabButton.js";
+
+export default function CardFurgon({ initialFurgon }) {
+  const history = useHistory();
+  const [furgon, setFurgon] = useState(initialFurgon || {});
+  const [activeTab, setActiveTab] = useState(1);
+
+  const [formData, setFormData] = useState({
+    id: furgon.id || null,
+    rendszam: furgon.rendszam || null,
+    meret: furgon.meret || null,
+    tipus: furgon.tipus || null,
+    allapot: furgon.allapot || "szabad",
+    aktualis_km: furgon.aktualis_km || null,
+    muszaki_lejarat: furgon.muszaki_lejarat || null,
+    adr_lejarat: furgon.adr_lejarat || null,
+    taograf_illesztes: furgon.taograf_illesztes || null,
+    emelohatfal_vizsga: furgon.emelohatfal_vizsga || null,
+    porolto_lejarat: furgon.porolto_lejarat || null,
+    porolto_lejarat_2: furgon.porolto_lejarat_2 || null,
+    kot_biztositas: furgon.kot_biztositas || null,
+    kot_biz_nev: furgon.kot_biz_nev || null,
+    kot_biz_dij: furgon.kot_biz_dij || null,
+    kot_biz_utem: furgon.kot_biz_utem || null,
+    kaszko_biztositas: furgon.kaszko_biztositas || null,
+    kaszko_nev: furgon.kaszko_nev || null,
+    kaszko_dij: furgon.kaszko_dij || null,
+    kaszko_fizetesi_utem: furgon.kaszko_fizetesi_utem || null,
+  });
+
+  const handleSave = async () => {
+    try {
+      const storedUserData = JSON.parse(localStorage.getItem("user"));
+      const action = formData.id ? "saveFurgonData" : "newFurgon";
+      const result = await fetchAction(action, {
+        admin: storedUserData.ceg_id,
+        ...formData,
+        kerelmezo_id: storedUserData.id,
+      });
+
+      if (result?.success) {
+        if (action === "newFurgon") {
+          toast.success("Új furgon rögzítése sikeres!");
+          setFurgon(result.furgon);
+          setFormData({ ...formData, id: result.furgon.id });
+        } else {
+          toast.success("Mentés sikeres!");
+        }
+      } else {
+        throw new Error(result?.message || "Mentés sikertelen");
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  const isNew = Object.keys(furgon).length === 0;
+
+  return (
+    <div className="flex flex-col gap-3">
+      <button
+        type="button"
+        onClick={() => history.push("/admin/furgonok")}
+        className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-ink-500 transition-colors duration-200 ease-fluid hover:text-brand-700"
+      >
+        <PiArrowLeftLight className="h-4 w-4" />
+        Vissza a furgonokhoz
+      </button>
+
+      {isNew ? (
+        <PageCard icon={PiVanLight} title="Új furgon">
+          <div className="px-4 py-4 lg:px-6">
+            <CardFurgonAdatokForm
+              furgon={formData}
+              setFormData={setFormData}
+              handleSave={handleSave}
+            />
+          </div>
+        </PageCard>
+      ) : (
+        <div className="relative flex min-w-0 flex-col rounded-3xl bg-white shadow-soft ring-1 ring-ink-100">
+          <div className="flex items-center gap-2.5 px-5 pt-4">
+            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+              <PiVanLight className="h-[18px] w-[18px]" />
+            </span>
+            <h3 className="font-display text-base font-semibold text-brand-900">
+              {furgon.rendszam}
+            </h3>
+          </div>
+
+          <div className="mt-3 flex gap-6 border-b border-ink-100 px-5">
+            <TabButton
+              icon={PiNotePencilLight}
+              active={activeTab === 1}
+              onClick={() => setActiveTab(1)}
+            >
+              Adatok
+            </TabButton>
+            <TabButton
+              icon={PiFolderLight}
+              active={activeTab === 3}
+              onClick={() => setActiveTab(3)}
+            >
+              Fájlok
+            </TabButton>
+          </div>
+
+          <div className="px-4 py-4 lg:px-6">
+            {activeTab === 1 && (
+              <CardFurgonAdatokForm
+                furgon={formData}
+                setFormData={setFormData}
+                handleSave={handleSave}
+              />
+            )}
+            {activeTab === 2 && <CardFurgonEsemenyekForm furgon_id={furgon.id} />}
+            {activeTab === 3 && <CardFurgonFajlok furgon_id={furgon.id} />}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

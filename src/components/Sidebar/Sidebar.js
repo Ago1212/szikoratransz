@@ -5,6 +5,7 @@ import {
   PiGearLight,
   PiTruckLight,
   PiTruckTrailerLight,
+  PiVanLight,
   PiWrenchLight,
   PiUsersLight,
   PiChatCircleTextLight,
@@ -20,7 +21,6 @@ import {
   PiMagnifyingGlassLight,
   PiCoinsLight,
   PiBellLight,
-  PiSteeringWheelLight,
   PiCaretDownLight,
   PiMapTrifoldLight,
 } from "react-icons/pi";
@@ -70,6 +70,7 @@ const mobileGroups = [
       },
       { to: "/admin/kamionok", icon: PiTruckLight, text: "Kamionok" },
       { to: "/admin/potkocsi", icon: PiTruckTrailerLight, text: "Pótkocsik" },
+      { to: "/admin/furgonok", icon: PiVanLight, text: "Furgonok" },
       {
         to: "/admin/karbantartasok",
         icon: PiWrenchLight,
@@ -78,17 +79,19 @@ const mobileGroups = [
       { to: "/admin/koltsegek", icon: PiCoinsLight, text: "Pénzforgalom" },
     ],
   },
+  // Csapat + Partnerek EGY mobil fülbe összevonva (divider-rel elválasztva) —
+  // a deszktop sidebaron ez a két csoport külön marad (ott bőven van hely,
+  // és tartalmilag a Partnerek külső fél, nem a cég saját csapata, ld. a
+  // fájl tetején lévő komment), de a mobil alsó sáv 8 oszlopa túl zsúfolt
+  // volt (felhasználói visszajelzés + élő teszt: a feliratok csonkolódtak).
+  // Ez a mobil-only összevonás nem változtatja meg a tartalmi jelentést —
+  // csak egy fület spórol a szűkös, ~390px-es sávon.
   {
     key: "csapat",
     label: "Csapat",
     icon: PiUsersLight,
     items: [
       { to: "/admin/soforok", icon: PiUsersLight, text: "Sofőrök" },
-      {
-        to: "/admin/vezetesi-ido",
-        icon: PiSteeringWheelLight,
-        text: "Vezetési idő",
-      },
       {
         to: "/admin/bejelentesek",
         icon: PiChatCircleTextLight,
@@ -99,13 +102,7 @@ const mobileGroups = [
         icon: PiCalendarBlankLight,
         text: "Szabadságok",
       },
-    ],
-  },
-  {
-    key: "partnerek",
-    label: "Partnerek",
-    icon: PiBuildingsLight,
-    items: [
+      { type: "divider", label: "Partnerek" },
       { to: "/admin/ugyfelek", icon: PiBuildingsLight, text: "Ügyfelek" },
       { to: "/admin/helyszinek", icon: PiMapPinLight, text: "Helyszínek" },
     ],
@@ -156,7 +153,7 @@ const mobileGroups = [
   },
 ];
 
-const TIPUS_LABEL = { kamion: "kamiont", potkocsi: "pótkocsit" };
+const TIPUS_LABEL = { kamion: "kamiont", potkocsi: "pótkocsit", furgon: "furgont" };
 
 export default function Sidebar() {
   const [openGroup, setOpenGroup] = React.useState(null);
@@ -183,7 +180,7 @@ export default function Sidebar() {
 
   let user = null;
   try {
-    user = JSON.parse(sessionStorage.getItem("user"));
+    user = JSON.parse(localStorage.getItem("user"));
   } catch (e) {
     user = null;
   }
@@ -207,7 +204,7 @@ export default function Sidebar() {
     } catch (e) {
       // ignore corrupt/legacy localStorage érték
     }
-    return { flotta: true, csapat: false, partnerek: false, rendszer: false };
+    return { flotta: true, csapat: false, partnerek: false, penzugyek: false, rendszer: false };
   });
   React.useEffect(() => {
     if (!user?.id) return;
@@ -318,9 +315,9 @@ export default function Sidebar() {
   const MODUL_PATH = {
     "/admin/kamionok": "kamionok",
     "/admin/potkocsi": "potkocsik",
+    "/admin/furgonok": "furgonok",
     "/admin/karbantartasok": "karbantartasok",
     "/admin/soforok": "soforok",
-    "/admin/vezetesi-ido": "vezetesi_ido",
     "/admin/bejelentesek": "bejelentesek",
     "/admin/szabadsagok": "szabadsagok",
     "/admin/ugyfelek": "ugyfelek",
@@ -400,8 +397,8 @@ export default function Sidebar() {
 
   const handleLogout = async () => {
     const result = await fetchAction("logoutUser", { id: user?.id });
-    sessionStorage.removeItem("user");
-    sessionStorage.removeItem("sessionToken");
+    localStorage.removeItem("user");
+    localStorage.removeItem("sessionToken");
     if (!result?.success) {
       // Session already gone client-side regardless of server response.
       console.warn(result?.message || "Logout request failed.");
@@ -553,6 +550,11 @@ export default function Sidebar() {
                   icon={PiTruckTrailerLight}
                   text="Pótkocsik"
                 />
+                <NavItem
+                  to="/admin/furgonok"
+                  icon={PiVanLight}
+                  text="Furgonok"
+                />
               </ul>
             )}
           </div>
@@ -569,11 +571,6 @@ export default function Sidebar() {
                   to="/admin/soforok"
                   icon={PiUsersLight}
                   text="Sofőrök"
-                />
-                <NavItem
-                  to="/admin/vezetesi-ido"
-                  icon={PiSteeringWheelLight}
-                  text="Vezetési idő"
                 />
                 <NavItem
                   to="/admin/szabadsagok"
@@ -602,6 +599,39 @@ export default function Sidebar() {
                   icon={PiMapPinLight}
                   text="Helyszínek"
                 />
+              </ul>
+            )}
+          </div>
+
+          {/* "Pénzügyek" csoport — a `PageHeader` eyebrow-mappingje (ld.
+              CLAUDE.md) már korábban is ide sorolta a Pénzforgalmat, de a
+              nav-fában eddig nem volt ilyen csoport: a Pénzforgalom csak a
+              napi zónában élt, a Devizák pedig a Rendszer alatt bujkált,
+              annak ellenére hogy fogalmilag mindkettő pénzügyi jellegű, nem
+              rendszer-adminisztráció. A Pénzforgalom szándékosan MEGMARAD a
+              napi zónában is (gyakran használt, egy kattintásra elérhető
+              elem) — ez a csoport a teljes, kereshető hierarchiát adja meg
+              hozzá, nem váltja ki a napi zóna pin-jét. */}
+          <div>
+            <GroupHeader
+              label="Pénzügyek"
+              open={openGroups.penzugyek}
+              onToggle={() => toggleGroup("penzugyek")}
+            />
+            {openGroups.penzugyek && (
+              <ul className="space-y-0.5">
+                <NavItem
+                  to="/admin/koltsegek"
+                  icon={PiCoinsLight}
+                  text="Pénzforgalom"
+                />
+                {isAdmin && (
+                  <NavItem
+                    to="/admin/devizak"
+                    icon={PiCoinsLight}
+                    text="Devizák"
+                  />
+                )}
               </ul>
             )}
           </div>
@@ -645,11 +675,6 @@ export default function Sidebar() {
                       to="/admin/listak"
                       icon={PiListBulletsLight}
                       text="Listák"
-                    />
-                    <NavItem
-                      to="/admin/devizak"
-                      icon={PiCoinsLight}
-                      text="Devizák"
                     />
                   </>
                 )}
@@ -805,7 +830,17 @@ export default function Sidebar() {
             "Csapat" fülön egy piros pont jelzi, ha van nyitott bejelentés
             (ami a fülön belülre, a Csapat csoportba került), hogy ne kelljen
             kinyitni a listát ahhoz, hogy lássa: van tennivaló. */}
-        <nav className="flex border-t border-ink-100 bg-white pb-[env(safe-area-inset-bottom)]">
+        {/* Egységesített fül-stílus: 2 közvetlen link + 3 csoport (Flotta,
+            Csapat+Partnerek összevonva, Rendszer) + Értesítések = 6 azonos
+            méretű/stílusú fül — a korábbi 8 (köztük egy szűk ikon-only
+            Kijelentkezés-oszlop) helyett. Az aktív fül most egy tényleges
+            háttér-jelvényt (pill) kap a puszta színváltás helyett, hogy
+            gyorsabban, egy pillantásból elváljon az inaktívaktól; az ikonok
+            kicsit nagyobbak (h-6), mert a kevesebb oszlopnak több hely jut.
+            A Kijelentkezés a Profil oldal saját tartalmi eleme lett (ld.
+            Settings.js) — a napi navigációtól elválasztva, mint a legtöbb
+            mobil appban. */}
+        <nav className="flex items-stretch gap-1 border-t border-ink-100 bg-white px-1.5 pt-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))]">
           {mobileDirectLinks.map((item) => {
             const active = isActive(item.to);
             return (
@@ -813,12 +848,12 @@ export default function Sidebar() {
                 key={item.to}
                 to={item.to}
                 aria-current={active ? "page" : undefined}
-                className={`flex min-w-0 flex-1 flex-col items-center gap-1 px-0.5 py-2.5 text-[11px] font-medium leading-none ${
-                  active ? "text-brand-600" : "text-ink-400"
+                className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[11px] font-medium leading-none transition-colors duration-150 ${
+                  active ? "bg-brand-50 text-brand-600" : "text-ink-400"
                 }`}
                 onClick={() => setOpenGroup(null)}
               >
-                <item.icon className="h-5 w-5 flex-shrink-0" />
+                <item.icon className="h-6 w-6 flex-shrink-0" />
                 <span className="w-full truncate text-center">{item.text}</span>
               </Link>
             );
@@ -835,15 +870,15 @@ export default function Sidebar() {
                 type="button"
                 aria-expanded={openGroup === group.key}
                 aria-controls={`mobile-group-panel-${group.key}`}
-                className={`flex min-w-0 flex-1 flex-col items-center gap-1 px-0.5 py-2.5 text-[11px] font-medium leading-none ${
-                  active ? "text-brand-600" : "text-ink-400"
+                className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[11px] font-medium leading-none transition-colors duration-150 ${
+                  active ? "bg-brand-50 text-brand-600" : "text-ink-400"
                 }`}
                 onClick={() =>
                   setOpenGroup(openGroup === group.key ? null : group.key)
                 }
               >
-                <span className="relative flex h-5 w-5 flex-shrink-0 items-center justify-center">
-                  <group.icon className="h-5 w-5" />
+                <span className="relative flex h-6 w-6 flex-shrink-0 items-center justify-center">
+                  <group.icon className="h-6 w-6" />
                   {showBadge && (
                     <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
                   )}
@@ -855,41 +890,22 @@ export default function Sidebar() {
             );
           })}
           <button
-            className="flex w-12 flex-shrink-0 flex-col items-center justify-center py-2.5 text-red-500"
-            onClick={handleLogout}
+            type="button"
+            className={`relative flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[11px] font-medium leading-none transition-colors duration-150 ${
+              notifOpen ? "bg-brand-50 text-brand-600" : "text-ink-400"
+            }`}
+            onClick={() => setNotifOpen(true)}
           >
-            <PiSignOutLight className="h-5 w-5" />
+            <span className="relative flex h-6 w-6 flex-shrink-0 items-center justify-center">
+              <PiBellLight className="h-6 w-6" />
+              {allNotifications.length > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-ember-500 ring-2 ring-white" />
+              )}
+            </span>
+            <span className="w-full truncate text-center">Értesítések</span>
           </button>
         </nav>
       </div>
-
-      {/* Mobil kereső- és értesítés-FAB — nem fér egy új oszlop a már
-          zsúfolt alsó navigációba (7 oszlop), ezért lebegő gombként, a sáv
-          fölött, egymás fölé rakva. Az értesítés-haranG korábban csak a
-          deszktop Sidebar fejlécében élt — mobilon eddig sehonnan nem volt
-          elérhető, most a NotificationDropdown önálló overlay-jét ez a FAB
-          is meg tudja nyitni. */}
-      <button
-        type="button"
-        onClick={() => setNotifOpen(true)}
-        className="fixed bottom-36 right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-white text-ink-500 shadow-soft-lg ring-1 ring-ink-100 md:hidden"
-        title="Értesítések"
-        aria-label="Értesítések"
-      >
-        <PiBellLight className="h-5 w-5" />
-        {allNotifications.length > 0 && (
-          <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full bg-ember-500 ring-2 ring-white" />
-        )}
-      </button>
-      <button
-        type="button"
-        onClick={() => setSearchOpen(true)}
-        className="fixed bottom-20 right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-brand-600 text-white shadow-soft-lg md:hidden"
-        title="Keresés"
-        aria-label="Keresés"
-      >
-        <PiMagnifyingGlassLight className="h-5 w-5" />
-      </button>
 
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
       <NotificationDropdown

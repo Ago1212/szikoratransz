@@ -57,6 +57,20 @@ class KeresesInterface {
                 ];
             }
 
+            $stmt = $this->db->prepare("SELECT id, rendszam, tipus FROM furgon WHERE admin = :ceg_id AND torolt <> 'I' AND rendszam LIKE :q LIMIT 8");
+            $stmt->bindValue(':ceg_id', $ceg_id);
+            $stmt->bindValue(':q', $like);
+            $stmt->execute();
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $talalatok[] = [
+                    'tipus' => 'furgon',
+                    'id' => $row['id'],
+                    'cim' => $row['rendszam'],
+                    'alcim' => $row['tipus'] ?: 'Furgon',
+                    'url' => '/admin/furgonok',
+                ];
+            }
+
             $stmt = $this->db->prepare("SELECT id, name, email FROM user WHERE admin = :ceg_id AND admin <> id AND torolt <> 'I' AND name LIKE :q LIMIT 8");
             $stmt->bindValue(':ceg_id', $ceg_id);
             $stmt->bindValue(':q', $like);

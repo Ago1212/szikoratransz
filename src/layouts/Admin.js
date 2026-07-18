@@ -8,12 +8,14 @@ import Dashboard from "views/admin/Dashboard.js";
 import Settings from "views/admin/Settings.js";
 import Kamionok from "views/admin/Kamionok.js";
 import Potkocsi from "views/admin/Potkocsi.js";
+import Furgonok from "views/admin/Furgonok.js";
 import Karbantartasok from "views/admin/Karbantartasok.js";
 import Soforok from "views/admin/Soforok.js";
 import Fajlok from "views/admin/Fajlok.js";
 import Esemenyek from "views/admin/Esemenyek.js";
 import KamionForm from "views/admin/KamionForm.js";
 import PotkocsiForm from "views/admin/PotkocsiForm.js";
+import FurgonForm from "views/admin/FurgonForm.js";
 import SoforForm from "views/admin/SoforForm.js";
 import LoginPage from "views/auth/Login.js";
 import Bejelentesek from "views/admin/Bejelentesek";
@@ -22,7 +24,6 @@ import Szabadsagok from "views/admin/Szabadsagok.js";
 import Naplo from "views/admin/Naplo.js";
 import Koltsegek from "views/admin/Koltsegek.js";
 import Flottakovetes from "views/admin/Flottakovetes.js";
-import VezetesiIdo from "views/admin/VezetesiIdo.js";
 import Ugyfelek from "views/admin/Ugyfelek.js";
 import UgyfelForm from "views/admin/UgyfelForm.js";
 import Felhasznalok from "views/admin/Felhasznalok.js";
@@ -34,7 +35,7 @@ import Listak from "views/admin/Listak.js";
 import Devizak from "views/admin/Devizak.js";
 
 const PrivateRoute = ({ component: Component, ...rest }) => {
-  const isAuthenticated = sessionStorage.getItem("user") !== null;
+  const isAuthenticated = localStorage.getItem("user") !== null;
   return (
     <Route
       {...rest}
@@ -85,17 +86,18 @@ export default function Admin() {
               exact
               component={PotkocsiForm}
             />
+            <PrivateRoute path="/admin/furgonok" exact component={Furgonok} />
+            <PrivateRoute
+              path="/admin/furgonForm"
+              exact
+              component={FurgonForm}
+            />
             <PrivateRoute
               path="/admin/karbantartasok"
               exact
               component={Karbantartasok}
             />
             <PrivateRoute path="/admin/soforok" exact component={Soforok} />
-            <PrivateRoute
-              path="/admin/vezetesi-ido"
-              exact
-              component={VezetesiIdo}
-            />
             <PrivateRoute path="/admin/soforForm" exact component={SoforForm} />
             <PrivateRoute path="/admin/fajlok" exact component={Fajlok} />
             <PrivateRoute path="/admin/esemenyek" exact component={Esemenyek} />

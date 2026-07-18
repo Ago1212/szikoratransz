@@ -14,7 +14,7 @@ import Spinner from "components/UI/Spinner.js";
 // szlugosított "euro" sosem találna árfolyamot. Ezért itt Kód+Név két külön,
 // explicit mező, nem egyetlen névből generált kulcs.
 export default function Devizak() {
-  const user = JSON.parse(sessionStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user"));
   const [elemek, setElemek] = useState([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);

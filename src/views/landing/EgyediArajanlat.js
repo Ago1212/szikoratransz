@@ -9,7 +9,7 @@ export default function EgyediArajanlat() {
       icon={PiFileTextLight}
       accent="#059669"
       path="/egyedi-arajanlat-fuvarozas"
-      metaTitle="Egyedi árajánlat fuvarozásra — bármilyen áru | Szikora Transz Kft."
+      metaTitle="Egyedi árajánlat fuvarozásra | Szikora Transz Kft."
       metaDescription="Nincs két egyforma fuvar — minden szállítást egyedileg árazunk az útvonal, az áru jellege és a határidő alapján. Kérjen ingyenes, kötöttség nélküli árajánlatot."
       eyebrow="Egyedi árajánlat"
       h1="Egyedi árajánlat — bármilyen árut szállítunk"

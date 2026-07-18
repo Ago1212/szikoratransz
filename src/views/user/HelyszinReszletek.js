@@ -31,7 +31,7 @@ const getKind = (filename) => {
 export default function HelyszinReszletek() {
   const location = useLocation();
   const history = useHistory();
-  const user = JSON.parse(sessionStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user"));
   const [helyszin, setHelyszin] = useState(location.state?.data);
   const [nev, setNev] = useState(location.state?.data?.nev || "");
   const [editingNev, setEditingNev] = useState(false);

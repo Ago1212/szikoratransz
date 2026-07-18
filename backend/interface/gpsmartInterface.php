@@ -130,25 +130,48 @@ class GpsmartInterface {
                 $kamionokRendszamSzerint[strtoupper(trim($kamion['rendszam']))] = $kamion['id'];
             }
 
-            // Ha a rendszám alapján sikerül azonosítani a saját kamionunkat,
-            // ahhoz a `user.kamion` mező alapján hozzárendeljük az aktuális
-            // sofőrt is — ez a "jelenlegi" hozzárendelés, nem egy adott
-            // napra visszamenőleg (a rendszer nincs napi bontásban vezetve,
-            // ki melyik kamionnal ment); ha egy sofőr aznap más kamiont
-            // vitt, ez nem tükrözi azt.
-            $soforStmt = $this->db->prepare('SELECT kamion, name FROM user WHERE admin = :admin AND torolt <> \'I\' AND kamion IS NOT NULL');
+            // A furgon önhajtó jármű, mint a kamion — ugyanúgy GPS-követett,
+            // ezért ugyanúgy rendszám szerint párosítjuk a GPSmart-tól kapott
+            // pozíciókkal. A pótkocsinak nincs GPS-eszköze, ezért az nem
+            // szerepel ebben az egyeztetésben.
+            $furgonStmt = $this->db->prepare('SELECT id, rendszam FROM furgon WHERE admin = :admin AND torolt <> \'I\'');
+            $furgonStmt->bindValue(':admin', $ceg_id);
+            $furgonStmt->execute();
+            $furgonokRendszamSzerint = [];
+            foreach ($furgonStmt->fetchAll(PDO::FETCH_ASSOC) as $furgon) {
+                $furgonokRendszamSzerint[strtoupper(trim($furgon['rendszam']))] = $furgon['id'];
+            }
+
+            // Ha a rendszám alapján sikerül azonosítani a saját kamionunkat/
+            // furgonunkat, ahhoz a `user.kamion`/`user.furgon` mező alapján
+            // hozzárendeljük az aktuális sofőrt is — ez a "jelenlegi"
+            // hozzárendelés, nem egy adott napra visszamenőleg (a rendszer
+            // nincs napi bontásban vezetve, ki melyik járművel ment); ha egy
+            // sofőr aznap más járművet vitt, ez nem tükrözi azt.
+            $soforStmt = $this->db->prepare('SELECT kamion, furgon, name FROM user WHERE admin = :admin AND torolt <> \'I\' AND (kamion IS NOT NULL OR furgon IS NOT NULL)');
             $soforStmt->bindValue(':admin', $ceg_id);
             $soforStmt->execute();
             $soforokKamionSzerint = [];
+            $soforokFurgonSzerint = [];
             foreach ($soforStmt->fetchAll(PDO::FETCH_ASSOC) as $sofor) {
-                $soforokKamionSzerint[$sofor['kamion']] = $sofor['name'];
+                if ($sofor['kamion']) {
+                    $soforokKamionSzerint[$sofor['kamion']] = $sofor['name'];
+                }
+                if ($sofor['furgon']) {
+                    $soforokFurgonSzerint[$sofor['furgon']] = $sofor['name'];
+                }
             }
 
             foreach ($poziciok as &$pozicio) {
                 $kulcs = strtoupper(trim($pozicio['rendszam']));
                 $kamionId = $kamionokRendszamSzerint[$kulcs] ?? null;
+                $furgonId = $kamionId ? null : ($furgonokRendszamSzerint[$kulcs] ?? null);
                 $pozicio['kamion_id'] = $kamionId;
-                $pozicio['sofor_nev'] = $kamionId ? ($soforokKamionSzerint[$kamionId] ?? null) : null;
+                $pozicio['furgon_id'] = $furgonId;
+                $pozicio['jarmu_tipus'] = $kamionId ? 'kamion' : ($furgonId ? 'furgon' : null);
+                $pozicio['sofor_nev'] = $kamionId
+                    ? ($soforokKamionSzerint[$kamionId] ?? null)
+                    : ($furgonId ? ($soforokFurgonSzerint[$furgonId] ?? null) : null);
             }
             unset($pozicio);
 
@@ -182,10 +205,9 @@ class GpsmartInterface {
         }
 
         $ma = date('Y-m-d');
-        $soforIdKamionSzerint = $this->getSoforIdKamionSzerint($ceg_id);
         $eredmeny = [];
         foreach ($poziciok['poziciok'] as $p) {
-            if (empty($p['kamion_id']) || empty($p['car_id'])) {
+            if ((empty($p['kamion_id']) && empty($p['furgon_id'])) || empty($p['car_id'])) {
                 continue;
             }
 
@@ -197,21 +219,6 @@ class GpsmartInterface {
                     if ($tavolsagSzoveg !== null) {
                         $megtettUt = $this->kmSzovegSzamra($tavolsagSzoveg);
                     }
-
-                    // Ugyanebből a válaszból (nincs emiatt külön GPSmart-
-                    // hívás, ld. GpsmartClient "minden hívás saját loginnal
-                    // indul" komment fent) a Vezetési idő oldal GPS-javaslat
-                    // gyorsítótárát is frissítjük a kamionhoz JELENLEG
-                    // rendelt sofőrnél — ez a cache-frissítés egyik forrása,
-                    // a másik a napi cron (ld. gpsmart_vezetesi_javaslat
-                    // migráció komment).
-                    $soforId = $soforIdKamionSzerint[$p['kamion_id']] ?? null;
-                    if ($soforId !== null) {
-                        $menetidoOra = $this->idoSzovegOraDecimalra($utvonal['osszesito']['menetido'] ?? null);
-                        if ($menetidoOra !== null) {
-                            $this->frissitVezetesiJavaslatCache($soforId, $ma, $p['kamion_id'], $menetidoOra);
-                        }
-                    }
                 }
             } catch (Exception $e) {
                 // Egy jármű hibás/időtúllépéses lekérdezése ne dobja el a
@@ -221,75 +228,14 @@ class GpsmartInterface {
 
             $eredmeny[] = [
                 'kamion_id' => $p['kamion_id'],
+                'furgon_id' => $p['furgon_id'] ?? null,
+                'jarmu_tipus' => $p['jarmu_tipus'] ?? ($p['kamion_id'] ? 'kamion' : 'furgon'),
                 'rendszam' => $p['rendszam'],
                 'megtettUtMa' => $megtettUt,
             ];
         }
 
         return ['success' => true, 'jarmuvek' => $eredmeny];
-    }
-
-    // [kamion_id => sofor_id] térkép — külön, saját lekérdezéssel a
-    // lekerdezPoziciok()-ban már meglévő (de csak NÉV-et tároló, `id`
-    // nélküli) sofőr-térképtől, hogy azt a metódust ne kelljen módosítani
-    // (a válaszát több helyen is felhasználják változatlan alakban).
-    private function getSoforIdKamionSzerint($ceg_id) {
-        $stmt = $this->db->prepare("SELECT id, kamion FROM user WHERE admin = :admin AND torolt <> 'I' AND kamion IS NOT NULL");
-        $stmt->bindValue(':admin', $ceg_id);
-        $stmt->execute();
-        $map = [];
-        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $map[$row['kamion']] = $row['id'];
-        }
-        return $map;
-    }
-
-    // A `datum`-ot mindig PHP-oldali `date('Y-m-d')`-ként kapjuk a hívótól
-    // (sosem MySQL CURDATE()-tel számoljuk itt) — ugyanaz az óvatosság, mint
-    // a piaci_arak cache-freshness számításnál (ld. CLAUDE.md PHP/MySQL
-    // timezone-eltérés gotcha): a szerver-timezone és a PHP timezone
-    // eltérése miatt a kettő éjfél körül különböző napot adhatna.
-    private function frissitVezetesiJavaslatCache($sofor_id, $datum, $kamion_id, $vezetes_ora) {
-        $stmt = $this->db->prepare(
-            'INSERT INTO gpsmart_vezetesi_javaslat (sofor_id, datum, kamion_id, vezetes_ora, frissitve)
-             VALUES (:sofor_id, :datum, :kamion_id, :vezetes_ora, NOW())
-             ON DUPLICATE KEY UPDATE kamion_id = VALUES(kamion_id), vezetes_ora = VALUES(vezetes_ora), frissitve = NOW()'
-        );
-        $stmt->bindValue(':sofor_id', $sofor_id, PDO::PARAM_INT);
-        $stmt->bindValue(':datum', $datum);
-        $stmt->bindValue(':kamion_id', $kamion_id, PDO::PARAM_INT);
-        $stmt->bindValue(':vezetes_ora', $vezetes_ora);
-        $stmt->execute();
-    }
-
-    // Sofőr-oldali olvasás — a Vezetési idő oldal ebből tölti elő a
-    // vezetés_ora mezőt élő GPSmart-hívás nélkül. A cache-t a napi cron és
-    // lekerdezMegtettUtMa() mellékhatása írja. Csak a MAI napra ad vissza
-    // adatot — egy tegnapi/korábbi sor sosem tekinthető aktuálisnak, mert a
-    // sofőr azóta kamiont válthatott (ld. gpsmart_vezetesi_javaslat migráció
-    // komment).
-    public function getVezetesJavaslatCache($sofor_id) {
-        try {
-            $ma = date('Y-m-d');
-            $stmt = $this->db->prepare('SELECT vezetes_ora, frissitve FROM gpsmart_vezetesi_javaslat WHERE sofor_id = :sofor_id AND datum = :ma');
-            $stmt->bindValue(':sofor_id', $sofor_id, PDO::PARAM_INT);
-            $stmt->bindValue(':ma', $ma);
-            $stmt->execute();
-            $sor = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$sor) {
-                return ['success' => true, 'van_javaslat' => false];
-            }
-
-            return [
-                'success' => true,
-                'van_javaslat' => true,
-                'vezetes_ora' => (float) $sor['vezetes_ora'],
-                'frissitve' => $sor['frissitve'],
-            ];
-        } catch (Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
-        }
     }
 
     // Egy jármű útvonal-előzménye egy dátumtartományra. A `carId` a
@@ -340,85 +286,14 @@ class GpsmartInterface {
         }
     }
 
-    // Item 6: a Vezetési idő napi bejegyzéséhez a `vezetes_ora` mező
-    // becslése a GPSmart útvonal-adatból — csak a sofőr JELENLEGI
-    // (`user.kamion`) kamionjához tartozó GPS-adatot tudjuk lekérni, mert
-    // nincs a rendszerben napi bontású, visszamenőleges sofőr↔kamion
-    // hozzárendelés-history (ld. lekerdezPoziciok() fenti komment) — ezért
-    // ez a becslés csak akkor megbízható, ha a sofőr a kérdéses napon is
-    // ugyanazt a kamiont vezette, mint most. A frontend ezt egy explicit
-    // figyelmeztetéssel jelzi, és a visszaadott órát a felhasználó a
-    // mentés előtt még szabadon módosíthatja — ez sosem ment el automatikusan,
-    // csak előtölti a mezőt. Szándékosan csak a `vezetes_ora`-t becsüljük,
-    // a `pihenes_ora`-t sosem (GPS-ből nem vezethető le megbízhatóan, hogy
-    // a jármű állásideje közben a sofőr ténylegesen pihent-e).
-    public function getVezetesJavaslat($ceg_id, $sofor_id, $datum) {
-        try {
-            $soforStmt = $this->db->prepare("SELECT kamion FROM user WHERE id = :id AND admin = :ceg_id AND torolt <> 'I'");
-            $soforStmt->bindValue(':id', $sofor_id);
-            $soforStmt->bindValue(':ceg_id', $ceg_id);
-            $soforStmt->execute();
-            $sofor = $soforStmt->fetch(PDO::FETCH_ASSOC);
-            if (!$sofor || empty($sofor['kamion'])) {
-                return ['success' => false, 'message' => 'A sofőrhöz jelenleg nincs kamion rendelve.'];
-            }
-
-            $kamionStmt = $this->db->prepare("SELECT rendszam FROM kamion WHERE id = :id AND admin = :ceg_id AND torolt <> 'I'");
-            $kamionStmt->bindValue(':id', $sofor['kamion']);
-            $kamionStmt->bindValue(':ceg_id', $ceg_id);
-            $kamionStmt->execute();
-            $kamion = $kamionStmt->fetch(PDO::FETCH_ASSOC);
-            if (!$kamion) {
-                return ['success' => false, 'message' => 'A sofőrhöz rendelt kamion nem található.'];
-            }
-
-            $poziciok = $this->lekerdezPoziciok($ceg_id);
-            if (!$poziciok['success']) {
-                return $poziciok;
-            }
-
-            $carId = null;
-            $kulcs = strtoupper(trim($kamion['rendszam']));
-            foreach ($poziciok['poziciok'] as $p) {
-                if (strtoupper(trim($p['rendszam'])) === $kulcs) {
-                    $carId = $p['car_id'] ?? null;
-                    break;
-                }
-            }
-            if (!$carId) {
-                return ['success' => false, 'message' => 'A kamion (' . $kamion['rendszam'] . ') nem található a GPSmart flottakövetőben.'];
-            }
-
-            $utvonal = $this->lekerdezUtvonal($ceg_id, $carId, $datum, $datum);
-            if (!$utvonal['success']) {
-                return $utvonal;
-            }
-
-            $menetidoNyers = $utvonal['osszesito']['menetido'] ?? null;
-            $oraDecimal = $this->idoSzovegOraDecimalra($menetidoNyers);
-            if ($oraDecimal === null) {
-                return ['success' => false, 'message' => 'Ehhez a naphoz nem érhető el vezetési idő adat a GPSmart-tól (a jármű típusától függően nem minden útvonal-adat tartalmaz menetidő-összesítést).'];
-            }
-
-            return [
-                'success' => true,
-                'vezetes_ora' => $oraDecimal,
-                'menetido_nyers' => $menetidoNyers,
-                'rendszam' => $kamion['rendszam'],
-            ];
-        } catch (Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
-        }
-    }
-
-    // Item 5: jármű-kihasználtsági riport — a GPSmart útvonal-lekérdezés
-    // már ma is visszaadja az `allasido`/`menetido` napi összesítőt (ld.
+    // Jármű-kihasználtsági riport — a GPSmart útvonal-lekérdezés már ma is
+    // visszaadja az `allasido`/`menetido` napi összesítőt (ld.
     // `lekerdezUtvonal()`/ElozmenyekModal.js), de eddig sehol nem volt
     // trendezve/összesítve flottaszinten — pedig ez pontosan megmutatja,
     // melyik kamion áll feleslegesen sokat egy adott időszakban. A `carId`
     // hiányában (nincs GPSmart-párosítás) vagy CAN-busz integrációjú
-    // járműveknél (nincs menetidő-mező, ld. getVezetesJavaslat komment)
-    // az adott jármű `kihasznaltsagSzazalek: null`-lal kerül vissza, nem
+    // járműveknél (nincs menetidő-mező) az adott jármű
+    // `kihasznaltsagSzazalek: null`-lal kerül vissza, nem
     // dobja el a teljes riportot egyetlen hiányzó/hibás jármű miatt.
     public function getKihasznaltsagiRiport($ceg_id, $datumTol, $datumIg) {
         $napok = (strtotime($datumIg) - strtotime($datumTol)) / 86400;
@@ -436,12 +311,14 @@ class GpsmartInterface {
 
         $eredmeny = [];
         foreach ($poziciok['poziciok'] as $p) {
-            if (empty($p['kamion_id']) || empty($p['car_id'])) {
+            if ((empty($p['kamion_id']) && empty($p['furgon_id'])) || empty($p['car_id'])) {
                 continue;
             }
 
             $sor = [
                 'kamion_id' => $p['kamion_id'],
+                'furgon_id' => $p['furgon_id'] ?? null,
+                'jarmu_tipus' => $p['jarmu_tipus'] ?? ($p['kamion_id'] ? 'kamion' : 'furgon'),
                 'rendszam' => $p['rendszam'],
                 'menetidoOra' => null,
                 'allasidoOra' => null,
@@ -481,9 +358,9 @@ class GpsmartInterface {
     }
 
     // A GPSmart "menetidő" mezője "Ó:PP" (pl. "8:23") vagy "Ó:PP:MP" alakú
-    // szöveg — ld. Item 6 kutatás: élő teszttel megerősítve ez a tényleges
-    // formátum GPS-alapú járműveknél (CAN-busz integrációjú járműveknél a
-    // mező hiányzik, ld. fenti komment).
+    // szöveg — élő teszttel megerősítve ez a tényleges formátum GPS-alapú
+    // járműveknél (CAN-busz integrációjú járműveknél a mező hiányzik, ld.
+    // fenti komment).
     private function idoSzovegOraDecimalra($ido) {
         if (empty($ido)) {
             return null;
@@ -517,7 +394,10 @@ class GpsmartInterface {
     // probléma). Csak LEZÁRT (tegnapi vagy korábbi) napok számítanak
     // véglegesnek; a mai napot mindig annak kell élőben lekérdeznie, akinek
     // ténylegesen kell (ez a metódus nem arra való).
-    public function frissitNapiKm($ceg_id, $carId, $kamionId, $datumTol, $datumIg) {
+    // `$kamionId`/`$furgonId`: kölcsönösen kizáró — a hívó (a cron, ld.
+    // gpsmart_km_cache_frissites.php) a `lekerdezPoziciok()` `jarmu_tipus`
+    // mezője alapján dönti el, melyiket adja meg.
+    public function frissitNapiKm($ceg_id, $carId, $kamionId, $datumTol, $datumIg, $furgonId = null) {
         $ma = date('Y-m-d');
         $utvonal = $this->lekerdezUtvonal($ceg_id, $carId, $datumTol, $datumIg);
         if (!$utvonal['success']) {
@@ -547,14 +427,20 @@ class GpsmartInterface {
             $datumMutato->modify('+1 day');
         }
 
+        // `jarmu_tipus`+`jarmu_id` — NEM két külön nullázható oszlop (ld. a
+        // fenti paraméter-komment: élőben bizonyítottan hibás lett volna az
+        // `ON DUPLICATE KEY UPDATE` NULL-lal).
+        $jarmuTipus = $furgonId ? 'furgon' : 'kamion';
+        $jarmuId = $furgonId ?: $kamionId;
         $stmt = $this->db->prepare(
-            'INSERT INTO gpsmart_napi_km (admin, kamion_id, datum, km, frissitve)
-             VALUES (:admin, :kamion_id, :datum, :km, NOW())
+            'INSERT INTO gpsmart_napi_km (admin, jarmu_tipus, jarmu_id, datum, km, frissitve)
+             VALUES (:admin, :jarmu_tipus, :jarmu_id, :datum, :km, NOW())
              ON DUPLICATE KEY UPDATE km = :km2, frissitve = NOW()'
         );
         foreach ($napiOsszeg as $datum => $km) {
             $stmt->bindValue(':admin', $ceg_id);
-            $stmt->bindValue(':kamion_id', $kamionId, PDO::PARAM_INT);
+            $stmt->bindValue(':jarmu_tipus', $jarmuTipus);
+            $stmt->bindValue(':jarmu_id', $jarmuId, PDO::PARAM_INT);
             $stmt->bindValue(':datum', $datum);
             $stmt->bindValue(':km', round($km, 2));
             $stmt->bindValue(':km2', round($km, 2));
@@ -568,17 +454,20 @@ class GpsmartInterface {
     // cache-t nézi, sosem hív GPSmart-ot (azt csak a `frissitNapiKm()`
     // teszi, amit a cron hív). A mai napot itt is szándékosan kihagyjuk a
     // "hiányzó" napok közül, mert azt sosem várjuk el a cache-től.
-    public function getNapiKmHianyzoNapok($kamion_id, $datumTol, $datumIg) {
+    public function getNapiKmHianyzoNapok($kamion_id, $datumTol, $datumIg, $furgon_id = null) {
         $ma = date('Y-m-d');
         $vegDatumIg = min($datumIg, date('Y-m-d', strtotime('-1 day')));
         if ($vegDatumIg < $datumTol) {
             return [];
         }
 
+        $jarmuTipus = $furgon_id ? 'furgon' : 'kamion';
+        $jarmuId = $furgon_id ?: $kamion_id;
         $stmt = $this->db->prepare(
-            'SELECT datum FROM gpsmart_napi_km WHERE kamion_id = :kamion_id AND datum BETWEEN :tol AND :ig'
+            'SELECT datum FROM gpsmart_napi_km WHERE jarmu_tipus = :jarmu_tipus AND jarmu_id = :jarmu_id AND datum BETWEEN :tol AND :ig'
         );
-        $stmt->bindValue(':kamion_id', $kamion_id, PDO::PARAM_INT);
+        $stmt->bindValue(':jarmu_tipus', $jarmuTipus);
+        $stmt->bindValue(':jarmu_id', $jarmuId, PDO::PARAM_INT);
         $stmt->bindValue(':tol', $datumTol);
         $stmt->bindValue(':ig', $vegDatumIg);
         $stmt->execute();

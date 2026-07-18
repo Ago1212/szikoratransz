@@ -61,7 +61,14 @@ export default function CardStats({
           <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-ink-400">
             {statSubtitle}
           </p>
-          {statCaption && <p className="truncate text-xs text-ink-500">{statCaption}</p>}
+          {statCaption && (
+            // `title`: keskeny (pl. mobil 2 oszlopos) elrendezésben a `truncate`
+            // gyakran mondat közepén vágja le a feliratot — natív tooltipként
+            // a teljes szöveg így is elérhető marad, nem csak a csonk.
+            <p className="truncate text-xs text-ink-500" title={statCaption}>
+              {statCaption}
+            </p>
+          )}
         </div>
       </div>
     );

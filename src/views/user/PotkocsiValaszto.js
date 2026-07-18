@@ -38,14 +38,14 @@ export default function PotkocsiValaszto() {
   };
 
   useEffect(() => {
-    const userData = JSON.parse(sessionStorage.getItem("user"));
+    const userData = JSON.parse(localStorage.getItem("user"));
     setUser(userData);
-    // A sessionStorage-beli user.aktiv_potkocsi elavult lehet, ha
+    // A localStorage-beli user.aktiv_potkocsi elavult lehet, ha
     // időközben egy korábbi kérést jóváhagytak.
     fetchAction("getSajatSofor", { id: userData.id }).then((result) => {
       if (result?.success && result.user) {
         const merged = { ...userData, ...result.user };
-        sessionStorage.setItem("user", JSON.stringify(merged));
+        localStorage.setItem("user", JSON.stringify(merged));
         setUser(merged);
       }
     });

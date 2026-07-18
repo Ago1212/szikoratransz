@@ -20,17 +20,17 @@ const JarmuValaszto = React.lazy(() => import("views/user/JarmuValaszto.js"));
 const PotkocsiValaszto = React.lazy(
   () => import("views/user/PotkocsiValaszto.js"),
 );
+const FurgonValaszto = React.lazy(() => import("views/user/FurgonValaszto.js"));
 const BejelentesUj = React.lazy(() => import("views/user/BejelentesUj.js"));
 const Bejelentesek = React.lazy(() => import("views/user/Bejelentesek.js"));
 const Tankolas = React.lazy(() => import("views/user/Tankolas.js"));
 const Profil = React.lazy(() => import("views/user/Profil.js"));
 const Ertesitesek = React.lazy(() => import("views/user/Ertesitesek.js"));
-const VezetesiIdo = React.lazy(() => import("views/user/VezetesiIdo.js"));
 const Helyszinek = React.lazy(() => import("views/user/Helyszinek.js"));
 const HelyszinReszletek = React.lazy(() => import("views/user/HelyszinReszletek.js"));
 
 const PrivateRoute = ({ component: Component, ...rest }) => {
-  const isAuthenticated = sessionStorage.getItem("user") !== null;
+  const isAuthenticated = localStorage.getItem("user") !== null;
   return (
     <Route
       {...rest}
@@ -46,7 +46,6 @@ const desktopLinks = [
   { to: "/user/bejelentesek", label: "Bejelentéseim" },
   { to: "/user/helyszinek", label: "Helyszínek" },
   { to: "/user/tankolas", label: "Tankolás" },
-  { to: "/user/vezetesi-ido", label: "Vezetési idő" },
   { to: "/user/profil", label: "Profil" },
 ];
 
@@ -62,10 +61,10 @@ function DesktopNav() {
   const { osszesSzam } = useSajatErtesitesek();
 
   const handleLogout = async () => {
-    const user = JSON.parse(sessionStorage.getItem("user") || "null");
+    const user = JSON.parse(localStorage.getItem("user") || "null");
     await fetchAction("logoutUser", { id: user?.id });
-    sessionStorage.removeItem("user");
-    sessionStorage.removeItem("sessionToken");
+    localStorage.removeItem("user");
+    localStorage.removeItem("sessionToken");
     history.push("/auth/login");
   };
 
@@ -160,6 +159,11 @@ export default function User() {
               component={PotkocsiValaszto}
             />
             <PrivateRoute
+              path="/user/furgon-valaszto"
+              exact
+              component={FurgonValaszto}
+            />
+            <PrivateRoute
               path="/user/bejelentes/uj"
               exact
               component={BejelentesUj}
@@ -170,7 +174,6 @@ export default function User() {
               component={Bejelentesek}
             />
             <PrivateRoute path="/user/tankolas" exact component={Tankolas} />
-            <PrivateRoute path="/user/vezetesi-ido" exact component={VezetesiIdo} />
             <PrivateRoute path="/user/profil" exact component={Profil} />
             <PrivateRoute
               path="/user/ertesitesek"

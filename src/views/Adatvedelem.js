@@ -1,7 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import Footer from "components/Footers/Footer.js";
+import Breadcrumb from "components/Landing/Breadcrumb.js";
 import { useSeo } from "utils/useSeo.js";
+
+const BREADCRUMB_ITEMS = [{ name: "Adatvédelmi tájékoztató", path: "/adatvedelem" }];
 
 // Adatvédelmi tájékoztató — elsősorban az ajánlatkérő/sofőr-jelentkezési
 // formok GDPR-hozzájárulási jelölőnégyzete hivatkozik erre az oldalra
@@ -14,8 +17,9 @@ export default function Adatvedelem() {
   useSeo({
     title: "Adatvédelmi tájékoztató | Szikora Transz Kft.",
     description:
-      "Tájékoztató arról, milyen személyes adatokat kezel a Szikora Transz Kft. az ajánlatkérő és sofőr-jelentkezési űrlapok kitöltésekor, és milyen jogok illetik meg az érintetteket.",
+      "Tájékoztató, milyen személyes adatokat kezel a Szikora Transz Kft. az ajánlatkérő és sofőr-jelentkezési űrlapok kitöltésekor, és milyen jogok illetik meg Önt.",
     path: "/adatvedelem",
+    breadcrumb: BREADCRUMB_ITEMS,
   });
 
   return (
@@ -23,7 +27,7 @@ export default function Adatvedelem() {
       <nav className="border-b border-[#23262B]/8 bg-[#F2F3F5]/90 backdrop-blur-sm">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link to="/">
-            <img src="/logo2.svg" alt="Szikora Transz Kft" className="h-9 w-auto" />
+            <img src="/logo2.svg" alt="Szikora Transz Kft" width="1600" height="578" className="h-9 w-auto" />
           </Link>
           <Link
             to="/"
@@ -35,6 +39,7 @@ export default function Adatvedelem() {
       </nav>
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20">
+        <Breadcrumb items={BREADCRUMB_ITEMS} />
         <span className="inline-flex items-center gap-2 text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-[#1E3AA8] mb-5">
           <span className="w-1.5 h-1.5 rounded-full bg-[#1E3AA8]"></span>
           Jogi tájékoztató

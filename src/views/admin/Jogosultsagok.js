@@ -9,6 +9,7 @@ import Spinner from "components/UI/Spinner.js";
 const MODUL_LABEL = {
   kamionok: "Kamionok",
   potkocsik: "Pótkocsik",
+  furgonok: "Furgonok",
   karbantartasok: "Karbantartások",
   soforok: "Sofőrök",
   bejelentesek: "Bejelentések",
@@ -16,7 +17,6 @@ const MODUL_LABEL = {
   ugyfelek: "Ügyfelek",
   naplo: "Napló",
   koltsegek: "Pénzforgalom",
-  vezetesi_ido: "Vezetési idő",
 };
 
 // "Diszpécser" -> "diszpecser", "Raktáros / Logisztikus" -> "raktaros_logisztikus"
@@ -33,24 +33,36 @@ const slugify = (str) =>
 
 // Egyszerű, on-brand jelölőnégyzet — a projektben eddig sehol nem volt
 // natív checkbox, csak select/input/textarea; itt egy 44×44px érintési
-// zónába csomagolva (ld. a mobil audit érintési-célterület javaslatait),
-// bár ez az oldal elsősorban asztali admin-használatra készült.
-function Jelolo({ checked, onChange, disabled }) {
+// zónába csomagolva (ld. a mobil audit érintési-célterület javaslatait).
+// Opcionális `text` prop: a mobil kártyanézet (ld. lentebb) egy szöveges
+// felirattal (Hozzáférés/Szerkesztés/Törlés) együtt jeleníti meg — ez a
+// szöveg UGYANAZON a `<label>`-ön belül van, nem egy külön, körbecsomagoló
+// labelben (a beágyazott `<label>` érvénytelen HTML lenne), így a felirat
+// koppintása is a checkbox-ot váltja, nem csak a 44×44-es ikon-zóna. Az
+// asztali táblázat-nézet (`text` nélkül) az eredeti, ikon-only alakot kapja.
+function Jelolo({ checked, onChange, disabled, text }) {
   return (
-    <label className="inline-flex h-11 w-11 cursor-pointer items-center justify-center">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={onChange}
-        disabled={disabled}
-        className="h-5 w-5 rounded border-ink-300 accent-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
-      />
+    <label
+      className={`inline-flex cursor-pointer items-center ${
+        text ? "gap-2 py-1" : "h-11 w-11 justify-center"
+      }`}
+    >
+      <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center">
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={onChange}
+          disabled={disabled}
+          className="h-5 w-5 rounded border-ink-300 accent-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
+        />
+      </span>
+      {text && <span className="text-sm text-ink-600">{text}</span>}
     </label>
   );
 }
 
 export default function Jogosultsagok() {
-  const user = JSON.parse(sessionStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user"));
   const [szerepkorok, setSzerepkorok] = useState([]);
   const [selected, setSelected] = useState("admin");
   const [jogosultsagok, setJogosultsagok] = useState([]);
@@ -275,37 +287,25 @@ export default function Jogosultsagok() {
                   {jogosultsagok.map((row) => (
                     <div key={row.modul} className="px-5 py-4">
                       <p className="mb-2.5 text-sm font-bold text-ink-900">{MODUL_LABEL[row.modul] || row.modul}</p>
-                      <div className="flex flex-wrap gap-x-6 gap-y-1">
-                        <label className="flex items-center gap-2 text-sm text-ink-600">
-                          <input
-                            type="checkbox"
-                            checked={row.hozzaferes === "I"}
-                            onChange={() => toggle(row.modul, "hozzaferes")}
-                            className="h-5 w-5 rounded border-ink-300 accent-brand-600"
-                          />
-                          Hozzáférés
-                        </label>
+                      <div className="flex flex-wrap gap-x-4 gap-y-0.5">
+                        <Jelolo
+                          text="Hozzáférés"
+                          checked={row.hozzaferes === "I"}
+                          onChange={() => toggle(row.modul, "hozzaferes")}
+                        />
                         {row.szerkesztes !== null && (
-                          <label className="flex items-center gap-2 text-sm text-ink-600">
-                            <input
-                              type="checkbox"
-                              checked={row.szerkesztes === "I"}
-                              onChange={() => toggle(row.modul, "szerkesztes")}
-                              className="h-5 w-5 rounded border-ink-300 accent-brand-600"
-                            />
-                            Szerkesztés
-                          </label>
+                          <Jelolo
+                            text="Szerkesztés"
+                            checked={row.szerkesztes === "I"}
+                            onChange={() => toggle(row.modul, "szerkesztes")}
+                          />
                         )}
                         {row.torles !== null && (
-                          <label className="flex items-center gap-2 text-sm text-ink-600">
-                            <input
-                              type="checkbox"
-                              checked={row.torles === "I"}
-                              onChange={() => toggle(row.modul, "torles")}
-                              className="h-5 w-5 rounded border-ink-300 accent-brand-600"
-                            />
-                            Törlés
-                          </label>
+                          <Jelolo
+                            text="Törlés"
+                            checked={row.torles === "I"}
+                            onChange={() => toggle(row.modul, "torles")}
+                          />
                         )}
                       </div>
                     </div>

@@ -21,7 +21,7 @@ const UserDropdown = ({ settingsPath = "/admin/settings" }) => {
 
   let user = null;
   try {
-    user = JSON.parse(sessionStorage.getItem("user"));
+    user = JSON.parse(localStorage.getItem("user"));
   } catch (e) {
     user = null;
   }
@@ -52,7 +52,8 @@ const UserDropdown = ({ settingsPath = "/admin/settings" }) => {
   const handleLogout = async () => {
     closePopover();
     const result = await fetchAction("logoutUser", { id: user?.id });
-    sessionStorage.removeItem("user");
+    localStorage.removeItem("user");
+    localStorage.removeItem("sessionToken");
     if (!result?.success) {
       // Session already gone client-side regardless of server response.
       console.warn(result?.message || "Logout request failed.");

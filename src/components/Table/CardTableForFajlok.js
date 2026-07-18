@@ -59,7 +59,7 @@ const PAGE_SIZE = 10;
 export default function CardTableForFajlok({ id, tabla }) {
   const [files, setFiles] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const storedUserData = sessionStorage.getItem("user");
+  const storedUserData = localStorage.getItem("user");
   const admin = storedUserData ? JSON.parse(storedUserData).ceg_id : "0";
   // A lapozás/keresés csak az admin saját, önálló "Fájlok" listaoldalán
   // (tabla === "admin") aktív — a komponens más kontextusban (pl.

@@ -20,7 +20,7 @@ export default function Bejelentesek() {
   // semmi nem látszott, amíg nem választottak kamiont).
   useEffect(() => {
     const fetchKamionok = async () => {
-      const user = JSON.parse(sessionStorage.getItem("user"));
+      const user = JSON.parse(localStorage.getItem("user"));
       const result = await fetchAction("getKamionValaszto", { ceg_id: user.ceg_id });
       if (result.success) {
         setKamionok(result.kamionok || []);
@@ -36,7 +36,7 @@ export default function Bejelentesek() {
     let cancelled = false;
     const fetchData = async () => {
       setIsLoading(true);
-      const user = JSON.parse(sessionStorage.getItem("user"));
+      const user = JSON.parse(localStorage.getItem("user"));
       const result = await fetchAction("getBejelentesek", {
         ceg_id: user.ceg_id,
         kamion: selectedKamion || undefined,
@@ -68,7 +68,7 @@ export default function Bejelentesek() {
   };
 
   const handleExportAll = useCallback(async () => {
-    const user = JSON.parse(sessionStorage.getItem("user"));
+    const user = JSON.parse(localStorage.getItem("user"));
     const result = await fetchAction("getBejelentesek", {
       ceg_id: user.ceg_id,
       kamion: selectedKamion || undefined,

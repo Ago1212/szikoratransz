@@ -54,7 +54,7 @@ export default function KihasznaltsagiModal({ open, onClose, cegId, kerelmezoId 
       <div className="space-y-4">
         <p className="text-xs text-ink-400">
           A megtett-idő (menetidő) és az állásidő aránya a GPSmart adatai alapján, legfeljebb 7
-          napos tartományra — megmutatja, melyik kamion áll feleslegesen sokat.
+          napos tartományra — megmutatja, melyik jármű áll feleslegesen sokat.
         </p>
         <FormSection columns={3}>
           <FormField type="date" label="Dátumtól" value={datumTol} onChange={(e) => setDatumTol(e.target.value)} />
@@ -84,7 +84,7 @@ export default function KihasznaltsagiModal({ open, onClose, cegId, kerelmezoId 
               </thead>
               <tbody>
                 {jarmuvek.map((j) => (
-                  <tr key={j.kamion_id} className="border-t border-ink-100">
+                  <tr key={`${j.jarmu_tipus}:${j.kamion_id ?? j.furgon_id}`} className="border-t border-ink-100">
                     <td className="px-3 py-2 font-semibold text-ink-800">{j.rendszam}</td>
                     <td className="px-3 py-2 text-right tabular-nums text-ink-600">
                       <span className="inline-flex items-center gap-1">

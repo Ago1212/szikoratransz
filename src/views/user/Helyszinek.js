@@ -19,7 +19,7 @@ export default function Helyszinek() {
   const [saving, setSaving] = useState(false);
 
   const load = async () => {
-    const user = JSON.parse(sessionStorage.getItem("user"));
+    const user = JSON.parse(localStorage.getItem("user"));
     const result = await fetchAction("getHelyszinek", { id: user.admin });
     if (result?.success) setHelyszinek(result.helyszinek || []);
     setLoading(false);
@@ -38,7 +38,7 @@ export default function Helyszinek() {
     if (!ujNev.trim()) return;
     setSaving(true);
     try {
-      const user = JSON.parse(sessionStorage.getItem("user"));
+      const user = JSON.parse(localStorage.getItem("user"));
       const result = await fetchAction("newHelyszin", { admin: user.admin, nev: ujNev.trim() });
       if (result?.success) {
         toast.success("Helyszín rögzítve.");

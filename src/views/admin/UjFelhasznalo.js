@@ -29,7 +29,7 @@ const emptyForm = { name: "", email: "", phone: "", password: "" };
 
 export default function UjFelhasznalo() {
   const history = useHistory();
-  const user = JSON.parse(sessionStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user"));
   const [szerepkorok, setSzerepkorok] = useState([]);
   const [loadingSzerepkorok, setLoadingSzerepkorok] = useState(true);
   const [selectedRole, setSelectedRole] = useState(null);

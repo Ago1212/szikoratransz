@@ -24,7 +24,19 @@ import {
   PiUserCircleLight,
   PiQuotesLight,
   PiCaretDownLight,
+  PiIdentificationCardLight,
 } from "react-icons/pi";
+
+// A "Sofőr jelentkezés" kártya saját, kiemelt előny-listája — külön tömbben,
+// hogy a JSX ne legyen zsúfolt, és mert ez a lista kizárólag ide tartozik
+// (nem megosztott adat, mint a data/landingContent.js FEATURES/FAQ_ITEMS).
+// A 3 pont a felhasználóval egyeztetett, valós üzeneteket tükrözi — nem
+// kitalált juttatás/fizetési szám, amit nem tudnánk alátámasztani.
+const SOFOR_ELONYOK = [
+  "Családias légkör — sok sofőrünk évek óta velünk dolgozik",
+  "Modern, karbantartott flotta és rendezett munkakörülmények",
+  "Versenyképes, rendszeres bérezés",
+];
 
 // ---------------------------------------------------------------------------
 // Design tokens (Tailwind arbitrary values — nem igényel config módosítást)
@@ -245,6 +257,8 @@ export default function Landing() {
                 <img
                   src="/logo2.svg"
                   alt="Szikora Transz Kft"
+                  width="1600"
+                  height="578"
                   className="h-9 md:h-10 w-auto"
                 />
               </Link>
@@ -657,12 +671,15 @@ export default function Landing() {
                 </div>
               </div>
               <div className="relative rounded-xl overflow-hidden shadow-2xl aspect-[4/3]">
-                <img
-                  src="/flotta-1.jpg"
-                  alt="Szikora Transz kamion"
-                  loading="lazy"
-                  className="w-full h-full object-cover"
-                />
+                <picture>
+                  <source srcSet="/kamionflotta-szikora-transz.webp" type="image/webp" />
+                  <img
+                    src="/kamionflotta-szikora-transz.jpg"
+                    alt="Szikora Transz kamion"
+                    loading="lazy"
+                    className="w-full h-full object-cover"
+                  />
+                </picture>
                 <div className="absolute inset-0 bg-gradient-to-t from-[#23262B] via-transparent to-transparent"></div>
                 <div className="absolute bottom-0 left-0 p-6">
                   <h4 className="font-[Overpass] font-bold text-xl text-white mb-1">
@@ -687,12 +704,15 @@ export default function Landing() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div className="relative rounded-xl overflow-hidden shadow-2xl aspect-[4/3] order-2 lg:order-1">
-                <img
-                  src="/flotta-3.jpg"
-                  alt="Szikora Transz kamion borult égbolt alatt"
-                  loading="lazy"
-                  className="w-full h-full object-cover"
-                />
+                <picture>
+                  <source srcSet="/kamion-orszagut-szikora-transz.webp" type="image/webp" />
+                  <img
+                    src="/kamion-orszagut-szikora-transz.jpg"
+                    alt="Szikora Transz kamion borult égbolt alatt"
+                    loading="lazy"
+                    className="w-full h-full object-cover"
+                  />
+                </picture>
                 <div className="absolute inset-0 bg-[#23262B]/20"></div>
               </div>
               <div className="order-1 lg:order-2">
@@ -809,6 +829,7 @@ export default function Landing() {
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "FAQPage",
+            inLanguage: "hu",
             mainEntity: FAQ_ITEMS.map((item) => ({
               "@type": "Question",
               name: item.q,
@@ -835,19 +856,20 @@ export default function Landing() {
                 const isOpen = openFaq === index;
                 return (
                   <div key={item.q}>
-                    <button
-                      onClick={() => setOpenFaq(isOpen ? null : index)}
-                      className="w-full flex items-center justify-between gap-4 py-6 text-left"
-                    >
-                      <span className="font-[Overpass] font-semibold text-[#23262B] text-lg">
+                    <h3>
+                      <button
+                        onClick={() => setOpenFaq(isOpen ? null : index)}
+                        aria-expanded={isOpen}
+                        className="w-full flex items-center justify-between gap-4 py-6 text-left font-[Overpass] font-semibold text-[#23262B] text-lg"
+                      >
                         {item.q}
-                      </span>
-                      <PiCaretDownLight
-                        className={`text-[#1E3AA8] text-sm flex-shrink-0 transition-transform duration-300 ${
-                          isOpen ? "rotate-180" : ""
-                        }`}
-                      />
-                    </button>
+                        <PiCaretDownLight
+                          className={`text-[#1E3AA8] text-sm flex-shrink-0 transition-transform duration-300 ${
+                            isOpen ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+                    </h3>
                     {isOpen && (
                       <p className="text-[#23262B]/70 leading-relaxed pb-6 pr-8">
                         {item.a}
@@ -897,21 +919,58 @@ export default function Landing() {
                   újrahasználhassák ugyanazt a submit-logikát). */}
               <QuoteForm />
 
-              {/* Sofőr jelentkezés — másodlagos, barátságosabb hangvételű űrlap */}
-              <div className="bg-[#1E3AA8]/[0.04] border border-[#1E3AA8]/15 rounded-xl overflow-hidden">
+              {/* Sofőr jelentkezés — másodlagos, de tudatosan vonzóvá tett
+                  űrlap: konkrét (a felhasználóval egyeztetett) előnyök +
+                  a jogosítvány-követelmény előre, hogy a jelentkező már a
+                  kitöltés előtt lássa, számára szól-e az ajánlat, és mit
+                  nyer vele. A zöld (emerald) tónus szándékos, nem
+                  tetszőleges szín-választás: a kimenő e-mail sablonok
+                  (backend/interface/emailInterface.php TONES) már ma is
+                  "positive/emerald" jelvénnyel küldik a sofőr-jelentkezési
+                  visszaigazolást — ez a kártya ugyanazt a szemantikát hozza
+                  vizuálisan a landing oldalra is. Szándékosan NEM a
+                  QuoteForm sötét #2E3239 "signature" kártyaszíne — az a
+                  bevétel-generáló ajánlatkérésnek van fenntartva, hogy a két
+                  form vizuálisan is jelezze, melyik az elsődleges konverziós
+                  cél az oldalon. */}
+              <div className="bg-emerald-50/60 border border-emerald-200 rounded-xl overflow-hidden">
+                <div className="h-1 bg-gradient-to-r from-emerald-500 to-emerald-600"></div>
                 <div className="p-8">
-                  <div className="flex items-center gap-4 mb-2">
-                    <div className="w-12 h-12 bg-[#1E3AA8]/10 text-[#1E3AA8] rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="inline-flex items-center gap-2 text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-emerald-700 mb-3">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                    Sofőröket keresünk
+                  </span>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center flex-shrink-0">
                       <PiTruckLight className="text-lg" />
                     </div>
                     <h3 className="font-[Overpass] font-bold text-xl text-[#23262B]">
-                      Sofőr jelentkezés
+                      Csatlakozzon a csapatunkhoz
                     </h3>
                   </div>
+
+                  <div className="space-y-2.5 mb-5">
+                    {SOFOR_ELONYOK.map((elony) => (
+                      <div key={elony} className="flex items-start gap-2.5 text-sm text-[#23262B]/70">
+                        <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <PiCheckLight className="text-[11px]" />
+                        </span>
+                        {elony}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex items-start gap-2.5 bg-white/70 border border-emerald-200/70 rounded-lg px-3.5 py-2.5 mb-6">
+                    <PiIdentificationCardLight className="text-emerald-700 text-base flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-[#23262B]/60">
+                      <span className="font-semibold text-[#23262B]/80">Amit kérünk: </span>
+                      érvényes C+E kategóriás jogosítvány és GKI kártya.
+                    </p>
+                  </div>
+
                   <p className="text-[#23262B]/50 mb-6 text-sm">
-                    Csatlakozzon profi sofőr csapatunkhoz! Nem kérünk azonnal
-                    önéletrajzat — írjon pár sort, és felvesszük Önnel a
-                    kapcsolatot.
+                    Nem kérünk azonnal önéletrajzat — írjon pár sort, és
+                    hamarosan felvesszük Önnel a kapcsolatot.
                   </p>
 
                   <form onSubmit={submitDriverApplication}>
@@ -925,7 +984,7 @@ export default function Landing() {
                           name="name"
                           value={applicationForm.name}
                           onChange={handleApplicationChange}
-                          className="w-full px-4 py-3 border border-[#1E3AA8]/20 bg-white rounded-xl text-[#23262B] focus:outline-none focus:ring-1 focus:ring-[#1E3AA8] focus:border-[#1E3AA8] transition duration-300"
+                          className="w-full px-4 py-3 border border-emerald-200 bg-white rounded-xl text-[#23262B] focus:outline-none focus:ring-1 focus:ring-emerald-600 focus:border-emerald-600 transition duration-300"
                           placeholder="Teljes név"
                           required
                         />
@@ -940,7 +999,7 @@ export default function Landing() {
                           name="phone"
                           value={applicationForm.phone}
                           onChange={handleApplicationChange}
-                          className="w-full px-4 py-3 border border-[#1E3AA8]/20 bg-white rounded-xl text-[#23262B] focus:outline-none focus:ring-1 focus:ring-[#1E3AA8] focus:border-[#1E3AA8] transition duration-300"
+                          className="w-full px-4 py-3 border border-emerald-200 bg-white rounded-xl text-[#23262B] focus:outline-none focus:ring-1 focus:ring-emerald-600 focus:border-emerald-600 transition duration-300"
                           placeholder="Telefonszám"
                           required
                         />
@@ -955,7 +1014,7 @@ export default function Landing() {
                           name="email"
                           value={applicationForm.email}
                           onChange={handleApplicationChange}
-                          className="w-full px-4 py-3 border border-[#1E3AA8]/20 bg-white rounded-xl text-[#23262B] focus:outline-none focus:ring-1 focus:ring-[#1E3AA8] focus:border-[#1E3AA8] transition duration-300"
+                          className="w-full px-4 py-3 border border-emerald-200 bg-white rounded-xl text-[#23262B] focus:outline-none focus:ring-1 focus:ring-emerald-600 focus:border-emerald-600 transition duration-300"
                           placeholder="Email cím"
                           required
                         />
@@ -963,15 +1022,15 @@ export default function Landing() {
 
                       <div>
                         <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-[#23262B]/40 mb-2">
-                          Üzenet
+                          Pár sor Önről
                         </label>
                         <textarea
                           rows="3"
                           name="message"
                           value={applicationForm.message}
                           onChange={handleApplicationChange}
-                          className="w-full px-4 py-3 border border-[#1E3AA8]/20 bg-white rounded-xl text-[#23262B] focus:outline-none focus:ring-1 focus:ring-[#1E3AA8] focus:border-[#1E3AA8] transition duration-300"
-                          placeholder="Üzenet szövege..."
+                          className="w-full px-4 py-3 border border-emerald-200 bg-white rounded-xl text-[#23262B] focus:outline-none focus:ring-1 focus:ring-emerald-600 focus:border-emerald-600 transition duration-300"
+                          placeholder="Pl. hány éve vezet kamiont, milyen jogosítványa/kártyája van..."
                           required
                         ></textarea>
                       </div>
@@ -980,7 +1039,7 @@ export default function Landing() {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full mt-6 px-6 py-3 border-2 border-[#1E3AA8] text-[#1E3AA8] hover:bg-[#1E3AA8] hover:text-white font-[Overpass] font-bold uppercase tracking-wide text-sm rounded-xl transition duration-300 disabled:opacity-50"
+                      className="w-full mt-6 px-6 py-3 border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-600 hover:text-white font-[Overpass] font-bold uppercase tracking-wide text-sm rounded-xl transition duration-300 disabled:opacity-50"
                     >
                       {isSubmitting ? (
                         <span className="flex items-center justify-center">
@@ -1007,7 +1066,7 @@ export default function Landing() {
                           Küldés...
                         </span>
                       ) : (
-                        "Jelentkezés elküldése"
+                        "Jelentkezem sofőrnek"
                       )}
                     </button>
                   </form>

@@ -19,7 +19,7 @@ export default function Soforok() {
     let cancelled = false;
     const fetchData = async () => {
       setLoading(true);
-      const user = JSON.parse(sessionStorage.getItem("user"));
+      const user = JSON.parse(localStorage.getItem("user"));
       const result = await fetchAction("getSoforok", {
         id: user.ceg_id,
         kerelmezo_id: user.id,
@@ -46,7 +46,7 @@ export default function Soforok() {
   }, [page, search]);
 
   const handleExportAll = useCallback(async () => {
-    const user = JSON.parse(sessionStorage.getItem("user"));
+    const user = JSON.parse(localStorage.getItem("user"));
     const result = await fetchAction("getSoforok", {
       id: user.ceg_id,
       kerelmezo_id: user.id,

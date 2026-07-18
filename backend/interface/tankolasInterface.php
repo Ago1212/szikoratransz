@@ -14,12 +14,15 @@ class TankolasInterface {
             $egysegar = isset($data['egysegar']) && $data['egysegar'] !== '' ? (float) $data['egysegar'] : null;
             $osszeg = $egysegar !== null ? round($liter * $egysegar, 2) : null;
 
-            $query = "INSERT INTO tankolasok (admin, sofor_id, kamion_id, datum, liter, egysegar, osszeg, km_oraallas, helyszin)
-                      VALUES (:admin, :sofor_id, :kamion_id, :datum, :liter, :egysegar, :osszeg, :km_oraallas, :helyszin)";
+            // A furgon önhajtó jármű, mint a kamion, ezért ugyanúgy tankolható
+            // — `kamion_id`/`furgon_id` kölcsönösen kizáró (ld. sql/28.sql).
+            $query = "INSERT INTO tankolasok (admin, sofor_id, kamion_id, furgon_id, datum, liter, egysegar, osszeg, km_oraallas, helyszin)
+                      VALUES (:admin, :sofor_id, :kamion_id, :furgon_id, :datum, :liter, :egysegar, :osszeg, :km_oraallas, :helyszin)";
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(':admin', $data['admin']);
             $stmt->bindValue(':sofor_id', $data['sofor_id']);
             $stmt->bindValue(':kamion_id', empty($data['kamion_id']) ? null : $data['kamion_id']);
+            $stmt->bindValue(':furgon_id', empty($data['furgon_id']) ? null : $data['furgon_id']);
             $stmt->bindValue(':datum', empty($data['datum']) ? date('Y-m-d H:i:s') : $data['datum']);
             $stmt->bindValue(':liter', $liter);
             $stmt->bindValue(':egysegar', $egysegar);
@@ -60,33 +63,64 @@ class TankolasInterface {
     // automatikus döntésre szolgál.
     const ANOMALIA_KUSZOB_SZAZALEK = 20;
 
-    public function getFogyasztasElemzes($ceg_id, $kamion_id = null) {
+    // `$kamion_id`/`$furgon_id`: opcionális, egy adott jármű saját fogyasztás-
+    // elemzésére szűkít (ld. Kamionok/Furgonok adatlap saját kártyája). Ha
+    // mindkettő üres, a teljes flotta (kamionok ÉS furgonok) elemzése jön
+    // vissza egy közös, `jarmu_tipus`-szal megkülönböztetett listában — a
+    // furgon önhajtó jármű, mint a kamion, ezért ugyanaz a "két tankolás
+    // közötti fogyasztás" módszer alkalmazható rá.
+    public function getFogyasztasElemzes($ceg_id, $kamion_id = null, $furgon_id = null) {
         try {
-            $query = "SELECT id, kamion_id, datum, liter, km_oraallas
-                      FROM tankolasok
-                      WHERE admin = :ceg_id AND torolt <> 'I' AND kamion_id IS NOT NULL AND km_oraallas IS NOT NULL";
-            $params = [':ceg_id' => $ceg_id];
-            if (!empty($kamion_id)) {
-                $query .= " AND kamion_id = :kamion_id";
-                $params[':kamion_id'] = $kamion_id;
+            $sorok = [];
+            if (empty($furgon_id)) {
+                $query = "SELECT id, kamion_id AS jarmu_id, 'kamion' AS jarmu_tipus, datum, liter, km_oraallas
+                          FROM tankolasok
+                          WHERE admin = :ceg_id AND torolt <> 'I' AND kamion_id IS NOT NULL AND km_oraallas IS NOT NULL";
+                $params = [':ceg_id' => $ceg_id];
+                if (!empty($kamion_id)) {
+                    $query .= " AND kamion_id = :kamion_id";
+                    $params[':kamion_id'] = $kamion_id;
+                }
+                $query .= " ORDER BY kamion_id ASC, km_oraallas ASC";
+                $stmt = $this->db->prepare($query);
+                foreach ($params as $k => $v) {
+                    $stmt->bindValue($k, $v);
+                }
+                $stmt->execute();
+                $sorok = array_merge($sorok, $stmt->fetchAll(PDO::FETCH_ASSOC));
             }
-            $query .= " ORDER BY kamion_id ASC, km_oraallas ASC";
-            $stmt = $this->db->prepare($query);
-            foreach ($params as $k => $v) {
-                $stmt->bindValue($k, $v);
+            if (empty($kamion_id)) {
+                $query = "SELECT id, furgon_id AS jarmu_id, 'furgon' AS jarmu_tipus, datum, liter, km_oraallas
+                          FROM tankolasok
+                          WHERE admin = :ceg_id AND torolt <> 'I' AND furgon_id IS NOT NULL AND km_oraallas IS NOT NULL";
+                $params = [':ceg_id' => $ceg_id];
+                if (!empty($furgon_id)) {
+                    $query .= " AND furgon_id = :furgon_id";
+                    $params[':furgon_id'] = $furgon_id;
+                }
+                $query .= " ORDER BY furgon_id ASC, km_oraallas ASC";
+                $stmt = $this->db->prepare($query);
+                foreach ($params as $k => $v) {
+                    $stmt->bindValue($k, $v);
+                }
+                $stmt->execute();
+                $sorok = array_merge($sorok, $stmt->fetchAll(PDO::FETCH_ASSOC));
             }
-            $stmt->execute();
-            $sorok = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             $kamionRendszamok = $this->getKamionRendszamok($ceg_id);
+            $furgonRendszamok = $this->getFurgonRendszamok($ceg_id);
 
             $csoportok = [];
             foreach ($sorok as $sor) {
-                $csoportok[$sor['kamion_id']][] = $sor;
+                $csoportok[$sor['jarmu_tipus'] . ':' . $sor['jarmu_id']][] = $sor;
             }
 
             $eredmeny = [];
-            foreach ($csoportok as $kamionId => $tetelek) {
+            foreach ($csoportok as $kulcs => $tetelek) {
+                [$jarmuTipus, $jarmuId] = explode(':', $kulcs, 2);
+                $rendszam = $jarmuTipus === 'furgon'
+                    ? ($furgonRendszamok[$jarmuId] ?? null)
+                    : ($kamionRendszamok[$jarmuId] ?? null);
                 $szakaszok = [];
                 for ($i = 1; $i < count($tetelek); $i++) {
                     $elozo = $tetelek[$i - 1];
@@ -110,8 +144,10 @@ class TankolasInterface {
                     // Van tankolás-adat, de nincs két, egymást követő
                     // érvényes km-óraállás — nem tudunk fogyasztást számolni.
                     $eredmeny[] = [
-                        'kamion_id' => $kamionId,
-                        'rendszam' => $kamionRendszamok[$kamionId] ?? null,
+                        'jarmu_tipus' => $jarmuTipus,
+                        'kamion_id' => $jarmuTipus === 'kamion' ? $jarmuId : null,
+                        'furgon_id' => $jarmuTipus === 'furgon' ? $jarmuId : null,
+                        'rendszam' => $rendszam,
                         'atlagFogyasztas' => null,
                         'szakaszok' => [],
                     ];
@@ -136,8 +172,10 @@ class TankolasInterface {
                 unset($sz);
 
                 $eredmeny[] = [
-                    'kamion_id' => $kamionId,
-                    'rendszam' => $kamionRendszamok[$kamionId] ?? null,
+                    'jarmu_tipus' => $jarmuTipus,
+                    'kamion_id' => $jarmuTipus === 'kamion' ? $jarmuId : null,
+                    'furgon_id' => $jarmuTipus === 'furgon' ? $jarmuId : null,
+                    'rendszam' => $rendszam,
                     'atlagFogyasztas' => round($tipikusFogyasztas, 2),
                     'szakaszok' => array_reverse($szakaszok), // legújabb elöl
                 ];
@@ -172,6 +210,17 @@ class TankolasInterface {
 
     private function getKamionRendszamok($ceg_id) {
         $stmt = $this->db->prepare("SELECT id, rendszam FROM kamion WHERE admin = :ceg_id AND torolt <> 'I'");
+        $stmt->bindValue(':ceg_id', $ceg_id);
+        $stmt->execute();
+        $map = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $map[$row['id']] = $row['rendszam'];
+        }
+        return $map;
+    }
+
+    private function getFurgonRendszamok($ceg_id) {
+        $stmt = $this->db->prepare("SELECT id, rendszam FROM furgon WHERE admin = :ceg_id AND torolt <> 'I'");
         $stmt->bindValue(':ceg_id', $ceg_id);
         $stmt->execute();
         $map = [];
