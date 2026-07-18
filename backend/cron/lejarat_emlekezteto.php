@@ -118,19 +118,6 @@ foreach ($adminStmt->fetchAll(PDO::FETCH_ASSOC) as $admin) {
         continue;
     }
 
-    $listHtml = '<ul>';
-    foreach ($items as $item) {
-        $listHtml .= '<li>' . htmlspecialchars($item) . '</li>';
-    }
-    $listHtml .= '</ul>';
-
-    $body = '<div style="font-family:sans-serif;">'
-        . '<h2>Közelgő lejáratok — ' . htmlspecialchars($admin['name']) . '</h2>'
-        . '<p>A következő ' . $WARNING_WINDOW_DAYS . ' napban az alábbi határidők járnak le:</p>'
-        . $listHtml
-        . '<p>Részletek: <a href="https://szikora-transz.hu/admin/esemenyek">admin/esemenyek</a></p>'
-        . '</div>';
-
-    $result = $emailInterface->sendNotification($admin['email'], 'Közelgő lejáratok — Szikora Transz', $body);
+    $result = $emailInterface->sendLejaratEmlekezteto($admin['email'], $admin['name'], $items, $WARNING_WINDOW_DAYS);
     echo date('c') . ' — ' . $admin['email'] . ': ' . count($items) . ' tétel, küldés ' . ($result['success'] ? 'sikeres' : 'sikertelen') . PHP_EOL;
 }
