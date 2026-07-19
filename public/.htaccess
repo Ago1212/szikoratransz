@@ -23,14 +23,54 @@
   # valódi könyvtár, így mod_dir-nek nincs mit átirányítania. Mivel minden
   # statikus asset abszolút, gyökér-relatív útvonalon hivatkozik (pl.
   # `/static/js/main.js`), ez nem tör el semmilyen relatív hivatkozást.
+  # A mintát szándékosan `[^/]+`-ra (egyetlen útvonal-szegmens) szűkítjük,
+  # NEM `.*`-ra — élő teszteléskor (helyi Apache-példányon reprodukálva)
+  # kiderült, hogy egy `.*`-mintájú szabály `%{REQUEST_FILENAME}.html -f`
+  # feltétellel egy létező alkönyvtár-szerű, de a lemezen valójában nem
+  # létező útvonal (pl. `/belfoldi-fuvarozas-arajanlat/barmi`) esetén a
+  # mod_rewrite saját "path info" heurisztikája miatt tévesen igaznak
+  # értékelődik (mert `belfoldi-fuvarozas-arajanlat.html` létezik), ami
+  # a szubsztitúciót minden körben egy újabb `.html` végződéssel toldja
+  # meg — végtelen belső-redirect hurkot és HTTP 500-at okozva. Mivel a
+  # prerender.js kimenete mindig egyetlen, lapos szegmens (ld.
+  # ROUTES_TO_PRERENDER), a szűkített minta ugyanazt a viselkedést adja
+  # a valódi route-okra, de kizárja ezt a hurkot bármilyen, egy
+  # prerenderelt route alá írt, nem létező alútvonalra.
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME}.html -f
-  RewriteRule ^(.*)$ $1.html [L]
+  RewriteRule ^([^/]+)$ $1.html [L]
 
   RewriteRule ^index\.html$ - [L]
+
+  # A fenti szabály csak akkor talál, ha a prerender.js ténylegesen legyártotta
+  # az adott route lapos .html fájlját. Ha nem (pl. a build-környezetben nem
+  # sikerült elindítani a headless Chromiumot, ld. scripts/prerender.js
+  # fail-safe ága), az alábbi két szabály még mindig a SPA-shellt (index.html,
+  # 200) szolgálja ki, de KIZÁRÓLAG a ténylegesen létező kliensoldali
+  # route-prefixekre (ld. src/index.js <Switch>-e) — minden más, ismeretlen
+  # útvonal nem kap rewrite-ot, tehát a normál Apache 404-kezelésbe fut.
+  # Korábban egy feltétel nélküli catch-all (`RewriteRule . /index.html`) MINDEN
+  # érvénytelen URL-re 200-at adott a főoldal tartalmával (soft-404) — ez a SEO
+  # audit szerint azért volt hiba, mert a Google/AI-crawlerek ezt indexelhető,
+  # a főoldallal duplikált tartalomként látták.
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . /index.html [L]
+  RewriteRule ^(admin|user|auth|profile)(/.*)?$ /index.html [L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(belfoldi-fuvarozas-arajanlat|nemzetkozi-fuvarozas-vamugyintezessel|biztositott-szallitas|expressz-fuvarozas|rendezveny-szallitas|egyedi-arajanlat-fuvarozas|adatvedelem)/?$ /index.html [L]
+</IfModule>
+
+# Alap biztonsági response headerek — a SEO/technikai audit ezek teljes
+# hiányát jelezte. A HSTS csak akkor biztonságos, ha a domain minden
+# aldomainje is HTTPS-en fut (`includeSubDomains`) — itt igen, ld. a fenti
+# HTTP→HTTPS és www→non-www redirect a szerveren.
+<IfModule mod_headers.c>
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
 
 # Frissítéskor az embereknél ne ragadjon be a régi verzió: a hashelt
