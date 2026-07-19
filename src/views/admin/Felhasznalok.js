@@ -171,19 +171,19 @@ export default function Felhasznalok() {
         }
       />
 
-      <p className="-mt-4 mb-6 max-w-2xl text-sm text-ink-500">
+      <p className="-mt-4 mb-6 max-w-2xl text-sm text-ink-500 dark:text-ink-400">
         Minden ember egy helyen, aki hozzáfér a rendszerhez — csapattagok (teljes admin-hozzáférés) és
         sofőrök (saját mobil felület) együtt.
       </p>
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="flex min-w-[220px] flex-1 items-center gap-2 rounded-xl border border-ink-100 bg-white px-3 py-2.5">
-          <PiMagnifyingGlassLight className="h-4 w-4 flex-shrink-0 text-ink-400" />
+        <div className="flex min-w-[220px] flex-1 items-center gap-2 rounded-xl border border-ink-100 bg-white px-3 py-2.5 dark:border-ink-800 dark:bg-ink-900">
+          <PiMagnifyingGlassLight className="h-4 w-4 flex-shrink-0 text-ink-400 dark:text-ink-500" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Név vagy email keresése"
-            className="w-full bg-transparent text-sm text-ink-900 placeholder-ink-300 focus:outline-none"
+            className="w-full bg-transparent text-sm text-ink-900 placeholder-ink-300 focus:outline-none dark:text-ink-50 dark:placeholder-ink-600"
           />
         </div>
         <div className="flex gap-2">
@@ -193,7 +193,7 @@ export default function Felhasznalok() {
               type="button"
               onClick={() => setFilter(f.key)}
               className={`flex-shrink-0 rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors duration-150 ${
-                filter === f.key ? "bg-brand-600 text-white" : "bg-white text-ink-500 border border-ink-100"
+                filter === f.key ? "bg-brand-600 text-white" : "bg-white text-ink-500 border border-ink-100 dark:bg-ink-900 dark:text-ink-400 dark:border-ink-800"
               }`}
             >
               {f.label}
@@ -205,7 +205,7 @@ export default function Felhasznalok() {
       {loading ? (
         <Spinner wrapperClassName="flex justify-center py-16" />
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl border border-ink-100 bg-white p-8 text-center text-sm text-ink-400 shadow-soft">
+        <div className="rounded-2xl border border-ink-100 bg-white p-8 text-center text-sm text-ink-400 shadow-soft dark:border-ink-800 dark:bg-ink-900 dark:text-ink-500">
           Nincs a szűrésnek megfelelő felhasználó.
         </div>
       ) : (
@@ -213,36 +213,36 @@ export default function Felhasznalok() {
           {filtered.map((row) => (
             <div
               key={`${row.tipus}-${row.id}`}
-              className="flex flex-wrap items-center gap-3 rounded-2xl border border-ink-100 bg-white p-4 shadow-soft"
+              className="flex flex-wrap items-center gap-3 rounded-2xl border border-ink-100 bg-white p-4 shadow-soft dark:border-ink-800 dark:bg-ink-900"
             >
               {(() => {
                 const RoleIcon =
                   row.tipus === "sofor" ? ROLE_ICON.sofor : ROLE_ICON[row.szerepkor] || PiIdentificationBadgeLight;
                 return (
-                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600">
+                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-brand-950/50 dark:text-brand-300">
                     <RoleIcon className="h-5 w-5" />
                   </span>
                 );
               })()}
               <div className="min-w-0 flex-1 basis-full sm:basis-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="truncate text-sm font-semibold text-ink-900">{row.name}</p>
+                  <p className="truncate text-sm font-semibold text-ink-900 dark:text-ink-50">{row.name}</p>
                   {row.tipus === "csapattag" && row.isRoot && (
-                    <span className="flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700">
+                    <span className="flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">
                       <PiCrownSimpleLight className="h-3 w-3" />
                       Cégtulajdonos
                     </span>
                   )}
                   {row.tipus === "csapattag" && row.isSelf && (
-                    <span className="rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-bold text-ink-500">Te</span>
+                    <span className="rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-bold text-ink-500 dark:bg-ink-800 dark:text-ink-400">Te</span>
                   )}
                   {row.tipus === "sofor" && (
-                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
+                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
                       Sofőr
                     </span>
                   )}
                 </div>
-                <p className="truncate text-xs text-ink-500">
+                <p className="truncate text-xs text-ink-500 dark:text-ink-400">
                   {row.email}
                   {row.phone ? ` · ${row.phone}` : ""}
                 </p>
@@ -260,14 +260,14 @@ export default function Felhasznalok() {
                       onBlur={(e) => handleBerBlur(row, e.target.value)}
                       placeholder="Havi bér"
                       title="Havi bérezés (Ft) — csak te látod"
-                      className="w-full rounded-lg border border-ink-100 bg-slate-50 px-2.5 py-1.5 text-xs text-ink-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300"
+                      className="w-full rounded-lg border border-ink-100 bg-slate-50 px-2.5 py-1.5 text-xs text-ink-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300 dark:border-ink-800 dark:bg-ink-800 dark:text-ink-100"
                     />
                   </div>
                 )}
                 {row.tipus === "csapattag" ? (
                   row.isRoot ? (
                     <span
-                      className="w-44 flex-shrink-0 truncate rounded-lg bg-ink-50 px-3 py-1.5 text-center text-xs font-semibold text-ink-500"
+                      className="w-44 flex-shrink-0 truncate rounded-lg bg-ink-50 px-3 py-1.5 text-center text-xs font-semibold text-ink-500 dark:bg-ink-800 dark:text-ink-400"
                       title="A cégtulajdonos szerepköre fixen adminisztrátor, nem módosítható."
                     >
                       Adminisztrátor
@@ -291,7 +291,7 @@ export default function Felhasznalok() {
                   <button
                     type="button"
                     onClick={() => history.push("/admin/soforForm", { data: row.raw })}
-                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-brand-50 hover:text-brand-600"
+                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-brand-50 hover:text-brand-600 dark:text-ink-500 dark:hover:bg-brand-950/40 dark:hover:text-brand-300"
                     aria-label="Szerkesztés"
                   >
                     <PiPencilSimpleLight className="h-5 w-5" />
@@ -302,7 +302,7 @@ export default function Felhasznalok() {
                   <button
                     type="button"
                     onClick={() => handleDeleteCsapattag(row.id)}
-                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-red-50 hover:text-red-600"
+                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-red-50 hover:text-red-600 dark:text-ink-500 dark:hover:bg-red-950/50 dark:hover:text-red-300"
                     aria-label="Törlés"
                   >
                     <PiTrashLight className="h-5 w-5" />
@@ -312,7 +312,7 @@ export default function Felhasznalok() {
                   <button
                     type="button"
                     onClick={() => handleDeleteSofor(row.id)}
-                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-red-50 hover:text-red-600"
+                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-red-50 hover:text-red-600 dark:text-ink-500 dark:hover:bg-red-950/50 dark:hover:text-red-300"
                     aria-label="Törlés"
                   >
                     <PiTrashLight className="h-5 w-5" />

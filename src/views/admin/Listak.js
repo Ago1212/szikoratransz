@@ -100,7 +100,7 @@ export default function Listak() {
     <div className="mx-auto w-full max-w-3xl">
       <PageHeader eyebrow="Saját adatok" title="Listák" />
 
-      <p className="-mt-4 mb-6 max-w-2xl text-sm text-ink-500">
+      <p className="-mt-4 mb-6 max-w-2xl text-sm text-ink-500 dark:text-ink-400">
         Itt bővítheted/nevezheted át a rendszer különböző választható listáit — pl. milyen
         kamionméretek, jármű-állapotok vagy bejelentés-típusok közül lehet választani a
         formokon. Egy elem törlése előtt győződj meg róla, hogy már semmi nem használja.
@@ -113,7 +113,7 @@ export default function Listak() {
             type="button"
             onClick={() => setSelected(t.tipus)}
             className={`flex-shrink-0 rounded-full px-4 py-2 text-xs font-bold transition-colors duration-150 ${
-              selected === t.tipus ? "bg-brand-600 text-white" : "border border-ink-100 bg-white text-ink-500 hover:bg-slate-100"
+              selected === t.tipus ? "bg-brand-600 text-white" : "border border-ink-100 bg-white text-ink-500 hover:bg-slate-100 dark:border-ink-800 dark:bg-ink-900 dark:text-ink-400 dark:hover:bg-ink-800"
             }`}
           >
             {t.nev}
@@ -121,26 +121,26 @@ export default function Listak() {
         ))}
       </div>
 
-      <div className="overflow-hidden rounded-3xl bg-white shadow-soft ring-1 ring-ink-100">
-        <div className="flex items-center gap-2.5 border-b border-ink-100 px-5 py-4">
-          <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+      <div className="overflow-hidden rounded-3xl bg-white shadow-soft ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800">
+        <div className="flex items-center gap-2.5 border-b border-ink-100 px-5 py-4 dark:border-ink-800">
+          <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-950/50 dark:text-brand-300">
             <PiListBulletsLight className="h-[18px] w-[18px]" />
           </span>
-          <h3 className="font-display text-base font-semibold text-brand-900">{selectedTipus?.nev} — elemek</h3>
+          <h3 className="font-display text-base font-semibold text-brand-900 dark:text-ink-50">{selectedTipus?.nev} — elemek</h3>
         </div>
 
         {loading ? (
           <Spinner wrapperClassName="flex justify-center py-16" />
         ) : (
-          <div className="divide-y divide-ink-100">
+          <div className="divide-y divide-ink-100 dark:divide-ink-800">
             {elemek.map((elem) => (
               <div key={elem.id} className="flex items-center justify-between gap-3 px-5 py-3">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-ink-900">{elem.nev}</p>
+                  <p className="truncate text-sm font-semibold text-ink-900 dark:text-ink-50">{elem.nev}</p>
                 </div>
                 {elem.vedett === "I" ? (
                   <span
-                    className="flex flex-shrink-0 items-center gap-1.5 rounded-full bg-ink-50 px-3 py-1 text-[11px] font-bold text-ink-400"
+                    className="flex flex-shrink-0 items-center gap-1.5 rounded-full bg-ink-50 px-3 py-1 text-[11px] font-bold text-ink-400 dark:bg-ink-800 dark:text-ink-500"
                     title="Alapértelmezett elem, nem törölhető."
                   >
                     <PiLockSimpleLight className="h-3.5 w-3.5" />
@@ -150,7 +150,7 @@ export default function Listak() {
                   <button
                     type="button"
                     onClick={() => handleDelete(elem)}
-                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-red-50 hover:text-red-600"
+                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-red-50 hover:text-red-600 dark:text-ink-500 dark:hover:bg-red-950/50 dark:hover:text-red-300"
                     aria-label="Törlés"
                   >
                     <PiTrashLight className="h-5 w-5" />
@@ -167,7 +167,7 @@ export default function Listak() {
                     value={ujNev}
                     onChange={(e) => setUjNev(e.target.value)}
                     placeholder="Új elem neve"
-                    className="min-w-0 flex-1 rounded-lg border border-ink-100 bg-slate-50 px-3 py-2 text-sm text-ink-900 placeholder-ink-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300"
+                    className="min-w-0 flex-1 rounded-lg border border-ink-100 bg-slate-50 px-3 py-2 text-sm text-ink-900 placeholder-ink-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300 dark:border-ink-800 dark:bg-ink-800 dark:text-ink-50 dark:placeholder-ink-600"
                     onKeyDown={(e) => e.key === "Enter" && handleCreate()}
                   />
                   <button
@@ -184,7 +184,7 @@ export default function Listak() {
                       setAdding(false);
                       setUjNev("");
                     }}
-                    className="flex-shrink-0 px-1 text-xs font-semibold text-ink-400 hover:text-ink-700"
+                    className="flex-shrink-0 px-1 text-xs font-semibold text-ink-400 hover:text-ink-700 dark:text-ink-500 dark:hover:text-ink-100"
                   >
                     Mégse
                   </button>
@@ -193,7 +193,7 @@ export default function Listak() {
                 <button
                   type="button"
                   onClick={() => setAdding(true)}
-                  className="flex items-center gap-1.5 text-xs font-bold text-brand-600 hover:text-brand-800"
+                  className="flex items-center gap-1.5 text-xs font-bold text-brand-600 hover:text-brand-800 dark:text-brand-300 dark:hover:text-brand-100"
                 >
                   <PiPlusLight className="h-4 w-4" />
                   Új elem hozzáadása

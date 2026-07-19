@@ -107,31 +107,31 @@ export default function ElozmenyekModal({
           <>
             {eredmeny.osszesito && (
               <div className="grid grid-cols-3 gap-2.5">
-                <div className="rounded-xl bg-slate-50 p-3">
-                  <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-400">
+                <div className="rounded-xl bg-slate-50 p-3 dark:bg-ink-800">
+                  <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">
                     <PiRoadHorizonLight className="h-3.5 w-3.5" /> Megtett út
                   </p>
-                  <p className="mt-0.5 text-sm font-bold text-ink-800">
+                  <p className="mt-0.5 text-sm font-bold text-ink-800 dark:text-ink-100">
                     {eredmeny.osszesito.tavolsag_osszesen || "—"}
                   </p>
-                  <p className="text-[11px] text-ink-400">
+                  <p className="text-[11px] text-ink-400 dark:text-ink-500">
                     hivatali {eredmeny.osszesito.tavolsag_hivatali || "—"} · magán{" "}
                     {eredmeny.osszesito.tavolsag_magan || "—"}
                   </p>
                 </div>
-                <div className="rounded-xl bg-slate-50 p-3">
-                  <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-400">
+                <div className="rounded-xl bg-slate-50 p-3 dark:bg-ink-800">
+                  <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">
                     <PiClockLight className="h-3.5 w-3.5" /> Menetidő
                   </p>
-                  <p className="mt-0.5 text-sm font-bold text-ink-800">
+                  <p className="mt-0.5 text-sm font-bold text-ink-800 dark:text-ink-100">
                     {eredmeny.osszesito.menetido || "—"}
                   </p>
                 </div>
-                <div className="rounded-xl bg-slate-50 p-3">
-                  <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-400">
+                <div className="rounded-xl bg-slate-50 p-3 dark:bg-ink-800">
+                  <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">
                     <PiMapTrifoldLight className="h-3.5 w-3.5" /> Állásidő
                   </p>
-                  <p className="mt-0.5 text-sm font-bold text-ink-800">
+                  <p className="mt-0.5 text-sm font-bold text-ink-800 dark:text-ink-100">
                     {eredmeny.osszesito.allasido || "—"}
                   </p>
                 </div>
@@ -139,9 +139,9 @@ export default function ElozmenyekModal({
             )}
 
             {eredmeny.szakaszok?.length > 0 && (
-              <div className="max-h-64 overflow-y-auto rounded-xl border border-ink-100">
+              <div className="max-h-64 overflow-y-auto rounded-xl border border-ink-100 dark:border-ink-800">
                 <table className="w-full text-xs">
-                  <thead className="sticky top-0 bg-slate-50 text-[11px] uppercase text-ink-400">
+                  <thead className="sticky top-0 bg-slate-50 text-[11px] uppercase text-ink-400 dark:bg-ink-800 dark:text-ink-500">
                     <tr>
                       <th className="px-3 py-2 text-left">Kezdés</th>
                       <th className="px-3 py-2 text-left">Típus</th>
@@ -151,23 +151,23 @@ export default function ElozmenyekModal({
                   </thead>
                   <tbody>
                     {eredmeny.szakaszok.map((sz, idx) => (
-                      <tr key={idx} className="border-t border-ink-100">
-                        <td className="px-3 py-1.5 text-ink-600">{sz.tol}</td>
+                      <tr key={idx} className="border-t border-ink-100 dark:border-ink-800">
+                        <td className="px-3 py-1.5 text-ink-600 dark:text-ink-300">{sz.tol}</td>
                         <td className="px-3 py-1.5">
                           <span
                             className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${
                               sz.tipus === "Hivatali"
-                                ? "bg-brand-50 text-brand-700"
-                                : "bg-amber-50 text-amber-700"
+                                ? "bg-brand-50 text-brand-700 dark:bg-brand-950/50 dark:text-brand-300"
+                                : "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300"
                             }`}
                           >
                             {sz.tipus || "—"}
                           </span>
                         </td>
-                        <td className="px-3 py-1.5 text-right tabular-nums text-ink-600">
+                        <td className="px-3 py-1.5 text-right tabular-nums text-ink-600 dark:text-ink-300">
                           {sz.megtett_ut || "—"}
                         </td>
-                        <td className="px-3 py-1.5 text-right tabular-nums text-ink-600">
+                        <td className="px-3 py-1.5 text-right tabular-nums text-ink-600 dark:text-ink-300">
                           {sz.max_sebesseg || "—"}
                         </td>
                       </tr>
@@ -178,7 +178,7 @@ export default function ElozmenyekModal({
             )}
 
             {(eredmeny.pontok || []).length > 0 && (
-              <p className="text-xs text-ink-400">
+              <p className="text-xs text-ink-400 dark:text-ink-500">
                 {eredmeny.pontok.length} útvonalpont megjelenítve a térképen.
               </p>
             )}

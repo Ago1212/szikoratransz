@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useMediaQuery } from "react-responsive";
+import { PiFunnelLight, PiFunnelFill } from "react-icons/pi";
 // components
 import { fetchAction } from "utils/fetchAction";
 import CardTable from "components/Table/CardTableForBejelentesek.js";
@@ -7,6 +9,12 @@ import PageHeader from "components/UI/PageHeader.js";
 const PAGE_SIZE = 15;
 
 export default function Bejelentesek() {
+  // R18 (fejlesztési audit, 2026-07-19): a Karbantartasok.js-ben már bevált
+  // "mobilon alapból csukott, asztalon változatlanul mindig nyitott szűrő"
+  // minta ide is kiterjesztve — ugyanaz a media query + `md:hidden` toggle-
+  // gomb + `hidden md:block` panel-pár, nem egy új komponens.
+  const isMobile = useMediaQuery({ maxWidth: 767 });
+  const [filtersOpen, setFiltersOpen] = useState(!isMobile);
   const [bejelentesek, setBejelentesek] = useState([]);
   const [kamionok, setKamionok] = useState([]);
   const [selectedKamion, setSelectedKamion] = useState("");
@@ -81,14 +89,44 @@ export default function Bejelentesek() {
   return (
     <>
       <div className="mx-auto w-full max-w-7xl">
-        <PageHeader eyebrow="Csapat" title="Bejelentések" />
+        <PageHeader
+          eyebrow="Csapat"
+          title="Bejelentések"
+          action={
+            <button
+              type="button"
+              onClick={() => setFiltersOpen(!filtersOpen)}
+              className={`relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border transition-colors duration-200 md:hidden ${
+                filtersOpen
+                  ? "border-brand-200 bg-brand-50 text-brand-600 dark:border-brand-800 dark:bg-brand-950/40"
+                  : "border-ink-200 bg-white text-ink-500 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-300"
+              }`}
+              title="Szűrők"
+            >
+              {filtersOpen ? (
+                <PiFunnelFill className="h-4 w-4" />
+              ) : (
+                <PiFunnelLight className="h-4 w-4" />
+              )}
+              {selectedKamion && (
+                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-600 text-[9px] font-bold text-white">
+                  1
+                </span>
+              )}
+            </button>
+          }
+        />
         <div className="w-full">
-          <div className="mb-6 rounded-3xl bg-white p-6 shadow-soft ring-1 ring-ink-100">
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-400">
+          <div
+            className={`mb-6 rounded-3xl bg-white p-6 shadow-soft ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800 ${
+              filtersOpen ? "" : "hidden md:block"
+            }`}
+          >
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">
               Szűrés kamionra (opcionális)
             </h3>
             <select
-              className="w-full rounded-xl border border-ink-100 bg-slate-50 px-4 py-3 text-sm text-brand-900 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300"
+              className="w-full rounded-xl border border-ink-100 bg-slate-50 px-4 py-3 text-sm text-brand-900 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-50"
               value={selectedKamion}
               onChange={handleKamionChange}
             >

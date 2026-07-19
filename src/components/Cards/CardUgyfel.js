@@ -73,7 +73,7 @@ export default function CardUgyfel({ initialUgyfel }) {
       <button
         type="button"
         onClick={() => history.push("/admin/ugyfelek")}
-        className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-ink-500 transition-colors duration-200 ease-fluid hover:text-brand-700"
+        className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-ink-500 transition-colors duration-200 ease-fluid hover:text-brand-700 dark:text-ink-400 dark:hover:text-brand-300"
       >
         <PiArrowLeftLight className="h-4 w-4" />
         Vissza az ügyfelekhez
@@ -168,7 +168,7 @@ export default function CardUgyfel({ initialUgyfel }) {
               />
             </FormSection>
 
-            <div className="flex justify-end border-t border-ink-100 pt-4">
+            <div className="flex justify-end border-t border-ink-100 pt-4 dark:border-ink-800">
               <SaveButton
                 onClick={handleSave}
                 isSaving={isSaving}

@@ -12,10 +12,19 @@ class FilesInterface {
     // (az admin saját, önálló "Fájlok" listaoldala) vonatkozik — a másik
     // ág (egy adott rekordhoz, pl. karbantartáshoz tartozó néhány fájl)
     // eleve kicsi, beágyazott lista, nem igényel lapozást.
-    function getFiles($tabla, $id, $search = null, $page = null, $pageSize = null) {
+    // `$ceg_id`-t a hívó (ApiHandler) mindig szerver-oldalon feloldva adja
+    // át. FONTOS, KORÁBBAN ÉLESEN HIBÁS ÁLLAPOT: ez a metódus régen csak 5
+    // paramétert fogadott, miközben az `else` ág belsejében egy definiálatlan
+    // `$ceg_id` változóra hivatkozott — az `ApiHandler` 6 argumentummal
+    // hívta, amit PHP csendben eldobott, és a `WHERE ... admin = :ceg_id`
+    // egy NULL-ra kötődött, ami sosem egyezett semmivel, tehát a
+    // `tabla !== "admin"` ág (kamion/pótkocsi/furgon/sofőr/karbantartás/
+    // bejelentés fájlok) MINDIG üres listát adott vissza — funkcionális
+    // regresszió, nem csak biztonsági rés (ld. biztonsági audit).
+    function getFiles($tabla, $id, $search = null, $page = null, $pageSize = null, $ceg_id = null) {
         try {
             if ($tabla === "admin") {
-                $params = [':id' => $id];
+                $params = [':id' => $ceg_id];
                 $query = "SELECT * FROM fajlok WHERE admin = :id";
                 if (!empty($search)) {
                     $query .= " AND " . PaginationHelper::likeClause(['filename'], 'search');

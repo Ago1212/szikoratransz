@@ -82,7 +82,7 @@ export default function CardHelyszin({ initialHelyszin }) {
         />
       </FormSection>
 
-      <div className="flex justify-end border-t border-ink-100 pt-4">
+      <div className="flex justify-end border-t border-ink-100 pt-4 dark:border-ink-800">
         <SaveButton
           onClick={handleSave}
           isSaving={isSaving}
@@ -97,7 +97,7 @@ export default function CardHelyszin({ initialHelyszin }) {
       <button
         type="button"
         onClick={() => history.push("/admin/helyszinek")}
-        className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-ink-500 transition-colors duration-200 ease-fluid hover:text-brand-700"
+        className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-ink-500 transition-colors duration-200 ease-fluid hover:text-brand-700 dark:text-ink-400 dark:hover:text-brand-300"
       >
         <PiArrowLeftLight className="h-4 w-4" />
         Vissza a helyszínekhez
@@ -108,15 +108,15 @@ export default function CardHelyszin({ initialHelyszin }) {
           <div className="px-4 py-4 lg:px-6">{AdatokForm}</div>
         </PageCard>
       ) : (
-        <div className="relative flex min-w-0 flex-col rounded-3xl bg-white shadow-soft ring-1 ring-ink-100">
+        <div className="relative flex min-w-0 flex-col rounded-3xl bg-white shadow-soft ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800">
           <div className="flex items-center gap-2.5 px-5 pt-4">
-            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-950/50 dark:text-brand-300">
               <PiMapPinLight className="h-[18px] w-[18px]" />
             </span>
-            <h3 className="font-display text-base font-semibold text-brand-900">{helyszin.nev}</h3>
+            <h3 className="font-display text-base font-semibold text-brand-900 dark:text-ink-50">{helyszin.nev}</h3>
           </div>
 
-          <div className="mt-3 flex gap-6 border-b border-ink-100 px-5">
+          <div className="mt-3 flex gap-6 border-b border-ink-100 px-5 dark:border-ink-800">
             <TabButton icon={PiNotePencilLight} active={activeTab === 1} onClick={() => setActiveTab(1)}>
               Adatok
             </TabButton>

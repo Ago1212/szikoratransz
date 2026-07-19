@@ -303,3 +303,155 @@
     font-weight: 700;
   }
 }
+
+/* Sötét mód — a react-big-calendar saját, fix (nem Tailwind-osztályos)
+   `.rbc-*` DOM-jára a `dark:` variáns nem tud hatni, ezért ez egy explicit,
+   `.dark` ős-osztállyal kapuzott CSS-blokk (ld. layouts/Admin.js — a `dark`
+   osztály ott, a gyökér wrapperen ül, ez a szelektor onnan öröklődik). Csak
+   azokat a tulajdonságokat írjuk felül, amik ténylegesen fehér/világos
+   háttérrel/sötét szöveggel dolgoznak az alap könyvtár-CSS-ben vagy a fenti
+   egyedi szabályokban. */
+.dark .calendar-card {
+  background: #1a1c1f;
+}
+
+.dark .rbc-off-range-bg {
+  background: #101113;
+}
+
+.dark .rbc-off-range {
+  color: #4a4c52;
+}
+
+.dark .rbc-today {
+  background-color: #131f5c;
+}
+
+.dark .rbc-header {
+  color: #9a9ca1;
+  border-bottom-color: #292b30;
+}
+
+.dark .rbc-time-view,
+.dark .rbc-month-view {
+  border-color: #292b30;
+}
+
+.dark .rbc-month-row + .rbc-month-row,
+.dark .rbc-day-bg + .rbc-day-bg,
+.dark .rbc-header + .rbc-header {
+  border-color: #292b30;
+}
+
+.dark .rbc-date-cell {
+  color: #e5e5e7;
+}
+
+.dark .rbc-toolbar-label {
+  color: #f4f4f5;
+}
+
+.dark .rbc-toolbar button {
+  color: #9a9ca1;
+  border-color: #35373c;
+}
+
+.dark .rbc-toolbar button:hover {
+  background-color: #23262b;
+  border-color: #1e3aa8;
+  color: #8fa0ee;
+}
+
+.dark .rbc-toolbar button.rbc-active {
+  background-color: #2f4de0;
+  border-color: #2f4de0;
+  color: white;
+}
+
+.dark .rbc-toolbar button.rbc-active:hover {
+  background-color: #1e3aa8;
+}
+
+.dark .rbc-overlay {
+  background-color: #1a1c1f;
+  border-color: #35373c;
+  color: #e5e5e7;
+}
+
+.dark .rbc-overlay-header {
+  border-bottom-color: #292b30;
+  color: #9a9ca1;
+}
+
+.dark .rbc-agenda-view table.rbc-agenda-table {
+  color: #e5e5e7;
+}
+
+.dark .rbc-agenda-view table.rbc-agenda-table thead > tr > th {
+  border-bottom-color: #292b30;
+  color: #9a9ca1;
+}
+
+.dark .rbc-agenda-view table.rbc-agenda-table tbody > tr > td {
+  border-bottom-color: #23262b;
+}
+
+.dark .rbc-agenda-view table.rbc-agenda-table tbody > tr + tr {
+  border-top-color: #23262b;
+}
+
+.dark .rbc-day-selected {
+  background-color: #131f5c;
+  box-shadow: inset 0 0 0 2px #5f76e6;
+}
+
+.dark .rbc-day-selected .rbc-button-link {
+  color: #8fa0ee;
+}
+
+.dark .modal {
+  background: #1a1c1f;
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.6);
+}
+
+.dark .modal-header {
+  border-bottom-color: #292b30;
+}
+
+.dark .modal-header h3 {
+  color: #f4f4f5;
+}
+
+.dark .close-button {
+  color: #6b6d73;
+}
+.dark .close-button:hover {
+  color: #e5e5e7;
+}
+
+.dark .modal-content p {
+  color: #9a9ca1;
+}
+
+.dark .description {
+  border-top-color: #292b30;
+}
+
+.dark .description p {
+  background: #23262b;
+  color: #e5e5e7;
+}
+
+.dark .modal-footer {
+  border-top-color: #292b30;
+}
+
+.dark .rbc-show-more {
+  background-color: rgba(15, 17, 20, 0.6);
+  color: #8fa0ee;
+}
+
+.dark .rbc-show-more:hover,
+.dark .rbc-show-more:focus {
+  color: #dde3fb;
+}

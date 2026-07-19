@@ -70,6 +70,14 @@ class PiaciArakInterface {
         if ($devizanem === 'HUF') {
             return 1.0;
         }
+        // ISO 4217-formátum kikényszerítése beszúrás/lekérdezés ELŐTT — a
+        // `$devizanem` végül egy XPath-kifejezés string-literáljába kerül
+        // (ld. lekerdezMnbArfolyam() lentebb), ahol egy nem validált, `'`
+        // karaktert tartalmazó érték kitörhetne a literálból és tetszőleges
+        // XPath-predikátumot fűzhetne a lekérdezéshez (ld. biztonsági audit).
+        if (!preg_match('/^[A-Z]{3}$/', $devizanem)) {
+            return null;
+        }
         $eredmeny = $this->frissitVagyOlvas($devizanem . '_HUF', self::EUR_HUF_TTL_MP, fn() => $this->lekerdezMnbArfolyam($devizanem));
         return $eredmeny['ertek'];
     }

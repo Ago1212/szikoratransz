@@ -29,13 +29,28 @@ const Ertesitesek = React.lazy(() => import("views/user/Ertesitesek.js"));
 const Helyszinek = React.lazy(() => import("views/user/Helyszinek.js"));
 const HelyszinReszletek = React.lazy(() => import("views/user/HelyszinReszletek.js"));
 
+// Ugyanaz a második védelmi vonal, mint layouts/Admin.js PrivateRoute-jában
+// (ld. ott a komment) — egy admin-munkamenet böngészőbe írva egy
+// /user/... URL-t korábban ide is bejutott; most `is_admin` esetén az
+// admin saját (működő) /admin/dashboard-jára kerül.
 const PrivateRoute = ({ component: Component, ...rest }) => {
-  const isAuthenticated = localStorage.getItem("user") !== null;
+  let user = null;
+  try {
+    user = JSON.parse(localStorage.getItem("user"));
+  } catch {
+    user = null;
+  }
+  const isAuthenticated = !!user;
+  const isAdmin = !!user?.is_admin;
   return (
     <Route
       {...rest}
       render={(props) =>
-        isAuthenticated ? <Component {...props} /> : <Redirect to="/auth/login" />
+        isAuthenticated && !isAdmin ? (
+          <Component {...props} />
+        ) : (
+          <Redirect to={isAuthenticated ? "/admin/dashboard" : "/auth/login"} />
+        )
       }
     />
   );

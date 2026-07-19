@@ -14,11 +14,11 @@ export default function SaveButton({
 }) {
   const toneClass =
     tone === "light"
-      ? "bg-white text-brand-700 hover:bg-brand-50"
+      ? "bg-white text-brand-700 hover:bg-brand-50 dark:bg-ink-800 dark:text-brand-300 dark:hover:bg-ink-700"
       : "bg-brand-600 text-white hover:bg-brand-700";
   const spinnerClass =
     tone === "light"
-      ? "h-4 w-4 border-2 border-brand-200 border-t-brand-600"
+      ? "h-4 w-4 border-2 border-brand-200 border-t-brand-600 dark:border-ink-600 dark:border-t-brand-300"
       : "h-4 w-4 border-2 border-white/30 border-t-white";
 
   return (

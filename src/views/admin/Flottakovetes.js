@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useMediaQuery } from "react-responsive";
 import { useHistory } from "react-router-dom";
 import { PiArrowClockwiseLight, PiMapTrifoldLight, PiGaugeLight } from "react-icons/pi";
@@ -24,12 +24,12 @@ function KpiVaz() {
       {Array.from({ length: 6 }).map((_, i) => (
         <div
           key={i}
-          className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-soft ring-1 ring-ink-100"
+          className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-soft ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800"
         >
-          <div className="h-11 w-11 flex-shrink-0 animate-pulse rounded-xl bg-slate-100" />
+          <div className="h-11 w-11 flex-shrink-0 animate-pulse rounded-xl bg-slate-100 dark:bg-ink-800" />
           <div className="flex-1 space-y-2">
-            <div className="h-4 w-10 animate-pulse rounded bg-slate-100" />
-            <div className="h-2.5 w-16 animate-pulse rounded bg-slate-100" />
+            <div className="h-4 w-10 animate-pulse rounded bg-slate-100 dark:bg-ink-800" />
+            <div className="h-2.5 w-16 animate-pulse rounded bg-slate-100 dark:bg-ink-800" />
           </div>
         </div>
       ))}
@@ -40,9 +40,9 @@ function KpiVaz() {
 function TartalomVaz() {
   return (
     <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-      <div className="h-[360px] animate-pulse rounded-2xl bg-white shadow-soft ring-1 ring-ink-100 xl:col-span-3 xl:h-[640px]" />
-      <div className="h-[420px] animate-pulse rounded-2xl bg-white shadow-soft ring-1 ring-ink-100 md:h-[520px] xl:col-span-6 xl:h-[640px]" />
-      <div className="hidden animate-pulse rounded-2xl bg-white shadow-soft ring-1 ring-ink-100 xl:col-span-3 xl:block xl:h-[640px]" />
+      <div className="h-[360px] animate-pulse rounded-2xl bg-white shadow-soft ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800 xl:col-span-3 xl:h-[640px]" />
+      <div className="h-[420px] animate-pulse rounded-2xl bg-white shadow-soft ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800 md:h-[520px] xl:col-span-6 xl:h-[640px]" />
+      <div className="hidden animate-pulse rounded-2xl bg-white shadow-soft ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800 xl:col-span-3 xl:block xl:h-[640px]" />
     </div>
   );
 }
@@ -83,13 +83,23 @@ export default function Flottakovetes() {
     return () => clearInterval(id);
   }, []);
 
+  // R34 (fejlesztési audit, 2026-07-19): a 60mp-es automatikus poll és a
+  // kézi "Frissítés" gomb (handleFrissites) néha egymáshoz közel indulhat
+  // (pl. valaki pont akkor kattint, amikor az automatikus kör is lefut) —
+  // enélkül egy lassabb, korábban indult hívás válasza egy közben indult,
+  // gyorsabb hívás eredményét írhatta volna felül, elavult adatot mutatva.
+  // Ugyanaz a "csak a legutóbb indított hívás eredménye számít" minta, mint
+  // amit a GlobalSearch.js már használ a keresésre.
+  const poziciokKerelemId = useRef(0);
   const loadPoziciok = async () => {
+    const sajatKerelemId = ++poziciokKerelemId.current;
     setLoading(true);
     try {
       const result = await fetchAction("gpsmartPoziciok", {
         ceg_id: user.ceg_id,
         kerelmezo_id: user.id,
       });
+      if (sajatKerelemId !== poziciokKerelemId.current) return;
       if (result?.success) {
         setPoziciok(result.poziciok || []);
         setFrissitve(new Date());
@@ -97,7 +107,7 @@ export default function Flottakovetes() {
         toast.error(result?.message || "Nem sikerült lekérdezni a pozíciókat.");
       }
     } finally {
-      setLoading(false);
+      if (sajatKerelemId === poziciokKerelemId.current) setLoading(false);
     }
   };
 
@@ -219,14 +229,14 @@ export default function Flottakovetes() {
           vanBeallitva && (
             <div className="flex items-center gap-3">
               {frissitve && (
-                <span className="text-xs text-ink-400">
+                <span className="text-xs text-ink-400 dark:text-ink-500">
                   Frissítve: {frissitve.toLocaleTimeString("hu-HU")}
                 </span>
               )}
               <button
                 type="button"
                 onClick={() => setKihasznaltsagOpen(true)}
-                className="flex items-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-ink-600 shadow-soft transition-all duration-300 ease-fluid hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 active:scale-95"
+                className="flex items-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-ink-600 shadow-soft transition-all duration-300 ease-fluid hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 active:scale-95 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-300 dark:hover:border-brand-700 dark:hover:bg-brand-950/40 dark:hover:text-brand-300"
               >
                 <PiGaugeLight className="h-4 w-4" />
                 Kihasználtság
@@ -235,7 +245,7 @@ export default function Flottakovetes() {
                 type="button"
                 onClick={handleFrissites}
                 disabled={loading}
-                className="flex items-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-ink-600 shadow-soft transition-all duration-300 ease-fluid hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 active:scale-95 disabled:cursor-wait disabled:opacity-60"
+                className="flex items-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-ink-600 shadow-soft transition-all duration-300 ease-fluid hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 active:scale-95 disabled:cursor-wait disabled:opacity-60 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-300 dark:hover:border-brand-700 dark:hover:bg-brand-950/40 dark:hover:text-brand-300"
               >
                 <PiArrowClockwiseLight className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
                 Frissítés
@@ -244,7 +254,7 @@ export default function Flottakovetes() {
           )
         }
       />
-      <p className="-mt-3 max-w-2xl text-sm text-ink-500">
+      <p className="-mt-3 max-w-2xl text-sm text-ink-500 dark:text-ink-400">
         A kamionok és furgonok pillanatnyi pozíciója a GPSmart flottakövető
         rendszerből, percenként automatikusan frissítve.
       </p>
@@ -255,9 +265,9 @@ export default function Flottakovetes() {
           <TartalomVaz />
         </>
       ) : !vanBeallitva ? (
-        <div className="flex flex-col items-center gap-3 rounded-3xl bg-white p-10 text-center shadow-soft ring-1 ring-ink-100">
-          <PiMapTrifoldLight className="h-10 w-10 text-ink-200" />
-          <p className="max-w-md text-sm text-ink-500">
+        <div className="flex flex-col items-center gap-3 rounded-3xl bg-white p-10 text-center shadow-soft ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800">
+          <PiMapTrifoldLight className="h-10 w-10 text-ink-200 dark:text-ink-700" />
+          <p className="max-w-md text-sm text-ink-500 dark:text-ink-400">
             A GPSmart flottakövetés kapcsolat még nincs beállítva ehhez a
             céghez. Állítsd be a{" "}
             <button

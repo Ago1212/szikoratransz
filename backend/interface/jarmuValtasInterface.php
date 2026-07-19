@@ -41,10 +41,26 @@ class JarmuValtasInterface {
                 return ['success' => false, 'message' => 'A kiválasztott jármű nem található a céged flottájában.'];
             }
 
+            // A korábbi függő kérés érvénytelenítése + az új beszúrása két
+            // külön utasítás (MyISAM-on nincs tranzakció/zárolás) — egy
+            // dupla-klikk/hálózati retry által kiváltott, közel egyidejű
+            // két hívás elméletileg két párhuzamos 'fuggoben' sort hozhatna
+            // létre. Egy közvetlen, a beszúrás előtti ellenőrzés zárja ezt
+            // ki: ha idő közben (a fenti SELECT-ek után) már létrejött egy
+            // másik függő kérés ugyanerre a sofőrre/típusra, itt elutasítjuk
+            // ahelyett, hogy csendben duplikálnánk.
             $this->db->prepare(
                 "UPDATE jarmu_valtas_kerelmek SET allapot = 'visszavonva'
                  WHERE sofor_id = :sofor_id AND tipus = :tipus AND allapot = 'fuggoben'"
             )->execute([':sofor_id' => $sofor_id, ':tipus' => $tipus]);
+
+            $meglevoStmt = $this->db->prepare(
+                "SELECT id FROM jarmu_valtas_kerelmek WHERE sofor_id = :sofor_id AND tipus = :tipus AND allapot = 'fuggoben'"
+            );
+            $meglevoStmt->execute([':sofor_id' => $sofor_id, ':tipus' => $tipus]);
+            if ($meglevoStmt->fetch()) {
+                return ['success' => false, 'message' => 'Már van függőben lévő kérésed erre a jármű-típusra.'];
+            }
 
             $query = "INSERT INTO jarmu_valtas_kerelmek (admin, sofor_id, tipus, jarmu_id, indoklas)
                       VALUES (:admin, :sofor_id, :tipus, :jarmu_id, :indoklas)";
@@ -81,7 +97,7 @@ class JarmuValtasInterface {
     }
 
     // Sofőr saját nézete — az aktuális függő kérése(i), típusonként.
-    public function getSajatJarmuValtasKerelmek($sofor_id) {
+    public function getSajatJarmuValtasKerelmek($sofor_id, $ceg_id) {
         try {
             $query = "SELECT * FROM jarmu_valtas_kerelmek
                       WHERE sofor_id = :sofor_id AND allapot = 'fuggoben' AND torolt <> 'I'
@@ -91,9 +107,9 @@ class JarmuValtasInterface {
             $stmt->execute();
             $kerelmek = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            $kamionRendszamok = $this->getRendszamok('kamion');
-            $potkocsiRendszamok = $this->getRendszamok('potkocsi');
-            $furgonRendszamok = $this->getRendszamok('furgon');
+            $kamionRendszamok = $this->getRendszamok('kamion', $ceg_id);
+            $potkocsiRendszamok = $this->getRendszamok('potkocsi', $ceg_id);
+            $furgonRendszamok = $this->getRendszamok('furgon', $ceg_id);
             foreach ($kerelmek as &$k) {
                 $k['jarmu_rendszam'] = $k['tipus'] === 'kamion'
                     ? ($kamionRendszamok[$k['jarmu_id']] ?? null)
@@ -115,7 +131,7 @@ class JarmuValtasInterface {
     // JarmuValaszto.js, pont ezért használják: hogy tudják, van-e még
     // aktív kérés), a 'visszavonva' állapotot pedig szándékosan kihagyjuk,
     // mert azt a sofőr saját maga váltotta ki, nem admin-döntés.
-    public function getElbiraltJarmuValtasok($sofor_id) {
+    public function getElbiraltJarmuValtasok($sofor_id, $ceg_id) {
         try {
             $query = "SELECT * FROM jarmu_valtas_kerelmek
                       WHERE sofor_id = :sofor_id AND allapot IN ('jovahagyva', 'elutasitva') AND torolt <> 'I'
@@ -125,9 +141,9 @@ class JarmuValtasInterface {
             $stmt->execute();
             $kerelmek = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            $kamionRendszamok = $this->getRendszamok('kamion');
-            $potkocsiRendszamok = $this->getRendszamok('potkocsi');
-            $furgonRendszamok = $this->getRendszamok('furgon');
+            $kamionRendszamok = $this->getRendszamok('kamion', $ceg_id);
+            $potkocsiRendszamok = $this->getRendszamok('potkocsi', $ceg_id);
+            $furgonRendszamok = $this->getRendszamok('furgon', $ceg_id);
             foreach ($kerelmek as &$k) {
                 $k['jarmu_rendszam'] = $k['tipus'] === 'kamion'
                     ? ($kamionRendszamok[$k['jarmu_id']] ?? null)
@@ -153,10 +169,10 @@ class JarmuValtasInterface {
             $stmt->execute();
             $kerelmek = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            $soforNevek = $this->getSoforNevek();
-            $kamionRendszamok = $this->getRendszamok('kamion');
-            $potkocsiRendszamok = $this->getRendszamok('potkocsi');
-            $furgonRendszamok = $this->getRendszamok('furgon');
+            $soforNevek = $this->getSoforNevek($admin);
+            $kamionRendszamok = $this->getRendszamok('kamion', $admin);
+            $potkocsiRendszamok = $this->getRendszamok('potkocsi', $admin);
+            $furgonRendszamok = $this->getRendszamok('furgon', $admin);
             foreach ($kerelmek as &$k) {
                 $k['sofor_nev'] = $soforNevek[$k['sofor_id']] ?? null;
                 $k['jarmu_rendszam'] = $k['tipus'] === 'kamion'
@@ -194,6 +210,42 @@ class JarmuValtasInterface {
                 throw new Exception('A kérés már el lett bírálva, nem létezik, vagy nem a te céged kérése.');
             }
 
+            // Jóváhagyás előtt ÚJRA ellenőrizzük a jármű érvényességét — a
+            // kérés BEKÜLDÉSEKOR (requestJarmuValtas) még érvényes volt, de
+            // időközben (a kérés és az elbírálás között) törölhették
+            // (selejtezés). Enélkül egy törölt járműre mutató jóváhagyás
+            // csendben "sikeresnek" tűnt, miközben a sofőr egy sehol nem
+            // listázott jármű-id-re lett volna beállítva (ld. biztonsági
+            // audit).
+            if ($allapot === 'jovahagyva') {
+                $tablak = ['kamion' => 'kamion', 'potkocsi' => 'potkocsi', 'furgon' => 'furgon'];
+                $jarmuTabla = $tablak[$kerelem['tipus']] ?? 'potkocsi';
+                $jarmuStmt = $this->db->prepare("SELECT id FROM `$jarmuTabla` WHERE id = :id AND admin = :ceg_id AND torolt <> 'I'");
+                $jarmuStmt->bindValue(':id', $kerelem['jarmu_id']);
+                $jarmuStmt->bindValue(':ceg_id', $ceg_id);
+                $jarmuStmt->execute();
+                if (!$jarmuStmt->fetch()) {
+                    throw new Exception('A kért jármű időközben törlésre került, a kérés nem hagyható jóvá.');
+                }
+
+                // Foglaltság-ellenőrzés — a jármű ne legyen már MÁS, aktív
+                // (nem törölt) sofőrnél beállítva. Enélkül ugyanaz a jármű
+                // két sofőrnek is jóváhagyható lett volna (ld. biztonsági
+                // audit).
+                $oszlopok = ['kamion' => 'kamion', 'potkocsi' => 'aktiv_potkocsi', 'furgon' => 'furgon'];
+                $column = $oszlopok[$kerelem['tipus']] ?? 'aktiv_potkocsi';
+                $foglaltStmt = $this->db->prepare(
+                    "SELECT id FROM user WHERE $column = :jarmu_id AND id <> :sofor_id AND admin = :ceg_id AND torolt <> 'I'"
+                );
+                $foglaltStmt->bindValue(':jarmu_id', $kerelem['jarmu_id']);
+                $foglaltStmt->bindValue(':sofor_id', $kerelem['sofor_id']);
+                $foglaltStmt->bindValue(':ceg_id', $ceg_id);
+                $foglaltStmt->execute();
+                if ($foglaltStmt->fetch()) {
+                    throw new Exception('A jármű időközben más sofőrhöz lett rendelve.');
+                }
+            }
+
             $stmt = $this->db->prepare(
                 "UPDATE jarmu_valtas_kerelmek SET allapot = :allapot, elbiralva = NOW() WHERE id = :id AND allapot = 'fuggoben'"
             );
@@ -205,9 +257,19 @@ class JarmuValtasInterface {
             }
 
             if ($allapot === 'jovahagyva') {
-                $oszlopok = ['kamion' => 'kamion', 'potkocsi' => 'aktiv_potkocsi', 'furgon' => 'furgon'];
-                $column = $oszlopok[$kerelem['tipus']] ?? 'aktiv_potkocsi';
-                $update = $this->db->prepare("UPDATE user SET $column = :jarmu_id WHERE id = :sofor_id");
+                // A kamion/furgon (mindkettő önhajtó) kölcsönösen kizárja
+                // egymást — enélkül egy korábban kamionhoz rendelt sofőr
+                // furgon-jóváhagyás után egyszerre mindkét oszlopon
+                // non-null maradt volna, ami hibás tankolás-attribúciót
+                // okozott (ld. biztonsági audit). A pótkocsi (vontatmány)
+                // ettől független, azt nem érinti egyik önhajtó váltás sem.
+                if ($kerelem['tipus'] === 'kamion') {
+                    $update = $this->db->prepare("UPDATE user SET kamion = :jarmu_id, furgon = NULL WHERE id = :sofor_id");
+                } elseif ($kerelem['tipus'] === 'furgon') {
+                    $update = $this->db->prepare("UPDATE user SET furgon = :jarmu_id, kamion = NULL WHERE id = :sofor_id");
+                } else {
+                    $update = $this->db->prepare("UPDATE user SET aktiv_potkocsi = :jarmu_id WHERE id = :sofor_id");
+                }
                 $update->bindValue(':jarmu_id', $kerelem['jarmu_id']);
                 $update->bindValue(':sofor_id', $kerelem['sofor_id']);
                 $update->execute();
@@ -219,8 +281,15 @@ class JarmuValtasInterface {
         }
     }
 
-    private function getSoforNevek() {
-        $stmt = $this->db->query("SELECT id, name FROM user WHERE torolt <> 'I'");
+    // `$ceg_id`-vel scope-olva — korábban minden cég összes sofőrjét
+    // betöltötte, ami önmagában nem szivárogtatott adatot (a hívó csak a
+    // már ceg_id-vel szűrt kérés-sorok saját `sofor_id`/`jarmu_id`
+    // kulcsaival keres bele), de higiéniailag helytelen és fölösleges
+    // terhelés volt (ld. biztonsági audit).
+    private function getSoforNevek($ceg_id) {
+        $stmt = $this->db->prepare("SELECT id, name FROM user WHERE admin = :ceg_id AND torolt <> 'I'");
+        $stmt->bindValue(':ceg_id', $ceg_id);
+        $stmt->execute();
         $map = [];
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
             $map[$row['id']] = $row['name'];
@@ -228,8 +297,10 @@ class JarmuValtasInterface {
         return $map;
     }
 
-    private function getRendszamok($tabla) {
-        $stmt = $this->db->query("SELECT id, rendszam FROM $tabla WHERE torolt <> 'I'");
+    private function getRendszamok($tabla, $ceg_id) {
+        $stmt = $this->db->prepare("SELECT id, rendszam FROM `$tabla` WHERE admin = :ceg_id AND torolt <> 'I'");
+        $stmt->bindValue(':ceg_id', $ceg_id);
+        $stmt->execute();
         $map = [];
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
             $map[$row['id']] = $row['rendszam'];

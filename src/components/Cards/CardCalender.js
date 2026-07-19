@@ -153,12 +153,12 @@ export default function CustomCalendar({ onEventsChange }) {
           {/* Mobilon nincs felugró részletező form — a kiválasztott nap
               eseményeit kizárólag ez az alsó lista mutatja, akár a
               naptárban egy eseményre, akár egy napra koppintunk. */}
-          <div className="mt-3 border-t border-ink-100 pt-3">
-            <h4 className="mb-2 text-sm font-semibold text-brand-900">
+          <div className="mt-3 border-t border-ink-100 pt-3 dark:border-ink-800">
+            <h4 className="mb-2 text-sm font-semibold text-brand-900 dark:text-ink-50">
               {moment(selectedDate).format("YYYY. MMMM D. (dddd)")}
             </h4>
             {dayEvents.length === 0 ? (
-              <p className="rounded-xl bg-slate-50 px-3 py-4 text-center text-sm text-ink-400">
+              <p className="rounded-xl bg-slate-50 px-3 py-4 text-center text-sm text-ink-400 dark:bg-ink-800 dark:text-ink-500">
                 Nincs esemény ezen a napon.
               </p>
             ) : (
@@ -166,10 +166,10 @@ export default function CustomCalendar({ onEventsChange }) {
                 {dayEvents.map((event, idx) => (
                   <li
                     key={idx}
-                    className="flex items-center gap-2.5 rounded-xl bg-slate-50 px-3 py-2.5"
+                    className="flex items-center gap-2.5 rounded-xl bg-slate-50 px-3 py-2.5 dark:bg-ink-800"
                   >
                     <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-brand-500" />
-                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink-700">
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink-700 dark:text-ink-100">
                       {event.title}
                     </span>
                   </li>

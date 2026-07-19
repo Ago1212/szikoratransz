@@ -52,7 +52,7 @@ export default function KihasznaltsagiModal({ open, onClose, cegId, kerelmezoId 
   return (
     <Modal open={open} onClose={handleClose} title="Jármű-kihasználtsági riport" maxWidth="max-w-2xl">
       <div className="space-y-4">
-        <p className="text-xs text-ink-400">
+        <p className="text-xs text-ink-400 dark:text-ink-500">
           A megtett-idő (menetidő) és az állásidő aránya a GPSmart adatai alapján, legfeljebb 7
           napos tartományra — megmutatja, melyik jármű áll feleslegesen sokat.
         </p>
@@ -72,9 +72,9 @@ export default function KihasznaltsagiModal({ open, onClose, cegId, kerelmezoId 
         </FormSection>
 
         {jarmuvek && jarmuvek.length > 0 && (
-          <div className="max-h-96 overflow-y-auto rounded-xl border border-ink-100">
+          <div className="max-h-96 overflow-y-auto rounded-xl border border-ink-100 dark:border-ink-800">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-slate-50 text-xs uppercase text-ink-400">
+              <thead className="sticky top-0 bg-slate-50 text-xs uppercase text-ink-400 dark:bg-ink-800 dark:text-ink-500">
                 <tr>
                   <th className="px-3 py-2 text-left">Rendszám</th>
                   <th className="px-3 py-2 text-right">Menetidő</th>
@@ -84,31 +84,31 @@ export default function KihasznaltsagiModal({ open, onClose, cegId, kerelmezoId 
               </thead>
               <tbody>
                 {jarmuvek.map((j) => (
-                  <tr key={`${j.jarmu_tipus}:${j.kamion_id ?? j.furgon_id}`} className="border-t border-ink-100">
-                    <td className="px-3 py-2 font-semibold text-ink-800">{j.rendszam}</td>
-                    <td className="px-3 py-2 text-right tabular-nums text-ink-600">
+                  <tr key={`${j.jarmu_tipus}:${j.kamion_id ?? j.furgon_id}`} className="border-t border-ink-100 dark:border-ink-800">
+                    <td className="px-3 py-2 font-semibold text-ink-800 dark:text-ink-100">{j.rendszam}</td>
+                    <td className="px-3 py-2 text-right tabular-nums text-ink-600 dark:text-ink-300">
                       <span className="inline-flex items-center gap-1">
-                        <PiClockLight className="h-3.5 w-3.5 text-ink-400" />
+                        <PiClockLight className="h-3.5 w-3.5 text-ink-400 dark:text-ink-500" />
                         {formatOra(j.menetidoOra)}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-right tabular-nums text-ink-600">
+                    <td className="px-3 py-2 text-right tabular-nums text-ink-600 dark:text-ink-300">
                       <span className="inline-flex items-center gap-1">
-                        <PiPauseCircleLight className="h-3.5 w-3.5 text-ink-400" />
+                        <PiPauseCircleLight className="h-3.5 w-3.5 text-ink-400 dark:text-ink-500" />
                         {formatOra(j.allasidoOra)}
                       </span>
                     </td>
                     <td className="px-3 py-2 text-right">
                       {j.kihasznaltsagSzazalek === null ? (
-                        <span className="text-ink-400">—</span>
+                        <span className="text-ink-400 dark:text-ink-500">—</span>
                       ) : (
                         <span
                           className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold ${
                             j.kihasznaltsagSzazalek < 40
-                              ? "bg-red-50 text-red-700"
+                              ? "bg-red-50 text-red-700 dark:bg-red-950/50 dark:text-red-300"
                               : j.kihasznaltsagSzazalek < 65
-                                ? "bg-amber-50 text-amber-700"
-                                : "bg-emerald-50 text-emerald-700"
+                                ? "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300"
+                                : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300"
                           }`}
                         >
                           <PiGaugeLight className="h-3.5 w-3.5" />

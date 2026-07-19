@@ -17,13 +17,13 @@ import { formatKm } from "utils/gpsmartHelpers.js";
 
 function Mezo({ icon: Icon, label, value }) {
   return (
-    <div className="flex items-start gap-2.5 rounded-xl bg-slate-50 p-3">
-      <Icon className="mt-0.5 h-4 w-4 flex-shrink-0 text-ink-400" />
+    <div className="flex items-start gap-2.5 rounded-xl bg-slate-50 p-3 dark:bg-ink-800">
+      <Icon className="mt-0.5 h-4 w-4 flex-shrink-0 text-ink-400 dark:text-ink-500" />
       <div className="min-w-0">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-400">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">
           {label}
         </p>
-        <p className="truncate text-sm font-semibold text-ink-800">{value}</p>
+        <p className="truncate text-sm font-semibold text-ink-800 dark:text-ink-100">{value}</p>
       </div>
     </div>
   );
@@ -48,15 +48,15 @@ export default function JarmuReszletek({
 }) {
   const tartalom = !jarmu ? (
     <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 py-12 text-center">
-      <PiTruckLight className="h-8 w-8 text-ink-200" />
-      <p className="text-sm text-ink-400">
+      <PiTruckLight className="h-8 w-8 text-ink-200 dark:text-ink-700" />
+      <p className="text-sm text-ink-400 dark:text-ink-500">
         Válassz egy járművet a listából vagy a térképről a részletekhez.
       </p>
     </div>
   ) : (
     <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
       <div className="flex items-center gap-3">
-        <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
+        <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 dark:bg-brand-950/50 dark:text-brand-300">
           {jarmu.jarmu_tipus === "furgon" ? (
             <PiVanLight className="h-6 w-6" />
           ) : (
@@ -64,7 +64,7 @@ export default function JarmuReszletek({
           )}
         </span>
         <div className="min-w-0">
-          <p className="truncate font-display text-lg font-bold text-brand-900">
+          <p className="truncate font-display text-lg font-bold text-brand-900 dark:text-ink-50">
             {jarmu.rendszam}
           </p>
           <StatusBadge tone={jarmu._allapot.tone}>{jarmu._allapot.label}</StatusBadge>
@@ -103,7 +103,7 @@ export default function JarmuReszletek({
         onClick={onElozmenyekOpen}
         disabled={!jarmu.car_id}
         title={!jarmu.car_id ? "Ehhez a járműhöz nincs GPSmart azonosító" : undefined}
-        className="mt-1 flex items-center justify-center gap-1.5 rounded-xl bg-brand-600 px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-ink-200 disabled:text-ink-400"
+        className="mt-1 flex items-center justify-center gap-1.5 rounded-xl bg-brand-600 px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-ink-200 disabled:text-ink-400 dark:disabled:bg-ink-800 dark:disabled:text-ink-600"
       >
         <PiClockCounterClockwiseLight className="h-4 w-4" />
         Előzmények
@@ -119,7 +119,7 @@ export default function JarmuReszletek({
           target="_blank"
           rel="noreferrer"
           aria-disabled={jarmu.lat == null}
-          className={`flex items-center justify-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink-600 shadow-soft transition-colors duration-200 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 ${
+          className={`flex items-center justify-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink-600 shadow-soft transition-colors duration-200 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-300 dark:hover:border-brand-700 dark:hover:bg-brand-950/40 dark:hover:text-brand-300 ${
             jarmu.lat == null ? "pointer-events-none opacity-40" : ""
           }`}
         >
@@ -133,7 +133,7 @@ export default function JarmuReszletek({
           className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold uppercase tracking-wide shadow-soft transition-colors duration-200 ${
             kovetesEnabled
               ? "border-brand-600 bg-brand-600 text-white"
-              : "border-ink-200 bg-white text-ink-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
+              : "border-ink-200 bg-white text-ink-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-300 dark:hover:border-brand-700 dark:hover:bg-brand-950/40 dark:hover:text-brand-300"
           }`}
         >
           <PiCrosshairSimpleLight className="h-4 w-4" />
@@ -148,7 +148,7 @@ export default function JarmuReszletek({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-white shadow-soft ring-1 ring-ink-100">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-white shadow-soft ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800">
       <GradientCardHeader
         icon={PiTruckLight}
         title="Jármű részletei"
@@ -158,7 +158,7 @@ export default function JarmuReszletek({
               type="button"
               onClick={onClose}
               aria-label="Kiválasztás törlése"
-              className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-400 transition-colors duration-150 hover:bg-slate-100 hover:text-ink-700"
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-400 transition-colors duration-150 hover:bg-slate-100 hover:text-ink-700 dark:hover:bg-ink-800 dark:hover:text-ink-100"
             >
               <PiXLight className="h-4 w-4" />
             </button>

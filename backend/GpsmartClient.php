@@ -12,16 +12,27 @@
 // mert a cím/rendszám mezőkben előfordulhat olyan karakter (pl. ékezet),
 // ami egy egyszerű reguláris kifejezést könnyen elrontana.
 //
-// Minden `lekerdezPoziciok()` hívás önálló bejelentkezéssel indul — a
-// cookie sehol nincs gyorsítótárazva. Napi néhány (menüpont-megnyitásnyi)
-// lekérdezésnél ez nem számottevő többletterhelés, cserébe sosem kell
-// lejárt-cookie hibával foglalkozni.
+// R27 (fejlesztési audit, 2026-07-19): korábban minden `lekerdezPoziciok()`/
+// `lekerdezUtvonal()` hívás önálló bejelentkezéssel indult, a cookie
+// sehol nem volt gyorsítótárazva. Ez a `$cookie` mezőn, PÉLDÁNY-szinten
+// (nem folyamatok/kérések közötti, tartós cache-ben) tárolja a bejelentkezés
+// eredményét — egyetlen HTTP-kérés élettartamán belül, ugyanazzal a
+// `GpsmartClient`-példánnyal végzett több hívás (pl. a Flottakövetés
+// "Megtett út (ma)"/kihasználtsági riport flotta-egészére futó ciklusa,
+// ld. GpsmartInterface::getClient()) így csak EGYSZER jelentkezik be,
+// nem jármű-számszor. Ez szándékosan NEM azonos a fájl korábbi fejléc-
+// kommentjében elvetett tartós/kérések-közötti cache-eléssel — mivel a
+// backend minden HTTP-kérés végén megszűnik (nincs hosszú élettartamú
+// worker-folyamat), a cookie sosem élhet túl egy request-nyi időt, tehát
+// a "lejárt cookie" kockázat, amit az eredeti komment el akart kerülni,
+// itt fel sem merül.
 class GpsmartClient {
     private const BASE_URL = 'https://flottanavigacio.gpsmart.eu';
 
     private $felhasznalonev;
     private $jelszo;
     private $userId;
+    private $cookie = null;
 
     public function __construct($felhasznalonev, $jelszo, $userId) {
         $this->felhasznalonev = $felhasznalonev;
@@ -30,7 +41,7 @@ class GpsmartClient {
     }
 
     public function lekerdezPoziciok() {
-        $cookie = $this->bejelentkezes();
+        $cookie = $this->bejelentkezesGyorsitva();
         $html = $this->pozicioLekerdezes($cookie);
         return $this->htmlFeldolgozas($html);
     }
@@ -42,9 +53,24 @@ class GpsmartClient {
     // cím/sebesség), megállások/szakaszok (hivatali/magán, időtartam,
     // táv, csúcssebesség) és egy napi összesítő (táv/menetidő/állásidő).
     public function lekerdezUtvonal($carId, $datumTol, $datumIg, $idoTol = '00:00', $idoIg = '23:59') {
-        $cookie = $this->bejelentkezes();
+        $cookie = $this->bejelentkezesGyorsitva();
         $html = $this->utvonalLekerdezes($cookie, $carId, $datumTol, $datumIg, $idoTol, $idoIg);
         return $this->utvonalFeldolgozas($html);
+    }
+
+    // Csak az ELSŐ hívásnál jelentkezik be ténylegesen — utána a példányon
+    // tárolt cookie-t adja vissza. Ha egy hívó mégis egy már lejárt/
+    // érvénytelen cookie-val futtatna le egy lekérdezést (pl. a GPSmart
+    // szerver oldalán, ritkán, egy kérésen belül járna le a munkamenet),
+    // az a meglévő hibakezelésen (üres/hibás válasz → Exception a hívó
+    // `try/catch`-ében) keresztül ugyanúgy látszik, mint eddig — ez a
+    // gyorsítótárazás nem változtat a hibamódon, csak a gyakori, sikeres
+    // esetben spórol meg felesleges bejelentkezéseket.
+    private function bejelentkezesGyorsitva() {
+        if ($this->cookie === null) {
+            $this->cookie = $this->bejelentkezes();
+        }
+        return $this->cookie;
     }
 
     private function utvonalLekerdezes($cookie, $carId, $datumTol, $datumIg, $idoTol, $idoIg) {

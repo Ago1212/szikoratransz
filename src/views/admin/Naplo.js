@@ -77,7 +77,7 @@ export default function Naplo() {
     {
       key: "tabla",
       label: "Entitás",
-      className: "font-semibold text-brand-900",
+      className: "font-semibold text-brand-900 dark:text-ink-50",
       render: (row) => TABLA_LABEL[row.tabla] || row.tabla,
       exportValue: (row) => TABLA_LABEL[row.tabla] || row.tabla,
     },

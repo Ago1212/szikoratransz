@@ -81,7 +81,7 @@ export default function UjFelhasznalo() {
       <button
         type="button"
         onClick={() => (selectedRole ? setSelectedRole(null) : history.push("/admin/felhasznalok"))}
-        className="mb-4 inline-flex w-fit items-center gap-1.5 text-sm font-medium text-ink-500 transition-colors duration-200 ease-fluid hover:text-brand-700"
+        className="mb-4 inline-flex w-fit items-center gap-1.5 text-sm font-medium text-ink-500 transition-colors duration-200 ease-fluid hover:text-brand-700 dark:text-ink-400 dark:hover:text-brand-300"
       >
         <PiArrowLeftLight className="h-4 w-4" />
         {selectedRole ? "Vissza a szerepkör-választáshoz" : "Vissza a felhasználókhoz"}
@@ -101,14 +101,14 @@ export default function UjFelhasznalo() {
                     key={role.kulcs}
                     type="button"
                     onClick={() => setSelectedRole(role.kulcs)}
-                    className="flex items-start gap-3 rounded-2xl border border-ink-100 bg-white p-4 text-left shadow-soft transition-colors duration-150 hover:border-brand-300 hover:bg-brand-50/40"
+                    className="flex items-start gap-3 rounded-2xl border border-ink-100 bg-white p-4 text-left shadow-soft transition-colors duration-150 hover:border-brand-300 hover:bg-brand-50/40 dark:border-ink-800 dark:bg-ink-900 dark:hover:border-brand-700 dark:hover:bg-brand-950/30"
                   >
-                    <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+                    <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-950/50 dark:text-brand-300">
                       <Icon className="h-5 w-5" />
                     </span>
                     <span>
-                      <span className="block text-sm font-semibold text-ink-900">{role.nev}</span>
-                      <span className="block text-xs text-ink-500">
+                      <span className="block text-sm font-semibold text-ink-900 dark:text-ink-50">{role.nev}</span>
+                      <span className="block text-xs text-ink-500 dark:text-ink-400">
                         {role.kulcs === "admin"
                           ? "Teljes hozzáférés minden menüponthoz."
                           : "A pontos hozzáférése a Jogosultságok oldalon állítható be."}
@@ -120,14 +120,14 @@ export default function UjFelhasznalo() {
               <button
                 type="button"
                 onClick={handleSelectSofor}
-                className="flex items-start gap-3 rounded-2xl border border-ink-100 bg-white p-4 text-left shadow-soft transition-colors duration-150 hover:border-brand-300 hover:bg-brand-50/40 sm:col-span-2"
+                className="flex items-start gap-3 rounded-2xl border border-ink-100 bg-white p-4 text-left shadow-soft transition-colors duration-150 hover:border-brand-300 hover:bg-brand-50/40 dark:border-ink-800 dark:bg-ink-900 dark:hover:border-brand-700 dark:hover:bg-brand-950/30 sm:col-span-2"
               >
-                <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-300">
                   <PiSteeringWheelLight className="h-5 w-5" />
                 </span>
                 <span>
-                  <span className="block text-sm font-semibold text-ink-900">Sofőr</span>
-                  <span className="block text-xs text-ink-500">
+                  <span className="block text-sm font-semibold text-ink-900 dark:text-ink-50">Sofőr</span>
+                  <span className="block text-xs text-ink-500 dark:text-ink-400">
                     Saját mobil felület — jármű-hozzárendelés, bejelentések, dokumentum-lejáratok. A
                     meglévő sofőr-felvevő űrlapra visz tovább.
                   </span>
@@ -168,11 +168,11 @@ export default function UjFelhasznalo() {
                   className="md:col-span-2"
                 />
               </FormSection>
-              <p className="flex items-center gap-1.5 text-xs text-ink-500">
+              <p className="flex items-center gap-1.5 text-xs text-ink-500 dark:text-ink-400">
                 <PiCheckCircleFill className="h-4 w-4 text-emerald-500" />
                 A szerepkör bármikor módosítható a Felhasználók listáján.
               </p>
-              <div className="flex justify-end border-t border-ink-100 pt-4">
+              <div className="flex justify-end border-t border-ink-100 pt-4 dark:border-ink-800">
                 <SaveButton onClick={handleSave} isSaving={isSaving} label="Meghívás" />
               </div>
             </form>

@@ -69,7 +69,7 @@ export default function HelyszinMegjegyzesek({ helyszinId, szerzoTipus, szerzoId
           onChange={(e) => setSzoveg(e.target.value)}
           placeholder="Új megjegyzés hozzáfűzése (pl. bejárati útvonal, rakodási tudnivaló)..."
           rows={3}
-          className="w-full rounded-xl border border-ink-100 bg-slate-50 px-4 py-3 text-sm text-brand-900 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300"
+          className="w-full rounded-xl border border-ink-100 bg-slate-50 px-4 py-3 text-sm text-brand-900 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300 dark:border-ink-800 dark:bg-ink-800 dark:text-ink-50"
         />
         <div className="flex justify-end">
           <button
@@ -85,24 +85,24 @@ export default function HelyszinMegjegyzesek({ helyszinId, szerzoTipus, szerzoId
       </div>
 
       {loading ? (
-        <p className="text-sm text-ink-400">Betöltés...</p>
+        <p className="text-sm text-ink-400 dark:text-ink-500">Betöltés...</p>
       ) : megjegyzesek.length === 0 ? (
-        <p className="rounded-xl bg-slate-50 px-4 py-4 text-center text-sm text-ink-400">
+        <p className="rounded-xl bg-slate-50 px-4 py-4 text-center text-sm text-ink-400 dark:bg-ink-800 dark:text-ink-500">
           Még nincs megjegyzés ehhez a helyszínhez.
         </p>
       ) : (
         <ul className="flex flex-col gap-2.5">
           {megjegyzesek.map((m) => (
-            <li key={m.id} className="rounded-xl border border-ink-100 bg-white p-3.5 shadow-soft">
+            <li key={m.id} className="rounded-xl border border-ink-100 bg-white p-3.5 shadow-soft dark:border-ink-800 dark:bg-ink-900">
               <div className="mb-1.5 flex items-center justify-between gap-2">
-                <span className="text-xs font-bold text-ink-700">{m.szerzo_nev}</span>
+                <span className="text-xs font-bold text-ink-700 dark:text-ink-100">{m.szerzo_nev}</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] text-ink-400">{formatDate(m.letrehozva)}</span>
+                  <span className="text-[11px] text-ink-400 dark:text-ink-500">{formatDate(m.letrehozva)}</span>
                   {String(m.szerzo_id) === String(szerzoId) && m.szerzo_tipus === szerzoTipus && (
                     <button
                       type="button"
                       onClick={() => handleDelete(m.id)}
-                      className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg text-ink-300 transition-colors duration-200 hover:bg-red-50 hover:text-red-600"
+                      className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg text-ink-300 transition-colors duration-200 hover:bg-red-50 hover:text-red-600 dark:text-ink-600 dark:hover:bg-red-950/50 dark:hover:text-red-300"
                       aria-label="Megjegyzés törlése"
                     >
                       <PiTrashLight className="h-3.5 w-3.5" />
@@ -110,7 +110,7 @@ export default function HelyszinMegjegyzesek({ helyszinId, szerzoTipus, szerzoId
                   )}
                 </div>
               </div>
-              <p className="whitespace-pre-wrap text-sm text-ink-600">{m.szoveg}</p>
+              <p className="whitespace-pre-wrap text-sm text-ink-600 dark:text-ink-300">{m.szoveg}</p>
             </li>
           ))}
         </ul>

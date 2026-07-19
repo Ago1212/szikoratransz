@@ -5,6 +5,7 @@ import { PiSignOutLight } from "react-icons/pi";
 // components
 
 import CardSettings from "components/Cards/CardSettings.js";
+import PushFeliratkozas from "components/UI/PushFeliratkozas.js";
 import { fetchAction } from "utils/fetchAction";
 
 export default function Settings() {
@@ -33,11 +34,14 @@ export default function Settings() {
         <div className="w-full lg:w-12/12 px-4">
           <CardSettings />
         </div>
+        <div className="w-full px-4 mt-4">
+          <PushFeliratkozas />
+        </div>
         <div className="w-full px-4 mt-4 md:hidden">
           <button
             type="button"
             onClick={handleLogout}
-            className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-ink-100 bg-white px-3.5 py-3 text-sm font-semibold text-red-600 shadow-soft transition-colors duration-200 hover:bg-red-50"
+            className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-ink-100 bg-white px-3.5 py-3 text-sm font-semibold text-red-600 shadow-soft transition-colors duration-200 hover:bg-red-50 dark:border-ink-800 dark:bg-ink-900 dark:text-red-400 dark:hover:bg-red-950/40"
           >
             <PiSignOutLight className="h-4 w-4" />
             Kijelentkezés
