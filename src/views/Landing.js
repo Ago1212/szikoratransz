@@ -379,7 +379,7 @@ export default function Landing() {
         {/* ---------------------------------------------------------- */}
         <section
           id="home"
-          className="relative pt-32 pb-24 lg:pt-40 lg:pb-32 flex items-center min-h-screen overflow-hidden bg-[#F2F3F5]"
+          className="relative pt-16 pb-12 lg:pt-40 lg:pb-32 flex items-center lg:min-h-screen overflow-hidden bg-[#F2F3F5]"
         >
           <div className="absolute inset-0 overflow-hidden bg-[#F2F3F5]">
             <style>{`
@@ -412,7 +412,7 @@ export default function Landing() {
           </div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
-            <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-16 items-start">
+            <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-8 lg:gap-16 items-start">
               {/* Bal oszlop — fő üzenet */}
               <div className="relative">
                 <Reveal delay={0}>
@@ -422,7 +422,7 @@ export default function Landing() {
                   </span>
                 </Reveal>
 
-                <h1 className="font-[Overpass] font-extrabold text-5xl md:text-7xl leading-[1.05] text-[#23262B] tracking-tight">
+                <h1 className="font-[Overpass] font-extrabold text-4xl md:text-7xl leading-[1.05] text-[#23262B] tracking-tight">
                   {/* Szóköz minden sor-span között: a `.hero-line-mask` maga
                       display:block-kel vizuálisan úgyis külön sorra töri
                       ezeket, de szóköz nélkül a nyers DOM-szöveg (amit pl.
@@ -480,7 +480,7 @@ export default function Landing() {
               {/* Jobb oszlop — ajánlatkérés a középpontban (signature elem) */}
               <Reveal
                 delay={150}
-                className="relative bg-[#2E3239]/90 backdrop-blur-md border border-white/10 rounded-xl p-8 md:p-10 shadow-2xl overflow-hidden"
+                className="relative bg-[#2E3239]/90 backdrop-blur-md border border-white/10 rounded-xl p-6 md:p-10 shadow-2xl overflow-hidden"
               >
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1E3AA8] to-[#172E86]"></div>
 
@@ -490,12 +490,12 @@ export default function Landing() {
                 <h2 className="font-[Overpass] font-extrabold text-2xl md:text-3xl text-white mt-3 mb-3">
                   Kérjen árajánlatot még ma
                 </h2>
-                <p className="text-white/60 mb-6">
+                <p className="text-white/60 mb-4 md:mb-6">
                   Töltse ki pár adatát, és 24 órán belül egyedi árajánlattal
                   válaszolunk — kötöttség nélkül.
                 </p>
 
-                <div className="space-y-3 mb-8">
+                <div className="space-y-2 mb-5 md:space-y-3 md:mb-8">
                   {[
                     "Teljesen ingyenes, nem kötelez semmire",
                     "Válasz 24 órán belül",

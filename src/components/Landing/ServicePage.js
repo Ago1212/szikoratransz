@@ -24,6 +24,7 @@ export default function ServicePage({
   metaTitle,
   metaDescription,
   path,
+  testimonialNames,
   children,
 }) {
   const currentService = SERVICE_PAGES.find((s) => s.path === path);
@@ -40,6 +41,17 @@ export default function ServicePage({
   });
 
   const otherServices = SERVICE_PAGES.filter((s) => s.path !== path);
+
+  // Melyik 3 referenciát mutassuk ehhez az oldalhoz — SEO-audit szerint
+  // korábban mind a 6 long-tail oldal + a főoldal ugyanazt a 3 referenciát,
+  // ugyanabban a sorrendben jelenítette meg (near-duplicate content). A
+  // `testimonialNames` prop oldalanként más 3-as kombinációt választ ki a
+  // TESTIMONIALS közös pooljából; ha egy oldal nem ad meg saját listát, a
+  // pool első 3 eleme a visszaeső alapértelmezés.
+  const shownTestimonials =
+    testimonialNames && testimonialNames.length > 0
+      ? testimonialNames.map((n) => TESTIMONIALS.find((t) => t.name === n)).filter(Boolean)
+      : TESTIMONIALS.slice(0, 3);
 
   // Minimális belépő animáció a hero-nak — nem a görgetési pozíciót
   // animáljuk (ld. ScrollToTop.js: az korábban épp azért volt zavaró, mert
@@ -152,7 +164,7 @@ export default function ServicePage({
             Amit partnereink mondanak rólunk
           </h2>
           <div className="grid md:grid-cols-3 gap-6">
-            {TESTIMONIALS.map((t) => (
+            {shownTestimonials.map((t) => (
               <div key={t.name} className="bg-white border border-[#23262B]/10 rounded-xl p-6 flex flex-col h-full">
                 <PiQuotesLight className="text-[#1E3AA8]/30 text-2xl mb-3" />
                 <p className="text-[#23262B]/75 text-sm leading-relaxed mb-5 flex-grow">{t.quote}</p>

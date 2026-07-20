@@ -5,15 +5,7 @@ import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 import "assets/styles/tailwind.css";
 
 // views without layouts
-import Landing from "views/Landing.js";
 import NotFound from "views/NotFound.js";
-import BelfoldiFuvarozas from "views/landing/BelfoldiFuvarozas.js";
-import NemzetkoziFuvarozas from "views/landing/NemzetkoziFuvarozas.js";
-import BiztositottSzallitas from "views/landing/BiztositottSzallitas.js";
-import ExpresszFuvarozas from "views/landing/ExpresszFuvarozas.js";
-import RendezvenySzallitas from "views/landing/RendezvenySzallitas.js";
-import EgyediArajanlat from "views/landing/EgyediArajanlat.js";
-import Adatvedelem from "views/Adatvedelem.js";
 
 import ToastContainer from "components/UI/ToastContainer.js";
 import ScrollToTop from "components/UI/ScrollToTop.js";
@@ -27,6 +19,25 @@ const Admin = lazy(() => import("layouts/Admin.js"));
 const User = lazy(() => import("layouts/User.js"));
 const Auth = lazy(() => import("layouts/Auth.js"));
 const Profile = lazy(() => import("views/Profile.js"));
+
+// A marketing/landing oldalak (főoldal + 6 long-tail szolgáltatás-oldal +
+// adatvédelem) route-onként lazy-betöltve — korábban mind a 7 (a NotFound-dal
+// együtt 8) statikusan be volt húzva a fő JS-bundle-be, tehát egyetlen oldal
+// betöltése is letöltötte és futtatta mind a többi kódját, feleslegesen
+// növelve az LCP-t domináló hidratálási/parse-időt (SEO-audit: 89-102 KiB
+// kihasználatlan JS minden egyes marketing oldalon). Ugyanaz a minta, mint
+// amit az Admin/User/Auth layoutok fent már használnak. A `scripts/
+// prerender.js` `networkidle` várakozása (+ 1s ráadás) a lazy chunk
+// letöltését/renderelését is bevárja, tehát ez a crawlereknek kiszolgált
+// statikus HTML-t nem érinti.
+const Landing = lazy(() => import("views/Landing.js"));
+const BelfoldiFuvarozas = lazy(() => import("views/landing/BelfoldiFuvarozas.js"));
+const NemzetkoziFuvarozas = lazy(() => import("views/landing/NemzetkoziFuvarozas.js"));
+const BiztositottSzallitas = lazy(() => import("views/landing/BiztositottSzallitas.js"));
+const ExpresszFuvarozas = lazy(() => import("views/landing/ExpresszFuvarozas.js"));
+const RendezvenySzallitas = lazy(() => import("views/landing/RendezvenySzallitas.js"));
+const EgyediArajanlat = lazy(() => import("views/landing/EgyediArajanlat.js"));
+const Adatvedelem = lazy(() => import("views/Adatvedelem.js"));
 
 // `onUpdate` nélkül a service worker új verziója csendben "waiting"
 // állapotban ragad, amíg minden fület be nem zárnak — emiatt tűnt úgy,

@@ -34,9 +34,13 @@ export default function RendezvenySzallitas() {
       ]}
       faqItems={pickFaq(
         "Mennyi idő alatt kapok ajánlatot?",
-        "Kérhetek egyedi árajánlatot speciális igényekhez?",
+        {
+          q: "Kérhetek egyedi árajánlatot speciális igényekhez?",
+          a: "Igen — rendezvényenként egyedi árajánlatot adunk a szállítandó anyag mennyisége, a helyszín sajátosságai (pl. be- és kirakodási időablak) és az esemény pontos ütemezése alapján.",
+        },
         "Milyen járművekkel dolgoznak?",
       )}
+      testimonialNames={["Molnár Eszter", "Farkas Zoltán", "Tóth Andrea"]}
     />
   );
 }

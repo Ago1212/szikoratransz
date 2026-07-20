@@ -98,6 +98,27 @@ export const TESTIMONIALS = [
     role: "ügyvezető",
     company: "Dunapack Csomagolástechnika Kft.",
   },
+  {
+    quote:
+      "Egy károsodott szállítmány esetén a csapat azonnal intézte a biztosítóval a kárrendezést — nekünk semmilyen plusz utánajárással nem járt.",
+    name: "Szabó Katalin",
+    role: "pénzügyi vezető",
+    company: "Kelet-Bútor Kft.",
+  },
+  {
+    quote:
+      "Egy váratlanul sürgőssé vált szállítást is pár órán belül megoldottak, amikor a gyártásunk emiatt állt volna le.",
+    name: "Farkas Zoltán",
+    role: "üzemvezető",
+    company: "GyorsGyár Kft.",
+  },
+  {
+    quote:
+      "A standunk ki- és beszállítását is pontosan a kiállítás ütemezéséhez igazítva végezték, egyeztetve a helyszíni be- és kirakodási időablakokkal.",
+    name: "Molnár Eszter",
+    role: "rendezvényszervező",
+    company: "EventLine Kft.",
+  },
 ];
 
 export const FAQ_ITEMS = [
@@ -140,10 +161,26 @@ export const FAQ_ITEMS = [
 ];
 
 // Segédfüggvény a long-tail oldalakhoz: a teljes FAQ_ITEMS-ből kérdés-szöveg
-// alapján válogat ki egy releváns részhalmazt (ugyanaz az objektum-referencia,
-// nem másolat — így a FAQPage JSON-LD és a látható szöveg sosem futhat szét).
-export function pickFaq(...questions) {
-  return questions.map((q) => FAQ_ITEMS.find((item) => item.q === q)).filter(Boolean);
+// alapján válogat ki egy releváns részhalmazt. Egy elem lehet sima kérdés-
+// szöveg (ilyenkor a FAQ_ITEMS-beli alap választ adja vissza változatlanul —
+// ugyanaz az objektum-referencia, nem másolat), vagy egy `{ q, a }` alakú
+// objektum, ahol az `a` felülírja az alap választ egy, az adott oldal
+// témájához (pl. expressz/rendezvény sürgősség, nemzetközi/egyedi fizetési
+// feltételek) igazított szöveggel — ez akadályozza meg, hogy több oldal
+// szó szerint azonos FAQ-választ jelenítsen meg (SEO-audit: near-duplicate
+// content). Mindkét esetben egy új, saját objektum jön létre a visszatérési
+// értékben, tehát a FAQPage JSON-LD és a látható szöveg ilyenkor is szinkronban
+// marad — csak épp oldalanként eltérő tartalommal.
+export function pickFaq(...selectors) {
+  return selectors
+    .map((sel) => {
+      const isOverride = typeof sel === "object" && sel !== null;
+      const q = isOverride ? sel.q : sel;
+      const base = FAQ_ITEMS.find((item) => item.q === q);
+      if (!base) return null;
+      return isOverride && sel.a ? { q: base.q, a: sel.a } : base;
+    })
+    .filter(Boolean);
 }
 
 // A szolgáltatás-specifikus long-tail SEO oldalak listája (ld.

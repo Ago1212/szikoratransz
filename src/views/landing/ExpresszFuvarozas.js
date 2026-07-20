@@ -33,10 +33,14 @@ export default function ExpresszFuvarozas() {
         },
       ]}
       faqItems={pickFaq(
-        "Mennyi idő alatt kapok ajánlatot?",
+        {
+          q: "Mennyi idő alatt kapok ajánlatot?",
+          a: "Expressz megbízásoknál ennél is gyorsabban, jellemzően néhány órán belül visszajelzünk — sürgős esetben hívjon minket közvetlenül telefonon a leggyorsabb egyeztetésért.",
+        },
         "Mitől függ egy fuvar ára?",
         "Kérhetek egyedi árajánlatot speciális igényekhez?",
       )}
+      testimonialNames={["Farkas Zoltán", "Kovács Gábor", "Nagy Péter"]}
     />
   );
 }

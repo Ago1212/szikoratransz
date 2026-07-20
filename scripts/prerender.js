@@ -47,9 +47,11 @@
 const path = require("path");
 const fs = require("fs");
 const http = require("http");
+const https = require("https");
 
 const BUILD_DIR = path.join(__dirname, "..", "build");
 const PORT = 47821;
+const SITE_URL = "https://szikora-transz.hu";
 const ROUTES_TO_PRERENDER = [
   "/",
   "/belfoldi-fuvarozas-arajanlat",
@@ -60,6 +62,11 @@ const ROUTES_TO_PRERENDER = [
   "/egyedi-arajanlat-fuvarozas",
   "/adatvedelem",
 ];
+// A kulcsfájl neve = a kulcs maga (public/<kulcs>.txt, a fájl tartalma is
+// csak a kulcs) — ezt a IndexNow protokoll írja elő a tulajdonosi
+// ellenőrzéshez. A generálás egyszeri, kézi lépés volt (`secrets.token_hex`),
+// nem a build része.
+const INDEXNOW_KEY = "256e3aaf0d0ab4f976916e23143e54ba";
 
 const MIME = {
   ".html": "text/html", ".js": "application/javascript", ".css": "text/css",
@@ -164,6 +171,53 @@ async function main() {
   }
 
   console.log(`\nKész. ${renderedCount}/${ROUTES_TO_PRERENDER.length} route mostantól a teljes renderelt tartalmat tartalmazza.`);
+
+  await submitToIndexNow();
+}
+
+// IndexNow — értesíti a Bing/Yandex-t (és a protokollt támogató egyéb
+// keresőket), hogy ezek az URL-ek frissültek, gyorsabb újra-crawlolást
+// kérve, mint a passzív sitemap-alapú felfedezés. Ugyanaz a fail-safe elv,
+// mint a script többi részén: egy hálózati hiba/időtúllépés itt SOSEM
+// buktathatja el a buildet, csak figyelmeztetést ír ki. Minden `npm run
+// build` (helyi teszt vagy éles deploy) lefuttatja ezt — az IndexNow
+// protokoll idempotens, egy ismételt bejelentés a már ismert URL-ekről nem
+// árt, csak feleslegesen redundáns helyi tesztelésnél.
+function submitToIndexNow() {
+  return new Promise((resolve) => {
+    const urlList = ROUTES_TO_PRERENDER.map((route) => `${SITE_URL}${route}`);
+    const payload = JSON.stringify({
+      host: "szikora-transz.hu",
+      key: INDEXNOW_KEY,
+      keyLocation: `${SITE_URL}/${INDEXNOW_KEY}.txt`,
+      urlList,
+    });
+
+    const req = https.request(
+      "https://api.indexnow.org/indexnow",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json; charset=utf-8", "Content-Length": Buffer.byteLength(payload) },
+        timeout: 8000,
+      },
+      (res) => {
+        console.log(`[prerender] IndexNow bejelentés elküldve, válasz: HTTP ${res.statusCode}`);
+        res.resume();
+        resolve();
+      },
+    );
+    req.on("timeout", () => {
+      console.warn("[prerender] IndexNow bejelentés időtúllépés — kihagyva, a build ettől nem bukik el.");
+      req.destroy();
+      resolve();
+    });
+    req.on("error", (err) => {
+      console.warn(`[prerender] IndexNow bejelentés sikertelen (${err.message}) — kihagyva, a build ettől nem bukik el.`);
+      resolve();
+    });
+    req.write(payload);
+    req.end();
+  });
 }
 
 main().catch((err) => {

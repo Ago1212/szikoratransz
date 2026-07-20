@@ -35,8 +35,12 @@ export default function EgyediArajanlat() {
       faqItems={pickFaq(
         "Mitől függ egy fuvar ára?",
         "Kérhetek egyedi árajánlatot speciális igényekhez?",
-        "Milyen fizetési feltételeket fogadnak el?",
+        {
+          q: "Milyen fizetési feltételeket fogadnak el?",
+          a: "Mivel minden megrendelést egyedileg árazunk, a fizetési határidőt és módot (átutalás vagy számlás fizetés) is a konkrét fuvarhoz igazítva állapítjuk meg.",
+        },
       )}
+      testimonialNames={["Kovács Gábor", "Molnár Eszter", "Szabó Katalin"]}
     />
   );
 }
