@@ -69,6 +69,12 @@ export default function ExpresszFuvarozas() {
             közvetlenül telefonon hívni minket, nem csak az űrlapot
             kitölteni.
           </p>
+          <p>
+            A vállalt időpontot írásban (e-mailben) is visszaigazoljuk, hogy
+            mindkét fél számára egyértelmű legyen a megállapodás — ez sürgős
+            helyzetben is megmarad, nem csak a nyugodtabb ütemezésű
+            fuvaroknál.
+          </p>
         </div>
       </section>
     </ServicePage>

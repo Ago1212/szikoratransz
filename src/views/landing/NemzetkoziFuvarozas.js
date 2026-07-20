@@ -73,6 +73,12 @@ export default function NemzetkoziFuvarozas() {
             dokumentációs igényt mindig az ajánlatkérés során, egyedileg
             tisztázzuk Önnel.
           </p>
+          <p>
+            A CMR-fuvarlevelet és a szükséges kísérő dokumentációt
+            fuvarjainknál mi állítjuk össze — Önnek csak az áru pontos
+            adatait és a rendeltetési helyet kell megadnia az
+            ajánlatkérésnél.
+          </p>
           <p className="text-sm text-[#23262B]/60">
             A vámügyintézés hivatalos szabályairól és eljárásrendjéről a{" "}
             <a
