@@ -8,8 +8,15 @@ import {
 } from "react-icons/pi";
 import { SERVICE_PAGES } from "data/landingContent.js";
 
-const MAPS_LINK =
-  "https://www.google.com/maps/search/?api=1&query=Szikora+Transz+Kft+2518+Le%C3%A1nyv%C3%A1r+B%C3%A9csi+%C3%BAt+86";
+// Korábban egy generikus Maps *keresés* URL volt itt (SEO-audit: nem egy
+// konkrét, ellenőrzött hely-linkre mutatott). Ez a cég valódi Google Business
+// Profile bejegyzésének stabil, cid-alapú linkje — a felhasználó által
+// megosztott https://maps.app.goo.gl/... rövid link feloldásából nyert
+// koordináták (~190m eltérés a schema.org LocalBusiness geo mezőjéhez képest,
+// ami pin-elhelyezési pontosságkülönbség, nem eltérő hely) és a `data=`
+// paraméterben szereplő hex azonosító (0x4bc9fef3782d8c54 → decimális cid)
+// alapján megerősítve, hogy ugyanarra a cégre mutat.
+const MAPS_LINK = "https://maps.google.com/?cid=5461176344810196052";
 
 export default function Footer() {
   return (
