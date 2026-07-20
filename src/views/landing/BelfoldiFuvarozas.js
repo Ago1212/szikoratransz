@@ -39,6 +39,32 @@ export default function BelfoldiFuvarozas() {
         "Milyen fizetési feltételeket fogadnak el?",
       )}
       testimonialNames={["Nagy Péter", "Szabó Katalin", "Farkas Zoltán"]}
-    />
+      areaServed={["HU"]}
+    >
+      <section className="py-10 border-t border-[#23262B]/10">
+        <h2 className="font-[Overpass] font-extrabold text-2xl text-[#23262B] mb-6">
+          Hogyan alakul ki a belföldi fuvar ára?
+        </h2>
+        <div className="space-y-4 text-[#23262B]/70 leading-relaxed max-w-2xl">
+          <p>
+            A belföldi fuvarok árát több tényező együttesen határozza meg: az
+            útvonal hossza, az áru mérete, súlya és csomagolási igényei,
+            valamint a vállalt határidő. Nincs egységes kilométerdíjunk —
+            minden ajánlatkérést tételesen, az adott fuvar tényleges
+            paraméterei alapján árazunk, hogy a végösszeg pontosan tükrözze a
+            valós költséget, se többet, se kevesebbet.
+          </p>
+          <p>
+            A jármű kiválasztása is ehhez igazodik: kisebb, gyors fuvaroknál
+            könnyebb, nagyobb terhelésnél nehezebb kamiont állítunk munkába,
+            mindig a szállítandó áru jellegéhez mérten. Ha rendszeres,
+            ismétlődő útvonalról van szó (pl. heti több alkalommal ugyanarra
+            a célállomásra), ezt jelezze az ajánlatkérésnél — állandó
+            partnereinknél az ütemezést és az árazást is hosszabb távra
+            egyeztetjük, nem fuvaronként újratárgyalva.
+          </p>
+        </div>
+      </section>
+    </ServicePage>
   );
 }

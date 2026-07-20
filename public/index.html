@@ -18,6 +18,14 @@
     <meta name="robots" content="index,follow" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- A teljesítmény-audit szerint a header logó (`/logo2.svg`) a mért LCP
+         elem minden oldalon, és a mérés 80%+-a nem a kép letöltésén (a TTFB
+         kiváló), hanem a React-hidratáció/render-idején múlik — ezt a
+         preload/fetchpriority pár önmagában nem oldja meg, de biztonságos,
+         additív lépés: garantálja, hogy a kép letöltése a lehető
+         leghamarabb, a legmagasabb prioritással induljon, ha mégis lenne
+         verseny más erőforrásokkal. -->
+    <link rel="preload" as="image" href="/logo2.svg" fetchpriority="high" />
     <!-- `display=optional` (nem `swap`): a böngésző csak akkor vált a
          betöltött Overpass fontra, ha az ~100ms-en belül elkészül,
          különben megtartja a rendszer-betűtípust az egész oldalbetöltés
@@ -59,6 +67,7 @@
         "url": "https://szikora-transz.hu",
         "image": "https://szikora-transz.hu/og-image.jpg",
         "logo": "https://szikora-transz.hu/logo2.png",
+        "hasMap": "https://maps.google.com/?cid=5461176344810196052",
         "inLanguage": "hu",
         "telephone": "+36-30-811-5776",
         "email": "szikoratransz@gmail.com",

@@ -34,8 +34,14 @@ export default function NemzetkoziFuvarozas() {
       ]}
       faqItems={pickFaq(
         "Vállalnak nemzetközi szállítást?",
-        "Biztosított a szállított áru?",
-        "Mi történik, ha kár keletkezik szállítás közben?",
+        {
+          q: "Biztosított a szállított áru?",
+          a: "Igen, nemzetközi fuvarjaink is teljes körű biztosítási fedezettel zajlanak a felvételtől a célországbeli kiszállításig — a határátlépés nem jelent kiesést a fedezetben.",
+        },
+        {
+          q: "Mi történik, ha kár keletkezik szállítás közben?",
+          a: "Nemzetközi fuvarnál is haladéktalanul jelezze felénk telefonon vagy e-mailben — csapatunk a biztosítóval egyeztetve intézi a kárrendezést, függetlenül attól, hogy a kár melyik országban érte az árut.",
+        },
         {
           q: "Milyen fizetési feltételeket fogadnak el?",
           a: "Nemzetközi partnereinknél a fizetési határidőt és — igény esetén — a pénznemet (forint vagy euró) is az adott megrendelés alapján egyeztetjük.",

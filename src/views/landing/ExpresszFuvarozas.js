@@ -37,10 +37,40 @@ export default function ExpresszFuvarozas() {
           q: "Mennyi idő alatt kapok ajánlatot?",
           a: "Expressz megbízásoknál ennél is gyorsabban, jellemzően néhány órán belül visszajelzünk — sürgős esetben hívjon minket közvetlenül telefonon a leggyorsabb egyeztetésért.",
         },
-        "Mitől függ egy fuvar ára?",
-        "Kérhetek egyedi árajánlatot speciális igényekhez?",
+        {
+          q: "Mitől függ egy fuvar ára?",
+          a: "Sürgős fuvaroknál a szokásos tényezők (távolság, az áru mérete és jellege) mellett a rendelkezésre álló időablak is számít — minél rövidebb a bejelentési idő, annál inkább az adott pillanatban szabad kapacitásunkhoz igazodik az ajánlat. Egyedi, tételes árazás itt is érvényes, nincs automatikus sürgősségi felár.",
+        },
+        {
+          q: "Kérhetek egyedi árajánlatot speciális igényekhez?",
+          a: "Igen — sürgős, szokatlan méretű vagy speciális kezelést igénylő rakományra is adunk egyedi árajánlatot, akár rövid határidővel is. Hívjon minket közvetlenül, ha a helyzet gyors egyeztetést igényel.",
+        },
       )}
       testimonialNames={["Farkas Zoltán", "Kovács Gábor", "Nagy Péter"]}
-    />
+    >
+      <section className="py-10 border-t border-[#23262B]/10">
+        <h2 className="font-[Overpass] font-extrabold text-2xl text-[#23262B] mb-6">
+          Mit jelent pontosan a garantált kiszállítási idő?
+        </h2>
+        <div className="space-y-4 text-[#23262B]/70 leading-relaxed max-w-2xl">
+          <p>
+            A "garantált kiszállítási idő" azt jelenti, hogy az ajánlatkérés
+            során közösen egyeztetett, konkrét időpontot vagy időablakot
+            vállaljuk — nem egy hozzávetőleges becslést. Mielőtt
+            visszaigazolnánk egy sürgős megbízást, mindig leellenőrizzük,
+            hogy a kért határidő ténylegesen tartható-e az adott útvonalon
+            és a pillanatnyi kapacitásunk mellett — így nem ígérünk olyat,
+            amit utólag nem tudunk tartani.
+          </p>
+          <p>
+            Szállítás közben, ha bármi váratlan közbejön (pl. forgalmi
+            torlódás), proaktívan jelzünk, nem Önnek kell utánaérdeklődnie.
+            Sürgős esetben a leggyorsabb egyeztetés érdekében érdemes
+            közvetlenül telefonon hívni minket, nem csak az űrlapot
+            kitölteni.
+          </p>
+        </div>
+      </section>
+    </ServicePage>
   );
 }

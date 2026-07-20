@@ -121,7 +121,16 @@ export function useSeo({ title, description, path, faqItems, breadcrumb, service
         // hívási helyeken, ugyanaz az érték mindkét property-re jó.
         serviceType: service.name,
         description: service.description || description,
-        areaServed: ["HU", "EU"],
+        // Korábban minden szolgáltatás-oldal feltétel nélkül ["HU","EU"]-t
+        // örökölt, függetlenül attól, hogy az adott szolgáltatás valóban
+        // nemzetközi-e — a belföldi oldal saját látható szövege
+        // ("Magyarország egész területén") ellentmondott a séma "EU"
+        // állításának (SEO-audit talált rá, séma/tartalom-eltérésként). A
+        // hívó oldal most explicit megadhatja a saját, valós hatókörét;
+        // ha nem adja meg, a korábbi, nemzetközi hatókört feltételező
+        // alapérték marad (ez a helyes alapértelmezés, mert a legtöbb
+        // oldal ténylegesen nem korlátozza magát csak belföldre).
+        areaServed: service.areaServed || ["HU", "EU"],
         // Ugyanarra az entitásra hivatkozik, mint amit a `public/index.html`-be
         // beégetett LocalBusiness JSON-LD `@id`-je definiál — nem másolja újra
         // a nevet/URL-t, hanem a séma-szabvány szerinti helyes módon
