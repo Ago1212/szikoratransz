@@ -29,17 +29,17 @@ export default function Modal({
       <>
         <div
           ref={inlineRef}
-          className="mb-6 w-full flex-shrink-0 rounded-2xl border border-ink-100 bg-white shadow-soft"
+          className="mb-6 w-full flex-shrink-0 rounded-2xl border border-ink-100 bg-white shadow-soft dark:border-ink-800 dark:bg-ink-900"
         >
-          <div className="flex items-center justify-between border-b border-ink-100 px-4 py-3">
-            <h3 className="font-display text-base font-semibold text-brand-900">
+          <div className="flex items-center justify-between border-b border-ink-100 px-4 py-3 dark:border-ink-800">
+            <h3 className="font-display text-base font-semibold text-brand-900 dark:text-ink-50">
               {title}
             </h3>
             <button
               type="button"
               onClick={onClose}
               aria-label="Bezárás"
-              className="flex h-11 w-11 items-center justify-center rounded-lg text-ink-400 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-700"
+              className="flex h-11 w-11 items-center justify-center rounded-lg text-ink-400 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-700 dark:hover:bg-ink-800 dark:hover:text-ink-50"
             >
               <PiXLight className="h-4 w-4" />
             </button>
@@ -63,22 +63,22 @@ export default function Modal({
           modal sose vágódjon le felül/alul, ha magasabb a tartalma a képernyőnél. */}
       <div className="flex min-h-full items-center justify-center py-8">
         <div
-          className={`flex max-h-[85vh] w-full ${maxWidth} flex-col overflow-hidden rounded-3xl bg-white shadow-soft-xl`}
+          className={`flex max-h-[85vh] w-full ${maxWidth} flex-col overflow-hidden rounded-3xl bg-white shadow-soft-xl dark:bg-ink-900`}
         >
-          <div className="flex flex-shrink-0 items-center justify-between border-b border-ink-100 px-6 py-4">
-            <h3 className="font-display text-lg font-semibold text-brand-900">
+          <div className="flex flex-shrink-0 items-center justify-between border-b border-ink-100 px-6 py-4 dark:border-ink-800">
+            <h3 className="font-display text-lg font-semibold text-brand-900 dark:text-ink-50">
               {title}
             </h3>
             <button
               type="button"
               onClick={onClose}
               aria-label="Bezárás"
-              className="flex h-11 w-11 items-center justify-center rounded-lg text-ink-400 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-700 md:h-8 md:w-8"
+              className="flex h-11 w-11 items-center justify-center rounded-lg text-ink-400 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-700 dark:hover:bg-ink-800 dark:hover:text-ink-50 md:h-8 md:w-8"
             >
               <PiXLight className="h-4 w-4" />
             </button>
           </div>
-          <div className="overflow-y-auto px-6 py-5">{children}</div>
+          <div className="overflow-y-auto px-6 py-5 dark:text-ink-100">{children}</div>
         </div>
       </div>
     </div>

@@ -25,6 +25,16 @@
 // kis lépésekben csökkenjen:
 //   0 * * * *  /usr/bin/php8.2 /var/www/szikoratransz/backend/cron/gpsmart_km_cache_frissites.php >> /var/www/szikoratransz/backend/cron/gpsmart_km_cache_frissites.log 2>&1
 
+// A fájl a `backend/` alatt, a webroot-on belül él — .htaccess-kizárás
+// nélkül bárki, hitelesítés nélkül közvetlenül lehívhatná HTTP-n, ami
+// felesleges/kártékony gyakoriságú GPSmart-lekérdezést váltana ki minden
+// cég fiókjára (ld. biztonsági audit). Ez a guard biztosítja, hogy a
+// script tényleg csak CLI-ből (a crontab bejegyzésből) fusson le.
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit('Ez a script kizárólag parancssorból futtatható.');
+}
+
 require __DIR__ . '/../db.php';
 require __DIR__ . '/../config.php';
 require __DIR__ . '/../interface/gpsmartInterface.php';

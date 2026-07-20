@@ -3,5 +3,6 @@ User-agent: *
 Disallow: /admin/
 Disallow: /user/
 Disallow: /profile
+Disallow: /auth/
 
 Sitemap: https://szikora-transz.hu/sitemap.xml

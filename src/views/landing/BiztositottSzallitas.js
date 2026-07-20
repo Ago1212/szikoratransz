@@ -35,8 +35,12 @@ export default function BiztositottSzallitas() {
       faqItems={pickFaq(
         "Biztosított a szállított áru?",
         "Mi történik, ha kár keletkezik szállítás közben?",
-        "Mennyi idő alatt kapok ajánlatot?",
+        {
+          q: "Mennyi idő alatt kapok ajánlatot?",
+          a: "Általában 24 órán belül felvesszük Önnel a kapcsolatot egy részletes árajánlattal, amiben a biztosítási fedezet részletei is szerepelnek.",
+        },
       )}
+      testimonialNames={["Szabó Katalin", "Tóth Andrea", "Molnár Eszter"]}
     >
       <section className="py-10 border-t border-[#23262B]/10">
         <p className="text-sm text-[#23262B]/60">

@@ -24,6 +24,15 @@ import SaveButton from "components/UI/SaveButton.js";
 // el sehova. Ez a verzió a ténylegesen létező mezőkre (cím, leírás,
 // prioritás, admin válasz, státusz) épül, és a már meglévő generikus
 // fájlfeltöltő mechanizmust használja (tabla='bejelentesek').
+//
+// R02 (fejlesztési audit, 2026-07-19): az `admin_valasz` mező a backendben
+// (bejelentesekInterface::saveBejelentesData) már régóta létezett és a
+// sofőr-oldali nézetek (Bejelentesek.js, Ertesitesek.js, Dashboard.js) meg
+// is jelenítik — de ezen az admin-felületen eddig NEM volt hozzá beviteli
+// mező. Emiatt a form-állapot sosem tartalmazta, és minden mentés (akár
+// egy puszta státuszváltás is) csendben NULL-ra írta felül egy korábban
+// már rögzített admin-választ (élő DB-n megerősített adatvesztés — ld.
+// backend-oldali komment). A mostani "Admin válasz" mező pótolja ezt.
 export default function CardBejelentesek({ initBejelentesek }) {
   const history = useHistory();
   const isNew = !initBejelentesek?.id;
@@ -36,6 +45,7 @@ export default function CardBejelentesek({ initBejelentesek }) {
     sofor_id: initBejelentesek?.sofor_id || "",
     prioritas: initBejelentesek?.prioritas || "kozepes",
     statusz: initBejelentesek?.statusz || "uj",
+    admin_valasz: initBejelentesek?.admin_valasz || "",
   });
   const [kamionok, setKamionok] = useState([]);
   const [soforok, setSoforok] = useState([]);
@@ -155,7 +165,11 @@ export default function CardBejelentesek({ initBejelentesek }) {
   const handleFileDelete = async (fileId) => {
     if (!window.confirm("Biztosan törölni szeretné ezt a fájlt?")) return;
     const result = await fetchAction("deleteFile", { id: fileId });
-    if (result?.success) await fetchFiles();
+    if (result?.success) {
+      await fetchFiles();
+    } else {
+      toast.error(result?.message || "A fájl törlése sikertelen.");
+    }
   };
 
   return (
@@ -163,7 +177,7 @@ export default function CardBejelentesek({ initBejelentesek }) {
       <button
         type="button"
         onClick={() => history.push("/admin/bejelentesek")}
-        className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-ink-500 transition-colors duration-200 ease-fluid hover:text-brand-700"
+        className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-ink-500 transition-colors duration-200 ease-fluid hover:text-brand-700 dark:text-ink-400 dark:hover:text-brand-300"
       >
         <PiArrowLeftLight className="h-4 w-4" />
         Vissza a bejelentésekhez
@@ -252,6 +266,20 @@ export default function CardBejelentesek({ initBejelentesek }) {
               />
             </FormSection>
 
+            {!isNew && (
+              <FormSection title="Admin válasz" columns={1}>
+                <FormField
+                  as="textarea"
+                  label="Válasz a bejelentő sofőrnek"
+                  name="admin_valasz"
+                  value={form.admin_valasz}
+                  onChange={handleChange}
+                  rows="3"
+                  placeholder="Ez a szöveg a sofőr saját Bejelentések/Értesítések nézetében is megjelenik."
+                />
+              </FormSection>
+            )}
+
             {/* Korábban a szöveg + gomb egy `justify-between` sorban élt egymás
                 mellett — asztalin még elfért, de mobilon a gomb felirata
                 kilógott a képernyőről, a magyarázó szöveg pedig egy pár tíz
@@ -263,10 +291,10 @@ export default function CardBejelentesek({ initBejelentesek }) {
             {!isNew && (
               <FormSection title="Karbantartás" columns={1}>
                 {karbantartasId ? (
-                  <div className="flex flex-col gap-3 rounded-xl border border-emerald-100 bg-emerald-50 p-4">
+                  <div className="flex flex-col gap-3 rounded-xl border border-emerald-100 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950/40">
                     <div className="flex items-start gap-2.5">
-                      <PiCheckCircleLight className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-600" />
-                      <p className="text-sm text-emerald-800">
+                      <PiCheckCircleLight className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-600 dark:text-emerald-400" />
+                      <p className="text-sm text-emerald-800 dark:text-emerald-200">
                         Karbantartás létrehozva ebből a bejelentésből{" "}
                         <span className="font-semibold">(#{karbantartasId})</span>.
                       </p>
@@ -274,17 +302,17 @@ export default function CardBejelentesek({ initBejelentesek }) {
                     <button
                       type="button"
                       onClick={() => history.push("/admin/karbantartasok")}
-                      className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-white px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-emerald-700 shadow-soft ring-1 ring-emerald-200 transition-colors duration-200 hover:bg-emerald-100 sm:w-fit sm:self-end"
+                      className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-white px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-emerald-700 shadow-soft ring-1 ring-emerald-200 transition-colors duration-200 hover:bg-emerald-100 dark:bg-ink-900 dark:text-emerald-300 dark:ring-emerald-800 dark:hover:bg-ink-800 sm:w-fit sm:self-end"
                     >
                       Megnyitás a Karbantartásoknál
                       <PiArrowRightLight className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 ) : form.kamion_id ? (
-                  <div className="flex flex-col gap-3 rounded-xl border border-brand-100 bg-brand-50/50 p-4">
+                  <div className="flex flex-col gap-3 rounded-xl border border-brand-100 bg-brand-50/50 p-4 dark:border-brand-900 dark:bg-brand-950/30">
                     <div className="flex items-start gap-2.5">
-                      <PiWrenchLight className="mt-0.5 h-5 w-5 flex-shrink-0 text-brand-600" />
-                      <p className="text-sm text-ink-600">
+                      <PiWrenchLight className="mt-0.5 h-5 w-5 flex-shrink-0 text-brand-600 dark:text-brand-300" />
+                      <p className="text-sm text-ink-600 dark:text-ink-300">
                         Ha a bejelentés valós hibát ír le, itt egy kattintással létrehozhat belőle egy karbantartási rekordot a kijelölt kamionhoz.
                       </p>
                     </div>
@@ -299,9 +327,9 @@ export default function CardBejelentesek({ initBejelentesek }) {
                     </button>
                   </div>
                 ) : (
-                  <div className="flex items-start gap-2.5 rounded-xl border border-ink-100 bg-slate-50 p-4">
-                    <PiInfoLight className="mt-0.5 h-5 w-5 flex-shrink-0 text-ink-300" />
-                    <p className="text-sm text-ink-400">
+                  <div className="flex items-start gap-2.5 rounded-xl border border-ink-100 bg-slate-50 p-4 dark:border-ink-800 dark:bg-ink-800">
+                    <PiInfoLight className="mt-0.5 h-5 w-5 flex-shrink-0 text-ink-300 dark:text-ink-600" />
+                    <p className="text-sm text-ink-400 dark:text-ink-400">
                       Nincs kamion megadva a bejelentésnél — karbantartás csak kamionhoz rendelt bejelentésből generálható.
                     </p>
                   </div>
@@ -311,8 +339,8 @@ export default function CardBejelentesek({ initBejelentesek }) {
 
             {!isNew && (
               <FormSection title="Csatolt fájlok" columns={1}>
-                <div className="rounded-xl border border-ink-100 bg-slate-50 p-3">
-                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-ink-600 shadow-soft transition-colors duration-200 hover:bg-brand-50 hover:text-brand-700">
+                <div className="rounded-xl border border-ink-100 bg-slate-50 p-3 dark:border-ink-800 dark:bg-ink-800">
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-ink-600 shadow-soft transition-colors duration-200 hover:bg-brand-50 hover:text-brand-700 dark:bg-ink-900 dark:text-ink-300 dark:hover:bg-brand-950/40 dark:hover:text-brand-300">
                     <PiUploadSimpleLight className="h-4 w-4" />
                     Fájlok feltöltése
                     <input
@@ -327,12 +355,12 @@ export default function CardBejelentesek({ initBejelentesek }) {
                     {files.map((file) => (
                       <div
                         key={file.sorszam}
-                        className="flex items-center justify-between rounded-lg bg-white px-3 py-2"
+                        className="flex items-center justify-between rounded-lg bg-white px-3 py-2 dark:bg-ink-900"
                       >
                         <button
                           type="button"
                           onClick={() => downloadFileAction(file.sorszam, file.filename)}
-                          className="flex items-center gap-2 text-sm text-brand-700 hover:underline"
+                          className="flex items-center gap-2 text-sm text-brand-700 hover:underline dark:text-brand-300"
                         >
                           <PiFileLight className="h-4 w-4 flex-shrink-0" />
                           <span className="truncate">{file.filename}</span>
@@ -340,7 +368,7 @@ export default function CardBejelentesek({ initBejelentesek }) {
                         <button
                           type="button"
                           onClick={() => handleFileDelete(file.sorszam)}
-                          className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-ink-400 transition-colors duration-200 hover:bg-red-50 hover:text-red-600"
+                          className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-ink-400 transition-colors duration-200 hover:bg-red-50 hover:text-red-600 dark:text-ink-500 dark:hover:bg-red-950/50 dark:hover:text-red-300"
                         >
                           <PiTrashLight className="h-3.5 w-3.5" />
                         </button>
@@ -351,7 +379,7 @@ export default function CardBejelentesek({ initBejelentesek }) {
               </FormSection>
             )}
 
-            <div className="flex justify-end border-t border-ink-100 pt-4">
+            <div className="flex justify-end border-t border-ink-100 pt-4 dark:border-ink-800">
               <SaveButton
                 onClick={handleSave}
                 isSaving={isSaving}

@@ -4,6 +4,7 @@ import { useMediaQuery } from "react-responsive";
 import { fetchAction } from "utils/fetchAction";
 import HungaryMapBackground from "components/UI/HungaryMapBackground.js";
 import { useNoindex } from "utils/useSeo.js";
+import WebAuthnQuickLogin from "components/UI/WebAuthnQuickLogin.js";
 
 // ---------------------------------------------------------------------------
 // Apró, függőségmentes ikonok (inline SVG) — ugyanazt a stroke-stílust
@@ -245,6 +246,21 @@ export default function Bejelentkezes() {
     history.push("/");
   };
 
+  // R52 (fejlesztési audit, 2026-07-19): a sikeres WebAuthn gyors-bejelentkezés
+  // pontosan ugyanazt a localStorage-mintát és navigációt követi, mint a
+  // jelszavas `handleLogin()` — a WebAuthnQuickLogin komponens csak a
+  // hitelesítést végzi, a munkamenet elindítása itt, egy helyen történik.
+  const handleWebauthnSuccess = (result) => {
+    localStorage.setItem("user", JSON.stringify(result.user));
+    localStorage.setItem("sessionToken", result.token);
+    history.push(result.user.is_admin ? "/admin/dashboard" : "/user/dashboard");
+  };
+  const handleWebauthnError = (message) => setError(message);
+
+  const webauthnQuickLoginBlock = (
+    <WebAuthnQuickLogin onSuccess={handleWebauthnSuccess} onError={handleWebauthnError} />
+  );
+
   const errorBox = error && (
     <div
       role="alert"
@@ -366,6 +382,7 @@ export default function Bejelentkezes() {
               Kérjük adja meg belépési adatait a fiókja eléréséhez.
             </p>
 
+            {webauthnQuickLoginBlock}
             {errorBox}
             {formFields}
             {submitButton}
@@ -441,6 +458,7 @@ export default function Bejelentkezes() {
               Kérjük adja meg belépési adatait a fiókja eléréséhez.
             </p>
 
+            {webauthnQuickLoginBlock}
             {errorBox}
             {formFields}
             {submitButton}

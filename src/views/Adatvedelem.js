@@ -17,7 +17,7 @@ export default function Adatvedelem() {
   useSeo({
     title: "Adatvédelmi tájékoztató | Szikora Transz Kft.",
     description:
-      "Tájékoztató, milyen személyes adatokat kezel a Szikora Transz Kft. az ajánlatkérő és sofőr-jelentkezési űrlapok kitöltésekor, és milyen jogok illetik meg Önt.",
+      "Tájékoztató, milyen személyes adatokat kezel a Szikora Transz Kft. az ajánlatkérő és jelentkezési űrlapok kitöltésekor, milyen jogok illetik meg Önt.",
     path: "/adatvedelem",
     breadcrumb: BREADCRUMB_ITEMS,
   });

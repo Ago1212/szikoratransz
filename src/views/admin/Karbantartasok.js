@@ -20,6 +20,7 @@ import PageHeader from "components/UI/PageHeader.js";
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import Modal from "components/UI/Modal.js";
 import FormField, { FormSection } from "components/UI/FormField.js";
+import StatusBadge from "components/UI/StatusBadge.js";
 
 const emptyKarbantartas = (adminId) => ({
   admin: adminId,
@@ -169,6 +170,25 @@ const Karbantartasok = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.ceg_id]);
 
+  // R06 (fejlesztési audit, 2026-07-19): a `kovetkezo_karbantartas` mező
+  // eddig kizárólag dátum-alapú volt — ez a km-alapú esedékesség (a
+  // gpsmart_napi_km cache-ből számolva, ugyanaz a forrás, mint a
+  // Pénzforgalom Ft/km oszlopáé) csak akkor jelenik meg sávként, ha
+  // ténylegesen van esedékes/közeledő jármű — egy üres/rendben-listánál
+  // nincs értelme figyelmeztetést mutatni.
+  const [kmEsedekesseg, setKmEsedekesseg] = useState([]);
+  useEffect(() => {
+    fetchAction("getKmAlapuKarbantartasEsedekesseg", { id: user.ceg_id, kerelmezo_id: user.id })
+      .then((result) => {
+        if (result?.success) {
+          setKmEsedekesseg(
+            (result.jarmuvek || []).filter((j) => j.allapot === "esedekes" || j.allapot === "kozeledik"),
+          );
+        }
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.ceg_id]);
+
   useEffect(() => {
     const fetchKarbantartasok = async () => {
       const result = await fetchAction("getKarbantartasok", {
@@ -304,13 +324,13 @@ const Karbantartasok = () => {
   const getStatus = (karb) => {
     const today = new Date().toISOString().split("T")[0];
     if (karb.datum < today)
-      return { text: "Kész", className: "bg-emerald-50 text-emerald-700" };
-    return { text: "Tervezett", className: "bg-amber-50 text-amber-700" };
+      return { text: "Kész", className: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300" };
+    return { text: "Tervezett", className: "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300" };
   };
 
   const renderFileUpload = (karbantartasId) => (
-    <div className="rounded-xl border border-ink-100 bg-slate-50 p-3">
-      <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-ink-600 shadow-soft transition-colors duration-200 hover:bg-brand-50 hover:text-brand-700">
+    <div className="rounded-xl border border-ink-100 bg-slate-50 p-3 dark:border-ink-800 dark:bg-ink-800">
+      <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-ink-600 shadow-soft transition-colors duration-200 hover:bg-brand-50 hover:text-brand-700 dark:bg-ink-900 dark:text-ink-300 dark:hover:bg-brand-950/40 dark:hover:text-brand-300">
         <PiUploadSimpleLight className="h-4 w-4" />
         Fájlok feltöltése
         <input
@@ -325,12 +345,12 @@ const Karbantartasok = () => {
         {files[karbantartasId]?.map((file) => (
           <div
             key={file.sorszam}
-            className="flex items-center justify-between rounded-lg bg-white px-3 py-2"
+            className="flex items-center justify-between rounded-lg bg-white px-3 py-2 dark:bg-ink-900"
           >
             <button
               type="button"
               onClick={() => downloadFileAction(file.sorszam, file.filename)}
-              className="flex items-center gap-2 text-sm text-brand-700 hover:underline"
+              className="flex items-center gap-2 text-sm text-brand-700 hover:underline dark:text-brand-300"
             >
               <PiFileLight className="h-4 w-4 flex-shrink-0" />
               <span className="truncate">{file.filename}</span>
@@ -338,7 +358,7 @@ const Karbantartasok = () => {
             <button
               type="button"
               onClick={() => handleFileDelete(file.sorszam, karbantartasId)}
-              className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-ink-400 transition-colors duration-200 hover:bg-red-50 hover:text-red-600"
+              className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-ink-400 transition-colors duration-200 hover:bg-red-50 hover:text-red-600 dark:text-ink-500 dark:hover:bg-red-950/50 dark:hover:text-red-300"
             >
               <PiTrashLight className="h-3.5 w-3.5" />
             </button>
@@ -358,7 +378,7 @@ const Karbantartasok = () => {
     {
       key: "rendszam",
       label: "Rendszám",
-      className: "font-semibold text-brand-900",
+      className: "font-semibold text-brand-900 dark:text-ink-50",
       render: (row) => {
         const tipus = getKarbTipus(row);
         return getJarmuRendszam(row[`${tipus}_id`], tipus);
@@ -461,8 +481,8 @@ const Karbantartasok = () => {
               onClick={() => setFiltersOpen(!filtersOpen)}
               className={`relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border transition-colors duration-200 md:hidden ${
                 filtersOpen
-                  ? "border-brand-200 bg-brand-50 text-brand-600"
-                  : "border-ink-200 bg-white text-ink-500"
+                  ? "border-brand-200 bg-brand-50 text-brand-600 dark:border-brand-800 dark:bg-brand-950/40 dark:text-brand-300"
+                  : "border-ink-200 bg-white text-ink-500 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-400"
               }`}
               title="Szűrők"
             >
@@ -482,29 +502,53 @@ const Karbantartasok = () => {
       </div>
 
       {osszesKoltseg > 0 && (
-        <div className="mb-4 flex flex-shrink-0 items-center gap-2 rounded-2xl border border-ink-100 bg-white px-4 py-3 text-sm">
-          <span className="font-semibold uppercase tracking-wide text-ink-400">
+        <div className="mb-4 flex flex-shrink-0 items-center gap-2 rounded-2xl border border-ink-100 bg-white px-4 py-3 text-sm dark:border-ink-800 dark:bg-ink-900">
+          <span className="font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">
             Szűrt összes költség
           </span>
-          <span className="font-display text-base font-bold text-brand-900">
+          <span className="font-display text-base font-bold text-brand-900 dark:text-ink-50">
             {formatHuf(osszesKoltseg)}
           </span>
         </div>
       )}
 
+      {kmEsedekesseg.length > 0 && (
+        <div className="mb-4 flex-shrink-0 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-900 dark:bg-amber-950/40">
+          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-amber-800 dark:text-amber-200">
+            <PiWrenchLight className="h-4 w-4" />
+            Km-alapú karbantartás esedékes
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {kmEsedekesseg.map((j) => (
+              <div
+                key={`${j.jarmu_tipus}:${j.jarmu_id}`}
+                className="flex items-center gap-2 rounded-xl border border-amber-200 bg-white px-3 py-1.5 text-xs text-ink-600 dark:border-amber-800 dark:bg-ink-900 dark:text-ink-300"
+              >
+                <span className="font-semibold">{j.rendszam}</span>
+                <StatusBadge tone={j.allapot === "esedekes" ? "danger" : "warning"}>
+                  {j.allapot === "esedekes"
+                    ? `${Math.abs(j.hatralevoKm)} km túllépve`
+                    : `${j.hatralevoKm} km múlva esedékes`}
+                </StatusBadge>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div
-        className={`mb-6 flex-shrink-0 rounded-3xl bg-white p-6 shadow-soft ring-1 ring-ink-100 ${
+        className={`mb-6 flex-shrink-0 rounded-3xl bg-white p-6 shadow-soft ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800 ${
           filtersOpen ? "" : "hidden md:block"
         }`}
       >
         <button
           type="button"
-          className="hidden w-full items-center gap-2 text-ink-600 md:flex"
+          className="hidden w-full items-center gap-2 text-ink-600 dark:text-ink-300 md:flex"
           onClick={() => setFiltersOpen(!filtersOpen)}
         >
           <PiFunnelLight className="h-4 w-4 text-brand-500" />
           <h2 className="text-sm font-semibold uppercase tracking-wide">Szűrők</h2>
-          <span className="ml-auto text-ink-400">
+          <span className="ml-auto text-ink-400 dark:text-ink-500">
             {filtersOpen ? <PiCaretUpLight /> : <PiCaretDownLight />}
           </span>
         </button>
@@ -633,11 +677,11 @@ const Karbantartasok = () => {
       >
         <form onSubmit={handleAddKarbantartas} className="space-y-4">
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-ink-600">
+            <label className="mb-1.5 block text-sm font-medium text-ink-600 dark:text-ink-300">
               Jármű típusa
             </label>
             <div className="flex gap-4">
-              <label className="inline-flex items-center gap-2 text-sm text-ink-600">
+              <label className="inline-flex items-center gap-2 text-sm text-ink-600 dark:text-ink-300">
                 <input
                   type="radio"
                   name="jarmu_tipus"
@@ -652,11 +696,11 @@ const Karbantartasok = () => {
                       furgon_id: null,
                     }));
                   }}
-                  className="h-4 w-4 text-brand-600"
+                  className="h-4 w-4 text-brand-600 dark:bg-ink-800"
                 />
                 Kamion
               </label>
-              <label className="inline-flex items-center gap-2 text-sm text-ink-600">
+              <label className="inline-flex items-center gap-2 text-sm text-ink-600 dark:text-ink-300">
                 <input
                   type="radio"
                   name="jarmu_tipus"
@@ -671,11 +715,11 @@ const Karbantartasok = () => {
                       furgon_id: null,
                     }));
                   }}
-                  className="h-4 w-4 text-brand-600"
+                  className="h-4 w-4 text-brand-600 dark:bg-ink-800"
                 />
                 Pótkocsi
               </label>
-              <label className="inline-flex items-center gap-2 text-sm text-ink-600">
+              <label className="inline-flex items-center gap-2 text-sm text-ink-600 dark:text-ink-300">
                 <input
                   type="radio"
                   name="jarmu_tipus"
@@ -690,7 +734,7 @@ const Karbantartasok = () => {
                       furgon_id: "",
                     }));
                   }}
-                  className="h-4 w-4 text-brand-600"
+                  className="h-4 w-4 text-brand-600 dark:bg-ink-800"
                 />
                 Furgon
               </label>
@@ -799,7 +843,7 @@ const Karbantartasok = () => {
             <button
               type="button"
               onClick={closeDialog}
-              className="rounded-xl px-4 py-2 text-sm font-medium text-ink-500 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-800"
+              className="rounded-xl px-4 py-2 text-sm font-medium text-ink-500 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-800 dark:text-ink-400 dark:hover:bg-ink-800 dark:hover:text-ink-100"
             >
               Mégse
             </button>

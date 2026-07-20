@@ -57,10 +57,20 @@ export default function GlobalSearch({ open, onClose }) {
     if (!cegId) return;
 
     setLoading(true);
+    const requestQ = q.trim();
     const timeout = setTimeout(() => {
-      fetchAction("globalSearch", { ceg_id: cegId, q: q.trim() }).then((result) => {
-        setTalalatok(result?.success ? result.talalatok || [] : []);
-        setLoading(false);
+      fetchAction("globalSearch", { ceg_id: cegId, q: requestQ }).then((result) => {
+        // Csak akkor alkalmazzuk az eredményt, ha még mindig ez az aktuális
+        // keresőkifejezés — enélkül egy korábban elindított, lassabb hívás
+        // válasza felülírhatta egy később elindított, gyorsabb hívás
+        // eredményét (race condition, ld. biztonsági/megbízhatósági audit).
+        setQ((currentQ) => {
+          if (currentQ.trim() === requestQ) {
+            setTalalatok(result?.success ? result.talalatok || [] : []);
+            setLoading(false);
+          }
+          return currentQ;
+        });
       });
     }, 300);
     return () => clearTimeout(timeout);
@@ -82,24 +92,28 @@ export default function GlobalSearch({ open, onClose }) {
       className="fixed inset-0 z-50 flex items-start justify-center bg-ink-950/50 p-4 pt-[12vh] backdrop-blur-sm"
       onClick={onClose}
       onKeyDown={handleKeyDown}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Globális keresés"
     >
       <div
-        className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-soft-lg ring-1 ring-ink-100"
+        className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-soft-lg ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-2.5 border-b border-ink-100 px-4 py-3.5">
-          <PiMagnifyingGlassLight className="h-5 w-5 flex-shrink-0 text-ink-400" />
+        <div className="flex items-center gap-2.5 border-b border-ink-100 px-4 py-3.5 dark:border-ink-800">
+          <PiMagnifyingGlassLight className="h-5 w-5 flex-shrink-0 text-ink-400 dark:text-ink-500" />
           <input
             ref={inputRef}
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Keresés rendszámra, névre, ügyfélre…"
-            className="min-w-0 flex-1 border-none bg-transparent text-sm text-ink-900 placeholder-ink-300 focus:outline-none"
+            aria-label="Keresés rendszámra, névre, ügyfélre"
+            className="min-w-0 flex-1 border-none bg-transparent text-sm text-ink-900 placeholder-ink-300 focus:outline-none dark:text-ink-50 dark:placeholder-ink-600"
           />
           <button
             type="button"
             onClick={onClose}
-            className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-slate-100 hover:text-ink-700"
+            className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-slate-100 hover:text-ink-700 dark:text-ink-500 dark:hover:bg-ink-800 dark:hover:text-ink-100"
             aria-label="Bezárás"
           >
             <PiXLight className="h-4 w-4" />
@@ -108,7 +122,7 @@ export default function GlobalSearch({ open, onClose }) {
 
         <div className="max-h-[50vh] overflow-y-auto">
           {q.trim().length >= 2 && !loading && talalatok.length === 0 && (
-            <p className="px-4 py-6 text-center text-sm text-ink-400">Nincs találat.</p>
+            <p className="px-4 py-6 text-center text-sm text-ink-400 dark:text-ink-500">Nincs találat.</p>
           )}
           {talalatok.map((item) => {
             const Icon = TIPUS_ICON[item.tipus] || PiMagnifyingGlassLight;
@@ -117,14 +131,14 @@ export default function GlobalSearch({ open, onClose }) {
                 key={`${item.tipus}-${item.id}`}
                 type="button"
                 onClick={() => handleSelect(item)}
-                className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50"
+                className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-ink-800"
               >
-                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-950/50 dark:text-brand-300">
                   <Icon className="h-[18px] w-[18px]" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-semibold text-ink-900">{item.cim}</span>
-                  <span className="block truncate text-xs text-ink-400">{item.alcim}</span>
+                  <span className="block truncate text-sm font-semibold text-ink-900 dark:text-ink-50">{item.cim}</span>
+                  <span className="block truncate text-xs text-ink-400 dark:text-ink-500">{item.alcim}</span>
                 </span>
               </button>
             );

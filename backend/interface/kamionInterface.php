@@ -81,7 +81,14 @@ class KamionInterface {
         }
     }
 
-    public function saveKamionData($data) {
+    // `$ceg_id`-t a hívó (ApiHandler) mindig szerver-oldalon feloldva adja
+    // át (resolveKerelmezo()['ceg_id']) — enélkül bármely cég módosíthatta
+    // volna bármely másik cég kamionját puszta id-tallózással (IDOR,
+    // ld. biztonsági audit). A `rowCount()===0` jelzi, ha az id nem
+    // létezik VAGY nem a hívó cégéhez tartozik — a két esetet szándékosan
+    // nem különböztetjük meg a válaszban, hogy ne áruljon el infót arról,
+    // hogy egy adott id egyáltalán létezik-e más cégnél.
+    public function saveKamionData($data, $ceg_id) {
         try {
             // SQL lekérdezés előkészítése az adatok frissítéséhez
             $query = "UPDATE kamion
@@ -105,11 +112,12 @@ class KamionInterface {
                           kaszko_nev = :kaszko_nev,
                           kaszko_dij = :kaszko_dij,
                           kaszko_fizetesi_utem = :kaszko_fizetesi_utem
-                      WHERE id = :id";
+                      WHERE id = :id AND admin = :ceg_id";
 
             $stmt = $this->db->prepare($query);
 
             // Paraméterek kötése
+            $stmt->bindValue(':ceg_id', $ceg_id);
             $stmt->bindParam(':rendszam', $data['rendszam'], PDO::PARAM_STR);
             $stmt->bindValue(':potkocsi', empty($data['potkocsi']) ? null : $data['potkocsi']);
             $stmt->bindParam(':tipus', $data['tipus'], PDO::PARAM_STR);
@@ -134,12 +142,20 @@ class KamionInterface {
 
             $stmt->execute();
 
+            if ($stmt->rowCount() === 0) {
+                return ['success' => false, 'message' => 'A kamion nem található, vagy nem a te céged flottájába tartozik.'];
+            }
+
             return ['success' => true, 'message' => 'Kamion adatai sikeresen frissítve.'];
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
-    public function newKamion($data) {
+    // `$ceg_id`-t a hívó szerver-oldalon feloldva adja át — az `admin`
+    // oszlopba MINDIG ez kerül, sosem a kliens által küldött `$data['admin']`
+    // (enélkül bárki tetszőleges másik cég neve alatt hozhatott létre
+    // kamiont, ld. biztonsági audit).
+    public function newKamion($data, $ceg_id) {
         try {
             // SQL lekérdezés előkészítése az adatok beszúrásához.
             // (A korábbi VALUES-lista sorrendje nem egyezett az oszloplista
@@ -153,7 +169,7 @@ class KamionInterface {
             $stmt = $this->db->prepare($query);
 
             // Paraméterek kötése
-            $stmt->bindParam(':admin', $data['admin'], PDO::PARAM_STR);
+            $stmt->bindValue(':admin', $ceg_id);
             $stmt->bindParam(':rendszam', $data['rendszam'], PDO::PARAM_STR);
             $stmt->bindValue(':potkocsi', empty($data['potkocsi']) ? null : $data['potkocsi']);
             $stmt->bindParam(':tipus', $data['tipus'], PDO::PARAM_STR);
@@ -178,7 +194,7 @@ class KamionInterface {
             $stmt->execute();
 
             $newKamionId = $this->db->lastInsertId();
-            $newKamionData = $this->getKamion($newKamionId);
+            $newKamionData = $this->getKamion($newKamionId, $ceg_id);
 
             return ['success' => true, 'message' => 'Kamion adatai sikeresen beszúrva.', 'kamion' => $newKamionData];
         } catch (Exception $e) {
@@ -186,16 +202,30 @@ class KamionInterface {
         }
     }
 
-    public function deleteKamion($id) {
+    // `$ceg_id`-t a hívó szerver-oldalon feloldva adja át (ld. saveKamionData
+    // komment) — a karbantartási előzmény törlése is scope-olva van, hogy
+    // egy idegen cég kamion_id-jére hivatkozva ne lehessen mások
+    // karbantartási naplóját is soft-törölni.
+    public function deleteKamion($id, $ceg_id) {
         try {
+            $query = "SELECT id FROM kamion WHERE id = :id AND admin = :ceg_id AND torolt <> 'I'";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindValue(':id', $id);
+            $stmt->bindValue(':ceg_id', $ceg_id);
+            $stmt->execute();
+            if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
+                return ['success' => false, 'message' => 'A kamion nem található, vagy nem a te céged flottájába tartozik.'];
+            }
+
             $query = "UPDATE kamion_karbantartars SET torolt='I' WHERE kamion_id = :id";
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':id', $id);
             $stmt->execute();
 
-            $query = "UPDATE kamion SET torolt='I' WHERE id = :id";
+            $query = "UPDATE kamion SET torolt='I' WHERE id = :id AND admin = :ceg_id";
             $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':id', $id);
+            $stmt->bindValue(':id', $id);
+            $stmt->bindValue(':ceg_id', $ceg_id);
             $stmt->execute();
             return ['success' => true, 'message' => 'Kamion törölve'];
         } catch (Exception $e) {
@@ -211,10 +241,11 @@ class KamionInterface {
         return ['success' => true, 'kamionok' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
 
-    public function getKamion($id) {
-        $query = "SELECT * FROM kamion WHERE id = :id";
+    public function getKamion($id, $ceg_id) {
+        $query = "SELECT * FROM kamion WHERE id = :id AND admin = :ceg_id AND torolt <> 'I'";
         $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':id', $id);
+        $stmt->bindValue(':id', $id);
+        $stmt->bindValue(':ceg_id', $ceg_id);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }

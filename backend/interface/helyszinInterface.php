@@ -1,5 +1,14 @@
 <?php
 
+// A modul szándékosan nincs a `MODULE_PERMISSION_MAP`-ban (admin ÉS sofőr
+// munkamenetből is elérhető), de emiatt korábban SEMMILYEN cég-szintű
+// hozzáférés-ellenőrzés nem volt rajta — bármely érvényes munkamenet
+// (sofőr is) tetszőleges másik cég helyszín-listáját olvashatta/
+// módosíthatta/törölhette, és a jegyzet szerzőjét (`szerzo_id`/`szerzo_nev`)
+// is a kliens kérése határozta meg, tehát bárki hamisíthatta (ld.
+// biztonsági audit). Minden metódus mostantól `$ceg_id`-t kap — ezt az
+// ApiHandler mindig szerver-oldalon oldja fel (resolveSajatCegId(), ami
+// admin- és sofőr-munkamenetre egyaránt működik).
 class HelyszinInterface {
     protected $db;
 
@@ -8,9 +17,9 @@ class HelyszinInterface {
         $this->db = $database->connect();
     }
 
-    public function getHelyszinek($id, $search = null, $page = null, $pageSize = null) {
+    public function getHelyszinek($ceg_id, $search = null, $page = null, $pageSize = null) {
         try {
-            $params = [':id' => $id];
+            $params = [':id' => $ceg_id];
             $query = "SELECT * FROM helyszinek WHERE admin = :id AND torolt <> 'I'";
             if (!empty($search)) {
                 $query .= " AND " . PaginationHelper::likeClause(['nev'], 'search');
@@ -34,11 +43,12 @@ class HelyszinInterface {
         }
     }
 
-    public function getHelyszin($id) {
+    public function getHelyszin($id, $ceg_id) {
         try {
-            $query = "SELECT * FROM helyszinek WHERE id = :id AND torolt <> 'I'";
+            $query = "SELECT * FROM helyszinek WHERE id = :id AND admin = :ceg_id AND torolt <> 'I'";
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(':id', $id);
+            $stmt->bindValue(':ceg_id', $ceg_id);
             $stmt->execute();
             $helyszin = $stmt->fetch(PDO::FETCH_ASSOC);
             if (!$helyszin) {
@@ -50,11 +60,11 @@ class HelyszinInterface {
         }
     }
 
-    public function newHelyszin($data) {
+    public function newHelyszin($data, $ceg_id) {
         try {
             $query = "INSERT INTO helyszinek (admin, nev) VALUES (:admin, :nev)";
             $stmt = $this->db->prepare($query);
-            $stmt->bindValue(':admin', $data['admin']);
+            $stmt->bindValue(':admin', $ceg_id);
             $stmt->bindValue(':nev', $data['nev']);
             $stmt->execute();
 
@@ -65,13 +75,18 @@ class HelyszinInterface {
         }
     }
 
-    public function saveHelyszinData($data) {
+    public function saveHelyszinData($data, $ceg_id) {
         try {
-            $query = "UPDATE helyszinek SET nev = :nev WHERE id = :id";
+            $query = "UPDATE helyszinek SET nev = :nev WHERE id = :id AND admin = :ceg_id";
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(':id', $data['id']);
             $stmt->bindValue(':nev', $data['nev']);
+            $stmt->bindValue(':ceg_id', $ceg_id);
             $stmt->execute();
+
+            if ($stmt->rowCount() === 0) {
+                return ['success' => false, 'message' => 'A helyszín nem található, vagy nem a te céged tulajdona.'];
+            }
 
             return ['success' => true, 'message' => 'Mentés sikeres.'];
         } catch (Exception $e) {
@@ -79,20 +94,34 @@ class HelyszinInterface {
         }
     }
 
-    public function deleteHelyszin($id) {
+    public function deleteHelyszin($id, $ceg_id) {
         try {
-            $query = "UPDATE helyszinek SET torolt = 'I' WHERE id = :id";
+            $query = "UPDATE helyszinek SET torolt = 'I' WHERE id = :id AND admin = :ceg_id";
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(':id', $id);
+            $stmt->bindValue(':ceg_id', $ceg_id);
             $stmt->execute();
+            if ($stmt->rowCount() === 0) {
+                return ['success' => false, 'message' => 'A helyszín nem található, vagy nem a te céged tulajdona.'];
+            }
             return ['success' => true, 'message' => 'Helyszín törölve.'];
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
 
-    public function getHelyszinMegjegyzesek($helyszin_id) {
+    // `helyszin_megjegyzesek`-nek nincs saját `admin` oszlopa — a tulajdonos
+    // céget a `helyszin_id`-n keresztül, a `helyszinek` táblából kell
+    // levezetni. A projekt konvenciója szerint (ld. ApiHandler::getEsemenyek)
+    // nincs SQL JOIN/subselect a kódbázisban — ezért két külön lekérdezés:
+    // előbb ellenőrizzük, hogy a helyszín tényleg a hívó cégéhez tartozik-e,
+    // utána (és csak akkor) kérjük le a hozzá tartozó jegyzeteket.
+    public function getHelyszinMegjegyzesek($helyszin_id, $ceg_id) {
         try {
+            if (!$this->helyszinSajat($helyszin_id, $ceg_id)) {
+                return ['success' => false, 'message' => 'A helyszín nem található, vagy nem a te céged tulajdona.'];
+            }
+
             $query = "SELECT * FROM helyszin_megjegyzesek WHERE helyszin_id = :helyszin_id AND torolt <> 'I' ORDER BY letrehozva ASC";
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(':helyszin_id', $helyszin_id);
@@ -103,15 +132,35 @@ class HelyszinInterface {
         }
     }
 
-    public function newHelyszinMegjegyzes($data) {
+    private function helyszinSajat($helyszin_id, $ceg_id) {
+        $stmt = $this->db->prepare("SELECT id FROM helyszinek WHERE id = :id AND admin = :ceg_id AND torolt <> 'I'");
+        $stmt->bindValue(':id', $helyszin_id);
+        $stmt->bindValue(':ceg_id', $ceg_id);
+        $stmt->execute();
+        return (bool) $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // `$szerzo_tipus`/`$szerzo_id`/`$szerzo_nev` mostantól a hívó (ApiHandler)
+    // által szerver-oldalon feloldott session-adatból jön, nem a kliens
+    // `$data` mezőiből — enélkül bárki tetszőleges nevet/id-t hamisíthatott
+    // a jegyzet szerzőjeként (ld. biztonsági audit).
+    public function newHelyszinMegjegyzes($data, $ceg_id, $szerzo_tipus, $szerzo_id, $szerzo_nev) {
         try {
+            $helyszinStmt = $this->db->prepare("SELECT id FROM helyszinek WHERE id = :id AND admin = :ceg_id AND torolt <> 'I'");
+            $helyszinStmt->bindValue(':id', $data['helyszin_id']);
+            $helyszinStmt->bindValue(':ceg_id', $ceg_id);
+            $helyszinStmt->execute();
+            if (!$helyszinStmt->fetch(PDO::FETCH_ASSOC)) {
+                return ['success' => false, 'message' => 'A helyszín nem található, vagy nem a te céged tulajdona.'];
+            }
+
             $query = "INSERT INTO helyszin_megjegyzesek (helyszin_id, szerzo_tipus, szerzo_id, szerzo_nev, szoveg)
                       VALUES (:helyszin_id, :szerzo_tipus, :szerzo_id, :szerzo_nev, :szoveg)";
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(':helyszin_id', $data['helyszin_id']);
-            $stmt->bindValue(':szerzo_tipus', $data['szerzo_tipus']);
-            $stmt->bindValue(':szerzo_id', $data['szerzo_id']);
-            $stmt->bindValue(':szerzo_nev', $data['szerzo_nev']);
+            $stmt->bindValue(':szerzo_tipus', $szerzo_tipus);
+            $stmt->bindValue(':szerzo_id', $szerzo_id);
+            $stmt->bindValue(':szerzo_nev', $szerzo_nev);
             $stmt->bindValue(':szoveg', $data['szoveg']);
             $stmt->execute();
 
@@ -122,8 +171,16 @@ class HelyszinInterface {
         }
     }
 
-    public function deleteHelyszinMegjegyzes($id) {
+    public function deleteHelyszinMegjegyzes($id, $ceg_id) {
         try {
+            $megjStmt = $this->db->prepare("SELECT helyszin_id FROM helyszin_megjegyzesek WHERE id = :id AND torolt <> 'I'");
+            $megjStmt->bindValue(':id', $id);
+            $megjStmt->execute();
+            $megjegyzes = $megjStmt->fetch(PDO::FETCH_ASSOC);
+            if (!$megjegyzes || !$this->helyszinSajat($megjegyzes['helyszin_id'], $ceg_id)) {
+                return ['success' => false, 'message' => 'A megjegyzés nem található, vagy nem a te céged tulajdona.'];
+            }
+
             $query = "UPDATE helyszin_megjegyzesek SET torolt = 'I' WHERE id = :id";
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(':id', $id);

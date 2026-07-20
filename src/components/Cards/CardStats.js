@@ -13,15 +13,31 @@ import PropTypes from "prop-types";
 // NEM ezt használják — azok több soros, bontott összegző panelek, nem
 // egyetlen-szám KPI-csempék, más tartalmi műfaj.
 const TONE = {
-  brand: { icon: "bg-brand-50 text-brand-600", ring: "ring-ink-100", value: "text-brand-900" },
-  positive: {
-    icon: "bg-emerald-50 text-emerald-600",
-    ring: "ring-ink-100",
-    value: "text-brand-900",
+  brand: {
+    icon: "bg-brand-50 text-brand-600 dark:bg-brand-950/50 dark:text-brand-300",
+    ring: "ring-ink-100 dark:ring-ink-800",
+    value: "text-brand-900 dark:text-ink-50",
   },
-  neutral: { icon: "bg-ink-100 text-ink-600", ring: "ring-ink-100", value: "text-brand-900" },
-  warning: { icon: "bg-amber-50 text-amber-700", ring: "ring-amber-200", value: "text-amber-700" },
-  danger: { icon: "bg-red-50 text-red-700", ring: "ring-red-200", value: "text-red-700" },
+  positive: {
+    icon: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-300",
+    ring: "ring-ink-100 dark:ring-ink-800",
+    value: "text-brand-900 dark:text-ink-50",
+  },
+  neutral: {
+    icon: "bg-ink-100 text-ink-600 dark:bg-ink-800 dark:text-ink-300",
+    ring: "ring-ink-100 dark:ring-ink-800",
+    value: "text-brand-900 dark:text-ink-50",
+  },
+  warning: {
+    icon: "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300",
+    ring: "ring-amber-200 dark:ring-amber-800",
+    value: "text-amber-700 dark:text-amber-400",
+  },
+  danger: {
+    icon: "bg-red-50 text-red-700 dark:bg-red-950/50 dark:text-red-300",
+    ring: "ring-red-200 dark:ring-red-800",
+    value: "text-red-700 dark:text-red-400",
+  },
 };
 
 export default function CardStats({
@@ -41,7 +57,7 @@ export default function CardStats({
     return (
       <div
         onClick={onClick}
-        className={`group flex items-center gap-3 rounded-2xl bg-white p-4 shadow-soft ring-1 transition-all duration-300 ease-fluid hover:shadow-soft-lg ${t.ring} ${
+        className={`group flex items-center gap-3 rounded-2xl bg-white p-4 shadow-soft ring-1 transition-all duration-300 ease-fluid hover:shadow-soft-lg dark:bg-ink-900 ${t.ring} ${
           clickable ? "cursor-pointer hover:-translate-y-0.5" : ""
         }`}
       >
@@ -58,14 +74,14 @@ export default function CardStats({
           >
             {statTitle}
           </p>
-          <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-ink-400">
+          <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">
             {statSubtitle}
           </p>
           {statCaption && (
             // `title`: keskeny (pl. mobil 2 oszlopos) elrendezésben a `truncate`
             // gyakran mondat közepén vágja le a feliratot — natív tooltipként
             // a teljes szöveg így is elérhető marad, nem csak a csonk.
-            <p className="truncate text-xs text-ink-500" title={statCaption}>
+            <p className="truncate text-xs text-ink-500 dark:text-ink-400" title={statCaption}>
               {statCaption}
             </p>
           )}
@@ -77,14 +93,14 @@ export default function CardStats({
   return (
     <div
       onClick={onClick}
-      className={`group rounded-2xl bg-white/60 p-1 shadow-soft ring-1 transition-all duration-300 ease-fluid hover:shadow-soft-lg sm:rounded-3xl sm:p-1.5 ${t.ring} ${
+      className={`group rounded-2xl bg-white/60 p-1 shadow-soft ring-1 transition-all duration-300 ease-fluid hover:shadow-soft-lg dark:bg-ink-900/60 sm:rounded-3xl sm:p-1.5 ${t.ring} ${
         clickable ? "cursor-pointer hover:-translate-y-0.5" : ""
       }`}
     >
-      <div className="rounded-[calc(1rem-0.25rem)] bg-white p-3 sm:rounded-[calc(1.5rem-0.375rem)] sm:p-4">
+      <div className="rounded-[calc(1rem-0.25rem)] bg-white p-3 dark:bg-ink-900 sm:rounded-[calc(1.5rem-0.375rem)] sm:p-4">
         <div className="flex items-center justify-between gap-2 sm:items-start sm:gap-3">
           <div className="min-w-0">
-            <h5 className="text-[9px] font-semibold uppercase tracking-[0.1em] text-ink-400 sm:text-[11px] sm:tracking-[0.12em]">
+            <h5 className="text-[9px] font-semibold uppercase tracking-[0.1em] text-ink-400 dark:text-ink-500 sm:text-[11px] sm:tracking-[0.12em]">
               {statSubtitle}
             </h5>
             <span
@@ -102,7 +118,7 @@ export default function CardStats({
           )}
         </div>
         {statDescripiron && (
-          <p className="mt-2 text-xs text-ink-400 sm:mt-4">{statDescripiron}</p>
+          <p className="mt-2 text-xs text-ink-400 dark:text-ink-500 sm:mt-4">{statDescripiron}</p>
         )}
       </div>
     </div>

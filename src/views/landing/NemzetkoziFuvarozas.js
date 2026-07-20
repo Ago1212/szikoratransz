@@ -36,22 +36,51 @@ export default function NemzetkoziFuvarozas() {
         "Vállalnak nemzetközi szállítást?",
         "Biztosított a szállított áru?",
         "Mi történik, ha kár keletkezik szállítás közben?",
-        "Milyen fizetési feltételeket fogadnak el?",
+        {
+          q: "Milyen fizetési feltételeket fogadnak el?",
+          a: "Nemzetközi partnereinknél a fizetési határidőt és — igény esetén — a pénznemet (forint vagy euró) is az adott megrendelés alapján egyeztetjük.",
+        },
       )}
+      testimonialNames={["Tóth Andrea", "Nagy Péter", "Molnár Eszter"]}
     >
       <section className="py-10 border-t border-[#23262B]/10">
-        <p className="text-sm text-[#23262B]/60">
-          A vámügyintézés hivatalos szabályairól és eljárásrendjéről a{" "}
-          <a
-            href="https://nav.gov.hu"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[#0F766E] underline hover:text-[#0B5B52] transition-colors duration-300"
-          >
-            Nemzeti Adó- és Vámhivatal (NAV)
-          </a>{" "}
-          hivatalos oldalán tájékozódhat bővebben — a konkrét ügyintézést nemzetközi fuvarjainknál mi végezzük Ön helyett.
-        </p>
+        <h2 className="font-[Overpass] font-extrabold text-2xl text-[#23262B] mb-6">
+          Amit érdemes tudni a nemzetközi fuvarok vámkezeléséről
+        </h2>
+        <div className="space-y-4 text-[#23262B]/70 leading-relaxed max-w-2xl">
+          <p>
+            Az EU-n belüli, illetve EU-n kívüli országokat érintő közúti
+            árufuvarozást nemzetközi egyezmények és okmányok szabályozzák.
+            A legfontosabb ezek közül a{" "}
+            <strong className="text-[#23262B]">CMR-fuvarlevél</strong> — a
+            nemzetközi közúti árufuvarozási szerződés (CMR-egyezmény) által
+            előírt, kötelező szállítási okmány, amely rögzíti a felrakó, a
+            fuvarozó és a címzett adatait, az áru jellegét és mennyiségét,
+            valamint a felelősség terjedelmét szállítás közben.
+          </p>
+          <p>
+            EU-n kívüli célországok esetén ehhez jellemzően{" "}
+            <strong className="text-[#23262B]">kereskedelmi számla</strong> és{" "}
+            <strong className="text-[#23262B]">csomagolási jegyzék</strong>{" "}
+            is szükséges a vámkezeléshez — ezek pontos köre országonként és
+            árutípusonként eltérhet, ezért az adott fuvarhoz tartozó
+            dokumentációs igényt mindig az ajánlatkérés során, egyedileg
+            tisztázzuk Önnel.
+          </p>
+          <p className="text-sm text-[#23262B]/60">
+            A vámügyintézés hivatalos szabályairól és eljárásrendjéről a{" "}
+            <a
+              href="https://nav.gov.hu"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#0F766E] underline hover:text-[#0B5B52] transition-colors duration-300"
+            >
+              Nemzeti Adó- és Vámhivatal (NAV)
+            </a>{" "}
+            hivatalos oldalán tájékozódhat bővebben — a konkrét ügyintézést
+            nemzetközi fuvarjainknál mi végezzük Ön helyett.
+          </p>
+        </div>
       </section>
     </ServicePage>
   );

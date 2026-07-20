@@ -55,7 +55,10 @@ class FurgonInterface {
         }
     }
 
-    public function saveFurgonData($data) {
+    // `$ceg_id`-t a hívó (ApiHandler) mindig szerver-oldalon feloldva adja
+    // át — enélkül bármely cég módosíthatta volna bármely másik cég
+    // furgonját puszta id-tallózással (IDOR, ld. biztonsági audit).
+    public function saveFurgonData($data, $ceg_id) {
         try {
             $query = "UPDATE furgon
                       SET rendszam = :rendszam,
@@ -77,10 +80,11 @@ class FurgonInterface {
                           kaszko_nev = :kaszko_nev,
                           kaszko_dij = :kaszko_dij,
                           kaszko_fizetesi_utem = :kaszko_fizetesi_utem
-                      WHERE id = :id";
+                      WHERE id = :id AND admin = :ceg_id";
 
             $stmt = $this->db->prepare($query);
 
+            $stmt->bindValue(':ceg_id', $ceg_id);
             $stmt->bindParam(':rendszam', $data['rendszam'], PDO::PARAM_STR);
             $stmt->bindParam(':tipus', $data['tipus'], PDO::PARAM_STR);
             $stmt->bindParam(':meret', $data['meret'], PDO::PARAM_STR);
@@ -104,13 +108,19 @@ class FurgonInterface {
 
             $stmt->execute();
 
+            if ($stmt->rowCount() === 0) {
+                return ['success' => false, 'message' => 'A furgon nem található, vagy nem a te céged flottájába tartozik.'];
+            }
+
             return ['success' => true, 'message' => 'Furgon adatai sikeresen frissítve.'];
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
 
-    public function newFurgon($data) {
+    // `$ceg_id`-t a hívó szerver-oldalon feloldva adja át — sosem a kliens
+    // `$data['admin']` mezőjét.
+    public function newFurgon($data, $ceg_id) {
         try {
             $query = "INSERT INTO furgon
                       (admin, rendszam, meret, tipus, allapot, aktualis_km, muszaki_lejarat, adr_lejarat, taograf_illesztes, emelohatfal_vizsga, porolto_lejarat, porolto_lejarat_2, kot_biztositas, kot_biz_nev, kot_biz_dij, kot_biz_utem, kaszko_biztositas, kaszko_nev, kaszko_dij, kaszko_fizetesi_utem)
@@ -118,7 +128,7 @@ class FurgonInterface {
 
             $stmt = $this->db->prepare($query);
 
-            $stmt->bindParam(':admin', $data['admin'], PDO::PARAM_STR);
+            $stmt->bindValue(':admin', $ceg_id);
             $stmt->bindParam(':rendszam', $data['rendszam'], PDO::PARAM_STR);
             $stmt->bindParam(':tipus', $data['tipus'], PDO::PARAM_STR);
             $stmt->bindParam(':meret', $data['meret'], PDO::PARAM_STR);
@@ -142,7 +152,7 @@ class FurgonInterface {
             $stmt->execute();
 
             $newFurgonId = $this->db->lastInsertId();
-            $newFurgonData = $this->getFurgon($newFurgonId);
+            $newFurgonData = $this->getFurgon($newFurgonId, $ceg_id);
 
             return ['success' => true, 'message' => 'Furgon adatai sikeresen beszúrva.', 'furgon' => $newFurgonData];
         } catch (Exception $e) {
@@ -150,16 +160,26 @@ class FurgonInterface {
         }
     }
 
-    public function deleteFurgon($id) {
+    public function deleteFurgon($id, $ceg_id) {
         try {
+            $query = "SELECT id FROM furgon WHERE id = :id AND admin = :ceg_id AND torolt <> 'I'";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindValue(':id', $id);
+            $stmt->bindValue(':ceg_id', $ceg_id);
+            $stmt->execute();
+            if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
+                return ['success' => false, 'message' => 'A furgon nem található, vagy nem a te céged flottájába tartozik.'];
+            }
+
             $query = "UPDATE furgon_karbantartars SET torolt='I' WHERE furgon_id = :id";
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':id', $id);
             $stmt->execute();
 
-            $query = "UPDATE furgon SET torolt='I' WHERE id = :id";
+            $query = "UPDATE furgon SET torolt='I' WHERE id = :id AND admin = :ceg_id";
             $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':id', $id);
+            $stmt->bindValue(':id', $id);
+            $stmt->bindValue(':ceg_id', $ceg_id);
             $stmt->execute();
             return ['success' => true, 'message' => 'Furgon törölve'];
         } catch (Exception $e) {
@@ -175,10 +195,11 @@ class FurgonInterface {
         return ['success' => true, 'furgonok' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
 
-    public function getFurgon($id) {
-        $query = "SELECT * FROM furgon WHERE id = :id";
+    public function getFurgon($id, $ceg_id) {
+        $query = "SELECT * FROM furgon WHERE id = :id AND admin = :ceg_id AND torolt <> 'I'";
         $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':id', $id);
+        $stmt->bindValue(':id', $id);
+        $stmt->bindValue(':ceg_id', $ceg_id);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }

@@ -7,7 +7,7 @@ import {
   PiCaretRightLight,
 } from "react-icons/pi";
 import { GradientCardHeader } from "components/UI/PageCard.js";
-import Spinner from "components/UI/Spinner.js";
+import TableSkeleton from "components/UI/Skeleton.js";
 
 // Excel export — a `render` oszlopok JSX-et adnak vissza (pl. állapot-
 // jelvény, gombok), ezért azoknál nem a renderelt kimenetet exportáljuk.
@@ -91,8 +91,8 @@ export function ActionIcon({ icon, onClick, title, danger = false }) {
     <button
       className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg border transition-all duration-200 ease-fluid hover:scale-105 active:scale-95 md:h-8 md:w-8 ${
         danger
-          ? "border-red-100 bg-red-50 text-red-600 hover:bg-red-100"
-          : "border-ink-200 bg-white text-ink-500 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-600"
+          ? "border-red-100 bg-red-50 text-red-600 hover:bg-red-100 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300 dark:hover:bg-red-950"
+          : "border-ink-200 bg-white text-ink-500 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-600 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-400 dark:hover:border-brand-700 dark:hover:bg-brand-950/40 dark:hover:text-brand-300"
       }`}
       onClick={onClick}
       title={title}
@@ -170,11 +170,28 @@ export default function DataTable({
   // page/pageSize nélkül) és azzal tér vissza. Ha nincs megadva, a gomb
   // (kényszerűségből) csak az épp látott oldalt exportálja.
   onExportAll,
+  // R17 (fejlesztési audit, 2026-07-19): opt-in tömeges kijelölés/műveletek.
+  // Alapból kikapcsolva — meglévő oldalak viselkedése változatlan marad,
+  // amíg explicit be nem kapcsolják. `bulkActions`: [{ label, icon?, tone?
+  // ("danger"|"default"), onClick(selectedRows) }] — a hívó felel a
+  // tényleges műveletért (pl. több `deleteFile` hívás) és a lista
+  // újratöltéséért utána; a kijelölés a hívás után automatikusan törlődik.
+  selectable = false,
+  bulkActions = [],
 }) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [exporting, setExporting] = useState(false);
   const debounceRef = useRef(null);
+  const [selected, setSelected] = useState(() => new Set());
+
+  // Új sorhalmaz (szűrés, lapváltás, frissítés) esetén a korábbi kijelölés
+  // már más sorokra vonatkozna — inkább töröljük, mint hogy véletlenül egy
+  // időközben eltűnt/másik sorra vonatkozó műveletet indítson el valaki.
+  useEffect(() => {
+    if (selected.size > 0) setSelected(new Set());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows]);
 
   // Szerver oldali keresésnél a mezőbe gépelt érték azonnal megjelenik,
   // de az `onSearchChange` (és ezzel az új szerver-lekérdezés) csak
@@ -235,6 +252,28 @@ export default function DataTable({
     }
   };
 
+  // Csak a JELENLEG látott (aktuális oldal) sorai közül lehet kijelölni —
+  // egy nem-látott, más oldalon lévő sor kijelölése megtévesztő lenne.
+  const toggleRow = (key) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+  const allVisibleSelected =
+    pagedRows.length > 0 && pagedRows.every((row, i) => selected.has(rowKey(row, i)));
+  const toggleAllVisible = () => {
+    setSelected((prev) => {
+      if (allVisibleSelected) return new Set();
+      const next = new Set(prev);
+      pagedRows.forEach((row, i) => next.add(rowKey(row, i)));
+      return next;
+    });
+  };
+  const selectedRows = pagedRows.filter((row, i) => selected.has(rowKey(row, i)));
+
   const searchInput = searchable && (
     <div className="relative">
       <PiMagnifyingGlassLight className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-300" />
@@ -246,7 +285,7 @@ export default function DataTable({
           if (!serverSide) setPage(1);
         }}
         placeholder={searchPlaceholder}
-        className="w-full rounded-xl border border-ink-200 bg-white py-2 pl-8 pr-3 text-xs text-ink-700 placeholder-ink-300 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300 sm:w-44"
+        className="w-full rounded-xl border border-ink-200 bg-white py-2 pl-8 pr-3 text-xs text-ink-700 placeholder-ink-300 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-100 sm:w-44"
       />
     </div>
   );
@@ -270,7 +309,7 @@ export default function DataTable({
   // `md:` fölött jelenik meg, hogy a mobil fejléc ne zsúfolódjon tele.
   const exportButton = exportFilename && (
     <button
-      className="hidden items-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-ink-500 shadow-soft transition-all duration-300 ease-fluid hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 active:scale-95 disabled:cursor-wait disabled:opacity-60 md:flex"
+      className="hidden items-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-ink-500 shadow-soft transition-all duration-300 ease-fluid hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 active:scale-95 disabled:cursor-wait disabled:opacity-60 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-300 dark:hover:border-brand-700 dark:hover:bg-ink-700 dark:hover:text-brand-300 md:flex"
       type="button"
       title="Táblázat exportálása Excelbe"
       disabled={exporting}
@@ -317,7 +356,7 @@ export default function DataTable({
   // terültre esnének. `md:pr-6`-nál a FAB-ok már nem jelennek meg
   // (`md:hidden`), ott visszaáll a normál térköz.
   const paginationBar = pageSize && effectiveTotal > 0 && (
-    <div className="flex flex-shrink-0 items-center justify-between gap-3 border-t border-ink-100 py-2.5 pl-4 pr-20 text-xs text-ink-500 sm:pl-6 md:pr-6">
+    <div className="flex flex-shrink-0 items-center justify-between gap-3 border-t border-ink-100 py-2.5 pl-4 pr-20 text-xs text-ink-500 dark:border-ink-800 dark:text-ink-400 sm:pl-6 md:pr-6">
       <span className="tabular-nums">
         {(safePage - 1) * pageSize + 1}–{Math.min(safePage * pageSize, effectiveTotal)} / {effectiveTotal}
       </span>
@@ -326,7 +365,7 @@ export default function DataTable({
           type="button"
           disabled={safePage <= 1}
           onClick={() => goToPage(safePage - 1)}
-          className="flex h-7 w-7 items-center justify-center rounded-lg border border-ink-200 text-ink-500 transition-colors duration-150 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex h-7 w-7 items-center justify-center rounded-lg border border-ink-200 text-ink-500 transition-colors duration-150 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-ink-700 dark:text-ink-400 dark:hover:bg-ink-800"
           aria-label="Előző oldal"
         >
           <PiCaretLeftLight className="h-3.5 w-3.5" />
@@ -338,7 +377,7 @@ export default function DataTable({
           type="button"
           disabled={safePage >= totalPages}
           onClick={() => goToPage(safePage + 1)}
-          className="flex h-7 w-7 items-center justify-center rounded-lg border border-ink-200 text-ink-500 transition-colors duration-150 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex h-7 w-7 items-center justify-center rounded-lg border border-ink-200 text-ink-500 transition-colors duration-150 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-ink-700 dark:text-ink-400 dark:hover:bg-ink-800"
           aria-label="Következő oldal"
         >
           <PiCaretRightLight className="h-3.5 w-3.5" />
@@ -374,7 +413,7 @@ export default function DataTable({
 
   return (
     <div
-      className={`relative -mx-4 flex min-w-0 flex-col overflow-hidden bg-white shadow-none ring-0 md:mx-0 md:rounded-3xl md:shadow-soft md:ring-1 md:ring-ink-100 ${
+      className={`relative -mx-4 flex min-w-0 flex-col overflow-hidden bg-white shadow-none ring-0 dark:bg-ink-900 md:mx-0 md:rounded-3xl md:shadow-soft md:ring-1 md:ring-ink-100 dark:md:ring-ink-800 ${
         fill ? "h-full" : ""
       } ${className}`}
     >
@@ -386,8 +425,40 @@ export default function DataTable({
         />
       )}
 
+      {selectable && selected.size > 0 && (
+        <div className="flex flex-shrink-0 flex-wrap items-center gap-2 border-b border-ink-100 bg-brand-50/60 px-4 py-2.5 dark:border-ink-800 dark:bg-brand-950/30 sm:px-6">
+          <span className="text-xs font-semibold text-brand-800 dark:text-brand-300">
+            {selected.size} kijelölve
+          </span>
+          <button
+            type="button"
+            onClick={() => setSelected(new Set())}
+            className="text-xs font-semibold text-ink-500 hover:text-ink-700 dark:text-ink-400 dark:hover:text-ink-100"
+          >
+            Kijelölés törlése
+          </button>
+          <div className="ml-auto flex flex-wrap gap-2">
+            {bulkActions.map((action, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => action.onClick(selectedRows)}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition-colors duration-200 ${
+                  action.tone === "danger"
+                    ? "bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/50 dark:text-red-300 dark:hover:bg-red-950"
+                    : "bg-white text-ink-600 shadow-soft hover:bg-brand-50 hover:text-brand-700 dark:bg-ink-800 dark:text-ink-300 dark:hover:bg-brand-950/40 dark:hover:text-brand-300"
+                }`}
+              >
+                {action.icon}
+                {action.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {loading ? (
-        <Spinner />
+        <TableSkeleton columns={fieldCols.length} selectable={selectable} />
       ) : effectiveTotal === 0 && emptyState ? (
         emptyState
       ) : (
@@ -402,7 +473,7 @@ export default function DataTable({
               a lapot magát meg csak alig. Ezért mobilon `!fill` esetén NINCS itt saját
               overflow/max-height — a kártyalista egyszerűen a lap normál folyásába illeszkedik. */}
           <div
-            className={`w-full bg-slate-50 md:hidden ${fill ? `overflow-y-auto ${bodyFillClass}` : ""}`}
+            className={`w-full bg-slate-50 dark:bg-ink-950 md:hidden ${fill ? `overflow-y-auto ${bodyFillClass}` : ""}`}
             style={fill ? { maxHeight: bodyMaxHeight } : undefined}
           >
             {pagedRows.length > 0 ? (
@@ -410,15 +481,25 @@ export default function DataTable({
                 {pagedRows.map((row, index) => (
                   <div
                     key={rowKey(row, index)}
-                    className="rounded-2xl border border-ink-100 bg-white p-4 shadow-soft"
+                    className="rounded-2xl border border-ink-100 bg-white p-4 shadow-soft dark:border-ink-800 dark:bg-ink-900"
                     onClick={
                       onRowDoubleClick ? () => onRowDoubleClick(row) : undefined
                     }
                     style={{ cursor: onRowDoubleClick ? "pointer" : "default" }}
                   >
                     <div className="flex items-start justify-between gap-3">
+                      {selectable && (
+                        <input
+                          type="checkbox"
+                          className="mt-1 h-4 w-4 flex-shrink-0 rounded border-ink-300 text-brand-600 focus:ring-brand-400 dark:border-ink-600 dark:bg-ink-800"
+                          checked={selected.has(rowKey(row, index))}
+                          onChange={() => toggleRow(rowKey(row, index))}
+                          onClick={(e) => e.stopPropagation()}
+                          aria-label="Sor kijelölése"
+                        />
+                      )}
                       {primaryCol && (
-                        <div className="min-w-0 truncate text-base font-bold text-ink-900">
+                        <div className="min-w-0 flex-1 truncate text-base font-bold text-ink-900 dark:text-ink-50">
                           {primaryCol.render
                             ? primaryCol.render(row, index)
                             : row[primaryCol.key]}
@@ -440,10 +521,10 @@ export default function DataTable({
                       <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3">
                         {secondaryCols.map((col) => (
                           <div key={col.key} className="min-w-0">
-                            <div className="text-[11px] font-semibold uppercase tracking-wide text-ink-400">
+                            <div className="text-[11px] font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">
                               {col.label}
                             </div>
-                            <div className="mt-0.5 truncate text-sm text-ink-700">
+                            <div className="mt-0.5 truncate text-sm text-ink-700 dark:text-ink-100">
                               {col.render
                                 ? col.render(row, index)
                                 : row[col.key]}
@@ -456,7 +537,7 @@ export default function DataTable({
                 ))}
               </div>
             ) : (
-              <div className="px-6 py-10 text-center text-sm text-ink-400">
+              <div className="px-6 py-10 text-center text-sm text-ink-400 dark:text-ink-500">
                 <EmptyContent />
               </div>
             )}
@@ -470,10 +551,21 @@ export default function DataTable({
             <table className="w-full border-collapse bg-transparent">
               <thead>
                 <tr>
+                  {selectable && (
+                    <th className="sticky top-0 z-10 w-10 border-b border-ink-100 bg-white px-4 py-3 dark:border-ink-800 dark:bg-ink-900">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-ink-300 text-brand-600 focus:ring-brand-400 dark:border-ink-600 dark:bg-ink-800"
+                        checked={allVisibleSelected}
+                        onChange={toggleAllVisible}
+                        aria-label="Összes látható sor kijelölése"
+                      />
+                    </th>
+                  )}
                   {columns.map((col) => (
                     <th
                       key={col.key}
-                      className={`sticky top-0 z-10 whitespace-nowrap border-b border-ink-100 bg-white px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-ink-400 text-${
+                      className={`sticky top-0 z-10 whitespace-nowrap border-b border-ink-100 bg-white px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-ink-400 dark:border-ink-800 dark:bg-ink-900 dark:text-ink-500 text-${
                         col.headerAlign || col.align || "left"
                       }`}
                     >
@@ -487,7 +579,7 @@ export default function DataTable({
                   pagedRows.map((row, index) => (
                     <tr
                       key={rowKey(row, index)}
-                      className="border-b border-ink-100 transition-colors duration-200 last:border-0 hover:bg-brand-50/40"
+                      className="border-b border-ink-100 transition-colors duration-200 last:border-0 hover:bg-brand-50/40 dark:border-ink-800 dark:hover:bg-brand-950/30"
                       onDoubleClick={
                         onRowDoubleClick
                           ? () => onRowDoubleClick(row)
@@ -497,10 +589,24 @@ export default function DataTable({
                         cursor: onRowDoubleClick ? "pointer" : "default",
                       }}
                     >
+                      {selectable && (
+                        <td
+                          className="px-4 py-3.5"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 rounded border-ink-300 text-brand-600 focus:ring-brand-400 dark:border-ink-600 dark:bg-ink-800"
+                            checked={selected.has(rowKey(row, index))}
+                            onChange={() => toggleRow(rowKey(row, index))}
+                            aria-label="Sor kijelölése"
+                          />
+                        </td>
+                      )}
                       {columns.map((col) => (
                         <td
                           key={col.key}
-                          className={`whitespace-nowrap px-6 py-3.5 text-sm text-ink-600 text-${
+                          className={`whitespace-nowrap px-6 py-3.5 text-sm text-ink-600 dark:text-ink-300 text-${
                             col.align || "left"
                           } ${col.className || ""}`}
                         >
@@ -512,8 +618,8 @@ export default function DataTable({
                 ) : (
                   <tr>
                     <td
-                      colSpan={columns.length}
-                      className="px-6 py-10 text-center text-sm text-ink-400"
+                      colSpan={columns.length + (selectable ? 1 : 0)}
+                      className="px-6 py-10 text-center text-sm text-ink-400 dark:text-ink-500"
                     >
                       <EmptyContent />
                     </td>

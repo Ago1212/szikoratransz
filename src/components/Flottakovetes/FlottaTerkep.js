@@ -86,12 +86,12 @@ function TerkepVezerlok({
   const map = useMap();
   return (
     <div className="absolute right-3 top-3 z-[1000] flex flex-col gap-2">
-      <div className="flex flex-col overflow-hidden rounded-xl bg-white shadow-soft-lg ring-1 ring-ink-100">
+      <div className="flex flex-col overflow-hidden rounded-xl bg-white shadow-soft-lg ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800">
         <button
           type="button"
           onClick={() => map.zoomIn()}
           aria-label="Nagyítás"
-          className="flex h-9 w-9 items-center justify-center border-b border-ink-100 text-ink-600 transition-colors duration-150 hover:bg-slate-50"
+          className="flex h-9 w-9 items-center justify-center border-b border-ink-100 text-ink-600 transition-colors duration-150 hover:bg-slate-50 dark:border-ink-800 dark:text-ink-300 dark:hover:bg-ink-800"
         >
           <PiPlusLight className="h-4 w-4" />
         </button>
@@ -99,7 +99,7 @@ function TerkepVezerlok({
           type="button"
           onClick={() => map.zoomOut()}
           aria-label="Kicsinyítés"
-          className="flex h-9 w-9 items-center justify-center text-ink-600 transition-colors duration-150 hover:bg-slate-50"
+          className="flex h-9 w-9 items-center justify-center text-ink-600 transition-colors duration-150 hover:bg-slate-50 dark:text-ink-300 dark:hover:bg-ink-800"
         >
           <PiMinusLight className="h-4 w-4" />
         </button>
@@ -109,7 +109,7 @@ function TerkepVezerlok({
         onClick={onFullscreenToggle}
         aria-label={isFullscreen ? "Kilépés a teljes képernyőből" : "Teljes képernyő"}
         title={isFullscreen ? "Kilépés a teljes képernyőből" : "Teljes képernyő"}
-        className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-ink-600 shadow-soft-lg ring-1 ring-ink-100 transition-colors duration-150 hover:bg-slate-50"
+        className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-ink-600 shadow-soft-lg ring-1 ring-ink-100 transition-colors duration-150 hover:bg-slate-50 dark:bg-ink-900 dark:text-ink-300 dark:ring-ink-800 dark:hover:bg-ink-800"
       >
         {isFullscreen ? (
           <PiArrowsInSimpleLight className="h-4 w-4" />
@@ -123,10 +123,10 @@ function TerkepVezerlok({
           onClick={onKovetesToggle}
           aria-pressed={kovetesEnabled}
           title="Kiválasztott jármű követése"
-          className={`flex h-9 w-9 items-center justify-center rounded-xl shadow-soft-lg ring-1 ring-ink-100 transition-colors duration-150 ${
+          className={`flex h-9 w-9 items-center justify-center rounded-xl shadow-soft-lg ring-1 ring-ink-100 transition-colors duration-150 dark:ring-ink-800 ${
             kovetesEnabled
               ? "bg-brand-600 text-white"
-              : "bg-white text-ink-600 hover:bg-slate-50"
+              : "bg-white text-ink-600 hover:bg-slate-50 dark:bg-ink-900 dark:text-ink-300 dark:hover:bg-ink-800"
           }`}
         >
           <PiCrosshairSimpleLight className="h-4 w-4" />
@@ -215,7 +215,7 @@ export default function FlottaTerkep({
       // AuthNavbar-bugjánál, csak fordított irányban: ott egy FELESLEGES
       // verem-kontextust kellett megszüntetni, itt egy HIÁNYZÓT kellett
       // pótolni).
-      className={`relative z-0 h-full w-full overflow-hidden ${isFullscreen ? "bg-white" : ""}`}
+      className={`relative z-0 h-full w-full overflow-hidden ${isFullscreen ? "bg-white dark:bg-ink-900" : ""}`}
     >
       <MapContainer
         center={MAGYARORSZAG_KOZEPPONT}
@@ -270,7 +270,7 @@ export default function FlottaTerkep({
 
       {ervenyesPoziciok.length === 0 && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <p className="rounded-xl bg-white/90 px-4 py-2 text-sm text-ink-400 shadow-soft">
+          <p className="rounded-xl bg-white/90 px-4 py-2 text-sm text-ink-400 shadow-soft dark:bg-ink-900/90 dark:text-ink-500">
             Nincs megjeleníthető pozíció.
           </p>
         </div>

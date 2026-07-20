@@ -99,7 +99,7 @@ export default function Szabadsagok() {
   };
 
   const columns = [
-    { key: "sofor_nev", label: "Sofőr", className: "font-semibold text-brand-900" },
+    { key: "sofor_nev", label: "Sofőr", className: "font-semibold text-brand-900 dark:text-ink-50" },
     { key: "datum_tol", label: "Kezdete" },
     { key: "datum_ig", label: "Vége" },
     {
@@ -216,7 +216,7 @@ export default function Szabadsagok() {
             <button
               type="button"
               onClick={() => setOpenDialog(false)}
-              className="rounded-xl px-4 py-2 text-sm font-medium text-ink-500 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-800"
+              className="rounded-xl px-4 py-2 text-sm font-medium text-ink-500 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-800 dark:text-ink-400 dark:hover:bg-ink-800 dark:hover:text-ink-100"
             >
               Mégse
             </button>

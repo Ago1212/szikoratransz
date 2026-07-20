@@ -37,7 +37,10 @@ class PotkocsiInterface {
         }
     }
 
-    public function savePotkocsiData($data) {
+    // `$ceg_id`-t a hívó (ApiHandler) mindig szerver-oldalon feloldva adja
+    // át — enélkül bármely cég módosíthatta volna bármely másik cég
+    // pótkocsiját puszta id-tallózással (IDOR, ld. biztonsági audit).
+    public function savePotkocsiData($data, $ceg_id) {
         try {
             // SQL lekérdezés előkészítése az adatok frissítéséhez
             $query = "UPDATE potkocsi
@@ -47,23 +50,24 @@ class PotkocsiInterface {
                           allapot = :allapot,
                           aktualis_km = :aktualis_km,
                           adr_lejarat = :adr_lejarat,
-                          taograf_illesztes = :taograf_illesztes, 
-                          emelohatfal_vizsga = :emelohatfal_vizsga, 
-                          porolto_lejarat = :porolto_lejarat, 
-                          porolto_lejarat_2 = :porolto_lejarat_2, 
-                          kot_biztositas = :kot_biztositas, 
-                          kot_biz_nev = :kot_biz_nev, 
-                          kot_biz_dij = :kot_biz_dij, 
-                          kot_biz_utem = :kot_biz_utem, 
-                          kaszko_biztositas = :kaszko_biztositas, 
-                          kaszko_nev = :kaszko_nev, 
-                          kaszko_dij = :kaszko_dij, 
-                          kaszko_fizetesi_utem = :kaszko_fizetesi_utem 
-                      WHERE id = :id";
+                          taograf_illesztes = :taograf_illesztes,
+                          emelohatfal_vizsga = :emelohatfal_vizsga,
+                          porolto_lejarat = :porolto_lejarat,
+                          porolto_lejarat_2 = :porolto_lejarat_2,
+                          kot_biztositas = :kot_biztositas,
+                          kot_biz_nev = :kot_biz_nev,
+                          kot_biz_dij = :kot_biz_dij,
+                          kot_biz_utem = :kot_biz_utem,
+                          kaszko_biztositas = :kaszko_biztositas,
+                          kaszko_nev = :kaszko_nev,
+                          kaszko_dij = :kaszko_dij,
+                          kaszko_fizetesi_utem = :kaszko_fizetesi_utem
+                      WHERE id = :id AND admin = :ceg_id";
 
             $stmt = $this->db->prepare($query);
 
             // Paraméterek kötése
+            $stmt->bindValue(':ceg_id', $ceg_id);
             $stmt->bindParam(':rendszam', $data['rendszam'], PDO::PARAM_STR);
             $stmt->bindParam(':tipus', $data['tipus'], PDO::PARAM_STR);
             $stmt->bindValue(':allapot', empty($data['allapot']) ? 'szabad' : $data['allapot']);
@@ -86,12 +90,18 @@ class PotkocsiInterface {
 
             $stmt->execute();
 
+            if ($stmt->rowCount() === 0) {
+                return ['success' => false, 'message' => 'A pótkocsi nem található, vagy nem a te céged flottájába tartozik.'];
+            }
+
             return ['success' => true, 'message' => 'Pótkocsi adatai sikeresen frissítve.'];
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
-    public function newPotkocsi($data) {
+    // `$ceg_id`-t a hívó szerver-oldalon feloldva adja át — sosem a kliens
+    // `$data['admin']` mezőjét (ld. saveKamionData komment ugyanerről).
+    public function newPotkocsi($data, $ceg_id) {
         try {
             // SQL lekérdezés előkészítése az adatok beszúrásához
             $query = "INSERT INTO potkocsi
@@ -101,7 +111,7 @@ class PotkocsiInterface {
             $stmt = $this->db->prepare($query);
 
             // Paraméterek kötése
-            $stmt->bindParam(':admin', $data['admin'], PDO::PARAM_STR);
+            $stmt->bindValue(':admin', $ceg_id);
             $stmt->bindParam(':tipus', $data['tipus'], PDO::PARAM_STR);
             $stmt->bindParam(':rendszam', $data['rendszam'], PDO::PARAM_STR);
             $stmt->bindValue(':allapot', empty($data['allapot']) ? 'szabad' : $data['allapot']);
@@ -124,7 +134,7 @@ class PotkocsiInterface {
             $stmt->execute();
 
             $newPotkocsiId = $this->db->lastInsertId();
-            $newPotkocsiData = $this->getPotkocsi($newPotkocsiId);
+            $newPotkocsiData = $this->getPotkocsi($newPotkocsiId, $ceg_id);
 
             return ['success' => true, 'message' => 'Pótkocsi adatai sikeresen beszúrva.', 'potkocsi' => $newPotkocsiData];
         } catch (Exception $e) {
@@ -132,16 +142,26 @@ class PotkocsiInterface {
         }
     }
 
-    public function deletePotkocsi($id) {
+    public function deletePotkocsi($id, $ceg_id) {
         try {
+            $query = "SELECT id FROM potkocsi WHERE id = :id AND admin = :ceg_id AND torolt <> 'I'";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindValue(':id', $id);
+            $stmt->bindValue(':ceg_id', $ceg_id);
+            $stmt->execute();
+            if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
+                return ['success' => false, 'message' => 'A pótkocsi nem található, vagy nem a te céged flottájába tartozik.'];
+            }
+
             $query = "UPDATE potkocsi_karbantartars SET torolt='I' WHERE potkocsi_id = :id";
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':id', $id);
             $stmt->execute();
 
-            $query = "UPDATE potkocsi SET torolt='I' WHERE id = :id";
+            $query = "UPDATE potkocsi SET torolt='I' WHERE id = :id AND admin = :ceg_id";
             $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':id', $id);
+            $stmt->bindValue(':id', $id);
+            $stmt->bindValue(':ceg_id', $ceg_id);
             $stmt->execute();
             return ['success' => true, 'message' => 'Pótkocsi törölve'];
         } catch (Exception $e) {
@@ -157,10 +177,11 @@ class PotkocsiInterface {
         return ['success' => true, 'potkocsik' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
 
-    public function getPotkocsi($id) {
-        $query = "SELECT * FROM potkocsi WHERE id = :id";
+    public function getPotkocsi($id, $ceg_id) {
+        $query = "SELECT * FROM potkocsi WHERE id = :id AND admin = :ceg_id AND torolt <> 'I'";
         $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':id', $id);
+        $stmt->bindValue(':id', $id);
+        $stmt->bindValue(':ceg_id', $ceg_id);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }

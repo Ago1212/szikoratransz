@@ -27,7 +27,7 @@ const CardTable = ({ soforok = [], loading, total, page, pageSize, onPageChange,
   });
 
   const columns = [
-    { key: "name", label: "Név", className: "font-semibold text-brand-900" },
+    { key: "name", label: "Név", className: "font-semibold text-brand-900 dark:text-ink-50" },
     { key: "email", label: "Email" },
     { key: "phone", label: "Telefon" },
     { key: "lakcim", label: "Lakcím" },

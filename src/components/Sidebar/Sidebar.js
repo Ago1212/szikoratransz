@@ -23,6 +23,10 @@ import {
   PiBellLight,
   PiCaretDownLight,
   PiMapTrifoldLight,
+  PiEnvelopeSimpleLight,
+  PiChartBarLight,
+  PiSunLight,
+  PiMoonLight,
 } from "react-icons/pi";
 
 import NotificationDropdown from "components/Dropdowns/NotificationDropdown.js";
@@ -92,6 +96,7 @@ const mobileGroups = [
     icon: PiUsersLight,
     items: [
       { to: "/admin/soforok", icon: PiUsersLight, text: "Sofőrök" },
+      { to: "/admin/sofor-riport", icon: PiChartBarLight, text: "Sofőr-riport" },
       {
         to: "/admin/bejelentesek",
         icon: PiChatCircleTextLight,
@@ -114,6 +119,11 @@ const mobileGroups = [
     items: [
       { to: "/admin/fajlok", icon: PiFilesLight, text: "Fájlok" },
       { to: "/admin/naplo", icon: PiListMagnifyingGlassLight, text: "Napló" },
+      {
+        to: "/admin/ertesitesi-elozmenyek",
+        icon: PiBellLight,
+        text: "Értesítési előzmények",
+      },
       { to: "/admin/esemenyek", icon: PiCalendarBlankLight, text: "Események" },
       {
         to: "/admin/felhasznalok",
@@ -149,13 +159,22 @@ const mobileGroups = [
         text: "Devizák",
         adminOnly: true,
       },
+      // A nyilvános Landing oldal ajánlatkérő/jelentkező űrlapjaiból beérkező
+      // leadek listája (ld. ApiHandler ADMIN_ONLY_ACTIONS) — üzemeltetői
+      // marketing-adat, nem egy adott bérlő-cég flotta-adata, ezért admin-only.
+      {
+        to: "/admin/ajanlatkeresek",
+        icon: PiEnvelopeSimpleLight,
+        text: "Ajánlatkérések",
+        adminOnly: true,
+      },
     ],
   },
 ];
 
 const TIPUS_LABEL = { kamion: "kamiont", potkocsi: "pótkocsit", furgon: "furgont" };
 
-export default function Sidebar() {
+export default function Sidebar({ isDark, onToggleDark }) {
   const [openGroup, setOpenGroup] = React.useState(null);
   const [kerelmek, setKerelmek] = React.useState([]);
   const [searchOpen, setSearchOpen] = React.useState(false);
@@ -389,6 +408,23 @@ export default function Sidebar() {
     ...kerelemNotifications,
   ].filter((n) => !toroltKulcsok.includes(n.id));
 
+  // R12 (fejlesztési audit, 2026-07-19): a raw (törlés-szűrés ELŐTTI)
+  // jelölt-listát naplózzuk — így egy azonnal dismisselt riasztás is
+  // bekerül az előzménybe, nem csak azok, amik ténylegesen látszottak
+  // valakinek. `INSERT IGNORE` a backenden (ld. ertesitesInterface.php)
+  // biztosítja, hogy ugyanaz a kulcs sokszori újraküldése olcsó no-op
+  // legyen, amíg a forrás-sor (kérelem/bejelentés) nyitva marad.
+  React.useEffect(() => {
+    if (!user?.id) return;
+    const raw = [...bejelentesNotifications, ...kerelemNotifications];
+    if (raw.length === 0) return;
+    fetchAction("logErtesitesek", {
+      kerelmezo_id: user.id,
+      tetelek: raw.map((n) => ({ kulcs: n.id, szoveg: n.text })),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nyitottBejelentesek, kerelmek]);
+
   const handleDismiss = (kulcsok) => {
     const lista = Array.isArray(kulcsok) ? kulcsok : [kulcsok];
     setToroltKulcsok((prev) => [...prev, ...lista]);
@@ -415,8 +451,8 @@ export default function Sidebar() {
           aria-current={active ? "page" : undefined}
           className={`group relative flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all duration-300 ease-fluid ${
             active
-              ? "bg-brand-50 text-brand-700"
-              : "text-ink-500 hover:translate-x-0.5 hover:bg-slate-100 hover:text-ink-800"
+              ? "bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300"
+              : "text-ink-500 hover:translate-x-0.5 hover:bg-slate-100 hover:text-ink-800 dark:text-ink-300 dark:hover:bg-ink-800 dark:hover:text-ink-50"
           }`}
           to={to}
         >
@@ -426,8 +462,8 @@ export default function Sidebar() {
           <Icon
             className={`h-[18px] w-[18px] flex-shrink-0 ${
               active
-                ? "text-brand-600"
-                : "text-ink-400 group-hover:text-ink-600"
+                ? "text-brand-600 dark:text-brand-300"
+                : "text-ink-400 group-hover:text-ink-600 dark:text-ink-400 dark:group-hover:text-ink-100"
             }`}
           />
           {text}
@@ -453,40 +489,53 @@ export default function Sidebar() {
       type="button"
       onClick={onToggle}
       aria-expanded={open}
-      className="group mt-1 flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-left transition-colors duration-200 hover:bg-slate-100"
+      className="group mt-1 flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-left transition-colors duration-200 hover:bg-slate-100 dark:hover:bg-ink-800"
     >
-      <span className="text-xs font-bold uppercase tracking-[0.1em] text-ink-500 group-hover:text-ink-800">
+      <span className="text-xs font-bold uppercase tracking-[0.1em] text-ink-500 group-hover:text-ink-800 dark:text-ink-400 dark:group-hover:text-ink-50">
         {label}
       </span>
       <PiCaretDownLight
-        className={`h-3.5 w-3.5 flex-shrink-0 text-ink-400 transition-all duration-200 group-hover:text-brand-600 ${open ? "" : "-rotate-90"}`}
+        className={`h-3.5 w-3.5 flex-shrink-0 text-ink-400 transition-all duration-200 group-hover:text-brand-600 dark:text-ink-500 dark:group-hover:text-brand-400 ${open ? "" : "-rotate-90"}`}
       />
     </button>
   );
 
   return (
     <>
-      <nav className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-ink-100 bg-white md:flex">
+      <nav className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-ink-100 bg-white dark:border-ink-800 dark:bg-ink-900 md:flex">
         {/* Fejléc — logó + név, mindig fixen fent */}
-        <div className="flex flex-shrink-0 items-center justify-between gap-2 border-b border-ink-100 px-5 py-4">
+        <div className="flex flex-shrink-0 items-center justify-between gap-2 border-b border-ink-100 px-5 py-4 dark:border-ink-800">
           <Link to="/admin/dashboard" className="flex items-center gap-2.5">
             <img
               src="/logo2.svg"
               alt="Szikora Transz Kft"
-              className="h-8 w-auto"
+              className="h-8 w-auto dark:brightness-0 dark:invert"
             />
           </Link>
           <div className="flex items-center gap-1">
             <button
               type="button"
+              onClick={onToggleDark}
+              className="relative flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-ink-400 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-700 dark:text-ink-400 dark:hover:bg-ink-800 dark:hover:text-ink-50"
+              title={isDark ? "Világos mód" : "Sötét mód"}
+              aria-label={isDark ? "Világos mód bekapcsolása" : "Sötét mód bekapcsolása"}
+            >
+              {isDark ? (
+                <PiSunLight className="h-[18px] w-[18px]" />
+              ) : (
+                <PiMoonLight className="h-[18px] w-[18px]" />
+              )}
+            </button>
+            <button
+              type="button"
               onClick={() => setNotifOpen(true)}
-              className="relative flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-ink-400 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-700"
+              className="relative flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-ink-400 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-700 dark:text-ink-400 dark:hover:bg-ink-800 dark:hover:text-ink-50"
               title="Értesítések"
               aria-label="Értesítések"
             >
               <PiBellLight className="h-[18px] w-[18px]" />
               {allNotifications.length > 0 && (
-                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-ember-500 ring-2 ring-white" />
+                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-ember-500 ring-2 ring-white dark:ring-ink-900" />
               )}
             </button>
           </div>
@@ -501,7 +550,7 @@ export default function Sidebar() {
             fiók-sorára kattintva
             érhető el, nem önálló menüpontként — ld. lentebb. */}
         <div className="flex-1 overflow-y-auto px-3 pb-4">
-          <div className="sticky top-0 z-10 mb-1 rounded-2xl bg-brand-50/70 p-2 backdrop-blur-sm">
+          <div className="sticky top-0 z-10 mb-1 rounded-2xl bg-brand-50/70 p-2 backdrop-blur-sm dark:bg-brand-950/40">
             <ul className="space-y-0.5">
               <NavItem
                 to="/admin/dashboard"
@@ -571,6 +620,11 @@ export default function Sidebar() {
                   to="/admin/soforok"
                   icon={PiUsersLight}
                   text="Sofőrök"
+                />
+                <NavItem
+                  to="/admin/sofor-riport"
+                  icon={PiChartBarLight}
+                  text="Sofőr-riport"
                 />
                 <NavItem
                   to="/admin/szabadsagok"
@@ -651,6 +705,11 @@ export default function Sidebar() {
                   text="Napló"
                 />
                 <NavItem
+                  to="/admin/ertesitesi-elozmenyek"
+                  icon={PiBellLight}
+                  text="Értesítési előzmények"
+                />
+                <NavItem
                   to="/admin/esemenyek"
                   icon={PiCalendarBlankLight}
                   text="Események"
@@ -664,7 +723,7 @@ export default function Sidebar() {
                   <>
                     <li
                       aria-hidden="true"
-                      className="mx-3.5 my-1.5 border-t border-ink-100"
+                      className="mx-3.5 my-1.5 border-t border-ink-100 dark:border-ink-800"
                     />
                     <NavItem
                       to="/admin/jogosultsagok"
@@ -675,6 +734,11 @@ export default function Sidebar() {
                       to="/admin/listak"
                       icon={PiListBulletsLight}
                       text="Listák"
+                    />
+                    <NavItem
+                      to="/admin/ajanlatkeresek"
+                      icon={PiEnvelopeSimpleLight}
+                      text="Ajánlatkérések"
                     />
                   </>
                 )}
@@ -697,15 +761,15 @@ export default function Sidebar() {
             tényleges, mindig látható mező, a "Ctrl+K" jelvénnyel jelezve a
             gyorsbillentyűt (ld. fent a globális keydown-listener). Ugyanazt
             a `GlobalSearch` overlay-t nyitja, mint korábban a fejléc-gomb. */}
-        <div className="flex-shrink-0 border-t border-ink-100 px-3 py-2.5">
+        <div className="flex-shrink-0 border-t border-ink-100 px-3 py-2.5 dark:border-ink-800">
           <button
             type="button"
             onClick={() => setSearchOpen(true)}
-            className="flex w-full items-center gap-2 rounded-xl border border-ink-100 bg-slate-50 px-3 py-2 text-left text-ink-400 transition-colors duration-200 hover:border-brand-200 hover:bg-white"
+            className="flex w-full items-center gap-2 rounded-xl border border-ink-100 bg-slate-50 px-3 py-2 text-left text-ink-400 transition-colors duration-200 hover:border-brand-200 hover:bg-white dark:border-ink-700 dark:bg-ink-800 dark:hover:border-brand-700 dark:hover:bg-ink-800"
           >
             <PiMagnifyingGlassLight className="h-4 w-4 flex-shrink-0" />
             <span className="flex-1 truncate text-sm">Keresés</span>
-            <span className="flex-shrink-0 rounded-md border border-ink-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-ink-400">
+            <span className="flex-shrink-0 rounded-md border border-ink-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-ink-400 dark:border-ink-600 dark:bg-ink-900 dark:text-ink-400">
               Ctrl+K
             </span>
           </button>
@@ -717,27 +781,27 @@ export default function Sidebar() {
             "Saját adatok" gyűjtő szekcióban, ami vegyítette a személyes
             beállítást a csapat-/admin-eszközökkel; a fogaskerék-ikon jelzi,
             hogy a sor kattintható. */}
-        <div className="flex-shrink-0 border-t border-ink-100 px-4 py-4">
+        <div className="flex-shrink-0 border-t border-ink-100 px-4 py-4 dark:border-ink-800">
           <Link
             to="/admin/settings"
-            className="group -mx-1 mb-3 flex items-center gap-2.5 rounded-xl px-1 py-1.5 transition-colors duration-200 hover:bg-slate-100"
+            className="group -mx-1 mb-3 flex items-center gap-2.5 rounded-xl px-1 py-1.5 transition-colors duration-200 hover:bg-slate-100 dark:hover:bg-ink-800"
           >
             <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold text-white shadow-inner-hairline">
               {initials(user?.name || user?.nev)}
             </span>
             <span className="min-w-0 flex-1 text-left">
-              <span className="block truncate text-sm font-semibold leading-tight text-brand-900">
+              <span className="block truncate text-sm font-semibold leading-tight text-brand-900 dark:text-ink-50">
                 {user?.name || user?.nev || "Fiók"}
               </span>
-              <span className="block truncate text-xs leading-tight text-ink-400">
+              <span className="block truncate text-xs leading-tight text-ink-400 dark:text-ink-500">
                 {szerepkorNev}
               </span>
             </span>
-            <PiGearLight className="h-4 w-4 flex-shrink-0 text-ink-300 transition-colors duration-200 group-hover:text-ink-500" />
+            <PiGearLight className="h-4 w-4 flex-shrink-0 text-ink-300 transition-colors duration-200 group-hover:text-ink-500 dark:text-ink-500 dark:group-hover:text-ink-300" />
           </Link>
           <button
             onClick={handleLogout}
-            className="flex w-full items-center justify-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-red-600 transition-colors duration-200 hover:bg-red-50"
+            className="flex w-full items-center justify-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-red-600 transition-colors duration-200 hover:bg-red-50 dark:hover:bg-red-950/40"
           >
             <PiSignOutLight className="h-4 w-4" />
             Kijelentkezés
@@ -764,7 +828,7 @@ export default function Sidebar() {
             görgetés nélkül is kiadja, az overflow-y-auto pedig biztonsági
             háló, ha egy jövőbeli bővítés miatt mégis rövidebb lenne. */}
         <div
-          className={`overflow-y-auto rounded-t-2xl border-t border-ink-100 bg-white shadow-soft-lg transition-all duration-300 ease-fluid ${
+          className={`overflow-y-auto rounded-t-2xl border-t border-ink-100 bg-white shadow-soft-lg transition-all duration-300 ease-fluid dark:border-ink-800 dark:bg-ink-900 ${
             openGroup ? "max-h-96" : "max-h-0"
           }`}
         >
@@ -787,7 +851,7 @@ export default function Sidebar() {
                       return (
                         <li
                           key={`divider-${item.label}`}
-                          className={`px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-400 ${
+                          className={`px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500 ${
                             i === 0 ? "pt-1" : "pt-3"
                           }`}
                         >
@@ -803,8 +867,8 @@ export default function Sidebar() {
                           aria-current={active ? "page" : undefined}
                           className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[15px] font-medium ${
                             active
-                              ? "bg-brand-50 text-brand-700"
-                              : "text-ink-600 hover:bg-slate-100"
+                              ? "bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300"
+                              : "text-ink-600 hover:bg-slate-100 dark:text-ink-300 dark:hover:bg-ink-800"
                           }`}
                           onClick={() => setOpenGroup(null)}
                         >
@@ -840,7 +904,7 @@ export default function Sidebar() {
             A Kijelentkezés a Profil oldal saját tartalmi eleme lett (ld.
             Settings.js) — a napi navigációtól elválasztva, mint a legtöbb
             mobil appban. */}
-        <nav className="flex items-stretch gap-1 border-t border-ink-100 bg-white px-1.5 pt-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))]">
+        <nav className="flex items-stretch gap-1 border-t border-ink-100 bg-white px-1.5 pt-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))] dark:border-ink-800 dark:bg-ink-900">
           {mobileDirectLinks.map((item) => {
             const active = isActive(item.to);
             return (
@@ -849,7 +913,7 @@ export default function Sidebar() {
                 to={item.to}
                 aria-current={active ? "page" : undefined}
                 className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[11px] font-medium leading-none transition-colors duration-150 ${
-                  active ? "bg-brand-50 text-brand-600" : "text-ink-400"
+                  active ? "bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300" : "text-ink-400 dark:text-ink-500"
                 }`}
                 onClick={() => setOpenGroup(null)}
               >
@@ -871,7 +935,7 @@ export default function Sidebar() {
                 aria-expanded={openGroup === group.key}
                 aria-controls={`mobile-group-panel-${group.key}`}
                 className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[11px] font-medium leading-none transition-colors duration-150 ${
-                  active ? "bg-brand-50 text-brand-600" : "text-ink-400"
+                  active ? "bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300" : "text-ink-400 dark:text-ink-500"
                 }`}
                 onClick={() =>
                   setOpenGroup(openGroup === group.key ? null : group.key)
@@ -880,7 +944,7 @@ export default function Sidebar() {
                 <span className="relative flex h-6 w-6 flex-shrink-0 items-center justify-center">
                   <group.icon className="h-6 w-6" />
                   {showBadge && (
-                    <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
+                    <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-ink-900" />
                   )}
                 </span>
                 <span className="w-full truncate text-center">
@@ -892,14 +956,14 @@ export default function Sidebar() {
           <button
             type="button"
             className={`relative flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[11px] font-medium leading-none transition-colors duration-150 ${
-              notifOpen ? "bg-brand-50 text-brand-600" : "text-ink-400"
+              notifOpen ? "bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300" : "text-ink-400 dark:text-ink-500"
             }`}
             onClick={() => setNotifOpen(true)}
           >
             <span className="relative flex h-6 w-6 flex-shrink-0 items-center justify-center">
               <PiBellLight className="h-6 w-6" />
               {allNotifications.length > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-ember-500 ring-2 ring-white" />
+                <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-ember-500 ring-2 ring-white dark:ring-ink-900" />
               )}
             </span>
             <span className="w-full truncate text-center">Értesítések</span>

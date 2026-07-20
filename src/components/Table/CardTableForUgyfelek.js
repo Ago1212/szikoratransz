@@ -27,7 +27,7 @@ const CardTable = ({ ugyfelek = [], loading, total, page, pageSize, onPageChange
   });
 
   const columns = [
-    { key: "nev", label: "Név", className: "font-semibold text-brand-900" },
+    { key: "nev", label: "Név", className: "font-semibold text-brand-900 dark:text-ink-50" },
     { key: "varos", label: "Város" },
     { key: "kapcsolattarto_nev", label: "Kapcsolattartó" },
     { key: "kapcsolattarto_telefon", label: "Telefon" },

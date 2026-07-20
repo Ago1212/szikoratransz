@@ -16,6 +16,17 @@
 // igazítva):
 //   0 7 * * *  /usr/bin/php8.2 /var/www/szikoratransz/backend/cron/lejarat_emlekezteto.php >> /var/www/szikoratransz/backend/cron/lejarat_emlekezteto.log 2>&1
 
+// A fájl a `backend/` alatt, a webroot-on belül él — .htaccess-kizárás
+// nélkül bárki, hitelesítés (authHash/session) nélkül közvetlenül
+// lehívhatná HTTP-n (pl. `GET /cron/lejarat_emlekezteto.php`), ami
+// tetszőleges gyakoriságú email-küldést tenne lehetővé minden aktív
+// adminnak (ld. biztonsági audit). Ez a guard biztosítja, hogy a script
+// tényleg csak CLI-ből (a crontab bejegyzésből) fusson le.
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit('Ez a script kizárólag parancssorból futtatható.');
+}
+
 require __DIR__ . '/../db.php';
 require __DIR__ . '/../interface/emailInterface.php';
 
@@ -59,7 +70,10 @@ function collectExpiringItems(PDO $db, $adminId, $windowDays) {
         }
     }
 
-    // Jármű lejáratok (kamion + potkocsi ugyanazokkal az oszlopokkal)
+    // Jármű lejáratok (kamion + potkocsi + furgon ugyanazokkal az oszlopokkal
+    // — a furgon önhajtó jármű, mint a kamion, korábban hiányzott innen,
+    // ld. biztonsági/logikai audit: egy furgon lejáró okmányai csendben
+    // láthatatlanok maradtak ebben az emlékeztetőben is.)
     $jarmuLabels = [
         'muszaki_lejarat' => 'műszaki vizsga lejárat',
         'porolto_lejarat' => 'poroltó lejárat (1)',
@@ -70,7 +84,7 @@ function collectExpiringItems(PDO $db, $adminId, $windowDays) {
         'kot_biztositas' => 'kötélzet-biztosítás lejárat',
         'kaszko_biztositas' => 'kaszkóbiztosítás lejárat',
     ];
-    foreach (['kamion', 'potkocsi'] as $tabla) {
+    foreach (['kamion', 'potkocsi', 'furgon'] as $tabla) {
         $cols = implode(', ', array_keys($jarmuLabels));
         $stmt = $db->prepare("SELECT rendszam, $cols FROM $tabla WHERE admin = :id AND torolt <> 'I'");
         $stmt->bindParam(':id', $adminId);
@@ -95,7 +109,7 @@ function collectExpiringItems(PDO $db, $adminId, $windowDays) {
     }
 
     // Tervezett (jövőbeli) karbantartások
-    foreach (['kamion_karbantartars' => 'kamion', 'potkocsi_karbantartars' => 'potkocsi'] as $tabla => $jarmuTabla) {
+    foreach (['kamion_karbantartars' => 'kamion', 'potkocsi_karbantartars' => 'potkocsi', 'furgon_karbantartars' => 'furgon'] as $tabla => $jarmuTabla) {
         $stmt = $db->prepare("SELECT log, datum FROM $tabla WHERE admin = :id AND torolt <> 'I'");
         $stmt->bindParam(':id', $adminId);
         $stmt->execute();
@@ -111,8 +125,23 @@ function collectExpiringItems(PDO $db, $adminId, $windowDays) {
 
 $emailInterface = new EmailInterface();
 
+// De-duplikáció: `lejarat_emlekezteto_log` (admin_id+datum összetett kulcs,
+// ld. sql/29.sql) biztosítja, hogy egy adott admin egy adott naptári napra
+// csak egyszer kapjon emlékeztetőt, akkor is, ha a script duplán regisztrált
+// cronból, manuális újrafuttatásból vagy DST-váltás miatti dupla lefutásból
+// adódóan többször is lefut ugyanaznap (ld. biztonsági/megbízhatósági audit).
+$ma = date('Y-m-d');
+$logStmt = $db->prepare("SELECT 1 FROM lejarat_emlekezteto_log WHERE admin_id = :admin_id AND datum = :datum");
+$logInsertStmt = $db->prepare("INSERT INTO lejarat_emlekezteto_log (admin_id, datum) VALUES (:admin_id, :datum)");
+
 $adminStmt = $db->query("SELECT id, email, name FROM admin WHERE torolt <> 'I'");
 foreach ($adminStmt->fetchAll(PDO::FETCH_ASSOC) as $admin) {
+    $logStmt->execute([':admin_id' => $admin['id'], ':datum' => $ma]);
+    if ($logStmt->fetch()) {
+        echo date('c') . ' — ' . $admin['email'] . ': ma már küldtünk emlékeztetőt, kihagyva.' . PHP_EOL;
+        continue;
+    }
+
     $items = collectExpiringItems($db, $admin['id'], $WARNING_WINDOW_DAYS);
     if (empty($items)) {
         continue;
@@ -120,4 +149,7 @@ foreach ($adminStmt->fetchAll(PDO::FETCH_ASSOC) as $admin) {
 
     $result = $emailInterface->sendLejaratEmlekezteto($admin['email'], $admin['name'], $items, $WARNING_WINDOW_DAYS);
     echo date('c') . ' — ' . $admin['email'] . ': ' . count($items) . ' tétel, küldés ' . ($result['success'] ? 'sikeres' : 'sikertelen') . PHP_EOL;
+    if ($result['success']) {
+        $logInsertStmt->execute([':admin_id' => $admin['id'], ':datum' => $ma]);
+    }
 }

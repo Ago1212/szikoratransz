@@ -10,7 +10,7 @@ export default function EgyediArajanlat() {
       accent="#059669"
       path="/egyedi-arajanlat-fuvarozas"
       metaTitle="Egyedi árajánlat fuvarozásra | Szikora Transz Kft."
-      metaDescription="Nincs két egyforma fuvar — minden szállítást egyedileg árazunk az útvonal, az áru jellege és a határidő alapján. Kérjen ingyenes, kötöttség nélküli árajánlatot."
+      metaDescription="Nincs két egyforma fuvar — minden szállítást egyedileg árazunk az útvonal, az áru jellege és a határidő alapján. Kérjen ingyenes árajánlatot még ma."
       eyebrow="Egyedi árajánlat"
       h1="Egyedi árajánlat — bármilyen árut szállítunk"
       intro="Nem szakosodtunk egyetlen iparágra sem: bármilyen árut szállítunk, az Ön igényei szerint. Mivel nincs két egyforma fuvar, nincs fix díjszabásunk sem — minden megrendelést egyedileg, tételesen árazunk."
@@ -35,8 +35,12 @@ export default function EgyediArajanlat() {
       faqItems={pickFaq(
         "Mitől függ egy fuvar ára?",
         "Kérhetek egyedi árajánlatot speciális igényekhez?",
-        "Milyen fizetési feltételeket fogadnak el?",
+        {
+          q: "Milyen fizetési feltételeket fogadnak el?",
+          a: "Mivel minden megrendelést egyedileg árazunk, a fizetési határidőt és módot (átutalás vagy számlás fizetés) is a konkrét fuvarhoz igazítva állapítjuk meg.",
+        },
       )}
+      testimonialNames={["Kovács Gábor", "Molnár Eszter", "Szabó Katalin"]}
     />
   );
 }

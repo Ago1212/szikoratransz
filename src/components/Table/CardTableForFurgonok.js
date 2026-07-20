@@ -28,7 +28,7 @@ const CardTable = ({ furgonok = [], loading, total, page, pageSize, onPageChange
   });
 
   const columns = [
-    { key: "rendszam", label: "Rendszám", className: "font-semibold text-brand-900" },
+    { key: "rendszam", label: "Rendszám", className: "font-semibold text-brand-900 dark:text-ink-50" },
     { key: "tipus", label: "Típus", render: (row) => row.tipus || "Nincs" },
     { key: "meret", label: "Méret", render: (row) => row.meret || "Nincs" },
     {

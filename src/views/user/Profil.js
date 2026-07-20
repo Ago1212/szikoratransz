@@ -18,6 +18,7 @@ import FormField, { FormSection } from "components/UI/FormField.js";
 import StatusBadge from "components/UI/StatusBadge.js";
 import SaveButton from "components/UI/SaveButton.js";
 import Spinner from "components/UI/Spinner.js";
+import WebAuthnRegisztracio from "components/UI/WebAuthnRegisztracio.js";
 import {
   DOCUMENT_FIELDS,
   getDocumentStatus,
@@ -309,6 +310,8 @@ export default function Profil() {
           className="w-full justify-center py-3.5"
         />
       </form>
+
+      <WebAuthnRegisztracio />
 
       <button
         type="button"

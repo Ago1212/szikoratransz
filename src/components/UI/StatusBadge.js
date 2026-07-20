@@ -9,11 +9,11 @@ import React from "react";
 // tényleges Tailwind-osztályokká alakul — a hívó oldal csak azt dönti
 // el, melyik tónus tartozik melyik állapothoz, a megjelenítést nem.
 const TONE_CLASSES = {
-  success: "bg-emerald-50 text-emerald-700",
-  warning: "bg-amber-50 text-amber-700",
-  danger: "bg-red-50 text-red-600",
-  info: "bg-brand-50 text-brand-700",
-  neutral: "bg-ink-100 text-ink-500",
+  success: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300",
+  warning: "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300",
+  danger: "bg-red-50 text-red-600 dark:bg-red-950/50 dark:text-red-300",
+  info: "bg-brand-50 text-brand-700 dark:bg-brand-950/50 dark:text-brand-300",
+  neutral: "bg-ink-100 text-ink-500 dark:bg-ink-800 dark:text-ink-300",
 };
 
 export default function StatusBadge({ tone = "neutral", children }) {

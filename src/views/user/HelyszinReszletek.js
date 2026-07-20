@@ -208,7 +208,12 @@ export default function HelyszinReszletek() {
                 >
                   {kind === "image" ? (
                     thumbs[f.sorszam] ? (
-                      <img src={thumbs[f.sorszam]} alt={f.filename} className="h-full w-full object-cover" />
+                      <img
+                        src={thumbs[f.sorszam]}
+                        alt={f.filename}
+                        loading="lazy"
+                        className="h-full w-full object-cover"
+                      />
                     ) : (
                       <Spinner wrapperClassName="flex" />
                     )

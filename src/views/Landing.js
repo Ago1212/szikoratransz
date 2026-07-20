@@ -379,7 +379,7 @@ export default function Landing() {
         {/* ---------------------------------------------------------- */}
         <section
           id="home"
-          className="relative pt-32 pb-24 lg:pt-40 lg:pb-32 flex items-center min-h-screen overflow-hidden bg-[#F2F3F5]"
+          className="relative pt-16 pb-12 lg:pt-40 lg:pb-32 flex items-center lg:min-h-screen overflow-hidden bg-[#F2F3F5]"
         >
           <div className="absolute inset-0 overflow-hidden bg-[#F2F3F5]">
             <style>{`
@@ -412,7 +412,7 @@ export default function Landing() {
           </div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
-            <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-16 items-start">
+            <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-8 lg:gap-16 items-start">
               {/* Bal oszlop — fő üzenet */}
               <div className="relative">
                 <Reveal delay={0}>
@@ -422,7 +422,7 @@ export default function Landing() {
                   </span>
                 </Reveal>
 
-                <h1 className="font-[Overpass] font-extrabold text-5xl md:text-7xl leading-[1.05] text-[#23262B] tracking-tight">
+                <h1 className="font-[Overpass] font-extrabold text-4xl md:text-7xl leading-[1.05] text-[#23262B] tracking-tight">
                   {/* Szóköz minden sor-span között: a `.hero-line-mask` maga
                       display:block-kel vizuálisan úgyis külön sorra töri
                       ezeket, de szóköz nélkül a nyers DOM-szöveg (amit pl.
@@ -456,8 +456,9 @@ export default function Landing() {
 
                 <Reveal delay={520}>
                   <p className="text-lg text-[#23262B]/70 max-w-xl text-balance">
-                    Szikora Transz Kft — belföldi és nemzetközi fuvarozás 2010
-                    óta, modern flottával és teljes körű biztosítással.
+                    Szikora Transz Kft — profi áruszállítás és logisztika 2010
+                    óta: belföldi és nemzetközi fuvarozás, modern flotta,
+                    teljes körű biztosítás.
                   </p>
                 </Reveal>
 
@@ -479,7 +480,7 @@ export default function Landing() {
               {/* Jobb oszlop — ajánlatkérés a középpontban (signature elem) */}
               <Reveal
                 delay={150}
-                className="relative bg-[#2E3239]/90 backdrop-blur-md border border-white/10 rounded-xl p-8 md:p-10 shadow-2xl overflow-hidden"
+                className="relative bg-[#2E3239]/90 backdrop-blur-md border border-white/10 rounded-xl p-6 md:p-10 shadow-2xl overflow-hidden"
               >
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1E3AA8] to-[#172E86]"></div>
 
@@ -489,12 +490,12 @@ export default function Landing() {
                 <h2 className="font-[Overpass] font-extrabold text-2xl md:text-3xl text-white mt-3 mb-3">
                   Kérjen árajánlatot még ma
                 </h2>
-                <p className="text-white/60 mb-6">
+                <p className="text-white/60 mb-4 md:mb-6">
                   Töltse ki pár adatát, és 24 órán belül egyedi árajánlattal
                   válaszolunk — kötöttség nélkül.
                 </p>
 
-                <div className="space-y-3 mb-8">
+                <div className="space-y-2 mb-5 md:space-y-3 md:mb-8">
                   {[
                     "Teljesen ingyenes, nem kötelez semmire",
                     "Válasz 24 órán belül",
@@ -558,9 +559,9 @@ export default function Landing() {
                   <div className="relative z-10 w-14 h-14 rounded-full bg-[#1E3AA8] text-white flex items-center justify-center font-[Overpass_Mono] font-bold border-4 border-[#F2F3F5] mb-5">
                     {step.n}
                   </div>
-                  <h3 className="font-[Overpass] font-bold text-lg text-[#23262B] mb-2">
+                  <p className="font-[Overpass] font-bold text-lg text-[#23262B] mb-2">
                     {step.title}
-                  </h3>
+                  </p>
                   <p className="text-[#23262B]/70 text-sm leading-relaxed">
                     {step.desc}
                   </p>
@@ -590,22 +591,31 @@ export default function Landing() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {FEATURES.map((feature, index) => {
-                // Csak azoknak a kártyáknak van `href`-je, amelyeknek van
-                // dedikált long-tail oldala (ld. data/landingContent.js) —
-                // azok kattinthatók, a többi egyszerű, nem kattintható kártya.
-                const CardTag = feature.href ? Link : "div";
-                const cardProps = feature.href ? { to: feature.href } : {};
                 return (
                   <Reveal key={feature.title} delay={index * 80}>
-                    <CardTag
-                      {...cardProps}
-                      className="group block bg-white border border-[#23262B]/10 rounded-xl p-8 h-full transition-all duration-300 hover:border-[#1E3AA8]/50 hover:shadow-xl hover:-translate-y-1"
-                    >
+                    {/* A kártya maga NEM link — csak a cím (h3) az, egy
+                        `after:absolute after:inset-0` "stretched link"
+                        trükkel kiterjesztve a teljes kártyára (a `relative`
+                        a kártyán maga adja a pozicionálási kontextust). Ez
+                        SEO-szempontból lényeges: korábban a teljes kártya
+                        (cím+leírás+"Részletek") egyetlen linkként a teljes
+                        bekezdést anchor textként adta ki (150-210 karakter),
+                        amit egy SEO-audit "túl hosszú belső link-anchor
+                        szöveg"-ként jelzett — most az anchor szövege csak a
+                        rövid, egyedi cím, a teljes kártya kattinthatósága
+                        (UX) viszont megmarad. */}
+                    <div className="group relative bg-white border border-[#23262B]/10 rounded-xl p-8 h-full transition-all duration-300 hover:border-[#1E3AA8]/50 hover:shadow-xl hover:-translate-y-1">
                       <div className="w-12 h-12 bg-[#1E3AA8]/10 text-[#1E3AA8] rounded-xl flex items-center justify-center mb-6">
                         <feature.icon className="text-lg" />
                       </div>
                       <h3 className="font-[Overpass] font-bold text-xl text-[#23262B] mb-2">
-                        {feature.title}
+                        {feature.href ? (
+                          <Link to={feature.href} className="after:content-[''] after:absolute after:inset-0">
+                            {feature.title}
+                          </Link>
+                        ) : (
+                          feature.title
+                        )}
                       </h3>
                       <p className="text-[#23262B]/70 leading-relaxed">
                         {feature.desc}
@@ -616,7 +626,7 @@ export default function Landing() {
                           <PiArrowRightLight className="text-xs" />
                         </span>
                       )}
-                    </CardTag>
+                    </div>
                   </Reveal>
                 );
               })}
@@ -658,9 +668,9 @@ export default function Landing() {
                     <Reveal key={item.title} delay={index * 80}>
                       <div className="flex items-start gap-4 border-l-2 border-dashed border-[#1E3AA8]/40 pl-5 py-1">
                         <div>
-                          <h4 className="font-[Overpass] font-bold text-[#23262B]">
+                          <p className="font-[Overpass] font-bold text-[#23262B]">
                             {item.title}
-                          </h4>
+                          </p>
                           <p className="text-[#23262B]/70 text-sm mt-1">
                             {item.desc}
                           </p>
@@ -675,16 +685,16 @@ export default function Landing() {
                   <source srcSet="/kamionflotta-szikora-transz.webp" type="image/webp" />
                   <img
                     src="/kamionflotta-szikora-transz.jpg"
-                    alt="Szikora Transz kamion"
+                    alt="Szikora Transz Kft. modern kamionflottája fuvarozás közben"
                     loading="lazy"
                     className="w-full h-full object-cover"
                   />
                 </picture>
                 <div className="absolute inset-0 bg-gradient-to-t from-[#23262B] via-transparent to-transparent"></div>
                 <div className="absolute bottom-0 left-0 p-6">
-                  <h4 className="font-[Overpass] font-bold text-xl text-white mb-1">
+                  <p className="font-[Overpass] font-bold text-xl text-white mb-1">
                     Modern flotta
-                  </h4>
+                  </p>
                   <p className="text-white/70 text-sm">
                     Több modern, karbantartott kamionból álló flottánk és
                     tapasztalt sofőreink garantálják a megbízható szállítást.
@@ -742,7 +752,7 @@ export default function Landing() {
                     </div>
                     <div>
                       <h3 className="font-[Overpass] font-semibold text-[#23262B]">
-                        Modern flotta
+                        Karbantartott flotta
                       </h3>
                       <p className="text-[#23262B]/70 text-sm">
                         Több modern kamionból álló, állandóan karbantartott

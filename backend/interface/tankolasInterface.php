@@ -8,7 +8,12 @@ class TankolasInterface {
         $this->db = $database->connect();
     }
 
-    public function newTankolas($data) {
+    // `$ceg_id`/`$sofor_id`-t a hívó (ApiHandler) mindig szerver-oldalon
+    // feloldva adja át (resolveSajatCegId()/resolveSajatSoforId()) — sosem
+    // a kliens `admin`/`sofor_id` mezőjét, enélkül bármely sofőr tetszőleges
+    // másik sofőr/cég nevében hozhatott létre hamis tankolási bejegyzést
+    // (ld. biztonsági audit).
+    public function newTankolas($data, $ceg_id, $sofor_id) {
         try {
             $liter = (float) ($data['liter'] ?? 0);
             $egysegar = isset($data['egysegar']) && $data['egysegar'] !== '' ? (float) $data['egysegar'] : null;
@@ -19,8 +24,8 @@ class TankolasInterface {
             $query = "INSERT INTO tankolasok (admin, sofor_id, kamion_id, furgon_id, datum, liter, egysegar, osszeg, km_oraallas, helyszin)
                       VALUES (:admin, :sofor_id, :kamion_id, :furgon_id, :datum, :liter, :egysegar, :osszeg, :km_oraallas, :helyszin)";
             $stmt = $this->db->prepare($query);
-            $stmt->bindValue(':admin', $data['admin']);
-            $stmt->bindValue(':sofor_id', $data['sofor_id']);
+            $stmt->bindValue(':admin', $ceg_id);
+            $stmt->bindValue(':sofor_id', $sofor_id);
             $stmt->bindValue(':kamion_id', empty($data['kamion_id']) ? null : $data['kamion_id']);
             $stmt->bindValue(':furgon_id', empty($data['furgon_id']) ? null : $data['furgon_id']);
             $stmt->bindValue(':datum', empty($data['datum']) ? date('Y-m-d H:i:s') : $data['datum']);

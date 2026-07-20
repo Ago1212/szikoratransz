@@ -56,8 +56,8 @@ class BejelentesekInterface {
                 $bejelentesek = $stmt->fetchAll(PDO::FETCH_ASSOC);
             }
 
-            $soforNevek = $this->getSoforNevek();
-            $kamionRendszamok = $this->getKamionRendszamok();
+            $soforNevek = $this->getSoforNevek($ceg_id);
+            $kamionRendszamok = $this->getKamionRendszamok($ceg_id);
             foreach ($bejelentesek as &$b) {
                 $b['sofor_nev'] = $soforNevek[$b['sofor_id']] ?? null;
                 $b['kamion_rendszam'] = $kamionRendszamok[$b['kamion_id']] ?? null;
@@ -88,10 +88,8 @@ class BejelentesekInterface {
             $stmt->execute();
             $bejelentesek = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            $soforNevek = $this->getSoforNevek();
-            $kamionRendszamok = $this->getKamionRendszamok();
+            $kamionRendszamok = $this->getKamionRendszamok($ceg_id);
             foreach ($bejelentesek as &$b) {
-                $b['sofor_nev'] = $soforNevek[$b['sofor_id']] ?? null;
                 $b['kamion_rendszam'] = $kamionRendszamok[$b['kamion_id']] ?? null;
             }
 
@@ -101,8 +99,12 @@ class BejelentesekInterface {
         }
     }
 
-    // Sofőr oldali nézet — saját bejelentései, státusszal.
-    public function getBejelentesekSofor($sofor_id) {
+    // Sofőr oldali nézet — saját bejelentései, státusszal. `$sofor_id`-t és
+    // `$ceg_id`-t a hívó (ApiHandler) mindig szerver-oldalon feloldva adja
+    // át (resolveSajatSoforId()/resolveSajatCegId()) — enélkül bármely
+    // sofőr bármely másik sofőr bejelentéseit lekérhette volna puszta
+    // id-tallózással.
+    public function getBejelentesekSofor($sofor_id, $ceg_id) {
         try {
             $query = "SELECT * FROM bejelentesek WHERE sofor_id = :sofor_id AND torolt <> 'I' ORDER BY bejelentve DESC";
             $stmt = $this->db->prepare($query);
@@ -110,7 +112,7 @@ class BejelentesekInterface {
             $stmt->execute();
             $bejelentesek = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            $kamionRendszamok = $this->getKamionRendszamok();
+            $kamionRendszamok = $this->getKamionRendszamok($ceg_id);
             foreach ($bejelentesek as &$b) {
                 $b['kamion_rendszam'] = $kamionRendszamok[$b['kamion_id']] ?? null;
             }
@@ -121,8 +123,14 @@ class BejelentesekInterface {
         }
     }
 
-    private function getSoforNevek() {
-        $stmt = $this->db->query("SELECT id, name FROM user WHERE torolt <> 'I'");
+    // `$ceg_id`-vel scope-olva — korábban minden cég összes sofőrjét/
+    // kamionját betöltötte, ami önmagában nem szivárogtatott adatot (csak
+    // a már ceg_id-vel szűrt bejelentés-sorok saját kulcsaival indexelnek
+    // bele), de higiéniailag helytelen és fölösleges terhelés volt.
+    private function getSoforNevek($ceg_id) {
+        $stmt = $this->db->prepare("SELECT id, name FROM user WHERE admin = :ceg_id AND torolt <> 'I'");
+        $stmt->bindValue(':ceg_id', $ceg_id);
+        $stmt->execute();
         $map = [];
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
             $map[$row['id']] = $row['name'];
@@ -130,8 +138,10 @@ class BejelentesekInterface {
         return $map;
     }
 
-    private function getKamionRendszamok() {
-        $stmt = $this->db->query("SELECT id, rendszam FROM kamion WHERE torolt <> 'I'");
+    private function getKamionRendszamok($ceg_id) {
+        $stmt = $this->db->prepare("SELECT id, rendszam FROM kamion WHERE admin = :ceg_id AND torolt <> 'I'");
+        $stmt->bindValue(':ceg_id', $ceg_id);
+        $stmt->execute();
         $map = [];
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
             $map[$row['id']] = $row['rendszam'];
@@ -139,44 +149,19 @@ class BejelentesekInterface {
         return $map;
     }
 
-    // Az admin (tulajdonos cég) azonosítót szándékosan NEM a kliens által
-    // küldött `admin` mezőből vesszük elsődlegesen, hanem szerveroldalon
-    // vezetjük le a sofőr saját `user.admin` FK-jából. A sofőr saját
-    // munkamenetében ugyanis a `user.admin` érték a bejelentkezéskor
-    // futó `SELECT *, false as admin FROM user` lekérdezés miatt mindig
-    // 0-ra (false) íródik felül — a `*` és a `false as admin` azonos nevű
-    // oszlopot ad vissza, és PDO a duplikált kulcsnál az utolsót tartja
-    // meg —, tehát a frontend sosem tudja megbízhatóan elküldeni a valós
-    // tulajdonos-admin id-t sofőrként bejelentkezve. Adminként létrehozott
-    // bejelentésnél ($data['admin'] explicit meg van adva) ez a kliens
-    // által küldött érték marad az elsődleges forrás.
-    private function resolveAdmin($data) {
-        if (!empty($data['admin'])) {
-            return $data['admin'];
-        }
-        if (!empty($data['sofor_id'])) {
-            $stmt = $this->db->prepare("SELECT admin FROM user WHERE id = :id");
-            $stmt->bindValue(':id', $data['sofor_id']);
-            $stmt->execute();
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($row) {
-                return $row['admin'];
-            }
-        }
-        return null;
-    }
-
-    public function newBejelentes($data) {
+    // `$ceg_id`-t a hívó (ApiHandler) mindig szerver-oldalon feloldva adja
+    // át — admin-munkamenetből `resolveKerelmezo()['ceg_id']`, sofőr-
+    // munkamenetből `resolveSajatCegId()` (a `sofor_id` mezőt is a
+    // sofőr saját, szerver-oldalon feloldott id-jére kényszerítve). Korábban
+    // ez a metódus a kliens által küldött `$data['admin']` mezőt fogadta el
+    // elsődleges forrásként — ez lehetővé tette, hogy bárki tetszőleges
+    // másik cég nevében hozzon létre bejelentést (ld. biztonsági audit).
+    public function newBejelentes($data, $ceg_id) {
         try {
-            $admin = $this->resolveAdmin($data);
-            if (empty($admin)) {
-                return ['success' => false, 'message' => 'A tulajdonos admin nem határozható meg (hiányzó admin/sofor_id).'];
-            }
-
             $query = "INSERT INTO bejelentesek (admin, kamion_id, sofor_id, tipus, lat, lng, cim, leiras, prioritas)
                       VALUES (:admin, :kamion_id, :sofor_id, :tipus, :lat, :lng, :cim, :leiras, :prioritas)";
             $stmt = $this->db->prepare($query);
-            $stmt->bindValue(':admin', $admin);
+            $stmt->bindValue(':admin', $ceg_id);
             $stmt->bindValue(':kamion_id', empty($data['kamion_id']) ? null : $data['kamion_id']);
             $stmt->bindValue(':sofor_id', empty($data['sofor_id']) ? null : $data['sofor_id']);
             $stmt->bindValue(':tipus', empty($data['tipus']) ? 'egyeb' : $data['tipus']);
@@ -193,22 +178,42 @@ class BejelentesekInterface {
         }
     }
 
-    public function saveBejelentesData($data) {
+    // `$ceg_id`-t a hívó szerver-oldalon feloldva adja át — enélkül bármely
+    // cég módosíthatta volna bármely másik cég bejelentését puszta
+    // id-tallózással (IDOR, ld. biztonsági audit).
+    //
+    // R02 (fejlesztési audit, 2026-07-19): `admin_valasz` korábban
+    // feltétel nélkül `:admin_valasz`-ra íródott — mivel a CardBejelentesek.js
+    // admin-felület form-állapota sosem tartalmazta ezt a mezőt (nem volt
+    // hozzá beviteli mező), minden mentés (akár csak egy státuszváltás is)
+    // csendben NULL-ra írta felül a korábban már rögzített admin-választ —
+    // élő adatvesztés, élő DB-n megerősítve (2 sornak volt tényleges
+    // admin_valasz értéke, amit egy újramentés némán törölt volna). A
+    // `lezarva`-nál már bevált COALESCE-mintát követve: ha a hívó ténylegesen
+    // NEM küld admin_valasz-t (NULL), a meglévő érték megmarad; ha explicit
+    // üres string érkezik (a mostantól létező admin-felületi mező törlésre
+    // szánt beküldése), az ténylegesen törli — ez a különbség számít.
+    public function saveBejelentesData($data, $ceg_id) {
         try {
             $lezarva = $data['statusz'] === 'lezart' ? date('Y-m-d H:i:s') : null;
             $query = "UPDATE bejelentesek SET
                       cim = :cim, leiras = :leiras, prioritas = :prioritas, statusz = :statusz,
-                      admin_valasz = :admin_valasz, lezarva = COALESCE(:lezarva, lezarva)
-                      WHERE id = :id";
+                      admin_valasz = COALESCE(:admin_valasz, admin_valasz), lezarva = COALESCE(:lezarva, lezarva)
+                      WHERE id = :id AND admin = :ceg_id";
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(':cim', $data['cim'] ?? '');
             $stmt->bindValue(':leiras', $data['leiras'] ?? '');
             $stmt->bindValue(':prioritas', empty($data['prioritas']) ? 'kozepes' : $data['prioritas']);
             $stmt->bindValue(':statusz', empty($data['statusz']) ? 'uj' : $data['statusz']);
-            $stmt->bindValue(':admin_valasz', $data['admin_valasz'] ?? null);
+            $stmt->bindValue(':admin_valasz', array_key_exists('admin_valasz', $data) ? $data['admin_valasz'] : null);
             $stmt->bindValue(':lezarva', $lezarva);
             $stmt->bindValue(':id', $data['id'], PDO::PARAM_INT);
+            $stmt->bindValue(':ceg_id', $ceg_id);
             $stmt->execute();
+
+            if ($stmt->rowCount() === 0) {
+                return ['success' => false, 'message' => 'A bejelentés nem található, vagy nem a te céged tulajdona.'];
+            }
 
             return ['success' => true, 'message' => 'Bejelentés frissítve.'];
         } catch (Exception $e) {
@@ -225,11 +230,12 @@ class BejelentesekInterface {
     // de a jármű törzsadatából már ismert. Pótkocsihoz kötött
     // karbantartást szándékosan nem generál — a bejelentesek tábla ma
     // csak kamion_id-t tárol, potkocsi_id-t nem.
-    public function generateKarbantartasFromBejelentes($id) {
+    public function generateKarbantartasFromBejelentes($id, $ceg_id) {
         try {
-            $query = "SELECT * FROM bejelentesek WHERE id = :id AND torolt <> 'I'";
+            $query = "SELECT * FROM bejelentesek WHERE id = :id AND admin = :ceg_id AND torolt <> 'I'";
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(':id', $id);
+            $stmt->bindValue(':ceg_id', $ceg_id);
             $stmt->execute();
             $bejelentes = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -275,12 +281,17 @@ class BejelentesekInterface {
         }
     }
 
-    public function deleteBejelentes($id) {
+    public function deleteBejelentes($id, $ceg_id) {
         try {
-            $query = "UPDATE bejelentesek SET torolt = 'I' WHERE id = :id";
+            $query = "UPDATE bejelentesek SET torolt = 'I' WHERE id = :id AND admin = :ceg_id";
             $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':id', $id);
+            $stmt->bindValue(':id', $id);
+            $stmt->bindValue(':ceg_id', $ceg_id);
             $stmt->execute();
+
+            if ($stmt->rowCount() === 0) {
+                return ['success' => false, 'message' => 'A bejelentés nem található, vagy nem a te céged tulajdona.'];
+            }
 
             return ['success' => true, 'message' => 'Bejelentés törölve.'];
         } catch (Exception $e) {

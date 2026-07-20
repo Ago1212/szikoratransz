@@ -163,11 +163,16 @@ class KarbantartasInterface {
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
-    public function getKamionKarbantartas($kamion_id) {
+    // `$ceg_id`-t a hívó szerver-oldalon feloldva adja át — enélkül bármely
+    // érvényes munkamenet (sofőr is) tetszőleges másik cég kamionjának teljes
+    // karbantartási előzményét (dátum, km, leírás, költség) lekérhette volna
+    // puszta `kamion_id`-tallózással (ld. biztonsági audit).
+    public function getKamionKarbantartas($kamion_id, $ceg_id) {
         try {
-            $query = "SELECT * FROM kamion_karbantartars WHERE kamion_id = :kamion_id AND torolt = 'N'";
+            $query = "SELECT * FROM kamion_karbantartars WHERE kamion_id = :kamion_id AND admin = :ceg_id AND torolt = 'N'";
             $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':kamion_id', $kamion_id);
+            $stmt->bindValue(':kamion_id', $kamion_id);
+            $stmt->bindValue(':ceg_id', $ceg_id);
             $stmt->execute();
 
             $karbantartas_adatok = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -176,10 +181,13 @@ class KarbantartasInterface {
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
-    public function deleteKamionKarbantartas($id) {
+    // `$ceg_id`-t a hívó szerver-oldalon feloldva adja át — enélkül egy
+    // idegen cég karbantartási rekordja is törölhető lett volna puszta
+    // id-tallózással (IDOR, ld. biztonsági audit).
+    public function deleteKamionKarbantartas($id, $ceg_id) {
         try {
             // Frissítési lekérdezés
-            $query = "UPDATE kamion_karbantartars SET torolt = :torolt WHERE id = :id";
+            $query = "UPDATE kamion_karbantartars SET torolt = :torolt WHERE id = :id AND admin = :ceg_id";
 
             // Lekérdezés előkészítése
             $stmt = $this->db->prepare($query);
@@ -187,6 +195,7 @@ class KarbantartasInterface {
             $torolt = "I";
             $stmt->bindParam(':torolt', $torolt);
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->bindValue(':ceg_id', $ceg_id);
 
             // Lekérdezés végrehajtása
             $stmt->execute();
@@ -240,8 +249,12 @@ class KarbantartasInterface {
                     return ['success' => false, 'message' => 'Hiba történt a karbantartás hozzáadása során.'];
                 }
             } else {
-                // Frissítési lekérdezés
-                $query = "UPDATE kamion_karbantartars SET datum = :datum, log = :log, km_oraallas = :km_oraallas, elvegezte = :elvegezte, koltseg = :koltseg WHERE id = :id AND torolt = 'N'";
+                // Frissítési lekérdezés — az `admin = :admin_scope` feltétel
+                // nélkül egy idegen cég karbantartási rekordja is
+                // módosítható lett volna, ha valaki eltalálja/tallózza az
+                // `id`-t (IDOR, ld. biztonsági audit). `$admin` itt mindig a
+                // hívó (ApiHandler) által szerver-oldalon feloldott ceg_id.
+                $query = "UPDATE kamion_karbantartars SET datum = :datum, log = :log, km_oraallas = :km_oraallas, elvegezte = :elvegezte, koltseg = :koltseg WHERE id = :id AND admin = :admin_scope AND torolt = 'N'";
 
                 // Lekérdezés előkészítése
                 $stmt = $this->db->prepare($query);
@@ -253,12 +266,13 @@ class KarbantartasInterface {
                 $stmt->bindParam(':elvegezte', $elvegezte);
                 $stmt->bindValue(':koltseg', $koltseg === '' || $koltseg === null ? null : $koltseg);
                 $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+                $stmt->bindValue(':admin_scope', $admin);
 
                 // Lekérdezés végrehajtása
-
+                $stmt->execute();
 
                 // Ellenőrzés, hogy történt-e frissítés
-                if ($stmt->execute()) {
+                if ($stmt->rowCount() > 0) {
                     if (!empty($kovetkezo_karbantartas) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $kovetkezo_karbantartas)) {
                         $nextQuery = "INSERT INTO kamion_karbantartars (kamion_id, admin, datum, log, torolt, km_oraallas, elvegezte)
                                   VALUES (:kamion_id, :admin, :datum, :log, 'N', NULL, NULL)";
@@ -272,7 +286,7 @@ class KarbantartasInterface {
 
                     return ['success' => true, 'message' => 'A karbantartás sikeresen frissítve.'];
                 } else {
-                    return ['success' => false, 'message' => 'A karbantartás nem található vagy az adatok nem változtak.'];
+                    return ['success' => false, 'message' => 'A karbantartás nem található, vagy nem a te céged tulajdona.'];
                 }
             }
         } catch (Exception $e) {
@@ -282,11 +296,12 @@ class KarbantartasInterface {
     }
 
 
-    public function getPotkocsiKarbantartas($potkocsi_id) {
+    public function getPotkocsiKarbantartas($potkocsi_id, $ceg_id) {
         try {
-            $query = "SELECT * FROM potkocsi_karbantartars WHERE potkocsi_id = :potkocsi_id AND torolt = 'N'";
+            $query = "SELECT * FROM potkocsi_karbantartars WHERE potkocsi_id = :potkocsi_id AND admin = :ceg_id AND torolt = 'N'";
             $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':potkocsi_id', $potkocsi_id);
+            $stmt->bindValue(':potkocsi_id', $potkocsi_id);
+            $stmt->bindValue(':ceg_id', $ceg_id);
             $stmt->execute();
 
             $karbantartas_adatok = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -296,10 +311,10 @@ class KarbantartasInterface {
         }
     }
 
-    public function deletePotkocsiKarbantartas($id) {
+    public function deletePotkocsiKarbantartas($id, $ceg_id) {
         try {
             // Frissítési lekérdezés
-            $query = "UPDATE potkocsi_karbantartars SET torolt = :torolt WHERE id = :id";
+            $query = "UPDATE potkocsi_karbantartars SET torolt = :torolt WHERE id = :id AND admin = :ceg_id";
 
             // Lekérdezés előkészítése
             $stmt = $this->db->prepare($query);
@@ -307,6 +322,7 @@ class KarbantartasInterface {
             $torolt = "I";
             $stmt->bindParam(':torolt', $torolt);
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->bindValue(':ceg_id', $ceg_id);
 
             // Lekérdezés végrehajtása
             $stmt->execute();
@@ -362,8 +378,9 @@ class KarbantartasInterface {
                     return ['success' => false, 'message' => 'Hiba történt a karbantartás hozzáadása során.'];
                 }
             } else {
-                // Frissítési lekérdezés
-                $query = "UPDATE potkocsi_karbantartars SET datum = :datum, log = :log, km_oraallas = :km_oraallas, elvegezte = :elvegezte, koltseg = :koltseg WHERE id = :id AND torolt = 'N'";
+                // Frissítési lekérdezés — `$admin` mindig a hívó által
+                // szerver-oldalon feloldott ceg_id (ld. kamion-ág komment).
+                $query = "UPDATE potkocsi_karbantartars SET datum = :datum, log = :log, km_oraallas = :km_oraallas, elvegezte = :elvegezte, koltseg = :koltseg WHERE id = :id AND admin = :admin_scope AND torolt = 'N'";
 
                 // Lekérdezés előkészítése
                 $stmt = $this->db->prepare($query);
@@ -375,11 +392,13 @@ class KarbantartasInterface {
                 $stmt->bindParam(':elvegezte', $elvegezte);
                 $stmt->bindValue(':koltseg', $koltseg === '' || $koltseg === null ? null : $koltseg);
                 $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+                $stmt->bindValue(':admin_scope', $admin);
 
                 // Lekérdezés végrehajtása
+                $stmt->execute();
 
                 // Ellenőrzés, hogy történt-e frissítés
-                if ($stmt->execute()) {
+                if ($stmt->rowCount() > 0) {
                     if (!empty($kovetkezo_karbantartas) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $kovetkezo_karbantartas)) {
                         $nextQuery = "INSERT INTO potkocsi_karbantartars (potkocsi_id, admin, datum, log, torolt, km_oraallas, elvegezte)
                                   VALUES (:potkocsi_id, :admin, :datum, :log, 'N', NULL, NULL)";
@@ -393,7 +412,7 @@ class KarbantartasInterface {
 
                     return ['success' => true, 'message' => 'A karbantartás sikeresen frissítve.'];
                 } else {
-                    return ['success' => false, 'message' => 'A karbantartás nem található vagy az adatok nem változtak.'];
+                    return ['success' => false, 'message' => 'A karbantartás nem található, vagy nem a te céged tulajdona.'];
                 }
             }
         } catch (Exception $e) {
@@ -402,11 +421,12 @@ class KarbantartasInterface {
         }
     }
 
-    public function getFurgonKarbantartas($furgon_id) {
+    public function getFurgonKarbantartas($furgon_id, $ceg_id) {
         try {
-            $query = "SELECT * FROM furgon_karbantartars WHERE furgon_id = :furgon_id AND torolt = 'N'";
+            $query = "SELECT * FROM furgon_karbantartars WHERE furgon_id = :furgon_id AND admin = :ceg_id AND torolt = 'N'";
             $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':furgon_id', $furgon_id);
+            $stmt->bindValue(':furgon_id', $furgon_id);
+            $stmt->bindValue(':ceg_id', $ceg_id);
             $stmt->execute();
 
             $karbantartas_adatok = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -416,10 +436,10 @@ class KarbantartasInterface {
         }
     }
 
-    public function deleteFurgonKarbantartas($id) {
+    public function deleteFurgonKarbantartas($id, $ceg_id) {
         try {
             // Frissítési lekérdezés
-            $query = "UPDATE furgon_karbantartars SET torolt = :torolt WHERE id = :id";
+            $query = "UPDATE furgon_karbantartars SET torolt = :torolt WHERE id = :id AND admin = :ceg_id";
 
             // Lekérdezés előkészítése
             $stmt = $this->db->prepare($query);
@@ -427,6 +447,7 @@ class KarbantartasInterface {
             $torolt = "I";
             $stmt->bindParam(':torolt', $torolt);
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->bindValue(':ceg_id', $ceg_id);
 
             // Lekérdezés végrehajtása
             $stmt->execute();
@@ -481,8 +502,9 @@ class KarbantartasInterface {
                     return ['success' => false, 'message' => 'Hiba történt a karbantartás hozzáadása során.'];
                 }
             } else {
-                // Frissítési lekérdezés
-                $query = "UPDATE furgon_karbantartars SET datum = :datum, log = :log, km_oraallas = :km_oraallas, elvegezte = :elvegezte, koltseg = :koltseg WHERE id = :id AND torolt = 'N'";
+                // Frissítési lekérdezés — `$admin` mindig a hívó által
+                // szerver-oldalon feloldott ceg_id (ld. kamion-ág komment).
+                $query = "UPDATE furgon_karbantartars SET datum = :datum, log = :log, km_oraallas = :km_oraallas, elvegezte = :elvegezte, koltseg = :koltseg WHERE id = :id AND admin = :admin_scope AND torolt = 'N'";
 
                 // Lekérdezés előkészítése
                 $stmt = $this->db->prepare($query);
@@ -494,11 +516,13 @@ class KarbantartasInterface {
                 $stmt->bindParam(':elvegezte', $elvegezte);
                 $stmt->bindValue(':koltseg', $koltseg === '' || $koltseg === null ? null : $koltseg);
                 $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+                $stmt->bindValue(':admin_scope', $admin);
 
                 // Lekérdezés végrehajtása
+                $stmt->execute();
 
                 // Ellenőrzés, hogy történt-e frissítés
-                if ($stmt->execute()) {
+                if ($stmt->rowCount() > 0) {
                     if (!empty($kovetkezo_karbantartas) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $kovetkezo_karbantartas)) {
                         $nextQuery = "INSERT INTO furgon_karbantartars (furgon_id, admin, datum, log, torolt, km_oraallas, elvegezte)
                                   VALUES (:furgon_id, :admin, :datum, :log, 'N', NULL, NULL)";
@@ -512,11 +536,112 @@ class KarbantartasInterface {
 
                     return ['success' => true, 'message' => 'A karbantartás sikeresen frissítve.'];
                 } else {
-                    return ['success' => false, 'message' => 'A karbantartás nem található vagy az adatok nem változtak.'];
+                    return ['success' => false, 'message' => 'A karbantartás nem található, vagy nem a te céged tulajdona.'];
                 }
             }
         } catch (Exception $e) {
             // Hibakezelés
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    // R06 (fejlesztési audit, 2026-07-19): a `kovetkezo_karbantartas` mező
+    // (fenti `updateXKarbantartas()` metódusok) eddig kizárólag DÁTUM-alapú
+    // volt — a valóságban az olajcsere/szervizintervallum futásteljesítmény-
+    // alapú. A `gpsmart_napi_km` cache (ld. GpsmartInterface::frissitNapiKm(),
+    // a Pénzforgalom Ft/km oszlopa is ezt olvassa) már naponta gyűjt km-adatot
+    // kamion/furgon szintre — ez a metódus ebből számol, ÚJ adatgyűjtés
+    // nélkül. Csak önhajtó jármű (kamion/furgon) kaphat km-alapú riasztást,
+    // a pótkocsinak nincs saját km-je (ld. CLAUDE.md "Furgon" szekció).
+    //
+    // Ha egy járműhöz még sosem volt km_oraallas-t is rögzítő karbantartási
+    // bejegyzés, a metódus 'nincs_adat' állapotot ad — SOSEM fabrikál 0-t
+    // vagy "rendben"-t hiányzó alapadatból (ugyanaz az elv, mint a
+    // `kmLefedettseg`-nél a Pénzforgalom riportban).
+    public function getKmAlapuEsedekesseg($ceg_id, $intervallumKm = 15000) {
+        try {
+            $jarmuvek = [];
+            $kamionStmt = $this->db->prepare("SELECT id, rendszam FROM kamion WHERE admin = :admin AND torolt <> 'I'");
+            $kamionStmt->bindValue(':admin', $ceg_id);
+            $kamionStmt->execute();
+            foreach ($kamionStmt->fetchAll(PDO::FETCH_ASSOC) as $k) {
+                $jarmuvek[] = ['jarmu_tipus' => 'kamion', 'jarmu_id' => (int) $k['id'], 'rendszam' => $k['rendszam']];
+            }
+            $furgonStmt = $this->db->prepare("SELECT id, rendszam FROM furgon WHERE admin = :admin AND torolt <> 'I'");
+            $furgonStmt->bindValue(':admin', $ceg_id);
+            $furgonStmt->execute();
+            foreach ($furgonStmt->fetchAll(PDO::FETCH_ASSOC) as $f) {
+                $jarmuvek[] = ['jarmu_tipus' => 'furgon', 'jarmu_id' => (int) $f['id'], 'rendszam' => $f['rendszam']];
+            }
+
+            $eredmeny = [];
+            foreach ($jarmuvek as $jarmu) {
+                $tabla = $jarmu['jarmu_tipus'] === 'furgon' ? 'furgon_karbantartars' : 'kamion_karbantartars';
+                $oszlop = $jarmu['jarmu_tipus'] === 'furgon' ? 'furgon_id' : 'kamion_id';
+
+                // A legutóbbi, TÉNYLEGES km_oraallas-t is rögzítő karbantartási
+                // bejegyzés dátuma/km-je — ez a viszonyítási alap, nem az
+                // utolsó bejegyzés dátuma önmagában (ami lehet km nélküli sor is).
+                $utolsoStmt = $this->db->prepare(
+                    "SELECT datum, km_oraallas FROM $tabla
+                     WHERE $oszlop = :jarmu_id AND torolt <> 'I' AND km_oraallas IS NOT NULL
+                     ORDER BY datum DESC, id DESC LIMIT 1"
+                );
+                $utolsoStmt->bindValue(':jarmu_id', $jarmu['jarmu_id'], PDO::PARAM_INT);
+                $utolsoStmt->execute();
+                $utolso = $utolsoStmt->fetch(PDO::FETCH_ASSOC);
+
+                if (!$utolso) {
+                    $eredmeny[] = array_merge($jarmu, [
+                        'utolsoKarbantartasDatum' => null,
+                        'utolsoKarbantartasKm' => null,
+                        'kmAzota' => null,
+                        'hatralevoKm' => null,
+                        'allapot' => 'nincs_adat',
+                    ]);
+                    continue;
+                }
+
+                $kmStmt = $this->db->prepare(
+                    "SELECT COALESCE(SUM(km), 0) km FROM gpsmart_napi_km
+                     WHERE admin = :admin AND jarmu_tipus = :jarmu_tipus AND jarmu_id = :jarmu_id AND datum > :datum"
+                );
+                $kmStmt->bindValue(':admin', $ceg_id);
+                $kmStmt->bindValue(':jarmu_tipus', $jarmu['jarmu_tipus']);
+                $kmStmt->bindValue(':jarmu_id', $jarmu['jarmu_id'], PDO::PARAM_INT);
+                $kmStmt->bindValue(':datum', $utolso['datum']);
+                $kmStmt->execute();
+                $kmAzota = round((float) $kmStmt->fetchColumn(), 1);
+
+                $hatralevoKm = round($intervallumKm - $kmAzota, 1);
+                if ($hatralevoKm <= 0) {
+                    $allapot = 'esedekes';
+                } elseif ($hatralevoKm <= $intervallumKm * 0.15) {
+                    $allapot = 'kozeledik';
+                } else {
+                    $allapot = 'rendben';
+                }
+
+                $eredmeny[] = array_merge($jarmu, [
+                    'utolsoKarbantartasDatum' => $utolso['datum'],
+                    'utolsoKarbantartasKm' => (int) $utolso['km_oraallas'],
+                    'kmAzota' => $kmAzota,
+                    'hatralevoKm' => $hatralevoKm,
+                    'allapot' => $allapot,
+                ]);
+            }
+
+            // A legsürgősebb (legkevesebb hátralévő km, "nincs_adat" a végén)
+            // elöl — ez a leginkább actionable sorrend egy admin számára.
+            usort($eredmeny, function ($a, $b) {
+                if ($a['hatralevoKm'] === null && $b['hatralevoKm'] === null) return 0;
+                if ($a['hatralevoKm'] === null) return 1;
+                if ($b['hatralevoKm'] === null) return -1;
+                return $a['hatralevoKm'] <=> $b['hatralevoKm'];
+            });
+
+            return ['success' => true, 'jarmuvek' => $eredmeny, 'intervallumKm' => $intervallumKm];
+        } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }

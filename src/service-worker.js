@@ -71,3 +71,47 @@ self.addEventListener("message", (event) => {
     self.skipWaiting();
   }
 });
+
+// R11 (fejlesztési audit, 2026-07-19): Web Push — a szerver (WebPushSender,
+// backend/WebPushSender.php) egy JSON payloadot küld ({title, body, url}),
+// amit itt a böngésző natív Notification API-jával jelenítünk meg. A
+// payload hiánya (pl. egy jövőbeli, adat nélküli "csendes" push) nem dob
+// hibát, csak egy generikus szöveget mutat.
+self.addEventListener("push", (event) => {
+  let data = { title: "Szikora Transz", body: "Új értesítésed érkezett." };
+  try {
+    if (event.data) {
+      data = { ...data, ...event.data.json() };
+    }
+  } catch (e) {
+    // nem JSON payload — marad az alapértelmezett szöveg
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
+      data: { url: data.url || "/admin/dashboard" },
+    })
+  );
+});
+
+// Értesítésre kattintva a már nyitott app-fület hozza előtérbe, ha van
+// ilyen (ne nyisson feleslegesen egy második lapot) — csak ha nincs, akkor
+// nyit egy újat a push payload `url`-jére.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || "/admin/dashboard";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if ("focus" in client) {
+          client.navigate(url);
+          return client.focus();
+        }
+      }
+      return self.clients.openWindow(url);
+    })
+  );
+});

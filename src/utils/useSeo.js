@@ -114,6 +114,12 @@ export function useSeo({ title, description, path, faqItems, breadcrumb, service
         "@type": "Service",
         inLanguage: "hu",
         name: service.name,
+        // Schema.org ajánlása szerint a `serviceType` egy rövid, önálló
+        // kategória-címke, elkülönítve a `name`-től — jelen esetben a
+        // `service.name` már pont ilyen rövid, kategória-jellegű szöveg
+        // (pl. "Belföldi fuvarozás"), ezért nincs szükség külön mezőre a
+        // hívási helyeken, ugyanaz az érték mindkét property-re jó.
+        serviceType: service.name,
         description: service.description || description,
         areaServed: ["HU", "EU"],
         // Ugyanarra az entitásra hivatkozik, mint amit a `public/index.html`-be

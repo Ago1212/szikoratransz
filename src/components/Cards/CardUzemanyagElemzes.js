@@ -62,7 +62,7 @@ export default function CardUzemanyagElemzes() {
   );
 
   return (
-    <div className="rounded-3xl bg-white p-5 shadow-soft ring-1 ring-ink-100">
+    <div className="rounded-3xl bg-white p-5 shadow-soft ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}

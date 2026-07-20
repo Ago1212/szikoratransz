@@ -8,9 +8,40 @@ require_once __DIR__ . '/../GpsmartClient.php';
 class GpsmartInterface {
     protected $db;
 
+    // R27 (fejlesztési audit, 2026-07-19): cégenként (ceg_id) legfeljebb
+    // EGY `GpsmartClient`-példány jön létre egy HTTP-kérésen belül — a
+    // `lekerdezMegtettUtMa()`/`getKihasznaltsagiRiport()` flotta-egészére
+    // futó ciklusai így egyetlen bejelentkezéssel (ld. GpsmartClient
+    // `bejelentkezesGyorsitva()`) intézik el az összes jármű lekérdezését
+    // a korábbi jármű-számnyi bejelentkezés helyett.
+    private $clientCache = [];
+
     public function __construct() {
         $database = new Database();
         $this->db = $database->connect();
+    }
+
+    // Visszaadja a céghez tartozó, gyorsítótárazott klienst — `null`, ha a
+    // GPSmart kapcsolat még nincs beállítva ehhez a céghez (a hívó felelős
+    // az ebből következő hibaüzenetért, ugyanúgy, mint korábban).
+    private function getClient($ceg_id) {
+        if (isset($this->clientCache[$ceg_id])) {
+            return $this->clientCache[$ceg_id];
+        }
+        $stmt = $this->db->prepare('SELECT felhasznalonev, jelszo_titkositva, userid FROM gpsmart_beallitasok WHERE admin = :admin');
+        $stmt->bindValue(':admin', $ceg_id);
+        $stmt->execute();
+        $beallitas = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$beallitas) {
+            return null;
+        }
+        $client = new GpsmartClient(
+            $beallitas['felhasznalonev'],
+            $this->visszafejt($beallitas['jelszo_titkositva']),
+            $beallitas['userid']
+        );
+        $this->clientCache[$ceg_id] = $client;
+        return $client;
     }
 
     // A jelszó titkosítva kerül az adatbázisba (openssl_encrypt,
@@ -106,20 +137,10 @@ class GpsmartInterface {
     // a térképen semmi nem tűnik el csendben.
     public function lekerdezPoziciok($ceg_id) {
         try {
-            $stmt = $this->db->prepare('SELECT felhasznalonev, jelszo_titkositva, userid FROM gpsmart_beallitasok WHERE admin = :admin');
-            $stmt->bindValue(':admin', $ceg_id);
-            $stmt->execute();
-            $beallitas = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$beallitas) {
+            $client = $this->getClient($ceg_id);
+            if (!$client) {
                 return ['success' => false, 'message' => 'A GPSmart kapcsolat még nincs beállítva ehhez a céghez.'];
             }
-
-            $client = new GpsmartClient(
-                $beallitas['felhasznalonev'],
-                $this->visszafejt($beallitas['jelszo_titkositva']),
-                $beallitas['userid']
-            );
             $poziciok = $client->lekerdezPoziciok();
 
             $kamionStmt = $this->db->prepare('SELECT id, rendszam FROM kamion WHERE admin = :admin AND torolt <> \'I\'');
@@ -264,20 +285,10 @@ class GpsmartInterface {
                 return ['success' => false, 'message' => 'Legfeljebb ' . self::MAX_UTVONAL_NAPOK . ' napos tartomány kérdezhető le egyszerre — szűkítsd a dátumtartományt.'];
             }
 
-            $stmt = $this->db->prepare('SELECT felhasznalonev, jelszo_titkositva, userid FROM gpsmart_beallitasok WHERE admin = :admin');
-            $stmt->bindValue(':admin', $ceg_id);
-            $stmt->execute();
-            $beallitas = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$beallitas) {
+            $client = $this->getClient($ceg_id);
+            if (!$client) {
                 return ['success' => false, 'message' => 'A GPSmart kapcsolat még nincs beállítva ehhez a céghez.'];
             }
-
-            $client = new GpsmartClient(
-                $beallitas['felhasznalonev'],
-                $this->visszafejt($beallitas['jelszo_titkositva']),
-                $beallitas['userid']
-            );
             $utvonal = $client->lekerdezUtvonal($carId, $datumTol, $datumIg);
 
             return ['success' => true] + $utvonal;

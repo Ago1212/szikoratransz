@@ -53,10 +53,10 @@ function Jelolo({ checked, onChange, disabled, text }) {
           checked={checked}
           onChange={onChange}
           disabled={disabled}
-          className="h-5 w-5 rounded border-ink-300 accent-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-5 w-5 rounded border-ink-300 accent-brand-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-ink-600"
         />
       </span>
-      {text && <span className="text-sm text-ink-600">{text}</span>}
+      {text && <span className="text-sm text-ink-600 dark:text-ink-300">{text}</span>}
     </label>
   );
 }
@@ -184,7 +184,7 @@ export default function Jogosultsagok() {
     <div className="mx-auto w-full max-w-4xl">
       <PageHeader eyebrow="Saját adatok" title="Jogosultságok" />
 
-      <p className="-mt-4 mb-6 max-w-2xl text-sm text-ink-500">
+      <p className="-mt-4 mb-6 max-w-2xl text-sm text-ink-500 dark:text-ink-400">
         Itt hozhatsz létre saját szerepköröket (pl. Diszpécser, Könyvelő), és állíthatod be
         szerepkörönként, hogy mely modulokhoz férhetnek hozzá, mit szerkeszthetnek és
         törölhetnek. Alapértelmezetten minden modul teljes hozzáférésű — csak azt kell
@@ -202,7 +202,7 @@ export default function Jogosultsagok() {
                 type="button"
                 onClick={() => setSelected(sz.kulcs)}
                 className={`flex-shrink-0 rounded-full px-4 py-2 text-xs font-bold transition-colors duration-150 ${
-                  selected === sz.kulcs ? "bg-brand-600 text-white" : "border border-ink-100 bg-white text-ink-500 hover:bg-slate-100"
+                  selected === sz.kulcs ? "bg-brand-600 text-white" : "border border-ink-100 bg-white text-ink-500 hover:bg-slate-100 dark:border-ink-800 dark:bg-ink-900 dark:text-ink-400 dark:hover:bg-ink-800"
                 }`}
               >
                 {sz.nev}
@@ -210,13 +210,13 @@ export default function Jogosultsagok() {
             ))}
 
             {adding ? (
-              <div className="flex items-center gap-2 rounded-full border border-ink-100 bg-white px-2 py-1.5">
+              <div className="flex items-center gap-2 rounded-full border border-ink-100 bg-white px-2 py-1.5 dark:border-ink-800 dark:bg-ink-900">
                 <input
                   autoFocus
                   value={ujNev}
                   onChange={(e) => setUjNev(e.target.value)}
                   placeholder="Új szerepkör neve"
-                  className="w-40 bg-transparent px-1.5 text-sm text-ink-900 placeholder-ink-300 focus:outline-none"
+                  className="w-40 bg-transparent px-1.5 text-sm text-ink-900 placeholder-ink-300 focus:outline-none dark:text-ink-50 dark:placeholder-ink-600"
                   onKeyDown={(e) => e.key === "Enter" && handleCreateSzerepkor()}
                 />
                 <button
@@ -233,7 +233,7 @@ export default function Jogosultsagok() {
                     setAdding(false);
                     setUjNev("");
                   }}
-                  className="flex-shrink-0 px-1 text-xs font-semibold text-ink-400 hover:text-ink-700"
+                  className="flex-shrink-0 px-1 text-xs font-semibold text-ink-400 hover:text-ink-700 dark:text-ink-500 dark:hover:text-ink-100"
                 >
                   Mégse
                 </button>
@@ -242,7 +242,7 @@ export default function Jogosultsagok() {
               <button
                 type="button"
                 onClick={() => setAdding(true)}
-                className="flex flex-shrink-0 items-center gap-1.5 rounded-full border border-dashed border-ink-200 px-4 py-2 text-xs font-bold text-ink-500 hover:border-brand-300 hover:text-brand-700"
+                className="flex flex-shrink-0 items-center gap-1.5 rounded-full border border-dashed border-ink-200 px-4 py-2 text-xs font-bold text-ink-500 hover:border-brand-300 hover:text-brand-700 dark:border-ink-700 dark:text-ink-400 dark:hover:border-brand-700 dark:hover:text-brand-300"
               >
                 <PiPlusLight className="h-4 w-4" />
                 Új szerepkör
@@ -251,9 +251,9 @@ export default function Jogosultsagok() {
           </div>
 
           {selected === "admin" ? (
-            <div className="flex items-center gap-3 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3">
+            <div className="flex items-center gap-3 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 dark:border-amber-900 dark:bg-amber-950/40">
               <PiCrownSimpleLight className="h-5 w-5 flex-shrink-0 text-amber-600" />
-              <p className="text-sm text-amber-800">
+              <p className="text-sm text-amber-800 dark:text-amber-200">
                 Az <strong>Adminisztrátor</strong> szerepkör mindig teljes hozzáférésű — ez nem korlátozható és nem törölhető.
               </p>
             </div>
@@ -261,13 +261,13 @@ export default function Jogosultsagok() {
             <Spinner wrapperClassName="flex justify-center py-16" />
           ) : (
             <>
-              <div className="overflow-hidden rounded-3xl bg-white shadow-soft ring-1 ring-ink-100">
-                <div className="flex items-center justify-between gap-2.5 border-b border-ink-100 px-5 py-4">
+              <div className="overflow-hidden rounded-3xl bg-white shadow-soft ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800">
+                <div className="flex items-center justify-between gap-2.5 border-b border-ink-100 px-5 py-4 dark:border-ink-800">
                   <div className="flex items-center gap-2.5">
-                    <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+                    <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-950/50 dark:text-brand-300">
                       <PiShieldCheckLight className="h-[18px] w-[18px]" />
                     </span>
-                    <h3 className="font-display text-base font-semibold text-brand-900">
+                    <h3 className="font-display text-base font-semibold text-brand-900 dark:text-ink-50">
                       {selectedSzerepkor?.nev || selected} jogosultságai
                     </h3>
                   </div>
@@ -275,7 +275,7 @@ export default function Jogosultsagok() {
                     type="button"
                     onClick={handleDeleteSzerepkor}
                     disabled={isDeleting}
-                    className="flex flex-shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="flex flex-shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-red-950/50"
                   >
                     <PiTrashLight className="h-4 w-4" />
                     Szerepkör törlése
@@ -283,10 +283,10 @@ export default function Jogosultsagok() {
                 </div>
 
                 {/* Mobil nézet — kártyák modulonként */}
-                <div className="divide-y divide-ink-100 md:hidden">
+                <div className="divide-y divide-ink-100 dark:divide-ink-800 md:hidden">
                   {jogosultsagok.map((row) => (
                     <div key={row.modul} className="px-5 py-4">
-                      <p className="mb-2.5 text-sm font-bold text-ink-900">{MODUL_LABEL[row.modul] || row.modul}</p>
+                      <p className="mb-2.5 text-sm font-bold text-ink-900 dark:text-ink-50">{MODUL_LABEL[row.modul] || row.modul}</p>
                       <div className="flex flex-wrap gap-x-4 gap-y-0.5">
                         <Jelolo
                           text="Hozzáférés"
@@ -317,24 +317,24 @@ export default function Jogosultsagok() {
                   <table className="w-full border-collapse">
                     <thead>
                       <tr>
-                        <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-ink-400">
+                        <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-ink-400 dark:text-ink-500">
                           Modul
                         </th>
-                        <th className="px-5 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-ink-400">
+                        <th className="px-5 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-ink-400 dark:text-ink-500">
                           Hozzáférés
                         </th>
-                        <th className="px-5 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-ink-400">
+                        <th className="px-5 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-ink-400 dark:text-ink-500">
                           Szerkesztés
                         </th>
-                        <th className="px-5 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-ink-400">
+                        <th className="px-5 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-ink-400 dark:text-ink-500">
                           Törlés
                         </th>
                       </tr>
                     </thead>
                     <tbody>
                       {jogosultsagok.map((row) => (
-                        <tr key={row.modul} className="border-t border-ink-100">
-                          <td className="px-5 py-2.5 text-sm font-semibold text-ink-900">
+                        <tr key={row.modul} className="border-t border-ink-100 dark:border-ink-800">
+                          <td className="px-5 py-2.5 text-sm font-semibold text-ink-900 dark:text-ink-50">
                             {MODUL_LABEL[row.modul] || row.modul}
                           </td>
                           <td className="px-5 py-2.5 text-center">
@@ -344,14 +344,14 @@ export default function Jogosultsagok() {
                             {row.szerkesztes !== null ? (
                               <Jelolo checked={row.szerkesztes === "I"} onChange={() => toggle(row.modul, "szerkesztes")} />
                             ) : (
-                              <span className="text-ink-200">—</span>
+                              <span className="text-ink-200 dark:text-ink-700">—</span>
                             )}
                           </td>
                           <td className="px-5 py-2.5 text-center">
                             {row.torles !== null ? (
                               <Jelolo checked={row.torles === "I"} onChange={() => toggle(row.modul, "torles")} />
                             ) : (
-                              <span className="text-ink-200">—</span>
+                              <span className="text-ink-200 dark:text-ink-700">—</span>
                             )}
                           </td>
                         </tr>

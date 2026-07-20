@@ -169,16 +169,32 @@ export default function CardTableForFajlok({ id, tabla }) {
     }
   };
 
+  // R17 (fejlesztési audit, 2026-07-19): a DataTable megosztott, opt-in
+  // tömeges-kijelölés funkciója — a Fájlok az első bevezetett hely, mert
+  // egy régebbi flotta/karbantartás sok, egyenként törlendő csatolmányt
+  // halmozhat fel, és eddig ezt kizárólag egyesével lehetett törölni.
+  const handleBulkDelete = async (rows) => {
+    if (rows.length === 0) return;
+    if (!window.confirm(`Biztosan törli a kijelölt ${rows.length} fájlt?`)) return;
+    const results = await Promise.all(
+      rows.map((row) => fetchAction("deleteFile", { id: row.sorszam })),
+    );
+    if (!results.every((r) => r?.success)) {
+      toast.error("Néhány fájl törlése sikertelen volt.");
+    }
+    fetchFiles();
+  };
+
   const columns = [
     {
       key: "filename",
       label: "Fájlnév",
       render: (row) => (
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100">
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-ink-800">
             {getFileIcon(row.filename)}
           </div>
-          <div className="max-w-xs truncate text-sm font-medium text-brand-900">
+          <div className="max-w-xs truncate text-sm font-medium text-brand-900 dark:text-ink-50">
             {row.filename}
           </div>
         </div>
@@ -187,13 +203,13 @@ export default function CardTableForFajlok({ id, tabla }) {
     {
       key: "filesize",
       label: "Méret",
-      className: "text-ink-500",
+      className: "text-ink-500 dark:text-ink-400",
       render: (row) => formatFileSize(row.filesize),
     },
     {
       key: "feltoltve",
       label: "Feltöltve",
-      className: "text-ink-500",
+      className: "text-ink-500 dark:text-ink-400",
       render: (row) => formatDate(row.feltoltve),
     },
     {
@@ -238,9 +254,18 @@ export default function CardTableForFajlok({ id, tabla }) {
       rows={files}
       rowKey={(row, index) => row.sorszam ?? index}
       loading={isLoading}
+      selectable
+      bulkActions={[
+        {
+          label: "Törlés",
+          tone: "danger",
+          icon: <PiTrashLight className="h-3.5 w-3.5" />,
+          onClick: handleBulkDelete,
+        },
+      ]}
       emptyState={
-        <div className="p-10 text-center text-ink-400">
-          <PiFileLight className="mx-auto h-10 w-10 text-ink-300" />
+        <div className="p-10 text-center text-ink-400 dark:text-ink-500">
+          <PiFileLight className="mx-auto h-10 w-10 text-ink-300 dark:text-ink-700" />
           <p className="mt-2 text-sm">Nincsenek feltöltött fájlok</p>
         </div>
       }

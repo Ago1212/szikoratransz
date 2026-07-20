@@ -2,6 +2,11 @@ const plugin = require("tailwindcss/plugin");
 const colors = require("tailwindcss/colors");
 
 module.exports = {
+  // R16 (fejlesztési audit, 2026-07-19): 'class' stratégia — a felhasználó
+  // saját kapcsolójától függ (localStorage-ban perzisztálva, ld.
+  // utils/useDarkMode.js), nem csak az OS/böngésző `prefers-color-scheme`-
+  // jétől (ami a 'media' stratégia lenne).
+  darkMode: "class",
   purge: {
     enabled: true,
     content: [

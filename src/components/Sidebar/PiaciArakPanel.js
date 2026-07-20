@@ -89,18 +89,18 @@ export default function PiaciArakPanel() {
   const mindenFriss = legregebbiFrissitve ? legregebbiFrissitve.slice(0, 10) === maiDatum() : false;
 
   return (
-    <div className="flex-shrink-0 border-t border-ink-100 px-3 py-2.5">
+    <div className="flex-shrink-0 border-t border-ink-100 px-3 py-2.5 dark:border-ink-800">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="group flex w-full items-center justify-between rounded-xl px-1.5 py-1 text-left transition-colors duration-200 hover:bg-slate-100"
+        className="group flex w-full items-center justify-between rounded-xl px-1.5 py-1 text-left transition-colors duration-200 hover:bg-slate-100 dark:hover:bg-ink-800"
       >
-        <span className="text-xs font-bold uppercase tracking-[0.1em] text-ink-500 group-hover:text-ink-800">
+        <span className="text-xs font-bold uppercase tracking-[0.1em] text-ink-500 group-hover:text-ink-800 dark:text-ink-400 dark:group-hover:text-ink-50">
           Piaci árak
         </span>
         <PiCaretDownLight
-          className={`h-3.5 w-3.5 flex-shrink-0 text-ink-400 transition-transform duration-200 ${open ? "" : "-rotate-90"}`}
+          className={`h-3.5 w-3.5 flex-shrink-0 text-ink-400 dark:text-ink-500 transition-transform duration-200 ${open ? "" : "-rotate-90"}`}
         />
       </button>
 
@@ -109,7 +109,7 @@ export default function PiaciArakPanel() {
           {csoportok.map((csoport) => (
             <div key={csoport.nev}>
               {csoportok.length > 1 && (
-                <p className="px-1.5 pb-0.5 pt-1.5 text-[9px] font-bold uppercase tracking-[0.08em] text-ink-300 first:pt-0.5">
+                <p className="px-1.5 pb-0.5 pt-1.5 text-[9px] font-bold uppercase tracking-[0.08em] text-ink-400 dark:text-ink-500 first:pt-0.5">
                   {csoport.nev}
                 </p>
               )}
@@ -121,7 +121,7 @@ export default function PiaciArakPanel() {
                     ? "text-emerald-600"
                     : t.valtozas === "le"
                       ? "text-red-600"
-                      : "text-ink-400";
+                      : "text-ink-400 dark:text-ink-500";
                 const tooltip = [
                   t.frissitve ? `Frissítve: ${t.frissitve}` : "Nincs elérhető adat",
                   t.valtozasSzazalek !== null
@@ -134,15 +134,15 @@ export default function PiaciArakPanel() {
                   <div
                     key={t.kulcs}
                     title={tooltip}
-                    className="flex items-center justify-between gap-2 rounded-lg px-1.5 py-1.5 transition-colors duration-150 hover:bg-slate-100"
+                    className="flex items-center justify-between gap-2 rounded-lg px-1.5 py-1.5 transition-colors duration-150 hover:bg-slate-100 dark:hover:bg-ink-800"
                   >
-                    <span className="truncate text-xs font-semibold text-ink-600">{t.cimke}</span>
+                    <span className="truncate text-xs font-semibold text-ink-600 dark:text-ink-300">{t.cimke}</span>
                     <span className="flex flex-shrink-0 items-center gap-1">
-                      <span className="text-xs font-bold tabular-nums text-ink-900">
+                      <span className="text-xs font-bold tabular-nums text-ink-900 dark:text-ink-50">
                         {formatSzam(t.ertek, t.egyseg === "Ft/l" ? 0 : 2)}
                       </span>
                       {IranyIcon && <IranyIcon className={`h-2.5 w-2.5 ${iranySzin}`} />}
-                      <span className="text-[10px] font-medium text-ink-400">{t.egyseg}</span>
+                      <span className="text-[10px] font-medium text-ink-400 dark:text-ink-500">{t.egyseg}</span>
                     </span>
                   </div>
                 );
@@ -151,11 +151,11 @@ export default function PiaciArakPanel() {
           ))}
 
           {legregebbiFrissitve && (
-            <div className="mt-1 flex items-center gap-1.5 border-t border-ink-100 px-1.5 pt-1.5">
+            <div className="mt-1 flex items-center gap-1.5 border-t border-ink-100 px-1.5 pt-1.5 dark:border-ink-800">
               <span
                 className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${mindenFriss ? "bg-emerald-500" : "bg-amber-500"}`}
               />
-              <span className="text-[10px] font-semibold text-ink-400">
+              <span className="text-[10px] font-semibold text-ink-400 dark:text-ink-500">
                 Frissítve: {formatFrissitve(legregebbiFrissitve)}
               </span>
             </div>

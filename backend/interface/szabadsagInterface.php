@@ -35,7 +35,9 @@ class SzabadsagInterface {
                 $szabadsagok = $stmt->fetchAll(PDO::FETCH_ASSOC);
             }
 
-            $stmt2 = $this->db->query("SELECT id, name FROM user WHERE torolt <> 'I'");
+            $stmt2 = $this->db->prepare("SELECT id, name FROM user WHERE admin = :ceg_id AND torolt <> 'I'");
+            $stmt2->bindValue(':ceg_id', $id);
+            $stmt2->execute();
             $soforNevek = [];
             foreach ($stmt2->fetchAll(PDO::FETCH_ASSOC) as $row) {
                 $soforNevek[$row['id']] = $row['name'];
@@ -56,12 +58,22 @@ class SzabadsagInterface {
         }
     }
 
-    public function newSzabadsag($data) {
+    // `$ceg_id`-t a hívó szerver-oldalon feloldva adja át — sosem a kliens
+    // `$data['admin']` mezőjét (ld. biztonsági audit).
+    public function newSzabadsag($data, $ceg_id) {
         try {
+            $soforStmt = $this->db->prepare("SELECT id FROM user WHERE id = :sofor_id AND admin = :ceg_id AND torolt <> 'I'");
+            $soforStmt->bindValue(':sofor_id', $data['sofor_id']);
+            $soforStmt->bindValue(':ceg_id', $ceg_id);
+            $soforStmt->execute();
+            if (!$soforStmt->fetch(PDO::FETCH_ASSOC)) {
+                return ['success' => false, 'message' => 'A sofőr nem található, vagy nem a te céged sofőrje.'];
+            }
+
             $query = "INSERT INTO sofor_szabadsag (admin, sofor_id, datum_tol, datum_ig, tipus, megjegyzes)
                       VALUES (:admin, :sofor_id, :datum_tol, :datum_ig, :tipus, :megjegyzes)";
             $stmt = $this->db->prepare($query);
-            $stmt->bindValue(':admin', $data['admin']);
+            $stmt->bindValue(':admin', $ceg_id);
             $stmt->bindValue(':sofor_id', $data['sofor_id']);
             $stmt->bindValue(':datum_tol', $data['datum_tol']);
             $stmt->bindValue(':datum_ig', $data['datum_ig']);
@@ -75,12 +87,17 @@ class SzabadsagInterface {
         }
     }
 
-    public function deleteSzabadsag($id) {
+    public function deleteSzabadsag($id, $ceg_id) {
         try {
-            $query = "UPDATE sofor_szabadsag SET torolt = 'I' WHERE id = :id";
+            $query = "UPDATE sofor_szabadsag SET torolt = 'I' WHERE id = :id AND admin = :ceg_id";
             $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':id', $id);
+            $stmt->bindValue(':id', $id);
+            $stmt->bindValue(':ceg_id', $ceg_id);
             $stmt->execute();
+
+            if ($stmt->rowCount() === 0) {
+                return ['success' => false, 'message' => 'A szabadság nem található, vagy nem a te céged tulajdona.'];
+            }
 
             return ['success' => true, 'message' => 'Szabadság törölve.'];
         } catch (Exception $e) {

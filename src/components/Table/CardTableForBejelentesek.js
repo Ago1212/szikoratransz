@@ -33,7 +33,7 @@ export default function CardTable({ bejelentesek = [], isLoading = false, select
   });
 
   const columns = [
-    { key: "cim", label: "Cím", className: "font-semibold text-brand-900" },
+    { key: "cim", label: "Cím", className: "font-semibold text-brand-900 dark:text-ink-50" },
     { key: "kamion_rendszam", label: "Rendszám", render: (row) => row.kamion_rendszam || "—" },
     { key: "sofor_nev", label: "Bejelentő", render: (row) => row.sofor_nev || "Ismeretlen" },
     { key: "bejelentve", label: "Bejelentve" },

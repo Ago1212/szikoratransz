@@ -887,6 +887,24 @@ class KoltsegInterface {
     // be az `osszeg` mezőbe — a Pénzforgalom minden riportja továbbra is
     // egyszerűen ezt az egy HUF-mezőt összegzi, semmilyen aggregáló logikát
     // nem kellett emiatt módosítani.
+    // `kamion_id`/`potkocsi_id`/`furgon_id` kölcsönösen kizárók — a jelenlegi
+    // frontend ("+ Új tétel" modál) ezt UI-szinten már kikényszeríti, de
+    // közvetlen API-hívással megkerülhető volt (ld. biztonsági audit): ha egy
+    // tételen kettő is ki lett volna töltve, a "Jármű szerinti bontás"
+    // táblázatban a tétel összege duplán jelent volna meg (mindkét jármű
+    // sorában), miközben a globális összesítő (ami a havi bontásból számol)
+    // helyes marad — belső inkonzisztencia a két nézet közt.
+    private function ellenorizJarmuMezoKizarolagossag($data) {
+        $jarmuMezok = array_filter([
+            $data['kamion_id'] ?? null,
+            $data['potkocsi_id'] ?? null,
+            $data['furgon_id'] ?? null,
+        ]);
+        if (count($jarmuMezok) > 1) {
+            throw new Exception('Egy tétel csak egyetlen járműhöz rendelhető.');
+        }
+    }
+
     private function resolveDevizaOsszeg($data) {
         $deviza = strtoupper(trim($data['deviza'] ?? 'HUF')) ?: 'HUF';
         if ($deviza === 'HUF') {
@@ -914,6 +932,7 @@ class KoltsegInterface {
 
     public function newEgyebKoltseg($data, $isAdmin = false) {
         try {
+            $this->ellenorizJarmuMezoKizarolagossag($data);
             $irany = in_array($data['irany'] ?? null, ['bevetel', 'kiado'], true) ? $data['irany'] : 'kiado';
             $deviza = $this->resolveDevizaOsszeg($data);
             $query = "INSERT INTO egyeb_koltsegek (admin, irany, kategoria, kamion_id, potkocsi_id, furgon_id, datum, megnevezes, szamlaszam, osszeg, deviza, eredeti_osszeg, arfolyam, megjegyzes)
@@ -955,6 +974,7 @@ class KoltsegInterface {
     // enélkül egy másik cég is módosíthatná a sorodat, ha kitalálná az id-t.
     public function updateEgyebKoltseg($data, $isAdmin = false) {
         try {
+            $this->ellenorizJarmuMezoKizarolagossag($data);
             $irany = in_array($data['irany'] ?? null, ['bevetel', 'kiado'], true) ? $data['irany'] : 'kiado';
             $deviza = $this->resolveDevizaOsszeg($data);
             $query = "UPDATE egyeb_koltsegek SET

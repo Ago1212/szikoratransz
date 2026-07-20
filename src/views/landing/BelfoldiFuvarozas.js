@@ -38,6 +38,7 @@ export default function BelfoldiFuvarozas() {
         "Milyen járművekkel dolgoznak?",
         "Milyen fizetési feltételeket fogadnak el?",
       )}
+      testimonialNames={["Nagy Péter", "Szabó Katalin", "Farkas Zoltán"]}
     />
   );
 }

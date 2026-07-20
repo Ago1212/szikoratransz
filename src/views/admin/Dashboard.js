@@ -40,42 +40,42 @@ function PenzugyiAllapotCard({ className, cashflow, varhato, varhatoLoading, isA
     <button
       type="button"
       onClick={onClick}
-      className={`group rounded-3xl bg-white p-5 text-left shadow-soft ring-1 ring-ink-100 transition-all duration-300 ease-fluid hover:-translate-y-0.5 hover:shadow-soft-lg sm:p-6 ${className}`}
+      className={`group rounded-3xl bg-white p-5 text-left shadow-soft ring-1 ring-ink-100 transition-all duration-300 ease-fluid hover:-translate-y-0.5 hover:shadow-soft-lg dark:bg-ink-900 dark:ring-ink-800 sm:p-6 ${className}`}
     >
       <div className="flex items-start justify-between gap-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
+        <p className="text-xs font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">
           Nettó eredmény (e havi)
         </p>
-        <span className="hidden flex-shrink-0 items-center gap-1 text-xs font-semibold text-brand-600 group-hover:underline sm:flex">
+        <span className="hidden flex-shrink-0 items-center gap-1 text-xs font-semibold text-brand-600 group-hover:underline dark:text-brand-400 sm:flex">
           Pénzforgalom <PiArrowRightLight className="h-3.5 w-3.5" />
         </span>
       </div>
       <p
         className={`mt-1 font-display text-3xl font-bold tabular-nums sm:text-4xl ${
-          cashflow.netto >= 0 ? "text-emerald-600" : "text-red-600"
+          cashflow.netto >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
         }`}
       >
         {formatHuf(cashflow.netto)}
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm">
-        <span className="flex items-center gap-1.5 text-ink-500">
-          <PiTrendUpLight className="h-4 w-4 text-emerald-600" />
-          Bevétel <span className="font-semibold tabular-nums text-ink-800">{formatHuf(cashflow.bevetel)}</span>
+        <span className="flex items-center gap-1.5 text-ink-500 dark:text-ink-400">
+          <PiTrendUpLight className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+          Bevétel <span className="font-semibold tabular-nums text-ink-800 dark:text-ink-100">{formatHuf(cashflow.bevetel)}</span>
         </span>
-        <span className="flex items-center gap-1.5 text-ink-500">
-          <PiCoinsLight className="h-4 w-4 text-red-600" />
-          Kiadás <span className="font-semibold tabular-nums text-ink-800">{formatHuf(cashflow.kiadas)}</span>
+        <span className="flex items-center gap-1.5 text-ink-500 dark:text-ink-400">
+          <PiCoinsLight className="h-4 w-4 text-red-600 dark:text-red-400" />
+          Kiadás <span className="font-semibold tabular-nums text-ink-800 dark:text-ink-100">{formatHuf(cashflow.kiadas)}</span>
         </span>
       </div>
 
       {!varhatoLoading && (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-ink-100 pt-3">
-          <span className="text-xs font-semibold uppercase tracking-wide text-ink-400">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-ink-100 pt-3 dark:border-ink-800">
+          <span className="text-xs font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">
             Várható eredmény (jövő hónap, becslés)
           </span>
           <span
             className={`font-display text-lg font-bold tabular-nums ${
-              varhato.varhatoEredmeny >= 0 ? "text-emerald-600" : "text-red-600"
+              varhato.varhatoEredmeny >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
             }`}
           >
             {formatHuf(varhato.varhatoEredmeny)}
@@ -83,7 +83,7 @@ function PenzugyiAllapotCard({ className, cashflow, varhato, varhatoLoading, isA
         </div>
       )}
       {!varhatoLoading && (
-        <p className="mt-1 text-xs text-ink-400">
+        <p className="mt-1 text-xs text-ink-400 dark:text-ink-300">
           Bevétel (6 havi átlag): {formatHuf(varhato.atlagBevetel)} · Fix költségek ({fixKoltsegLabel}):{" "}
           {formatHuf(varhato.fixKoltsegek)}
           {vanKarbantartas &&
@@ -119,16 +119,16 @@ function MireFigyeljekMaCard({ className, hatarido, events, limit, onNavigate })
   };
 
   const toneClass = (napok) => {
-    if (napok < 0) return { dot: "bg-red-500", label: "text-red-700", bg: "bg-red-50" };
-    if (napok <= 7) return { dot: "bg-amber-500", label: "text-amber-700", bg: "bg-amber-50" };
-    return { dot: "bg-ink-300", label: "text-ink-500", bg: "bg-slate-50" };
+    if (napok < 0) return { dot: "bg-red-500", label: "text-red-700 dark:text-red-300", bg: "bg-red-50 dark:bg-red-950/40" };
+    if (napok <= 7) return { dot: "bg-amber-500", label: "text-amber-700 dark:text-amber-300", bg: "bg-amber-50 dark:bg-amber-950/40" };
+    return { dot: "bg-ink-300 dark:bg-ink-600", label: "text-ink-500 dark:text-ink-400", bg: "bg-slate-50 dark:bg-ink-800" };
   };
 
   return (
-    <div className={`flex flex-col rounded-3xl border border-ink-100 bg-white shadow-soft md:min-h-[420px] ${className}`}>
-      <div className="flex flex-shrink-0 items-center justify-between border-b border-ink-100 px-4 py-3 md:px-6 md:py-4">
-        <h3 className="flex items-center gap-2 font-display text-base font-semibold text-brand-900 md:text-lg">
-          <PiCalendarCheckLight className="h-5 w-5 text-brand-600" />
+    <div className={`flex flex-col rounded-3xl border border-ink-100 bg-white shadow-soft dark:border-ink-800 dark:bg-ink-900 md:min-h-[420px] ${className}`}>
+      <div className="flex flex-shrink-0 items-center justify-between border-b border-ink-100 px-4 py-3 dark:border-ink-800 md:px-6 md:py-4">
+        <h3 className="flex items-center gap-2 font-display text-base font-semibold text-brand-900 dark:text-ink-50 md:text-lg">
+          <PiCalendarCheckLight className="h-5 w-5 text-brand-600 dark:text-brand-400" />
           Mire figyeljek ma
           {hatarido > 0 && (
             <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-amber-500 px-1.5 text-xs font-bold text-white">
@@ -139,7 +139,7 @@ function MireFigyeljekMaCard({ className, hatarido, events, limit, onNavigate })
         <button
           type="button"
           onClick={onNavigate}
-          className="flex items-center gap-1 text-xs font-semibold text-brand-600 hover:underline"
+          className="flex items-center gap-1 text-xs font-semibold text-brand-600 hover:underline dark:text-brand-400"
         >
           Összes <PiArrowRightLight className="h-3.5 w-3.5" />
         </button>
@@ -147,8 +147,8 @@ function MireFigyeljekMaCard({ className, hatarido, events, limit, onNavigate })
       <div className="min-h-0 flex-1 overflow-y-auto p-3 md:p-4">
         {tetelek.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 py-10 text-center">
-            <PiCalendarCheckLight className="h-8 w-8 text-ink-300" />
-            <p className="text-sm text-ink-400">Nincs közelgő határidő a következő 30 napban.</p>
+            <PiCalendarCheckLight className="h-8 w-8 text-ink-300 dark:text-ink-600" />
+            <p className="text-sm text-ink-400 dark:text-ink-500">Nincs közelgő határidő a következő 30 napban.</p>
           </div>
         ) : (
           <ul className="space-y-1.5">
@@ -158,8 +158,8 @@ function MireFigyeljekMaCard({ className, hatarido, events, limit, onNavigate })
                 <li key={idx} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 ${tone.bg}`}>
                   <span className={`h-2 w-2 flex-shrink-0 rounded-full ${tone.dot}`} />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-ink-800">{e.title}</p>
-                    <p className="text-xs text-ink-400">{moment(e.start).format("YYYY. MM. DD.")}</p>
+                    <p className="truncate text-sm font-medium text-ink-800 dark:text-ink-100">{e.title}</p>
+                    <p className="text-xs text-ink-400 dark:text-ink-300">{moment(e.start).format("YYYY. MM. DD.")}</p>
                   </div>
                   <span className={`flex-shrink-0 text-xs font-semibold ${tone.label}`}>{napCimke(e._napok)}</span>
                 </li>
@@ -180,17 +180,17 @@ function MireFigyeljekMaCard({ className, hatarido, events, limit, onNavigate })
 // Mire figyeljek ma) kapja a fő hangsúlyt felül.
 function FlottaOsszesitoStrip({ className, items, onNavigate }) {
   return (
-    <div className={`flex items-stretch divide-x divide-ink-100 rounded-2xl border border-ink-100 bg-white shadow-soft ${className}`}>
+    <div className={`flex items-stretch divide-x divide-ink-100 rounded-2xl border border-ink-100 bg-white shadow-soft dark:divide-ink-800 dark:border-ink-800 dark:bg-ink-900 ${className}`}>
       {items.map((item) => (
         <button
           key={item.title}
           type="button"
           onClick={() => onNavigate(item.path)}
-          className="flex flex-1 items-center justify-center gap-2 px-3 py-3 transition-colors duration-150 hover:bg-slate-50 sm:justify-start sm:px-5"
+          className="flex flex-1 items-center justify-center gap-2 px-3 py-3 transition-colors duration-150 hover:bg-slate-50 dark:hover:bg-ink-800 sm:justify-start sm:px-5"
         >
-          <item.icon className="h-4 w-4 flex-shrink-0 text-ink-400" />
-          <span className="font-display text-sm font-bold tabular-nums text-ink-700">{item.value}</span>
-          <span className="hidden text-xs font-medium text-ink-400 sm:inline">{item.title}</span>
+          <item.icon className="h-4 w-4 flex-shrink-0 text-ink-400 dark:text-ink-500" />
+          <span className="font-display text-sm font-bold tabular-nums text-ink-700 dark:text-ink-100">{item.value}</span>
+          <span className="hidden text-xs font-medium text-ink-400 dark:text-ink-500 sm:inline">{item.title}</span>
         </button>
       ))}
     </div>
@@ -305,16 +305,16 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-brand-200 border-t-brand-600" />
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-brand-200 border-t-brand-600 dark:border-brand-900 dark:border-t-brand-400" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-start gap-3 rounded-2xl border border-red-100 bg-red-50 p-4">
-        <PiWarningCircleLight className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-500" />
-        <p className="text-sm text-red-700">{error}</p>
+      <div className="flex items-start gap-3 rounded-2xl border border-red-100 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/40">
+        <PiWarningCircleLight className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-500 dark:text-red-400" />
+        <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
       </div>
     );
   }
@@ -356,9 +356,9 @@ export default function Dashboard() {
           limit={4}
           onNavigate={() => navigateTo("/admin/esemenyek")}
         />
-        <div className="flex flex-shrink-0 flex-col rounded-3xl border border-ink-100 bg-white shadow-soft md:order-2 md:min-h-[420px] md:overflow-hidden">
-          <div className="flex-shrink-0 border-b border-ink-100 px-4 py-3 md:px-6 md:py-4">
-            <h3 className="font-display text-base font-semibold text-brand-900 md:text-lg">Eseménynaptár</h3>
+        <div className="flex flex-shrink-0 flex-col rounded-3xl border border-ink-100 bg-white shadow-soft dark:border-ink-800 dark:bg-ink-900 md:order-2 md:min-h-[420px] md:overflow-hidden">
+          <div className="flex-shrink-0 border-b border-ink-100 px-4 py-3 dark:border-ink-800 md:px-6 md:py-4">
+            <h3 className="font-display text-base font-semibold text-brand-900 dark:text-ink-50 md:text-lg">Eseménynaptár</h3>
           </div>
           <div className="min-h-0 flex-1 p-2">
             <CardCalender onEventsChange={setCalendarEvents} />

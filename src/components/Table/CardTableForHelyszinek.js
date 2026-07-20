@@ -25,7 +25,7 @@ const CardTable = ({ helyszinek = [], loading, total, page, pageSize, onPageChan
   });
 
   const columns = [
-    { key: "nev", label: "Név", className: "font-semibold text-brand-900" },
+    { key: "nev", label: "Név", className: "font-semibold text-brand-900 dark:text-ink-50" },
     {
       key: "actions",
       label: "Műveletek",

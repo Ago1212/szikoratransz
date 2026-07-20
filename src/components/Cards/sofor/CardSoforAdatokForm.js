@@ -196,7 +196,7 @@ const CardSoforAdatokForm = ({ sofor, setFormData, handleSave }) => {
               </option>
             ))}
           </FormField>
-          <p className="md:col-span-2 text-xs text-ink-500">
+          <p className="md:col-span-2 text-xs text-ink-500 dark:text-ink-400">
             A sofőr innentől ezt látja aktív járműként — más kamionra/pótkocsira csak kérést küldhet,
             amit itt, a jármű-váltási kérések között hagyhatsz jóvá.
           </p>
@@ -214,14 +214,14 @@ const CardSoforAdatokForm = ({ sofor, setFormData, handleSave }) => {
             onChange={handleInputChange}
             placeholder="pl. 450000"
           />
-          <p className="md:col-span-2 text-xs text-ink-500">
+          <p className="md:col-span-2 text-xs text-ink-500 dark:text-ink-400">
             Csak te látod — ez a Pénzforgalom oldalon minden hónapban
             automatikusan megjelenik "Fizetés" kiadásként.
           </p>
         </FormSection>
       )}
 
-      <div className="flex justify-end border-t border-ink-100 pt-4">
+      <div className="flex justify-end border-t border-ink-100 pt-4 dark:border-ink-800">
         <SaveButton
           onClick={handleSubmit}
           isSaving={isSaving}
