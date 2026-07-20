@@ -260,6 +260,7 @@ export default function Landing() {
                   width="1600"
                   height="578"
                   className="h-9 md:h-10 w-auto"
+                  fetchpriority="high"
                 />
               </Link>
             </div>

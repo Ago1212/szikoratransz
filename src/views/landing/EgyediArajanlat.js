@@ -33,7 +33,10 @@ export default function EgyediArajanlat() {
         },
       ]}
       faqItems={pickFaq(
-        "Mitől függ egy fuvar ára?",
+        {
+          q: "Mitől függ egy fuvar ára?",
+          a: "Mivel nincs két egyforma megrendelésünk, nincs egységes díjtáblázatunk sem — minden ajánlatot a konkrét útvonal, az áru mérete, súlya és jellege, valamint a vállalt határidő alapján, egyedileg számolunk ki. Mondja el a részleteket, és pontos, tételes árajánlatot küldünk.",
+        },
         "Kérhetek egyedi árajánlatot speciális igényekhez?",
         {
           q: "Milyen fizetési feltételeket fogadnak el?",
@@ -41,6 +44,30 @@ export default function EgyediArajanlat() {
         },
       )}
       testimonialNames={["Kovács Gábor", "Molnár Eszter", "Szabó Katalin"]}
-    />
+    >
+      <section className="py-10 border-t border-[#23262B]/10">
+        <h2 className="font-[Overpass] font-extrabold text-2xl text-[#23262B] mb-6">
+          Milyen szállítmányokat vállalunk egyedi árajánlattal?
+        </h2>
+        <div className="space-y-4 text-[#23262B]/70 leading-relaxed max-w-2xl">
+          <p>
+            Az "egyedi árajánlat" nem csak egy árazási elv nálunk, hanem azt
+            is jelenti, hogy nyitottak vagyunk olyan szállítási igényekre,
+            amik nem illenek bele egy szabványos kategóriába — legyen szó
+            szokatlan méretű, nehezen rakodható, több részletben szállítandó,
+            vagy csak egyszerűen ritkán előforduló árutípusról. Nem szabunk
+            feltételt arra, milyen iparágból érkezik a megrendelés.
+          </p>
+          <p>
+            Az ajánlatkérésnél írja le pontosan, mit kell szállítani, honnan
+            hová, és milyen határidővel — minél részletesebb a leírás, annál
+            pontosabb és gyorsabb ajánlatot tudunk adni. Ha bizonytalan
+            abban, hogy egy adott rakomány "beleillik-e" a szokásos
+            szolgáltatásainkba, ne habozzon megkérdezni: az esetek
+            túlnyomó többségében találunk megoldást.
+          </p>
+        </div>
+      </section>
+    </ServicePage>
   );
 }

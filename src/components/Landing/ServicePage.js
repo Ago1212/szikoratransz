@@ -25,6 +25,7 @@ export default function ServicePage({
   metaDescription,
   path,
   testimonialNames,
+  areaServed,
   children,
 }) {
   const currentService = SERVICE_PAGES.find((s) => s.path === path);
@@ -37,7 +38,9 @@ export default function ServicePage({
     path,
     faqItems,
     breadcrumb: breadcrumbItems.length > 0 ? breadcrumbItems : undefined,
-    service: currentService ? { name: currentService.label, description: metaDescription } : undefined,
+    service: currentService
+      ? { name: currentService.label, description: metaDescription, areaServed }
+      : undefined,
   });
 
   const otherServices = SERVICE_PAGES.filter((s) => s.path !== path);
@@ -74,7 +77,14 @@ export default function ServicePage({
       <nav className="border-b border-[#23262B]/8 bg-[#F2F3F5]/90 backdrop-blur-sm">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link to="/">
-            <img src="/logo2.svg" alt="Szikora Transz Kft" width="1600" height="578" className="h-9 w-auto" />
+            <img
+              src="/logo2.svg"
+              alt="Szikora Transz Kft"
+              width="1600"
+              height="578"
+              className="h-9 w-auto"
+              fetchpriority="high"
+            />
           </Link>
           <Link
             to="/"
