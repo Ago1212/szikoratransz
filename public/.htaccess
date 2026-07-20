@@ -89,14 +89,14 @@
   <FilesMatch "^(index\.html|service-worker\.js|manifest\.json|asset-manifest\.json)$">
     Header set Cache-Control "no-cache, must-revalidate"
   </FilesMatch>
-  <!-- A `public/`-ból változatlanul kiszolgált képek/ikonok (logo2.svg,
-       icon-*.png, a két hero kép) korábban egyáltalán nem kaptak
-       Cache-Control fejlécet — a SEO/teljesítmény-audit ezt élő fejléc-
-       vizsgálattal erősítette meg (Lighthouse `uses-long-cache-ttl` is
-       jelezte). Nem kapnak `immutable`/1 éves TTL-t, mint a hash-elt
-       static/js|css, mert a fájlnevük nem tartalmaz tartalom-hash-t — egy
-       jövőbeli csere (pl. új logó) így legfeljebb 7 napig cache-elt marad
-       elavultan, nem egy évig. -->
+  # A `public/`-ból változatlanul kiszolgált képek/ikonok (logo2.svg,
+  # icon-*.png, a két hero kép) korábban egyáltalán nem kaptak
+  # Cache-Control fejlécet — a SEO/teljesítmény-audit ezt élő fejléc-
+  # vizsgálattal erősítette meg (Lighthouse `uses-long-cache-ttl` is
+  # jelezte). Nem kapnak `immutable`/1 éves TTL-t, mint a hash-elt
+  # static/js|css, mert a fájlnevük nem tartalmaz tartalom-hash-t — egy
+  # jövőbeli csere (pl. új logó) így legfeljebb 7 napig cache-elt marad
+  # elavultan, nem egy évig.
   <FilesMatch "\.(jpg|jpeg|png|webp|svg|ico|woff2)$">
     Header set Cache-Control "public, max-age=604800"
   </FilesMatch>
