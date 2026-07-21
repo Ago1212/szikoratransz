@@ -19,6 +19,10 @@ import {
   PiChartBarLight,
   PiWalletLight,
   PiWarningCircleLight,
+  PiBankLight,
+  PiFileArrowUpLight,
+  PiLinkSimpleLight,
+  PiCheckCircleLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
@@ -452,6 +456,39 @@ export default function Koltsegek() {
   // jelvény.
   const [navUjSzam, setNavUjSzam] = useState(0);
 
+  // Bankszámla-kivonat import (fejlesztési javaslat, 2026-07-20) — ugyanaz a
+  // "digest, admin dönt" minta, mint a NAV import fent: a CSV-elemzés
+  // (`elemezBankImportCsv`) semmit nem ír az adatbázisba, csak javaslatot ad
+  // soronként (összepárosítás egy meglévő tétellel / új tétel / kihagyás),
+  // a tényleges alkalmazás (`alkalmazBankImport`) csak admin jóváhagyása
+  // után fut. Nincs egyetlen "a" magyar banki CSV-formátum, ezért az
+  // oszlop-hozzárendelést (melyik oszlop a dátum/összeg/közlemény) a
+  // felhasználó a fejléc előnézete alapján, kézzel adja meg.
+  const [bankModalOpen, setBankModalOpen] = useState(false);
+  const [bankCsvSzoveg, setBankCsvSzoveg] = useState("");
+  const [bankFejlec, setBankFejlec] = useState([]);
+  const [bankOszlopok, setBankOszlopok] = useState({ datum: "", osszeg: "", kozlemeny: "" });
+  const [bankElemzesLoading, setBankElemzesLoading] = useState(false);
+  const [bankElemezve, setBankElemezve] = useState(false);
+  const [bankSorok, setBankSorok] = useState([]);
+  const [bankKihagyottSorSzam, setBankKihagyottSorSzam] = useState(0);
+  const [bankMarFeldolgozottSorSzam, setBankMarFeldolgozottSorSzam] = useState(0);
+  const [bankAlkalmazasLoading, setBankAlkalmazasLoading] = useState(false);
+
+  // MOL üzemanyagkártya-tranzakció PDF import — a "Számla melléklet" nevű
+  // MOL-dokumentumot dolgozza fel (nem magát a számlát). Ugyanaz a
+  // "digest, admin dönt" minta, mint a Bank/NAV import fent, de a
+  // MolTankolasInterface::elemezPdf()/alkalmaz() a `tankolasok` táblába ír,
+  // NEM a Pénzforgalom `egyeb_koltsegek`-jébe — ld. az interface fájl fejléc-
+  // kommentje a duplikáció elkerüléséről (a Pénzforgalom Üzemanyag-
+  // összesítője a kettőt amúgy is összeadná).
+  const [molModalOpen, setMolModalOpen] = useState(false);
+  const [molElemzesLoading, setMolElemzesLoading] = useState(false);
+  const [molElemezve, setMolElemezve] = useState(false);
+  const [molSorok, setMolSorok] = useState([]);
+  const [molKihagyottSorSzam, setMolKihagyottSorSzam] = useState(0);
+  const [molAlkalmazasLoading, setMolAlkalmazasLoading] = useState(false);
+
   // A két ref sorszámozza a saját loaderük hívásait — a beérkező válasz
   // csak akkor alkalmazódik, ha még mindig ő a LEGUTÓBB elindított hívás.
   // Enélkül egy korábbi, lassabb hívás válasza felülírhatta egy később
@@ -640,6 +677,186 @@ export default function Koltsegek() {
       }
     } finally {
       setNavImportLoading(false);
+    }
+  };
+
+  const openBankModal = () => {
+    setBankModalOpen(true);
+    setBankCsvSzoveg("");
+    setBankFejlec([]);
+    setBankOszlopok({ datum: "", osszeg: "", kozlemeny: "" });
+    setBankElemezve(false);
+    setBankSorok([]);
+  };
+
+  // Ugyanaz a `;`/`,` elválasztó-heurisztika, mint a backend
+  // `BankImportInterface::parseCsv()`-jében — csak a fejléc előnézetéhez,
+  // a tényleges soronkénti feldolgozás mindig a szerveren történik.
+  const bankSorElvalasztva = (sor) => {
+    const elvalaszto = (sor.match(/;/g) || []).length > (sor.match(/,/g) || []).length ? ";" : ",";
+    return sor.split(elvalaszto).map((cella) => cella.trim().replace(/^"|"$/g, ""));
+  };
+
+  const handleBankFajlValasztas = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const szoveg = String(reader.result || "");
+      setBankCsvSzoveg(szoveg);
+      const elsoSor = szoveg.split(/\r\n|\r|\n/)[0] || "";
+      setBankFejlec(bankSorElvalasztva(elsoSor));
+      setBankElemezve(false);
+      setBankSorok([]);
+    };
+    reader.readAsText(file, "UTF-8");
+  };
+
+  const handleBankElemzes = async () => {
+    if (bankOszlopok.datum === "" || bankOszlopok.osszeg === "") {
+      toast.error("Válaszd ki legalább a dátum és az összeg oszlopát.");
+      return;
+    }
+    setBankElemzesLoading(true);
+    try {
+      const result = await fetchAction("elemezBankImportCsv", {
+        ceg_id: user.ceg_id,
+        kerelmezo_id: user.id,
+        csv: bankCsvSzoveg,
+        oszlopok: {
+          datum: Number(bankOszlopok.datum),
+          osszeg: Number(bankOszlopok.osszeg),
+          ...(bankOszlopok.kozlemeny !== "" ? { kozlemeny: Number(bankOszlopok.kozlemeny) } : {}),
+        },
+      });
+      if (result?.success) {
+        // Alapból a javasolt párosítást fogadjuk el soronként, ha van — a
+        // felhasználó ezt a review-listán bármikor "Új tétel"-re vagy
+        // "Kihagyás"-ra válthatja, mielőtt alkalmazná.
+        setBankSorok(
+          (result.sorok || []).map((s) => ({ ...s, akcio: s.javasoltTetel ? "parosit" : "uj" })),
+        );
+        setBankKihagyottSorSzam(result.kihagyottSorSzam || 0);
+        setBankMarFeldolgozottSorSzam(result.marFeldolgozottSorSzam || 0);
+        setBankElemezve(true);
+      } else {
+        toast.error(result?.message || "A CSV elemzése sikertelen.");
+      }
+    } finally {
+      setBankElemzesLoading(false);
+    }
+  };
+
+  const changeBankSorAkcio = (hash, akcio) => {
+    setBankSorok((prev) => prev.map((s) => (s.hash === hash ? { ...s, akcio } : s)));
+  };
+
+  const handleBankAlkalmazas = async () => {
+    setBankAlkalmazasLoading(true);
+    try {
+      const result = await fetchAction("alkalmazBankImport", {
+        ceg_id: user.ceg_id,
+        kerelmezo_id: user.id,
+        sorok: bankSorok,
+      });
+      if (result?.success) {
+        const e = result.eredmeny;
+        toast.success(
+          `Kész: ${e.parositva} párosítva, ${e.ujTetel} új tétel, ${e.kihagyva} kihagyva${e.hiba ? `, ${e.hiba} hiba` : ""}.`,
+        );
+        setBankModalOpen(false);
+        loadOsszesito();
+        loadTetelek();
+      } else {
+        toast.error(result?.message || "Az alkalmazás sikertelen.");
+      }
+    } finally {
+      setBankAlkalmazasLoading(false);
+    }
+  };
+
+  const openMolModal = () => {
+    setMolModalOpen(true);
+    setMolElemezve(false);
+    setMolSorok([]);
+    setMolKihagyottSorSzam(0);
+  };
+
+  const handleMolFajlValasztas = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setMolElemzesLoading(true);
+    const reader = new FileReader();
+    reader.onload = async () => {
+      // "data:application/pdf;base64,XXXX" — a szerver csak a nyers
+      // base64-tartalmat várja, a data-URL fejlécet levágjuk.
+      const dataUrl = String(reader.result || "");
+      const base64 = dataUrl.split(",")[1] || "";
+      try {
+        const result = await fetchAction("elemezMolTankolasPdf", {
+          ceg_id: user.ceg_id,
+          kerelmezo_id: user.id,
+          pdf: base64,
+        });
+        if (result?.success) {
+          // Alapból csak a felismert rendszámú (jármühöz köthető) és még
+          // nem importált sorok vannak bepipálva — a fel nem ismert
+          // rendszámúakat az admin a jármű kézi kiválasztása UTÁN maga
+          // pipálja be, hogy véletlenül ne kerüljön be jármű nélküli sor.
+          setMolSorok(
+            (result.sorok || []).map((s) => ({
+              ...s,
+              betoltendo: !s.marImportalva && !!s.jarmuId,
+            })),
+          );
+          setMolKihagyottSorSzam(result.kihagyottSorSzam || 0);
+          setMolElemezve(true);
+        } else {
+          toast.error(result?.message || "A PDF elemzése sikertelen.");
+        }
+      } finally {
+        setMolElemzesLoading(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const changeMolSorBetoltendo = (molSlipId, betoltendo) => {
+    setMolSorok((prev) => prev.map((s) => (s.molSlipId === molSlipId ? { ...s, betoltendo } : s)));
+  };
+
+  const changeMolSorJarmu = (molSlipId, ertek) => {
+    const [jarmuTipus, jarmuId] = ertek ? ertek.split(":") : [null, null];
+    setMolSorok((prev) =>
+      prev.map((s) =>
+        s.molSlipId === molSlipId
+          ? { ...s, jarmuTipus: jarmuTipus || null, jarmuId: jarmuId || null, betoltendo: !!jarmuId }
+          : s,
+      ),
+    );
+  };
+
+  const handleMolAlkalmazas = async () => {
+    setMolAlkalmazasLoading(true);
+    try {
+      const result = await fetchAction("alkalmazMolTankolas", {
+        ceg_id: user.ceg_id,
+        kerelmezo_id: user.id,
+        sorok: molSorok,
+      });
+      if (result?.success) {
+        const e = result.eredmeny;
+        toast.success(
+          `Kész: ${e.sikeres} tankolás rögzítve${e.marVolt ? `, ${e.marVolt} már korábban importálva volt` : ""}${
+            e.hiba ? `, ${e.hiba} hiba` : ""
+          }.`,
+        );
+        setMolModalOpen(false);
+      } else {
+        toast.error(result?.message || "Az alkalmazás sikertelen.");
+      }
+    } finally {
+      setMolAlkalmazasLoading(false);
     }
   };
 
@@ -1204,6 +1421,22 @@ export default function Koltsegek() {
                 </button>
                 <button
                   type="button"
+                  onClick={openBankModal}
+                  className="flex items-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-ink-600 shadow-soft transition-all duration-300 ease-fluid hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 active:scale-95 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-300 dark:hover:border-brand-700 dark:hover:bg-brand-950/40 dark:hover:text-brand-300"
+                >
+                  <PiBankLight className="h-4 w-4" />
+                  Bank import
+                </button>
+                <button
+                  type="button"
+                  onClick={openMolModal}
+                  className="flex items-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-ink-600 shadow-soft transition-all duration-300 ease-fluid hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 active:scale-95 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-300 dark:hover:border-brand-700 dark:hover:bg-brand-950/40 dark:hover:text-brand-300"
+                >
+                  <PiGasPumpLight className="h-4 w-4" />
+                  MOL tankolás import
+                </button>
+                <button
+                  type="button"
                   onClick={openAdding}
                   className="ml-auto flex items-center gap-1.5 rounded-xl bg-brand-600 px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-all duration-300 ease-fluid hover:bg-brand-700 active:scale-95"
                 >
@@ -1549,7 +1782,7 @@ export default function Koltsegek() {
                                 <select
                                   value={t.kategoria || ""}
                                   onChange={(e) => changeNavKategoria(t.szamlaszam, e.target.value)}
-                                  disabled={t.mar_importalva}
+                                  disabled={t.mar_importalva || t.mol_tankolasbol_fedve}
                                   className="rounded-lg border border-ink-200 bg-white px-2 py-1 text-xs text-ink-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-200"
                                 >
                                   <option value="">Kiadás</option>
@@ -1564,9 +1797,11 @@ export default function Koltsegek() {
                             <td className="px-3 py-2 text-xs text-ink-400 dark:text-ink-500">
                               {t.mar_importalva
                                 ? "Már importálva"
-                                : t.osszeg_huf === null
-                                  ? "Hiányos adat"
-                                  : "Új"}
+                                : t.mol_tankolasbol_fedve
+                                  ? "Már fedve (MOL tankolás import)"
+                                  : t.osszeg_huf === null
+                                    ? "Hiányos adat"
+                                    : "Új"}
                             </td>
                           </tr>
                         ))}
@@ -1598,6 +1833,340 @@ export default function Koltsegek() {
             )}
           </div>
         )}
+      </Modal>
+
+      <Modal
+        open={bankModalOpen}
+        onClose={() => setBankModalOpen(false)}
+        title="Bankszámla-kivonat import"
+        maxWidth="max-w-5xl"
+      >
+        <div className="space-y-4">
+          {!bankElemezve && (
+            <>
+              <p className="text-sm text-ink-500 dark:text-ink-400">
+                Töltsd fel a bankod CSV-exportját — a rendszer megjelöli a hozzá kiválasztott
+                oszlopok alapján a már rögzített tételekkel valószínűleg egyező sorokat, a többit
+                pedig új tételként ajánlja fel. Semmi nem kerül be a Pénzforgalomba, amíg a
+                következő lépésben jóvá nem hagyod.
+              </p>
+              <div>
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-white px-3.5 py-2 text-xs font-semibold text-ink-600 shadow-soft ring-1 ring-ink-200 transition-colors duration-200 hover:bg-brand-50 hover:text-brand-700 dark:bg-ink-800 dark:text-ink-300 dark:ring-ink-700 dark:hover:bg-brand-950/40 dark:hover:text-brand-300">
+                  <PiFileArrowUpLight className="h-4 w-4" />
+                  CSV fájl kiválasztása
+                  <input type="file" accept=".csv,text/csv" className="hidden" onChange={handleBankFajlValasztas} />
+                </label>
+              </div>
+
+              {bankFejlec.length > 0 && (
+                <>
+                  <FormSection columns={3}>
+                    <FormField
+                      as="select"
+                      label="Dátum oszlopa"
+                      value={bankOszlopok.datum}
+                      onChange={(e) => setBankOszlopok((prev) => ({ ...prev, datum: e.target.value }))}
+                    >
+                      <option value="">Válassz oszlopot</option>
+                      {bankFejlec.map((cim, idx) => (
+                        <option key={idx} value={idx}>
+                          {cim || `${idx + 1}. oszlop`}
+                        </option>
+                      ))}
+                    </FormField>
+                    <FormField
+                      as="select"
+                      label="Összeg oszlopa"
+                      value={bankOszlopok.osszeg}
+                      onChange={(e) => setBankOszlopok((prev) => ({ ...prev, osszeg: e.target.value }))}
+                    >
+                      <option value="">Válassz oszlopot</option>
+                      {bankFejlec.map((cim, idx) => (
+                        <option key={idx} value={idx}>
+                          {cim || `${idx + 1}. oszlop`}
+                        </option>
+                      ))}
+                    </FormField>
+                    <FormField
+                      as="select"
+                      label="Közlemény oszlopa (opcionális)"
+                      value={bankOszlopok.kozlemeny}
+                      onChange={(e) => setBankOszlopok((prev) => ({ ...prev, kozlemeny: e.target.value }))}
+                    >
+                      <option value="">Nincs</option>
+                      {bankFejlec.map((cim, idx) => (
+                        <option key={idx} value={idx}>
+                          {cim || `${idx + 1}. oszlop`}
+                        </option>
+                      ))}
+                    </FormField>
+                  </FormSection>
+
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={handleBankElemzes}
+                      disabled={bankElemzesLoading}
+                      className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {bankElemzesLoading ? "Elemzés..." : "Elemzés"}
+                    </button>
+                  </div>
+                </>
+              )}
+            </>
+          )}
+
+          {bankElemezve && (
+            <>
+              {(bankMarFeldolgozottSorSzam > 0 || bankKihagyottSorSzam > 0) && (
+                <p className="text-xs text-ink-400 dark:text-ink-500">
+                  {bankMarFeldolgozottSorSzam > 0 &&
+                    `${bankMarFeldolgozottSorSzam} sor egy korábbi importból már fel van dolgozva, ezért nem jelenik meg újra. `}
+                  {bankKihagyottSorSzam > 0 && `${bankKihagyottSorSzam} sort nem sikerült értelmezni (hiányos dátum/összeg).`}
+                </p>
+              )}
+
+              {bankSorok.length === 0 ? (
+                <p className="py-6 text-center text-sm text-ink-400 dark:text-ink-500">
+                  Nincs feldolgozható, még ismeretlen sor ebben a fájlban.
+                </p>
+              ) : (
+                <div className="max-h-96 overflow-y-auto rounded-xl border border-ink-100 dark:border-ink-800">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 bg-slate-50 text-xs uppercase text-ink-400 dark:bg-ink-800 dark:text-ink-500">
+                      <tr>
+                        <th className="px-3 py-2 text-left">Dátum</th>
+                        <th className="px-3 py-2 text-right">Összeg</th>
+                        <th className="px-3 py-2 text-left">Közlemény</th>
+                        <th className="px-3 py-2 text-left">Döntés</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {bankSorok.map((s) => (
+                        <tr key={s.hash} className="border-t border-ink-100 align-top dark:border-ink-800">
+                          <td className="px-3 py-2 text-ink-500 dark:text-ink-400">{s.datum}</td>
+                          <td
+                            className={`px-3 py-2 text-right tabular-nums font-medium ${
+                              s.osszeg >= 0 ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300"
+                            }`}
+                          >
+                            {formatHuf(s.osszeg)}
+                          </td>
+                          <td className="max-w-xs truncate px-3 py-2 text-ink-500 dark:text-ink-400" title={s.kozlemeny}>
+                            {s.kozlemeny || "—"}
+                          </td>
+                          <td className="px-3 py-2">
+                            <div className="flex flex-col gap-1">
+                              {s.javasoltTetel && (
+                                <label className="flex items-center gap-1.5 text-xs">
+                                  <input
+                                    type="radio"
+                                    name={`bank-akcio-${s.hash}`}
+                                    checked={s.akcio === "parosit"}
+                                    onChange={() => changeBankSorAkcio(s.hash, "parosit")}
+                                    className="accent-brand-600"
+                                  />
+                                  <PiLinkSimpleLight className="h-3.5 w-3.5 flex-shrink-0 text-brand-500" />
+                                  Párosítás: {s.javasoltTetel.megnevezes} ({formatHuf(s.javasoltTetel.osszeg)},{" "}
+                                  {s.javasoltTetel.datum})
+                                </label>
+                              )}
+                              <label className="flex items-center gap-1.5 text-xs">
+                                <input
+                                  type="radio"
+                                  name={`bank-akcio-${s.hash}`}
+                                  checked={s.akcio === "uj"}
+                                  onChange={() => changeBankSorAkcio(s.hash, "uj")}
+                                  className="accent-brand-600"
+                                />
+                                Új tétel létrehozása
+                              </label>
+                              <label className="flex items-center gap-1.5 text-xs">
+                                <input
+                                  type="radio"
+                                  name={`bank-akcio-${s.hash}`}
+                                  checked={s.akcio === "skip"}
+                                  onChange={() => changeBankSorAkcio(s.hash, "skip")}
+                                  className="accent-brand-600"
+                                />
+                                Kihagyás
+                              </label>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setBankModalOpen(false)}
+                  className="rounded-xl px-4 py-2 text-sm font-medium text-ink-500 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-800 dark:text-ink-400 dark:hover:bg-ink-800 dark:hover:text-ink-100"
+                >
+                  Mégse
+                </button>
+                {bankSorok.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleBankAlkalmazas}
+                    disabled={bankAlkalmazasLoading}
+                    className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {bankAlkalmazasLoading ? "Alkalmazás..." : `Alkalmazás (${bankSorok.length})`}
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </Modal>
+
+      <Modal
+        open={molModalOpen}
+        onClose={() => setMolModalOpen(false)}
+        title="MOL tankolás import"
+        maxWidth="max-w-6xl"
+      >
+        <div className="space-y-4">
+          {!molElemezve && (
+            <>
+              <p className="text-sm text-ink-500 dark:text-ink-400">
+                Töltsd fel a MOL "Számla melléklet" PDF-jét (a tranzakció-szintű részletezőt, nem
+                magát a számlát) — a rendszer kártyaszám/rendszám szerint bontja tankolásokra, és a
+                rendszám alapján megpróbálja beazonosítani a jármüvet. Semmi nem kerül be a
+                Tankolások közé, amíg a következő lépésben jóvá nem hagyod.
+              </p>
+              <div>
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-white px-3.5 py-2 text-xs font-semibold text-ink-600 shadow-soft ring-1 ring-ink-200 transition-colors duration-200 hover:bg-brand-50 hover:text-brand-700 dark:bg-ink-800 dark:text-ink-300 dark:ring-ink-700 dark:hover:bg-brand-950/40 dark:hover:text-brand-300">
+                  <PiFileArrowUpLight className="h-4 w-4" />
+                  {molElemzesLoading ? "Feldolgozás..." : "PDF fájl kiválasztása"}
+                  <input
+                    type="file"
+                    accept=".pdf,application/pdf"
+                    className="hidden"
+                    disabled={molElemzesLoading}
+                    onChange={handleMolFajlValasztas}
+                  />
+                </label>
+              </div>
+            </>
+          )}
+
+          {molElemezve && (
+            <>
+              {molKihagyottSorSzam > 0 && (
+                <p className="text-xs text-ink-400 dark:text-ink-500">
+                  {molKihagyottSorSzam} sort nem sikerült értelmezni vagy nem üzemanyag-tétel volt
+                  (pl. éves kártyadíj).
+                </p>
+              )}
+
+              {molSorok.length === 0 ? (
+                <p className="py-6 text-center text-sm text-ink-400 dark:text-ink-500">
+                  Nincs feldolgozható tankolási tétel ebben a fájlban.
+                </p>
+              ) : (
+                <div className="max-h-96 overflow-y-auto rounded-xl border border-ink-100 dark:border-ink-800">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 bg-slate-50 text-xs uppercase text-ink-400 dark:bg-ink-800 dark:text-ink-500">
+                      <tr>
+                        <th className="px-3 py-2 text-left">Dátum</th>
+                        <th className="px-3 py-2 text-left">Rendszám</th>
+                        <th className="px-3 py-2 text-left">Jármű</th>
+                        <th className="px-3 py-2 text-right">Liter</th>
+                        <th className="px-3 py-2 text-right">Összeg</th>
+                        <th className="px-3 py-2 text-center">Import</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {molSorok.map((s) => (
+                        <tr key={s.molSlipId} className="border-t border-ink-100 align-top dark:border-ink-800">
+                          <td className="whitespace-nowrap px-3 py-2 text-ink-500 dark:text-ink-400">{s.datum}</td>
+                          <td className="whitespace-nowrap px-3 py-2 font-medium text-ink-700 dark:text-ink-200">
+                            {s.rendszamNyers || "—"}
+                          </td>
+                          <td className="px-3 py-2">
+                            {s.marImportalva ? (
+                              <span className="inline-flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-300">
+                                <PiCheckCircleLight className="h-4 w-4" /> Már importálva
+                              </span>
+                            ) : s.jarmuId ? (
+                              <span className="text-xs text-ink-500 dark:text-ink-400">
+                                {s.jarmuTipus === "kamion"
+                                  ? kamionok.find((k) => String(k.id) === String(s.jarmuId))?.rendszam
+                                  : furgonok.find((f) => String(f.id) === String(s.jarmuId))?.rendszam}{" "}
+                                ({s.jarmuTipus})
+                              </span>
+                            ) : (
+                              <select
+                                value=""
+                                onChange={(e) => changeMolSorJarmu(s.molSlipId, e.target.value)}
+                                className="rounded-lg border border-amber-300 bg-amber-50 px-2 py-1 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+                              >
+                                <option value="">Nem azonosítható rendszám — válassz jármüvet</option>
+                                {kamionok.map((k) => (
+                                  <option key={`kamion:${k.id}`} value={`kamion:${k.id}`}>
+                                    {k.rendszam} (kamion)
+                                  </option>
+                                ))}
+                                {furgonok.map((f) => (
+                                  <option key={`furgon:${f.id}`} value={`furgon:${f.id}`}>
+                                    {f.rendszam} (furgon)
+                                  </option>
+                                ))}
+                              </select>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-right tabular-nums text-ink-500 dark:text-ink-400">
+                            {s.liter?.toLocaleString("hu-HU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                          <td className="px-3 py-2 text-right tabular-nums font-medium text-ink-700 dark:text-ink-200">
+                            {formatHuf(s.osszeg)}
+                          </td>
+                          <td className="px-3 py-2 text-center">
+                            <input
+                              type="checkbox"
+                              checked={!!s.betoltendo}
+                              disabled={s.marImportalva || !s.jarmuId}
+                              onChange={(e) => changeMolSorBetoltendo(s.molSlipId, e.target.checked)}
+                              className="accent-brand-600"
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setMolModalOpen(false)}
+                  className="rounded-xl px-4 py-2 text-sm font-medium text-ink-500 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-800 dark:text-ink-400 dark:hover:bg-ink-800 dark:hover:text-ink-100"
+                >
+                  Mégse
+                </button>
+                {molSorok.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleMolAlkalmazas}
+                    disabled={molAlkalmazasLoading || molSorok.filter((s) => s.betoltendo).length === 0}
+                    className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {molAlkalmazasLoading
+                      ? "Alkalmazás..."
+                      : `Alkalmazás (${molSorok.filter((s) => s.betoltendo).length})`}
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </Modal>
     </div>
   );

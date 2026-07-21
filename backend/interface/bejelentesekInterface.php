@@ -281,6 +281,70 @@ class BejelentesekInterface {
         }
     }
 
+    // A korábban csak frontend-mockolt üzenetfolyam (ld. a fájl tetején lévő
+    // komment) valódi backendje — ugyanaz a minta, mint
+    // `HelyszinInterface::getHelyszinMegjegyzesek()`/`newHelyszinMegjegyzes()`.
+    // `$sofor_id` NULL admin-hívásnál (a cég BÁRMELY bejelentéséhez fér
+    // hozzá), és a hívó saját, szerver-oldalon feloldott sofőr-id-je
+    // sofőr-hívásnál (csak a SAJÁT bejelentéséhez fér hozzá) — enélkül egy
+    // sofőr egy másik sofőr bejelentésének üzenetfolyamát is olvashatná/
+    // írhatná puszta bejelentes_id-tallózással.
+    private function bejelentesElerheto($bejelentes_id, $ceg_id, $sofor_id = null) {
+        $query = "SELECT id FROM bejelentesek WHERE id = :id AND admin = :ceg_id AND torolt <> 'I'";
+        if ($sofor_id !== null) {
+            $query .= " AND sofor_id = :sofor_id";
+        }
+        $stmt = $this->db->prepare($query);
+        $stmt->bindValue(':id', $bejelentes_id);
+        $stmt->bindValue(':ceg_id', $ceg_id);
+        if ($sofor_id !== null) {
+            $stmt->bindValue(':sofor_id', $sofor_id);
+        }
+        $stmt->execute();
+        return (bool) $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function getMessages($bejelentes_id, $ceg_id, $sofor_id = null) {
+        try {
+            if (!$this->bejelentesElerheto($bejelentes_id, $ceg_id, $sofor_id)) {
+                return ['success' => false, 'message' => 'A bejelentés nem található, vagy nincs jogosultságod hozzá.'];
+            }
+
+            $query = "SELECT * FROM bejelentes_uzenetek WHERE bejelentes_id = :id AND torolt <> 'I' ORDER BY letrehozva ASC, id ASC";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindValue(':id', $bejelentes_id);
+            $stmt->execute();
+            return ['success' => true, 'uzenetek' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    public function sendMessage($bejelentes_id, $szoveg, $ceg_id, $szerzo_tipus, $szerzo_id, $szerzo_nev, $sofor_id = null) {
+        try {
+            if (!$this->bejelentesElerheto($bejelentes_id, $ceg_id, $sofor_id)) {
+                return ['success' => false, 'message' => 'A bejelentés nem található, vagy nincs jogosultságod hozzá.'];
+            }
+            if (trim((string) $szoveg) === '') {
+                return ['success' => false, 'message' => 'Az üzenet nem lehet üres.'];
+            }
+
+            $query = "INSERT INTO bejelentes_uzenetek (bejelentes_id, szerzo_tipus, szerzo_id, szerzo_nev, szoveg)
+                      VALUES (:bejelentes_id, :szerzo_tipus, :szerzo_id, :szerzo_nev, :szoveg)";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindValue(':bejelentes_id', $bejelentes_id);
+            $stmt->bindValue(':szerzo_tipus', $szerzo_tipus);
+            $stmt->bindValue(':szerzo_id', $szerzo_id);
+            $stmt->bindValue(':szerzo_nev', $szerzo_nev);
+            $stmt->bindValue(':szoveg', $szoveg);
+            $stmt->execute();
+
+            return ['success' => true, 'id' => $this->db->lastInsertId(), 'message' => 'Üzenet elküldve.'];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
     public function deleteBejelentes($id, $ceg_id) {
         try {
             $query = "UPDATE bejelentesek SET torolt = 'I' WHERE id = :id AND admin = :ceg_id";

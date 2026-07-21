@@ -13,6 +13,8 @@ import {
   PiWrenchLight,
   PiCheckCircleLight,
   PiInfoLight,
+  PiChatCircleTextLight,
+  PiPaperPlaneRightLight,
 } from "react-icons/pi";
 import FormField, { FormSection } from "components/UI/FormField.js";
 import PageCard from "components/UI/PageCard.js";
@@ -55,6 +57,15 @@ export default function CardBejelentesek({ initBejelentesek }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isFileUploading, setIsFileUploading] = useState(false);
 
+  // Valódi, backenddel rendelkező üzenetfolyam (ld. a fájl tetején lévő
+  // komment a korábbi, sosem működött mock-verzióról). Az "Admin válasz"
+  // mező marad a hivatalos, egyszeri lezáró válasz — ez itt egy tényleges,
+  // kétirányú beszélgetés a sofőrrel ugyanahhoz a bejelentéshez.
+  const [uzenetek, setUzenetek] = useState([]);
+  const [ujUzenet, setUjUzenet] = useState("");
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+
   useEffect(() => {
     const fetchOptions = async () => {
       const kamionResult = await fetchAction("getKamionRendszamok", { id: user.ceg_id });
@@ -70,9 +81,33 @@ export default function CardBejelentesek({ initBejelentesek }) {
   useEffect(() => {
     if (!isNew) {
       fetchFiles();
+      fetchUzenetek();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initBejelentesek?.id]);
+
+  const fetchUzenetek = async () => {
+    setIsLoadingMessages(true);
+    const result = await fetchAction("getMessages", { bejelentes_id: initBejelentesek.id });
+    if (result?.success) setUzenetek(result.uzenetek || []);
+    setIsLoadingMessages(false);
+  };
+
+  const handleSendMessage = async () => {
+    if (!ujUzenet.trim()) return;
+    setIsSendingMessage(true);
+    try {
+      const result = await fetchAction("sendMessage", { bejelentes_id: initBejelentesek.id, szoveg: ujUzenet.trim() });
+      if (result?.success) {
+        setUjUzenet("");
+        await fetchUzenetek();
+      } else {
+        toast.error(result?.message || "Az üzenet küldése sikertelen.");
+      }
+    } finally {
+      setIsSendingMessage(false);
+    }
+  };
 
   const fetchFiles = async () => {
     const result = await fetchAction("getFiles", { id: initBejelentesek.id, tabla: "bejelentesek" });
@@ -277,6 +312,65 @@ export default function CardBejelentesek({ initBejelentesek }) {
                   rows="3"
                   placeholder="Ez a szöveg a sofőr saját Bejelentések/Értesítések nézetében is megjelenik."
                 />
+              </FormSection>
+            )}
+
+            {!isNew && (
+              <FormSection title="Üzenetek" columns={1}>
+                <div className="flex flex-col gap-3 rounded-xl border border-ink-100 bg-slate-50 p-3 dark:border-ink-800 dark:bg-ink-800">
+                  {isLoadingMessages ? (
+                    <p className="py-4 text-center text-sm text-ink-400 dark:text-ink-500">Betöltés...</p>
+                  ) : uzenetek.length === 0 ? (
+                    <div className="flex flex-col items-center gap-1.5 py-6 text-center">
+                      <PiChatCircleTextLight className="h-6 w-6 text-ink-300 dark:text-ink-600" />
+                      <p className="text-sm text-ink-400 dark:text-ink-500">
+                        Még nincs üzenet ehhez a bejelentéshez.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex max-h-80 flex-col gap-2 overflow-y-auto">
+                      {uzenetek.map((u) => (
+                        <div
+                          key={u.id}
+                          className={`max-w-[85%] rounded-xl px-3 py-2 text-sm ${
+                            u.szerzo_tipus === "admin"
+                              ? "self-end bg-brand-600 text-white"
+                              : "self-start bg-white text-ink-700 shadow-soft dark:bg-ink-900 dark:text-ink-100"
+                          }`}
+                        >
+                          <p className={`mb-0.5 text-xs font-semibold ${u.szerzo_tipus === "admin" ? "text-brand-100" : "text-ink-400 dark:text-ink-500"}`}>
+                            {u.szerzo_nev} · {(u.letrehozva || "").slice(0, 16).replace("T", " ")}
+                          </p>
+                          <p className="whitespace-pre-wrap">{u.szoveg}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex items-end gap-2 border-t border-ink-100 pt-3 dark:border-ink-700">
+                    <textarea
+                      value={ujUzenet}
+                      onChange={(e) => setUjUzenet(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendMessage();
+                        }
+                      }}
+                      rows="1"
+                      placeholder="Írj üzenetet a sofőrnek..."
+                      className="flex-1 resize-none rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm text-ink-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-100"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSendMessage}
+                      disabled={isSendingMessage || !ujUzenet.trim()}
+                      className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-brand-600 text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      aria-label="Üzenet küldése"
+                    >
+                      <PiPaperPlaneRightLight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
               </FormSection>
             )}
 

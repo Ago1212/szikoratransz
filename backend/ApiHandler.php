@@ -25,6 +25,8 @@ require 'interface/navSzamlaInterface.php';
 require 'interface/gpsmartInterface.php';
 require 'interface/piaciArakInterface.php';
 require 'interface/pushInterface.php';
+require 'interface/bankImportInterface.php';
+require 'interface/molTankolasInterface.php';
 require_once 'WebAuthnHelper.php';
 class ApiHandler {
     protected string $auth_hash;
@@ -163,6 +165,10 @@ class ApiHandler {
         'getNavSzamlaBeallitasokStatusz' => ['koltsegek', 'hozzaferes'],
         'navSzamlaLekerdezes' => ['koltsegek', 'hozzaferes'],
         'saveNavSzamlaBeallitasok' => ['koltsegek', 'szerkesztes'],
+        'elemezBankImportCsv' => ['koltsegek', 'hozzaferes'],
+        'alkalmazBankImport' => ['koltsegek', 'szerkesztes'],
+        'elemezMolTankolasPdf' => ['koltsegek', 'hozzaferes'],
+        'alkalmazMolTankolas' => ['koltsegek', 'szerkesztes'],
         'getGpsmartBeallitasokStatusz' => ['kamionok', 'hozzaferes'],
         'gpsmartPoziciok' => ['kamionok', 'hozzaferes'],
         'gpsmartMegtettUtMa' => ['kamionok', 'hozzaferes'],
@@ -277,6 +283,17 @@ class ApiHandler {
 
             'getAjanlatkeresek' => [],
             'updateAjanlatkeresStatusz' => ['id', 'statusz'],
+
+            'getTeendok' => ['id', 'kerelmezo_id'],
+
+            'getMessages' => ['bejelentes_id'],
+            'sendMessage' => ['bejelentes_id', 'szoveg'],
+
+            'elemezBankImportCsv' => ['csv', 'oszlopok', 'ceg_id', 'kerelmezo_id'],
+            'alkalmazBankImport' => ['sorok', 'ceg_id', 'kerelmezo_id'],
+
+            'elemezMolTankolasPdf' => ['pdf', 'ceg_id', 'kerelmezo_id'],
+            'alkalmazMolTankolas' => ['sorok', 'ceg_id', 'kerelmezo_id'],
 
             'getSzabadsagok' => ['id', 'kerelmezo_id'],
             'newSzabadsag' => ['admin', 'sofor_id', 'datum_tol', 'datum_ig', 'kerelmezo_id'],
@@ -585,7 +602,7 @@ class ApiHandler {
     }
 
     public function process(?array $request) {
-        global $kamionInterface, $potkocsiInterface, $furgonInterface, $soforokInterface, $filesInterface, $emailInterface, $bejelentesekInterface, $karbantartasInterface, $szabadsagInterface, $tankolasInterface, $jarmuValtasInterface, $ugyfelInterface, $csapatInterface, $helyszinInterface, $jogosultsagInterface, $szerepkorInterface, $listaInterface, $keresesInterface, $koltsegInterface, $ertesitesInterface, $navSzamlaInterface, $gpsmartInterface, $piaciArakInterface, $pushInterface;
+        global $kamionInterface, $potkocsiInterface, $furgonInterface, $soforokInterface, $filesInterface, $emailInterface, $bejelentesekInterface, $karbantartasInterface, $szabadsagInterface, $tankolasInterface, $jarmuValtasInterface, $ugyfelInterface, $csapatInterface, $helyszinInterface, $jogosultsagInterface, $szerepkorInterface, $listaInterface, $keresesInterface, $koltsegInterface, $ertesitesInterface, $navSzamlaInterface, $gpsmartInterface, $piaciArakInterface, $pushInterface, $bankImportInterface, $molTankolasInterface;
         try {
             $this->validation($request);
             $action = $request['action'];
@@ -1388,6 +1405,62 @@ class ApiHandler {
                     return;
                 case 'updateAjanlatkeresStatusz':
                     echo json_encode($this->updateAjanlatkeresStatusz($request['id'], $request['statusz']));
+                    return;
+
+                case 'getTeendok':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($this->getTeendok($kerelmezo['ceg_id'], $kerelmezo['is_root'] || $kerelmezo['szerepkor'] === 'admin'));
+                    return;
+
+                case 'getMessages':
+                    $session = $this->requireValidSession($request);
+                    $cegId = $this->resolveSajatCegId($request);
+                    $soforId = $session['felhasznalo_tipus'] === 'sofor' ? $this->resolveSajatSoforId($request) : null;
+                    echo json_encode($bejelentesekInterface->getMessages($request['bejelentes_id'], $cegId, $soforId));
+                    return;
+                case 'sendMessage':
+                    // A szerző típusát/id-ját/nevét mindig a hívó munkamenetéből
+                    // oldjuk fel, sosem a kliens `$request` mezőiből — ugyanaz a
+                    // minta, mint `newHelyszinMegjegyzes`-nél.
+                    $session = $this->requireValidSession($request);
+                    $cegId = $this->resolveSajatCegId($request);
+                    if ($session['felhasznalo_tipus'] === 'sofor') {
+                        $szerzoId = $this->resolveSajatSoforId($request);
+                        $nevStmt = $this->db->prepare("SELECT name FROM user WHERE id = :id");
+                        $nevStmt->bindValue(':id', $szerzoId);
+                        $nevStmt->execute();
+                        $szerzoNev = $nevStmt->fetch(PDO::FETCH_ASSOC)['name'] ?? 'Sofőr';
+                        $result = $bejelentesekInterface->sendMessage($request['bejelentes_id'], $request['szoveg'], $cegId, 'sofor', $szerzoId, $szerzoNev, $szerzoId);
+                        if ($result['success']) {
+                            $this->ertesitBejelentesUjUzenetrol($cegId, $request['bejelentes_id'], $szerzoNev);
+                        }
+                    } else {
+                        $szerzoId = $session['felhasznalo_id'];
+                        $nevStmt = $this->db->prepare("SELECT name FROM admin WHERE id = :id");
+                        $nevStmt->bindValue(':id', $szerzoId);
+                        $nevStmt->execute();
+                        $szerzoNev = $nevStmt->fetch(PDO::FETCH_ASSOC)['name'] ?? 'Admin';
+                        $result = $bejelentesekInterface->sendMessage($request['bejelentes_id'], $request['szoveg'], $cegId, 'admin', $szerzoId, $szerzoNev);
+                    }
+                    echo json_encode($result);
+                    return;
+
+                case 'elemezBankImportCsv':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($bankImportInterface->elemezCsv($request['csv'], $request['oszlopok'], $kerelmezo['ceg_id']));
+                    return;
+                case 'alkalmazBankImport':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($bankImportInterface->alkalmaz($request['sorok'], $kerelmezo['ceg_id']));
+                    return;
+
+                case 'elemezMolTankolasPdf':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($molTankolasInterface->elemezPdf($request['pdf'], $kerelmezo['ceg_id']));
+                    return;
+                case 'alkalmazMolTankolas':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($molTankolasInterface->alkalmaz($request['sorok'], $kerelmezo['ceg_id']));
                     return;
 
                 case 'requestPasswordReset':
@@ -2399,6 +2472,74 @@ class ApiHandler {
             return ['success' => true];
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    // "Teendők" akció-központ (fejlesztési javaslat, 2026-07-20) — a
+    // jóváhagyásra váró jármű-váltási kérelem, az új bejelentés és a friss
+    // ajánlatkérés eddig 3 különböző helyen élt (haranG-értesítés, Bejelentések
+    // lista, Ajánlatkérések oldal). Ez a metódus NEM gyűjt új adatot, csak a
+    // meglévő 3 forrást fésüli össze egy Dashboard-kártyához, ugyanazokkal a
+    // metódusokkal, amiket a haranG-értesítés is használ (getFuggoJarmuValtasok/
+    // getNyitottBejelentesek) — a jóváhagyás/elutasítás a kártyáról így
+    // pontosan ugyanazt az `elbiralJarmuValtas` akciót hívja, amit a Sidebar is.
+    // Az ajánlatkérések (globális, nem ceg_id-s adat, ld. ADMIN_ONLY_ACTIONS
+    // komment) szándékosan csak akkor kerülnek bele, ha a hívó valódi
+    // admin/gyökér szerepkörű — egy korlátozott (pl. fuvarszervező) csapattag
+    // ne lásson üzemeltetői marketing-leadeket a saját Dashboardján.
+    private function getTeendok($ceg_id, $isAdmin) {
+        global $jarmuValtasInterface, $bejelentesekInterface;
+        try {
+            $jarmuValtas = $jarmuValtasInterface->getFuggoJarmuValtasok($ceg_id);
+            $bejelentesek = $bejelentesekInterface->getNyitottBejelentesek($ceg_id);
+
+            $ajanlatkeresek = [];
+            if ($isAdmin) {
+                $osszesAjanlatkeres = $this->getAjanlatkeresek();
+                if ($osszesAjanlatkeres['success']) {
+                    $ajanlatkeresek = array_values(array_filter(
+                        $osszesAjanlatkeres['ajanlatkeresek'],
+                        fn($a) => $a['statusz'] === 'uj'
+                    ));
+                }
+            }
+
+            return [
+                'success' => true,
+                'jarmuValtas' => $jarmuValtas['success'] ? $jarmuValtas['kerelmek'] : [],
+                'bejelentesek' => $bejelentesek['success'] ? $bejelentesek['bejelentesek'] : [],
+                'ajanlatkeresek' => $ajanlatkeresek,
+            ];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    // Új bejelentés-üzenetről a cég MINDEN admin-fiókját (gyökér + minden
+    // csapattag) értesíti, akinek van aktív Web Push feliratkozása — a
+    // driver-oldali push-infrastruktúra még nem létezik (ld. CLAUDE.md), ezért
+    // ez csak a sofőr -> admin irányt fedi le. `sendPushAdminnak()` némán nem
+    // csinál semmit egy nem-feliratkozott admin-nál, tehát biztonságos minden
+    // csapattagra meghívni szűrés nélkül.
+    private function ertesitBejelentesUjUzenetrol($ceg_id, $bejelentes_id, $szerzoNev) {
+        global $pushInterface;
+        try {
+            $cimStmt = $this->db->prepare("SELECT cim FROM bejelentesek WHERE id = :id");
+            $cimStmt->bindValue(':id', $bejelentes_id);
+            $cimStmt->execute();
+            $cim = $cimStmt->fetch(PDO::FETCH_ASSOC)['cim'] ?? 'Bejelentés';
+
+            $adminStmt = $this->db->prepare(
+                "SELECT id FROM admin WHERE (id = :ceg_id OR tulajdonos_admin_id = :ceg_id2) AND torolt <> 'I'"
+            );
+            $adminStmt->bindValue(':ceg_id', $ceg_id);
+            $adminStmt->bindValue(':ceg_id2', $ceg_id);
+            $adminStmt->execute();
+            foreach ($adminStmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $pushInterface->sendPushAdminnak($row['id'], 'Új üzenet — ' . $cim, $szerzoNev . ' írt a bejelentéshez.', '/admin/bejelentesek');
+            }
+        } catch (Exception $e) {
+            error_log('Bejelentés-üzenet push értesítés sikertelen: ' . $e->getMessage());
         }
     }
 

@@ -1,6 +1,8 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { PiXLight } from "react-icons/pi";
 import { useMediaQuery } from "react-responsive";
+import { useDarkMode } from "utils/useDarkMode.js";
 
 export default function Modal({
   open,
@@ -10,6 +12,15 @@ export default function Modal({
   maxWidth = "max-w-md",
 }) {
   const isMobile = useMediaQuery({ maxWidth: 767 });
+  // A `dark` osztály a layouts/Admin.js saját gyökér wrapperén ül — mivel a
+  // desktop ág mostantól `document.body`-ra van portolva (ld. lentebb), már
+  // nem DOM-őse neki, tehát nem örökölné. Ugyanaz a minta, mint
+  // ToastContainer.js-nél: saját maga olvassa ki a preferenciát. A
+  // route-alapú szűkítést (ld. ott) itt nem kell megismételni — a Modal
+  // minden hívási helye kizárólag admin-nézet (Koltsegek.js, Szabadsagok.js,
+  // Karbantartasok.js, Flottakovetes.js stb.), sofőr/nyilvános oldal sosem
+  // rendereli.
+  const [isDark] = useDarkMode();
   const inlineRef = React.useRef(null);
 
   React.useEffect(() => {
@@ -57,8 +68,24 @@ export default function Modal({
     );
   }
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-ink-950/50 p-4 backdrop-blur-sm">
+  // Portolva `document.body`-ra — a hívók (pl. Koltsegek.js) a saját
+  // komponensfájukban rendereli be a Modal-t, ami az Admin.js layout
+  // `fixed inset-y-0 ... md:left-64` "Tartalom" wrapperén BELÜL van. Az a
+  // wrapper maga is `position: fixed`, ami saját verem-kontextust hoz létre
+  // — emiatt ennek a Modal-nak a `z-50`-e csak AZON A WRAPPEREN BELÜL
+  // számít, nem a teljes oldalon: a Sidebar `<nav>`-ja (explicit `z-30` a
+  // wrapperrel AZONOS, külső verem-kontextusban) élőben, `elementFromPoint`-
+  // tal ellenőrizve ténylegesen a modal fölé festődött egy széles
+  // (`max-w-5xl`+) modalnál a bal ~130px sávban — nem csak vizuális
+  // rendereési furcsaság, a kattintás is a Sidebar-t találta el ott.
+  // Portolással a modal a `<body>` közvetlen gyereke lesz, kikerülve a
+  // Tartalom-wrapper verem-kontextusát — pontosan ugyanaz a minta, mint a
+  // DatePicker.js popover-jénél egy hasonló, ős-overflow okozta clip ellen.
+  return createPortal(
+    <div
+      className={`fixed inset-0 z-50 overflow-y-auto bg-ink-950/50 p-4 backdrop-blur-sm ${isDark ? "dark" : ""}`}
+      style={{ colorScheme: isDark ? "dark" : "light" }}
+    >
       {/* min-h-full (nem h-full) + a görgetés a külső rétegen történik, hogy a
           modal sose vágódjon le felül/alul, ha magasabb a tartalma a képernyőnél. */}
       <div className="flex min-h-full items-center justify-center py-8">
@@ -81,6 +108,7 @@ export default function Modal({
           <div className="overflow-y-auto px-6 py-5 dark:text-ink-100">{children}</div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

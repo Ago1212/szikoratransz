@@ -158,10 +158,26 @@ class NavSzamlaInterface {
         return array_flip(array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'szamlaszam'));
     }
 
+    // A MolTankolasInterface::alkalmaz() által importált tankolás-sorok
+    // számlaszámai — ha egy NAV-tétel (pl. egy MOL üzemanyagkártya-számla)
+    // ide esik, azt SOSEM szabad még egyszer, egy `egyeb_koltsegek` sorként
+    // is importálni: `koltsegInterface::getKoltsegOsszesito()` az
+    // "Üzemanyag" összesítőt a `tankolasok.osszeg` ÉS az `egyeb_koltsegek`
+    // (kategoria='uzemanyag') összegéből feltétel nélkül összeadja, tehát
+    // ugyanannak a számlának a kétszeri felvétele duplán számolná be a
+    // kiadást — ld. CLAUDE.md "MOL üzemanyagkártya PDF import" szekció.
+    private function molTankolasSzamlaszamok($ceg_id) {
+        $stmt = $this->db->prepare("SELECT DISTINCT szamlaszam FROM tankolasok WHERE admin = :admin AND torolt <> 'I' AND szamlaszam IS NOT NULL");
+        $stmt->bindValue(':admin', $ceg_id);
+        $stmt->execute();
+        return array_flip(array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'szamlaszam'));
+    }
+
     public function lekerdezSzamlak($ceg_id, $datumTol, $datumIg) {
         try {
             $kliens = $this->kliensLetrehozas($ceg_id);
             $mar_importalt = $this->marImportaltSzamlaszamok($ceg_id);
+            $mol_fedve = $this->molTankolasSzamlaszamok($ceg_id);
 
             $kimeno = $kliens->queryInvoiceDigest($datumTol, $datumIg, 'OUTBOUND');
             $bejovo = $kliens->queryInvoiceDigest($datumTol, $datumIg, 'INBOUND');
@@ -169,11 +185,17 @@ class NavSzamlaInterface {
             $tetelek = [];
             foreach (array_merge($kimeno, $bejovo) as $t) {
                 $t['mar_importalva'] = isset($mar_importalt[$t['szamlaszam']]);
+                // Külön jelzés (nem ugyanaz, mint `mar_importalva`), hogy a
+                // felület megmagyarázhassa az admin-nak, MIÉRT nem
+                // importálható ez a tétel — nem azért, mert már fent van a
+                // Pénzforgalomban, hanem mert a MOL tankolás-import már
+                // lefedte forint-szinten a tankolasok táblán keresztül.
+                $t['mol_tankolasbol_fedve'] = isset($mol_fedve[$t['szamlaszam']]);
                 // A digest mindig ad forint-egyenértéket (ÁFA tv. szerint
                 // kötelező adat), devizánként is — ha ez valamiért mégis
                 // hiányzik egy sornál, azt a sort nem tudjuk megbízhatóan
                 // összegszerűen importálni.
-                $t['importalhato'] = !$t['mar_importalva'] && $t['osszeg_huf'] !== null;
+                $t['importalhato'] = !$t['mar_importalva'] && !$t['mol_tankolasbol_fedve'] && $t['osszeg_huf'] !== null;
                 // Csak javaslat — a felhasználó importálás előtt bármikor
                 // felülbírálhatja a felületen (ld. Koltsegek.js NAV modal).
                 $t['kategoria_javaslat'] = $this->uzemanyagJavaslat($t['partner_nev'] ?? null) ? 'uzemanyag' : null;
@@ -193,6 +215,12 @@ class NavSzamlaInterface {
     public function importalSzamlak($ceg_id, $tetelek) {
         try {
             $mar_importalt = $this->marImportaltSzamlaszamok($ceg_id);
+            // Szerver-oldali védelem is (nem csak a frontend `importalhato`
+            // jelzése) — ha egy elavult kliensállapot mégis beküldene egy,
+            // a MOL tankolás-importon keresztül már lefedett számlát, azt
+            // itt is kihagyjuk, ugyanúgy, mint a már `egyeb_koltsegek`-be
+            // importált tételeket.
+            $mol_fedve = $this->molTankolasSzamlaszamok($ceg_id);
             $query = "INSERT INTO egyeb_koltsegek (admin, irany, kategoria, kamion_id, potkocsi_id, datum, megnevezes, szamlaszam, osszeg, deviza, eredeti_osszeg, arfolyam, megjegyzes)
                       VALUES (:admin, :irany, :kategoria, NULL, NULL, :datum, :megnevezes, :szamlaszam, :osszeg, :deviza, :eredeti_osszeg, :arfolyam, :megjegyzes)";
             $stmt = $this->db->prepare($query);
@@ -202,7 +230,7 @@ class NavSzamlaInterface {
             foreach ($tetelek as $t) {
                 $szamlaszam = $t['szamlaszam'] ?? null;
                 $osszeg = $t['osszeg_huf'] ?? null;
-                if (!$szamlaszam || $osszeg === null || isset($mar_importalt[$szamlaszam])) {
+                if (!$szamlaszam || $osszeg === null || isset($mar_importalt[$szamlaszam]) || isset($mol_fedve[$szamlaszam])) {
                     $kihagyva++;
                     continue;
                 }

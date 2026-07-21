@@ -89,7 +89,13 @@ class SoforokInterface {
             $stmt->bindParam(':id', $data['id'], PDO::PARAM_INT);
             $stmt->bindValue(':ceg_id', $ceg_id);
             $stmt->bindParam(':name', $data['name'], PDO::PARAM_STR);
-            $stmt->bindParam(':email', $data['email'], PDO::PARAM_STR);
+            // Üres email esetén NULL-t írunk, nem ''-t — a `user.email`
+            // oszlop UNIQUE, és két ''-os sofőr rekord összeütközne rajta
+            // (ld. sql/30.sql komment). MySQL/InnoDB több NULL-t nem tekint
+            // egyezőnek a UNIQUE indexben, tehát ez tetszőleges számú email
+            // nélküli sofőrt megenged.
+            $email = !empty($data['email']) ? $data['email'] : null;
+            $stmt->bindValue(':email', $email, $email !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
             $stmt->bindParam(':phone', $data['phone'], PDO::PARAM_STR);
             $stmt->bindParam(':szul_datum', $data['szul_datum'], PDO::PARAM_STR);
             $stmt->bindParam(':szemelyi', $data['szemelyi'], PDO::PARAM_STR);
@@ -141,7 +147,11 @@ class SoforokInterface {
             // Paraméterek kötése
             $stmt->bindValue(':admin', $ceg_id);
             $stmt->bindParam(':name', $data['name'], PDO::PARAM_STR);
-            $stmt->bindParam(':email', $data['email'], PDO::PARAM_STR);
+            // Ld. saveSoforData() fenti kommentje — üres email NULL-ként
+            // kerül be, nem ''-ként, hogy a UNIQUE KEY ne ütközzön össze
+            // több email nélküli sofőrnél.
+            $email = !empty($data['email']) ? $data['email'] : null;
+            $stmt->bindValue(':email', $email, $email !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
             $stmt->bindParam(':phone', $data['phone'], PDO::PARAM_STR);
             $stmt->bindParam(':szul_datum', $data['szul_datum'], PDO::PARAM_STR);
             $stmt->bindParam(':szemelyi', $data['szemelyi'], PDO::PARAM_STR);
