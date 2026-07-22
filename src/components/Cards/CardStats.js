@@ -80,8 +80,14 @@ export default function CardStats({
           {statCaption && (
             // `title`: keskeny (pl. mobil 2 oszlopos) elrendezésben a `truncate`
             // gyakran mondat közepén vágja le a feliratot — natív tooltipként
-            // a teljes szöveg így is elérhető marad, nem csak a csonk.
-            <p className="truncate text-xs text-ink-500 dark:text-ink-400" title={statCaption}>
+            // a teljes szöveg így is elérhető marad, nem csak a csonk. Csak
+            // sima string esetén állítjuk be (JSX-nél, pl. a %-delta
+            // jelvénynél, a `title` HTML attribútum nem tudna mit kezdeni
+            // egy React-elemmel).
+            <p
+              className="truncate text-xs text-ink-500 dark:text-ink-400"
+              title={typeof statCaption === "string" ? statCaption : undefined}
+            >
               {statCaption}
             </p>
           )}
@@ -129,7 +135,11 @@ CardStats.propTypes = {
   statSubtitle: PropTypes.string,
   statTitle: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   statDescripiron: PropTypes.string,
-  statCaption: PropTypes.string,
+  // UX-audit (2026-07-20) — a Pénzforgalom KPI-sora mostantól JSX-et (egy
+  // %-delta jelvényt, ld. Koltsegek.js `KpiDelta`) is átad ide, nem csak
+  // sima szöveget — a komponens maga mindig csak `{statCaption}`-t rendereli,
+  // ezt itt is ennek megfelelően jelezzük.
+  statCaption: PropTypes.node,
   statIcon: PropTypes.elementType,
   onClick: PropTypes.func,
   tone: PropTypes.oneOf(["brand", "positive", "neutral", "warning", "danger"]),

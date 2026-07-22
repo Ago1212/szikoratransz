@@ -5,6 +5,9 @@ import {
   PiMagnifyingGlassLight,
   PiCaretLeftLight,
   PiCaretRightLight,
+  PiCaretUpLight,
+  PiCaretDownLight,
+  PiCaretUpDownLight,
 } from "react-icons/pi";
 import { GradientCardHeader } from "components/UI/PageCard.js";
 import TableSkeleton from "components/UI/Skeleton.js";
@@ -145,6 +148,12 @@ export default function DataTable({
   // ne a `render()` által visszaadott JSX-en.
   searchable = false,
   searchPlaceholder = "Keresés...",
+  // UX-audit (2026-07-20) — a hívó előre kitöltheti a keresőmezőt (pl. egy
+  // másik nézetből ide navigálva, egy adott rendszámra szűkítve). Csak a
+  // kezdeti értéket adja, utána a mező a szokásos módon, szabadon
+  // szerkeszthető — ha a hívó egy ÚJABB előtöltést akar kényszeríteni, a
+  // `DataTable`-t egy megváltozott `key` prop-pal kell újra-mountolnia.
+  initialSearch = "",
   // Ha meg van adva egy szám, a sorok lapozva jelennek meg ennyi soronként
   // — nélküle (alapértelmezetten) nincs lapozás, minden sor egyszerre
   // látszik (a meglévő `maxBodyHeight` szerinti görgetéssel).
@@ -178,12 +187,39 @@ export default function DataTable({
   // újratöltéséért utána; a kijelölés a hívás után automatikusan törlődik.
   selectable = false,
   bulkActions = [],
+  // UX-audit (2026-07-20) — opt-in oszloprendezés: egy oszlop `sortable: true`
+  // jelzővel kattinthatóvá válik a fejléce. Nem-szerver oldali módban a
+  // rendezés teljes egészében itt, helyben történik (`sortValue(row)` opcionális
+  // felbontóval, alapból `row[col.key]`). Szerver oldali módban (`serverSide`)
+  // a komponens csak jelez (`onSortChange(key, dir)`), a tényleges rendezést a
+  // szülő végzi a backend felé — ugyanaz a vezérelt/nem-vezérelt kettősség,
+  // mint a lapozásnál/keresésnél. Alapból egyetlen oszlop sem `sortable`, ezért
+  // ez a bővítés a meglévő táblázatok viselkedését nem érinti.
+  sortKey: sortKeyProp,
+  sortDir: sortDirProp = "asc",
+  onSortChange,
 }) {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
   const [page, setPage] = useState(1);
   const [exporting, setExporting] = useState(false);
   const debounceRef = useRef(null);
   const [selected, setSelected] = useState(() => new Set());
+  const [localSortKey, setLocalSortKey] = useState(null);
+  const [localSortDir, setLocalSortDir] = useState("asc");
+  const sortKey = serverSide ? sortKeyProp : localSortKey;
+  const sortDir = serverSide ? sortDirProp : localSortDir;
+
+  const handleSortClick = (col) => {
+    if (!col.sortable) return;
+    const nextDir = sortKey === col.key && sortDir === "asc" ? "desc" : "asc";
+    if (serverSide) {
+      onSortChange?.(col.key, nextDir);
+    } else {
+      setLocalSortKey(col.key);
+      setLocalSortDir(nextDir);
+      setPage(1);
+    }
+  };
 
   // Új sorhalmaz (szűrés, lapváltás, frissítés) esetén a korábbi kijelölés
   // már más sorokra vonatkozna — inkább töröljük, mint hogy véletlenül egy
@@ -235,14 +271,38 @@ export default function DataTable({
         )
       : rows;
 
-  const effectiveTotal = serverSide ? totalRows : filteredRows.length;
+  // Helyi rendezés — csak nem-szerver oldali módban fut (szerver oldalon a
+  // `rows` már a szülő által lekért, rendezett oldal). A `sortValue(row)`
+  // hiányában a nyers `row[col.key]`-t hasonlítjuk, szám-érzékenyen (ha
+  // mindkét oldal számmá alakítható), egyébként lokalizált string-
+  // összevetéssel, hogy az ékezetes magyar szövegek is helyesen rendeződjenek.
+  const sortedRows = (() => {
+    if (serverSide || !sortKey) return filteredRows;
+    const col = fieldCols.find((c) => c.key === sortKey);
+    if (!col?.sortable) return filteredRows;
+    const resolve = (row) => (col.sortValue ? col.sortValue(row) : row[col.key]);
+    const dir = sortDir === "desc" ? -1 : 1;
+    return [...filteredRows].sort((a, b) => {
+      const va = resolve(a);
+      const vb = resolve(b);
+      if (va == null && vb == null) return 0;
+      if (va == null) return -1 * dir;
+      if (vb == null) return 1 * dir;
+      const na = Number(va);
+      const nb = Number(vb);
+      if (!Number.isNaN(na) && !Number.isNaN(nb)) return (na - nb) * dir;
+      return String(va).localeCompare(String(vb), "hu") * dir;
+    });
+  })();
+
+  const effectiveTotal = serverSide ? totalRows : sortedRows.length;
   const totalPages = pageSize ? Math.max(1, Math.ceil(effectiveTotal / pageSize)) : 1;
   const safePage = serverSide ? Math.min(Math.max(pageProp, 1), totalPages) : Math.min(Math.max(page, 1), totalPages);
   const pagedRows = serverSide
     ? rows
     : pageSize
-      ? filteredRows.slice((safePage - 1) * pageSize, safePage * pageSize)
-      : filteredRows;
+      ? sortedRows.slice((safePage - 1) * pageSize, safePage * pageSize)
+      : sortedRows;
 
   const goToPage = (nextPage) => {
     if (serverSide) {
@@ -569,7 +629,28 @@ export default function DataTable({
                         col.headerAlign || col.align || "left"
                       }`}
                     >
-                      {col.label}
+                      {col.sortable ? (
+                        <button
+                          type="button"
+                          onClick={() => handleSortClick(col)}
+                          className={`inline-flex items-center gap-1 hover:text-ink-700 dark:hover:text-ink-200 ${
+                            col.align === "right" ? "flex-row-reverse" : ""
+                          }`}
+                        >
+                          {col.label}
+                          {sortKey === col.key ? (
+                            sortDir === "asc" ? (
+                              <PiCaretUpLight className="h-3 w-3 flex-shrink-0 text-brand-600 dark:text-brand-400" />
+                            ) : (
+                              <PiCaretDownLight className="h-3 w-3 flex-shrink-0 text-brand-600 dark:text-brand-400" />
+                            )
+                          ) : (
+                            <PiCaretUpDownLight className="h-3 w-3 flex-shrink-0 text-ink-300 dark:text-ink-600" />
+                          )}
+                        </button>
+                      ) : (
+                        col.label
+                      )}
                     </th>
                   ))}
                 </tr>

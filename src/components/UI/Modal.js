@@ -22,11 +22,25 @@ export default function Modal({
   // rendereli.
   const [isDark] = useDarkMode();
   const inlineRef = React.useRef(null);
+  const closeButtonRef = React.useRef(null);
+  const titleId = React.useId();
 
   React.useEffect(() => {
     if (open && isMobile && inlineRef.current) {
       inlineRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
+  }, [open, isMobile]);
+
+  // UX-audit (2026-07-20) — a Modal eddig nem kapott dialógus-szemantikát,
+  // miközben a GlobalSearch.js/NotificationDropdown.js overlay-jei már
+  // korábban (R23) megkapták ugyanezt: `role="dialog"`/`aria-modal`, hogy
+  // screen reader felhasználó számára a megnyílás ténylegesen dialógusként
+  // jelenjen be, és a fókusz automatikusan a bezárás-gombra (mint első
+  // kezelhető elem) kerüljön nyitáskor. Csak a desktop (nem mobil, nem
+  // in-flow) ágra vonatkozik — a mobil ág a lap normál folyásába illeszkedik,
+  // nem egy felugró dialógus, tehát nem igényli ugyanezt a szemantikát.
+  React.useEffect(() => {
+    if (open && !isMobile) closeButtonRef.current?.focus();
   }, [open, isMobile]);
 
   if (!open) return null;
@@ -85,6 +99,9 @@ export default function Modal({
     <div
       className={`fixed inset-0 z-50 overflow-y-auto bg-ink-950/50 p-4 backdrop-blur-sm ${isDark ? "dark" : ""}`}
       style={{ colorScheme: isDark ? "dark" : "light" }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
     >
       {/* min-h-full (nem h-full) + a görgetés a külső rétegen történik, hogy a
           modal sose vágódjon le felül/alul, ha magasabb a tartalma a képernyőnél. */}
@@ -93,10 +110,11 @@ export default function Modal({
           className={`flex max-h-[85vh] w-full ${maxWidth} flex-col overflow-hidden rounded-3xl bg-white shadow-soft-xl dark:bg-ink-900`}
         >
           <div className="flex flex-shrink-0 items-center justify-between border-b border-ink-100 px-6 py-4 dark:border-ink-800">
-            <h3 className="font-display text-lg font-semibold text-brand-900 dark:text-ink-50">
+            <h3 id={titleId} className="font-display text-lg font-semibold text-brand-900 dark:text-ink-50">
               {title}
             </h3>
             <button
+              ref={closeButtonRef}
               type="button"
               onClick={onClose}
               aria-label="Bezárás"

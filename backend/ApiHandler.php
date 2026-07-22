@@ -1246,7 +1246,9 @@ class ApiHandler {
                         $request['page'] ?? null,
                         $request['pageSize'] ?? null,
                         $request['kategoria'] ?? null,
-                        $this->hivoSajatSzerepkoreAdmin($request)
+                        $this->hivoSajatSzerepkoreAdmin($request),
+                        $request['sortKey'] ?? null,
+                        $request['sortDir'] ?? 'desc'
                     ));
                     return;
 

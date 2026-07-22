@@ -674,6 +674,25 @@ class KoltsegInterface {
                 $osszesenBer = 0;
             }
 
+            // UX-audit (2026-07-20) — KPI %-delta: az előző, AZONOS HOSSZÚSÁGÚ
+            // időszak bevétel/kiadás/nettó összege, hogy a frontend %-os
+            // változást tudjon mutatni a KPI-csempéken (ugyanaz az elv, mint a
+            // PiaciArakPanel %-delta-ja, csak itt a KPI-sorban, nem tooltipben).
+            // Csak akkor számolható, ha a hívó tényleges (nem "mindenkori")
+            // dátumtartományt adott meg — enélkül nincs értelmes "előző
+            // időszak" fogalom.
+            $elozoOsszesen = null;
+            if ($datumTol && $datumIg) {
+                $kezdetTs = strtotime($datumTol);
+                $vegTs = strtotime($datumIg);
+                if ($kezdetTs !== false && $vegTs !== false && $vegTs >= $kezdetTs) {
+                    $napok = (int) round(($vegTs - $kezdetTs) / 86400) + 1;
+                    $elozoVeg = date('Y-m-d', $kezdetTs - 86400);
+                    $elozoKezdet = date('Y-m-d', $kezdetTs - 86400 * $napok);
+                    $elozoOsszesen = $this->getOsszesenGyors($ceg_id, $elozoKezdet, $elozoVeg, $isAdmin);
+                }
+            }
+
             return [
                 'success' => true,
                 'havi' => $havi,
@@ -689,10 +708,66 @@ class KoltsegInterface {
                     'kiadas' => $osszesenKiadas,
                     'netto' => $osszesenBevetel - $osszesenKiadas,
                 ],
+                'elozoOsszesen' => $elozoOsszesen,
             ];
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
+    }
+
+    // Könnyűsúlyú változat a fenti getKoltsegOsszesito()-hoz képest — csak a
+    // 3 összesített számot (bevétel/kiadás/nettó) adja vissza, jármű szerinti
+    // bontás és Ft/km számítás (kmOsszesito, jármüvenkénti lekérdezések)
+    // NÉLKÜL. Kizárólag a KPI %-delta "előző időszak" összehasonlításához
+    // kell — azt duplán, a teljes (drágább) függvénnyel újrafuttatni
+    // felesleges terhelés lenne egy olyan időszakra, aminek a jármüvenkénti
+    // bontására senki nem kíváncsi.
+    private function getOsszesenGyors($ceg_id, $datumTol, $datumIg, $isAdmin) {
+        $karbHavonta = $this->havonta('kamion_karbantartars', 'datum', $datumTol, $datumIg, $ceg_id);
+        foreach ($this->havonta('potkocsi_karbantartars', 'datum', $datumTol, $datumIg, $ceg_id) as $honap => $osszeg) {
+            $karbHavonta[$honap] = ($karbHavonta[$honap] ?? 0) + $osszeg;
+        }
+        foreach ($this->havonta('furgon_karbantartars', 'datum', $datumTol, $datumIg, $ceg_id) as $honap => $osszeg) {
+            $karbHavonta[$honap] = ($karbHavonta[$honap] ?? 0) + $osszeg;
+        }
+
+        [$tankSzuresSql, $tankSzuresParams] = $this->datumSzures('datum', $datumTol, $datumIg);
+        $tankStmt = $this->db->prepare(
+            "SELECT SUM(osszeg) AS osszeg FROM tankolasok WHERE admin = :ceg_id AND torolt <> 'I' AND osszeg IS NOT NULL$tankSzuresSql"
+        );
+        $tankStmt->bindValue(':ceg_id', $ceg_id);
+        foreach ($tankSzuresParams as $k => $v) {
+            $tankStmt->bindValue($k, $v);
+        }
+        $tankStmt->execute();
+        $uzemanyagOsszeg = (float) ($tankStmt->fetchColumn() ?: 0);
+        $uzemanyagOsszeg += array_sum($this->egyebHavonta('kiado', $datumTol, $datumIg, $ceg_id, 'uzemanyag'));
+
+        $karbOsszeg = array_sum($karbHavonta) + array_sum($this->egyebHavonta('kiado', $datumTol, $datumIg, $ceg_id, 'karbantartas'));
+
+        $biztositasOsszeg = 0.0;
+        foreach ($this->getBiztositasKiadasok($ceg_id, $datumTol, $datumIg) as $t) {
+            $biztositasOsszeg += $t['osszeg'];
+        }
+        $biztositasOsszeg += array_sum($this->egyebHavonta('kiado', $datumTol, $datumIg, $ceg_id, 'biztositas'));
+
+        $berOsszeg = 0.0;
+        if ($isAdmin) {
+            foreach ($this->getBerKiadasok($ceg_id, $datumTol, $datumIg) as $t) {
+                $berOsszeg += $t['osszeg'];
+            }
+            $berOsszeg += array_sum($this->egyebHavonta('kiado', $datumTol, $datumIg, $ceg_id, 'ber'));
+        }
+
+        $egyebKiadasOsszeg = array_sum($this->egyebHavonta('kiado', $datumTol, $datumIg, $ceg_id, 'egyeb'));
+        $bevetelOsszeg = array_sum($this->egyebHavonta('bevetel', $datumTol, $datumIg, $ceg_id));
+
+        $kiadas = $karbOsszeg + $uzemanyagOsszeg + $biztositasOsszeg + $berOsszeg + $egyebKiadasOsszeg;
+        return [
+            'bevetel' => $bevetelOsszeg,
+            'kiadas' => $kiadas,
+            'netto' => $bevetelOsszeg - $kiadas,
+        ];
     }
 
     // A havi bérezés (user.ber + admin.ber) ÉLŐ, aktuális összege — nem az
@@ -1019,7 +1094,15 @@ class KoltsegInterface {
     // táblában), a frontend ezt ismeri fel és mutat helyette egy rövid
     // eligazító szöveget ("ezek a tételek a Karbantartások/Kamionok oldalon
     // részletesek"), nem hibaüzenetet.
-    public function getEgyebKoltsegek($ceg_id, $datumTol = null, $datumIg = null, $irany = null, $search = null, $page = null, $pageSize = null, $kategoria = null, $isAdmin = false) {
+    // UX-audit (2026-07-20) — a `DataTable` mostantól opt-in oszloprendezést
+    // támogat; szerver oldali módban ez a `$sortKey`/`$sortDir` páron
+    // keresztül jut el ide. Kizárólag egy fehérlistás oszlop-térképen
+    // keresztül épül be az `ORDER BY`-ba (sosem a kliens nyers string-jéből
+    // közvetlenül) — SQL-injection ellen, ugyanaz az elv, mint bármelyik
+    // más, kliens-vezérelt lekérdezés-résznél ebben a fájlban.
+    private const RENDEZHETO_OSZLOPOK = ['datum' => 'datum', 'osszeg' => 'osszeg'];
+
+    public function getEgyebKoltsegek($ceg_id, $datumTol = null, $datumIg = null, $irany = null, $search = null, $page = null, $pageSize = null, $kategoria = null, $isAdmin = false, $sortKey = null, $sortDir = 'desc') {
         try {
             [$szuresSql, $szuresParams] = $this->datumSzures('datum', $datumTol, $datumIg);
             $params = [':ceg_id' => $ceg_id];
@@ -1049,18 +1132,31 @@ class KoltsegInterface {
                 $query .= " AND " . PaginationHelper::likeClause(['megnevezes', 'szamlaszam', 'megjegyzes'], 'search');
                 $params[':search'] = '%' . $search . '%';
             }
-            $query .= " ORDER BY datum DESC, id DESC";
+            // Felhasználói kérésre (2026-07-21) a MOL tankolás-importból
+            // (mol_slip_id IS NOT NULL) származó sorok is megjelennek itt —
+            // korábban ez volt az audit egyik kritikus találata: a "MOL
+            // tankolás import" gomb ugyanezen az oldalon él, mégis a
+            // beimportált tétel sosem látszott a Tételek listán, mert a
+            // `tankolasok` táblába írt, nem az `egyeb_koltsegek`-be (ld. a
+            // molTankolasInterface.php fejléc-kommentje a duplikáció-
+            // elkerülésről). Ez a lekérdezés emiatt nem SQL-szintű tábla-
+            // összefésüléssel (amit a projekt egyedi SQL-lintere amúgy is
+            // tilt), hanem PHP-oldali egyesítéssel old meg — mindkét forrás
+            // LIMIT nélkül jön le, egy tömbbe fésülve, majd a lapozás/
+            // rendezés PHP-ban történik.
+            // A driver saját, önkiszolgáló tankolásai (mol_slip_id IS NULL)
+            // szándékosan KIMARADNAK — azok rutinszerű, nagy darabszámú
+            // naplóbejegyzések, nem "tételek" a Pénzforgalom értelmében.
+            $rendezoOszlop = self::RENDEZHETO_OSZLOPOK[$sortKey] ?? 'datum';
+            $iranySql = strtolower((string) $sortDir) === 'asc' ? 'ASC' : 'DESC';
+            $query .= " ORDER BY $rendezoOszlop $iranySql, id DESC";
 
-            if ($page !== null) {
-                [$tetelek, $total, $page, $pageSize] = PaginationHelper::fetchPage($this->db, $query, $params, $page, $pageSize);
-            } else {
-                $stmt = $this->db->prepare($query);
-                foreach ($params as $k => $v) {
-                    $stmt->bindValue($k, $v);
-                }
-                $stmt->execute();
-                $tetelek = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt = $this->db->prepare($query);
+            foreach ($params as $k => $v) {
+                $stmt->bindValue($k, $v);
             }
+            $stmt->execute();
+            $tetelek = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             $kamionRendszamok = $this->getRendszamok('kamion', $ceg_id);
             $potkocsiRendszamok = $this->getRendszamok('potkocsi', $ceg_id);
@@ -1075,9 +1171,36 @@ class KoltsegInterface {
                 } else {
                     $t['rendszam'] = null;
                 }
+                $t['forras'] = 'egyeb_koltseg';
+            }
+            unset($t);
+
+            $molTetelek = $this->getMolTankolasTetelek($ceg_id, $datumTol, $datumIg, $irany, $kategoria, $search, $kamionRendszamok, $furgonRendszamok);
+            $egyesitett = array_merge($tetelek, $molTetelek);
+
+            // Stabil (PHP 8+ `usort` garantáltan stabil) rendezés a teljes,
+            // egyesített halmazon — csak ITT, a merge UTÁN, mert a két forrás
+            // saját SQL-rendezése önmagában nem adna helyes sorrendet a
+            // kombinált listára.
+            $rendezoKulcs = $sortKey === 'osszeg' ? 'osszeg' : 'datum';
+            $irany3 = strtolower((string) $sortDir) === 'asc' ? 1 : -1;
+            usort($egyesitett, function ($a, $b) use ($rendezoKulcs, $irany3) {
+                if ($a[$rendezoKulcs] == $b[$rendezoKulcs]) {
+                    return 0;
+                }
+                return ($a[$rendezoKulcs] <=> $b[$rendezoKulcs]) * $irany3;
+            });
+
+            $total = count($egyesitett);
+            if ($page !== null) {
+                $pageSize = $pageSize ?: 10;
+                $page = max(1, (int) $page);
+                $tetelek = array_slice($egyesitett, ($page - 1) * $pageSize, $pageSize);
+            } else {
+                $tetelek = $egyesitett;
             }
 
-            $result = ['success' => true, 'tetelek' => $tetelek];
+            $result = ['success' => true, 'tetelek' => array_values($tetelek)];
             if ($page !== null) {
                 $result['total'] = $total;
                 $result['page'] = $page;
@@ -1087,6 +1210,84 @@ class KoltsegInterface {
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
+    }
+
+    // Ld. a getEgyebKoltsegek() fenti kommentje — a MOL tankolás-importból
+    // származó `tankolasok` sorokat "tétel-szerű" alakra hozza, hogy a
+    // Pénzforgalom Tételek listája egységesen tudja megjeleníteni az
+    // `egyeb_koltsegek` sorokkal együtt. Az `id` mezőt szándékosan
+    // `tankolas_`-prefixszel, STRING-ként adjuk vissza (nem a nyers
+    // `tankolasok.id`-t) — a frontend ebből ismeri fel, hogy ez a sor NEM
+    // szerkeszthető/törölhető a `updateEgyebKoltseg`/`deleteEgyebKoltseg`
+    // akciókkal (más tábla, más elsődleges kulcs-tér — egy egyszerű numerikus
+    // id-ütközés véletlenül egy teljesen más `egyeb_koltsegek` sort módosítana/
+    // törölne, ha a frontend nem tudná megkülönböztetni a két forrást).
+    private function getMolTankolasTetelek($ceg_id, $datumTol, $datumIg, $irany, $kategoria, $search, $kamionRendszamok, $furgonRendszamok) {
+        // Tankolás mindig kiadás, mindig "uzemanyag" kategória — bevételre
+        // vagy egy MÁS kategóriára szűrve ezek a sorok sosem relevánsak.
+        if ($irany === 'bevetel' || (!empty($kategoria) && $kategoria !== 'uzemanyag')) {
+            return [];
+        }
+
+        $params = [':ceg_id' => $ceg_id];
+        $query = "SELECT * FROM tankolasok WHERE admin = :ceg_id AND torolt <> 'I' AND mol_slip_id IS NOT NULL";
+        // A `tankolasok.datum` DATETIME, az `egyeb_koltsegek.datum` DATE —
+        // a záró határnál a teljes napot bele kell érteni, különben egy
+        // délutáni tankolás kiesne a mai napra szűrt lekérdezésből.
+        if (!empty($datumTol)) {
+            $query .= " AND datum >= :datumTol";
+            $params[':datumTol'] = $datumTol . ' 00:00:00';
+        }
+        if (!empty($datumIg)) {
+            $query .= " AND datum <= :datumIg";
+            $params[':datumIg'] = $datumIg . ' 23:59:59';
+        }
+        $stmt = $this->db->prepare($query);
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
+        $stmt->execute();
+
+        $tetelek = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $s) {
+            $rendszam = $s['kamion_id']
+                ? ($kamionRendszamok[$s['kamion_id']] ?? null)
+                : ($s['furgon_id'] ? ($furgonRendszamok[$s['furgon_id']] ?? null) : null);
+            $megnevezes = 'MOL tankolás' . ($s['helyszin'] ? ' — ' . $s['helyszin'] : '');
+
+            if (!empty($search)) {
+                $talalat = false;
+                foreach ([$megnevezes, $rendszam, $s['mol_slip_id'], $s['szamlaszam']] as $mezo) {
+                    if ($mezo !== null && stripos((string) $mezo, $search) !== false) {
+                        $talalat = true;
+                        break;
+                    }
+                }
+                if (!$talalat) {
+                    continue;
+                }
+            }
+
+            $tetelek[] = [
+                'id' => 'tankolas_' . $s['id'],
+                'forras' => 'tankolas',
+                'datum' => substr($s['datum'], 0, 10),
+                'irany' => 'kiado',
+                'kategoria' => 'uzemanyag',
+                'megnevezes' => $megnevezes,
+                'szamlaszam' => $s['mol_slip_id'],
+                'osszeg' => (float) $s['osszeg'],
+                'deviza' => 'HUF',
+                'eredeti_osszeg' => null,
+                'kamion_id' => $s['kamion_id'],
+                'potkocsi_id' => null,
+                'furgon_id' => $s['furgon_id'],
+                'megjegyzes' => null,
+                'bank_parositva' => 'N',
+                'rendszam' => $rendszam,
+            ];
+        }
+        return $tetelek;
     }
 
     public function deleteEgyebKoltseg($id, $ceg_id) {
