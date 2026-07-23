@@ -123,6 +123,10 @@ export default function DataTable({
   onRowDoubleClick,
   loading = false,
   emptyLabel = "Nincs megjeleníthető adat",
+  // UX-audit — korábban egy keresésre kapott 0 találat pontosan ugyanazt az
+  // üzenetet (és a megtévesztő "+ Új" gombot) mutatta, mint egy ténylegesen
+  // üres lista, ami könnyen véletlen duplikátum-létrehozáshoz vezethetett.
+  noResultsLabel,
   emptyState,
   className = "",
   maxBodyHeight = "min(80vh, 760px)",
@@ -455,21 +459,49 @@ export default function DataTable({
   // hozzáadás-akció, egy közvetlen "+ Új" gomb is megjelenik itt, hogy
   // egy üres listánál (pl. friss fiók) ne kelljen felgörgetni a fejléc
   // gombjáig a következő lépéshez.
-  const EmptyContent = () => (
-    <div className="flex flex-col items-center gap-3 py-4">
-      {icon && React.createElement(icon, { className: "h-8 w-8 text-ink-200" })}
-      <span>{emptyLabel}</span>
-      {onAdd && (
+  const clearSearch = () => {
+    setSearch("");
+    if (serverSide) {
+      onSearchChange?.("");
+      onPageChange?.(1);
+    } else {
+      setPage(1);
+    }
+  };
+
+  // Egy aktív keresés mellett kapott 0 találat NEM ugyanaz, mint egy
+  // ténylegesen üres lista — előbbinél nincs értelme a "+ Új" gombnak (ld.
+  // UX-audit), és a szöveg is a keresést, nem az adathiányt kommunikálja.
+  const isSearchEmpty = searchable && search.trim().length > 0;
+
+  const EmptyContent = () =>
+    isSearchEmpty ? (
+      <div className="flex flex-col items-center gap-3 py-4">
+        {icon && React.createElement(icon, { className: "h-8 w-8 text-ink-200" })}
+        <span>{noResultsLabel || `Nincs találat a keresésre: „${search.trim()}”`}</span>
         <button
           type="button"
-          onClick={onAdd}
-          className="mt-1 flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-all duration-300 ease-fluid hover:bg-brand-700 active:scale-95"
+          onClick={clearSearch}
+          className="mt-1 text-xs font-semibold text-brand-600 hover:underline dark:text-brand-400"
         >
-          <PiPlusLight className="h-4 w-4" /> {addLabel}
+          Keresés törlése
         </button>
-      )}
-    </div>
-  );
+      </div>
+    ) : (
+      <div className="flex flex-col items-center gap-3 py-4">
+        {icon && React.createElement(icon, { className: "h-8 w-8 text-ink-200" })}
+        <span>{emptyLabel}</span>
+        {onAdd && (
+          <button
+            type="button"
+            onClick={onAdd}
+            className="mt-1 flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-all duration-300 ease-fluid hover:bg-brand-700 active:scale-95"
+          >
+            <PiPlusLight className="h-4 w-4" /> {addLabel}
+          </button>
+        )}
+      </div>
+    );
 
   return (
     <div
@@ -625,6 +657,15 @@ export default function DataTable({
                   {columns.map((col) => (
                     <th
                       key={col.key}
+                      aria-sort={
+                        col.sortable
+                          ? sortKey === col.key
+                            ? sortDir === "asc"
+                              ? "ascending"
+                              : "descending"
+                            : "none"
+                          : undefined
+                      }
                       className={`sticky top-0 z-10 whitespace-nowrap border-b border-ink-100 bg-white px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-ink-400 dark:border-ink-800 dark:bg-ink-900 dark:text-ink-500 text-${
                         col.headerAlign || col.align || "left"
                       }`}
@@ -661,7 +702,12 @@ export default function DataTable({
                     <tr
                       key={rowKey(row, index)}
                       className="border-b border-ink-100 transition-colors duration-200 last:border-0 hover:bg-brand-50/40 dark:border-ink-800 dark:hover:bg-brand-950/30"
-                      onDoubleClick={
+                      // Korábban `onDoubleClick` volt, holott a sor `cursor:pointer`-t
+                      // kapott — az egyszeri kattintást ígérő kurzor a mai webes
+                      // konvenció szerint (ld. UX-audit), a mobil kártyanézet is
+                      // egyszeri koppintásra nyit. A prop neve (`onRowDoubleClick`)
+                      // maradt, hogy a hívóhelyeken ne kelljen semmit átnevezni.
+                      onClick={
                         onRowDoubleClick
                           ? () => onRowDoubleClick(row)
                           : undefined
@@ -687,6 +733,12 @@ export default function DataTable({
                       {columns.map((col) => (
                         <td
                           key={col.key}
+                          // A `col.key === "actions"` cellának (gombok/select-ek) meg kell
+                          // állítania a buborékolást — a sor egyszeri kattintásra nyit
+                          // (ld. a fenti komment), enélkül minden akció-gomb kattintása
+                          // AZ AKCIÓ VÉGREHAJTÁSA MELLETT a sort is megnyitná (a mobil
+                          // kártyanézet ezt már korábban is helyesen kezelte).
+                          onClick={col.key === "actions" ? (e) => e.stopPropagation() : undefined}
                           className={`whitespace-nowrap px-6 py-3.5 text-sm text-ink-600 dark:text-ink-300 text-${
                             col.align || "left"
                           } ${col.className || ""}`}

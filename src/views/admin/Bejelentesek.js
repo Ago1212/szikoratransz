@@ -88,7 +88,7 @@ export default function Bejelentesek() {
 
   return (
     <>
-      <div className="mx-auto w-full max-w-7xl">
+      <div className="w-full px-0 md:px-4">
         <PageHeader
           eyebrow="Csapat"
           title="Bejelentések"

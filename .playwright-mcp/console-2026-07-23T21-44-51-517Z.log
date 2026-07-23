@@ -1,0 +1,42 @@
+[    1534ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://127.0.0.1:3000/static/js/bundle.js:35683
+[    1585ms] [ERROR] Warning: ReactDOM.render is no longer supported in React 18. Use createRoot instead. Until you switch to the new API, your app will behave as if it's running React 17. Learn more: https://reactjs.org/link/switch-to-createroot @ http://127.0.0.1:3000/static/js/bundle.js:9997
+[    2093ms] TypeError: Cannot read properties of null (reading 'id')
+    at CardTable (http://127.0.0.1:3000/static/js/src_views_admin_Kamionok_js.chunk.js:66:26)
+    at renderWithHooks (http://127.0.0.1:3000/static/js/bundle.js:23392:22)
+    at updateFunctionComponent (http://127.0.0.1:3000/static/js/bundle.js:26959:24)
+    at beginWork (http://127.0.0.1:3000/static/js/bundle.js:28678:20)
+    at HTMLUnknownElement.callCallback (http://127.0.0.1:3000/static/js/bundle.js:13648:18)
+    at Object.invokeGuardedCallbackDev (http://127.0.0.1:3000/static/js/bundle.js:13692:20)
+    at invokeGuardedCallback (http://127.0.0.1:3000/static/js/bundle.js:13749:35)
+    at beginWork$1 (http://127.0.0.1:3000/static/js/bundle.js:33647:11)
+    at performUnitOfWork (http://127.0.0.1:3000/static/js/bundle.js:32895:16)
+    at workLoopSync (http://127.0.0.1:3000/static/js/bundle.js:32818:9)
+[    2069ms] [ERROR] The above error occurred in the <CardTable> component:
+
+    at CardTable (http://127.0.0.1:3000/static/js/src_views_admin_Kamionok_js.chunk.js:38:3)
+    at div
+    at div
+    at Kamionok (http://127.0.0.1:3000/static/js/src_views_admin_Kamionok_js.chunk.js:309:82)
+    at Route (http://127.0.0.1:3000/static/js/bundle.js:37687:29)
+    at PrivateRoute (http://127.0.0.1:3000/static/js/src_layouts_Admin_js.chunk.js:2322:14)
+    at Switch (http://127.0.0.1:3000/static/js/bundle.js:37856:29)
+    at Suspense
+    at div
+    at div
+    at div
+    at Admin (http://127.0.0.1:3000/static/js/src_layouts_Admin_js.chunk.js:2358:63)
+    at Route (http://127.0.0.1:3000/static/js/bundle.js:37687:29)
+    at Switch (http://127.0.0.1:3000/static/js/bundle.js:37856:29)
+    at Suspense
+    at Router (http://127.0.0.1:3000/static/js/bundle.js:37359:30)
+    at BrowserRouter (http://127.0.0.1:3000/static/js/bundle.js:36873:35)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries. @ http://127.0.0.1:3000/static/js/bundle.js:26172
+[    2218ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://127.0.0.1:3000/static/js/bundle.js:35683
+[    2278ms] [ERROR] Warning: ReactDOM.render is no longer supported in React 18. Use createRoot instead. Until you switch to the new API, your app will behave as if it's running React 17. Learn more: https://reactjs.org/link/switch-to-createroot @ http://127.0.0.1:3000/static/js/bundle.js:9997
+[    2570ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:3000/auth/login:0
+[    5661ms] [WARNING] The resource http://127.0.0.1:3000/logo2.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://127.0.0.1:3000/auth/login:0
+[   12611ms] [WARNING] The resource http://127.0.0.1:3000/logo2.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://127.0.0.1:3000/auth/login:0
+[   26103ms] [WARNING] The resource http://127.0.0.1:3000/logo2.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://127.0.0.1:3000/auth/login:0
+[   37279ms] [WARNING] The resource http://127.0.0.1:3000/logo2.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://127.0.0.1:3000/auth/login:0

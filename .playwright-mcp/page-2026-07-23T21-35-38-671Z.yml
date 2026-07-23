@@ -1,0 +1,88 @@
+- generic [active]:
+  - generic:
+    - generic:
+      - navigation [ref=f14e1]:
+        - generic [ref=f14e2]:
+          - link [ref=f14e3] [cursor=pointer]:
+            - /url: /admin/dashboard
+            - img "Szikora Transz Kft" [ref=f14e4]
+          - generic [ref=f14e5]:
+            - button "Sötét mód bekapcsolása" [ref=f14e6] [cursor=pointer]
+            - button "Értesítések" [ref=f14e9] [cursor=pointer]
+        - generic [ref=f14e12]:
+          - list [ref=f14e14]:
+            - listitem [ref=f14e15]:
+              - link "Főmenü" [ref=f14e16] [cursor=pointer]:
+                - /url: /admin/dashboard
+            - listitem [ref=f14e19]:
+              - link "Karbantartások" [ref=f14e20] [cursor=pointer]:
+                - /url: /admin/karbantartasok
+            - listitem [ref=f14e23]:
+              - link "Bejelentések" [ref=f14e24] [cursor=pointer]:
+                - /url: /admin/bejelentesek
+            - listitem [ref=f14e27]:
+              - link "Pénzforgalom" [ref=f14e28] [cursor=pointer]:
+                - /url: /admin/koltsegek
+            - listitem [ref=f14e31]:
+              - link "Flottakövetés" [ref=f14e32] [cursor=pointer]:
+                - /url: /admin/flottakovetes
+          - generic [ref=f14e35]:
+            - button "Flotta" [expanded] [ref=f14e36] [cursor=pointer]
+            - list [ref=f14e40]:
+              - listitem [ref=f14e41]:
+                - link "Kamionok" [ref=f14e42] [cursor=pointer]:
+                  - /url: /admin/kamionok
+              - listitem [ref=f14e45]:
+                - link "Pótkocsik" [ref=f14e46] [cursor=pointer]:
+                  - /url: /admin/potkocsi
+              - listitem [ref=f14e49]:
+                - link "Furgonok" [ref=f14e50] [cursor=pointer]:
+                  - /url: /admin/furgonok
+          - button "Csapat" [ref=f14e54] [cursor=pointer]
+          - button "Partnerek" [ref=f14e59] [cursor=pointer]
+          - button "Pénzügyek" [ref=f14e64] [cursor=pointer]
+          - button "Rendszer" [ref=f14e69] [cursor=pointer]
+        - generic [ref=f14e74]:
+          - button "Piaci árak" [expanded] [ref=f14e75] [cursor=pointer]
+          - generic [ref=f14e79]:
+            - 'generic "Frissítve: 2026-07-23 23:30:44 · 0,0% (előző munkanaphoz képest)" [ref=f14e80]':
+              - generic [ref=f14e81]: EUR/HUF
+              - generic [ref=f14e82]:
+                - generic [ref=f14e83]: 364,16
+                - generic [ref=f14e84]: Ft
+            - 'generic "Frissítve: 2026-07-23 23:30:45 · 0,0% (előző munkanaphoz képest)" [ref=f14e85]':
+              - generic [ref=f14e86]: USD/HUF
+              - generic [ref=f14e87]:
+                - generic [ref=f14e88]: 319,13
+                - generic [ref=f14e89]: Ft
+            - 'generic "Frissítve: 2026-07-23 13:54:39 · 0,0% (előző havi árhoz képest)" [ref=f14e90]':
+              - generic [ref=f14e91]: Benzin (ESZ-95)
+              - generic [ref=f14e92]:
+                - generic [ref=f14e93]: "662"
+                - generic [ref=f14e94]: Ft/l
+            - paragraph [ref=f14e95]: "Frissítve: ma 13:54"
+        - button "Keresés Ctrl+K" [ref=f14e97] [cursor=pointer]:
+          - generic [ref=f14e100]: Keresés
+          - generic [ref=f14e101]: Ctrl+K
+        - generic [ref=f14e102]:
+          - link "SÁ Szikora Ágoston Adminisztrátor" [ref=f14e103] [cursor=pointer]:
+            - /url: /admin/settings
+            - generic [ref=f14e104]: SÁ
+            - generic [ref=f14e105]:
+              - generic [ref=f14e106]: Szikora Ágoston
+              - generic [ref=f14e107]: Adminisztrátor
+          - button "Kijelentkezés" [ref=f14e110] [cursor=pointer]
+      - generic [ref=f14e117]:
+        - generic [ref=f14e119]:
+          - paragraph [ref=f14e120]: Rendszer
+          - heading "Listák" [level=1] [ref=f14e121]
+        - paragraph [ref=f14e122]: Itt bővítheted/nevezheted át a rendszer különböző választható listáit — pl. milyen kamionméretek, jármű-állapotok vagy bejelentés-típusok közül lehet választani a formokon. Egy elem törlése előtt győződj meg róla, hogy már semmi nem használja.
+        - generic [ref=f14e123]:
+          - button "Kamion méret" [ref=f14e124] [cursor=pointer]
+          - button "Furgon méret" [ref=f14e125] [cursor=pointer]
+          - button "Pótkocsi méret" [ref=f14e126] [cursor=pointer]
+          - button "Jármű állapota" [ref=f14e127] [cursor=pointer]
+          - button "Biztosítás fizetési ütem" [ref=f14e128] [cursor=pointer]
+          - button "Bejelentés típusa" [ref=f14e129] [cursor=pointer]
+          - button "Szabadság típusa" [ref=f14e130] [cursor=pointer]
+        - heading "Kamion méret — elemek" [level=3] [ref=f14e136]

@@ -1,0 +1,32 @@
+[     125ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/static/js/bundle.js:34955
+[     172ms] [ERROR] Warning: ReactDOM.render is no longer supported in React 18. Use createRoot instead. Until you switch to the new API, your app will behave as if it's running React 17. Learn more: https://reactjs.org/link/switch-to-createroot @ http://localhost:3000/static/js/bundle.js:9269
+[     289ms] [ERROR] Warning: `value` prop on `%s` should not be null. Consider using an empty string to clear the component or `undefined` for uncontrolled components.%s input 
+    at input
+    at div
+    at FormField (http://localhost:3000/static/js/src_components_UI_FormField_js.chunk.js:366:3)
+    at div
+    at div
+    at FormSection (http://localhost:3000/static/js/src_components_UI_FormField_js.chunk.js:479:3)
+    at form
+    at CardJarmuAdatokForm (http://localhost:3000/static/js/src_views_admin_KamionForm_js.chunk.js:38:3)
+    at div
+    at div
+    at PageCard (http://localhost:3000/static/js/src_components_UI_DataTable_js.chunk.js:946:3)
+    at div
+    at CardKamion (http://localhost:3000/static/js/src_views_admin_KamionForm_js.chunk.js:934:3)
+    at div
+    at div
+    at KamionForm (http://localhost:3000/static/js/src_views_admin_KamionForm_js.chunk.js:2042:81)
+    at Route (http://localhost:3000/static/js/bundle.js:36726:29)
+    at PrivateRoute (http://localhost:3000/static/js/src_layouts_Admin_js.chunk.js:2254:14)
+    at Switch (http://localhost:3000/static/js/bundle.js:36895:29)
+    at Suspense
+    at div
+    at div
+    at div
+    at Admin (http://localhost:3000/static/js/src_layouts_Admin_js.chunk.js:2290:63)
+    at Route (http://localhost:3000/static/js/bundle.js:36726:29)
+    at Switch (http://localhost:3000/static/js/bundle.js:36895:29)
+    at Suspense
+    at Router (http://localhost:3000/static/js/bundle.js:36398:30)
+    at BrowserRouter (http://localhost:3000/static/js/bundle.js:35912:35) @ http://localhost:3000/static/js/bundle.js:9269

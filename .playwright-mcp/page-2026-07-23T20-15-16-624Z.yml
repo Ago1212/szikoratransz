@@ -1,0 +1,121 @@
+- generic [active]:
+  - generic:
+    - generic:
+      - navigation [ref=f47e1]:
+        - generic [ref=f47e2]:
+          - link [ref=f47e3] [cursor=pointer]:
+            - /url: /admin/dashboard
+            - img "Szikora Transz Kft" [ref=f47e4]
+          - generic [ref=f47e5]:
+            - button "Sötét mód bekapcsolása" [ref=f47e6] [cursor=pointer]
+            - button "Értesítések" [ref=f47e9] [cursor=pointer]
+        - generic [ref=f47e12]:
+          - list [ref=f47e14]:
+            - listitem [ref=f47e15]:
+              - link "Főmenü" [ref=f47e16] [cursor=pointer]:
+                - /url: /admin/dashboard
+            - listitem [ref=f47e19]:
+              - link "Karbantartások" [ref=f47e20] [cursor=pointer]:
+                - /url: /admin/karbantartasok
+            - listitem [ref=f47e23]:
+              - link "Bejelentések" [ref=f47e24] [cursor=pointer]:
+                - /url: /admin/bejelentesek
+            - listitem [ref=f47e27]:
+              - link "Pénzforgalom" [ref=f47e28] [cursor=pointer]:
+                - /url: /admin/koltsegek
+            - listitem [ref=f47e31]:
+              - link "Flottakövetés" [ref=f47e32] [cursor=pointer]:
+                - /url: /admin/flottakovetes
+          - generic [ref=f47e35]:
+            - button "Flotta" [expanded] [ref=f47e36] [cursor=pointer]
+            - list [ref=f47e40]:
+              - listitem [ref=f47e41]:
+                - link "Kamionok" [ref=f47e42] [cursor=pointer]:
+                  - /url: /admin/kamionok
+              - listitem [ref=f47e46]:
+                - link "Pótkocsik" [ref=f47e47] [cursor=pointer]:
+                  - /url: /admin/potkocsi
+              - listitem [ref=f47e50]:
+                - link "Furgonok" [ref=f47e51] [cursor=pointer]:
+                  - /url: /admin/furgonok
+          - button "Csapat" [ref=f47e55] [cursor=pointer]
+          - button "Partnerek" [ref=f47e60] [cursor=pointer]
+          - button "Pénzügyek" [ref=f47e65] [cursor=pointer]
+          - button "Rendszer" [ref=f47e70] [cursor=pointer]
+        - generic [ref=f47e75]:
+          - button "Piaci árak" [expanded] [ref=f47e76] [cursor=pointer]
+          - generic [ref=f47e80]:
+            - 'generic "Frissítve: 2026-07-23 21:27:42 · 0,0% (előző munkanaphoz képest)" [ref=f47e81]':
+              - generic [ref=f47e82]: EUR/HUF
+              - generic [ref=f47e83]:
+                - generic [ref=f47e84]: 364,16
+                - generic [ref=f47e85]: Ft
+            - 'generic "Frissítve: 2026-07-23 21:27:43 · 0,0% (előző munkanaphoz képest)" [ref=f47e86]':
+              - generic [ref=f47e87]: USD/HUF
+              - generic [ref=f47e88]:
+                - generic [ref=f47e89]: 319,13
+                - generic [ref=f47e90]: Ft
+            - 'generic "Frissítve: 2026-07-23 13:54:39 · 0,0% (előző havi árhoz képest)" [ref=f47e91]':
+              - generic [ref=f47e92]: Benzin (ESZ-95)
+              - generic [ref=f47e93]:
+                - generic [ref=f47e94]: "662"
+                - generic [ref=f47e95]: Ft/l
+            - paragraph [ref=f47e96]: "Frissítve: ma 13:54"
+        - button "Keresés Ctrl+K" [ref=f47e98] [cursor=pointer]:
+          - generic [ref=f47e101]: Keresés
+          - generic [ref=f47e102]: Ctrl+K
+        - generic [ref=f47e103]:
+          - link "SÁ Szikora Ágoston" [ref=f47e104] [cursor=pointer]:
+            - /url: /admin/settings
+            - generic [ref=f47e105]: SÁ
+            - generic [ref=f47e106]: Szikora Ágoston
+          - button "Kijelentkezés" [ref=f47e110] [cursor=pointer]
+      - generic [ref=f47e116]:
+        - generic [ref=f47e118]:
+          - paragraph [ref=f47e119]: Flotta
+          - heading "Kamionok" [level=1] [ref=f47e120]
+        - generic [ref=f47e123]:
+          - generic [ref=f47e124]:
+            - heading "Kamionok" [level=3] [ref=f47e129]
+            - generic [ref=f47e130]:
+              - textbox "Keresés rendszám, típus szerint..." [ref=f47e132]
+              - button "Excel" [ref=f47e133] [cursor=pointer]
+              - button "Új" [ref=f47e136] [cursor=pointer]
+          - table [ref=f47e140]:
+            - rowgroup [ref=f47e141]:
+              - row [ref=f47e142]:
+                - cell [ref=f47e143]
+                - cell [ref=f47e145]
+                - cell [ref=f47e147]
+                - cell [ref=f47e149]
+                - cell [ref=f47e151]
+              - row [ref=f47e153]:
+                - cell [ref=f47e154]
+                - cell [ref=f47e156]
+                - cell [ref=f47e158]
+                - cell [ref=f47e160]
+                - cell [ref=f47e162]
+              - row [ref=f47e164]:
+                - cell [ref=f47e165]
+                - cell [ref=f47e167]
+                - cell [ref=f47e169]
+                - cell [ref=f47e171]
+                - cell [ref=f47e173]
+              - row [ref=f47e175]:
+                - cell [ref=f47e176]
+                - cell [ref=f47e178]
+                - cell [ref=f47e180]
+                - cell [ref=f47e182]
+                - cell [ref=f47e184]
+              - row [ref=f47e186]:
+                - cell [ref=f47e187]
+                - cell [ref=f47e189]
+                - cell [ref=f47e191]
+                - cell [ref=f47e193]
+                - cell [ref=f47e195]
+              - row [ref=f47e197]:
+                - cell [ref=f47e198]
+                - cell [ref=f47e200]
+                - cell [ref=f47e202]
+                - cell [ref=f47e204]
+                - cell [ref=f47e206]

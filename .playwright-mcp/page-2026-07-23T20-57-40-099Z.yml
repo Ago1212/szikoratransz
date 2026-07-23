@@ -1,0 +1,181 @@
+- generic:
+  - generic:
+    - generic:
+      - navigation [ref=f5e1]:
+        - generic [ref=f5e2]:
+          - link [ref=f5e3] [cursor=pointer]:
+            - /url: /admin/dashboard
+            - img "Szikora Transz Kft" [ref=f5e4]
+          - generic [ref=f5e5]:
+            - button "Sötét mód bekapcsolása" [ref=f5e6] [cursor=pointer]
+            - button "Értesítések" [ref=f5e9] [cursor=pointer]
+        - generic [ref=f5e12]:
+          - list [ref=f5e14]:
+            - listitem [ref=f5e125]:
+              - link "Főmenü" [ref=f5e126] [cursor=pointer]:
+                - /url: /admin/dashboard
+            - listitem [ref=f5e129]:
+              - link "Karbantartások" [ref=f5e130] [cursor=pointer]:
+                - /url: /admin/karbantartasok
+            - listitem [ref=f5e133]:
+              - link "Bejelentések" [ref=f5e134] [cursor=pointer]:
+                - /url: /admin/bejelentesek
+            - listitem [ref=f5e137]:
+              - link "Pénzforgalom" [ref=f5e138] [cursor=pointer]:
+                - /url: /admin/koltsegek
+            - listitem [ref=f5e141]:
+              - link "Flottakövetés" [ref=f5e142] [cursor=pointer]:
+                - /url: /admin/flottakovetes
+          - generic [ref=f5e35]:
+            - button "Flotta" [expanded] [ref=f5e145] [cursor=pointer]
+            - list [ref=f5e40]:
+              - listitem [ref=f5e149]:
+                - link "Kamionok" [ref=f5e150] [cursor=pointer]:
+                  - /url: /admin/kamionok
+              - listitem [ref=f5e153]:
+                - link "Pótkocsik" [ref=f5e154] [cursor=pointer]:
+                  - /url: /admin/potkocsi
+              - listitem [ref=f5e157]:
+                - link "Furgonok" [ref=f5e158] [cursor=pointer]:
+                  - /url: /admin/furgonok
+          - button "Csapat" [ref=f5e161] [cursor=pointer]
+          - button "Partnerek" [ref=f5e165] [cursor=pointer]
+          - button "Pénzügyek" [ref=f5e169] [cursor=pointer]
+          - button "Rendszer" [ref=f5e173] [cursor=pointer]
+        - generic [ref=f5e74]:
+          - button "Piaci árak" [expanded] [ref=f5e75] [cursor=pointer]
+          - generic [ref=f5e79]:
+            - 'generic "Frissítve: 2026-07-23 22:30:17 · 0,0% (előző munkanaphoz képest)" [ref=f5e80]':
+              - generic [ref=f5e81]: EUR/HUF
+              - generic [ref=f5e82]:
+                - generic [ref=f5e83]: 364,16
+                - generic [ref=f5e84]: Ft
+            - 'generic "Frissítve: 2026-07-23 22:30:18 · 0,0% (előző munkanaphoz képest)" [ref=f5e85]':
+              - generic [ref=f5e86]: USD/HUF
+              - generic [ref=f5e87]:
+                - generic [ref=f5e88]: 319,13
+                - generic [ref=f5e89]: Ft
+            - 'generic "Frissítve: 2026-07-23 13:54:39 · 0,0% (előző havi árhoz képest)" [ref=f5e90]':
+              - generic [ref=f5e91]: Benzin (ESZ-95)
+              - generic [ref=f5e92]:
+                - generic [ref=f5e93]: "662"
+                - generic [ref=f5e94]: Ft/l
+            - paragraph [ref=f5e95]: "Frissítve: ma 13:54"
+        - button "Keresés Ctrl+K" [ref=f5e97] [cursor=pointer]:
+          - generic [ref=f5e100]: Keresés
+          - generic [ref=f5e101]: Ctrl+K
+        - generic [ref=f5e102]:
+          - link "SÁ Szikora Ágoston Adminisztrátor" [ref=f5e103] [cursor=pointer]:
+            - /url: /admin/settings
+            - generic [ref=f5e104]: SÁ
+            - generic [ref=f5e105]:
+              - generic [ref=f5e106]: Szikora Ágoston
+              - generic [ref=f5e107]: Adminisztrátor
+          - button "Kijelentkezés" [ref=f5e110] [cursor=pointer]
+      - generic [ref=f5e117]:
+        - generic [ref=f5e119]:
+          - paragraph [ref=f5e120]: Rendszer
+          - heading "Jogosultságok" [level=1] [ref=f5e121]
+        - paragraph [ref=f5e122]: Itt hozhatsz létre saját szerepköröket (pl. Diszpécser, Könyvelő), és állíthatod be szerepkörönként, hogy mely modulokhoz férhetnek hozzá, mit szerkeszthetnek és törölhetnek. Alapértelmezetten minden modul teljes hozzáférésű — csak azt kell kikapcsolni, amit korlátozni szeretnél.
+        - generic [ref=f5e177]:
+          - button "Adminisztrátor" [ref=f5e178] [cursor=pointer]
+          - button "Fuvarszervező" [active] [ref=f5e179] [cursor=pointer]
+          - button "Új szerepkör" [ref=f5e180] [cursor=pointer]
+        - generic [ref=f5e188]:
+          - generic [ref=f5e189]:
+            - heading "Fuvarszervező jogosultságai" [level=3] [ref=f5e194]
+            - button "Szerepkör törlése" [ref=f5e195] [cursor=pointer]
+          - table [ref=f5e199]:
+            - rowgroup [ref=f5e200]:
+              - row [ref=f5e201]:
+                - columnheader "Modul" [ref=f5e202]
+                - columnheader "Hozzáférés" [ref=f5e203]
+                - columnheader "Szerkesztés" [ref=f5e204]
+                - columnheader "Törlés" [ref=f5e205]
+            - rowgroup [ref=f5e206]:
+              - row [ref=f5e207]:
+                - cell "Kamionok" [ref=f5e208]
+                - cell [ref=f5e209]:
+                  - checkbox "Kamionok – Hozzáférés" [checked] [ref=f5e212]
+                - cell [ref=f5e213]:
+                  - checkbox "Kamionok – Szerkesztés" [checked] [ref=f5e216]
+                - cell [ref=f5e217]:
+                  - checkbox "Kamionok – Törlés" [checked] [ref=f5e220]
+              - row [ref=f5e221]:
+                - cell "Pótkocsik" [ref=f5e222]
+                - cell [ref=f5e223]:
+                  - checkbox "Pótkocsik – Hozzáférés" [checked] [ref=f5e226]
+                - cell [ref=f5e227]:
+                  - checkbox "Pótkocsik – Szerkesztés" [checked] [ref=f5e230]
+                - cell [ref=f5e231]:
+                  - checkbox "Pótkocsik – Törlés" [checked] [ref=f5e234]
+              - row [ref=f5e235]:
+                - cell "Furgonok" [ref=f5e236]
+                - cell [ref=f5e237]:
+                  - checkbox "Furgonok – Hozzáférés" [checked] [ref=f5e240]
+                - cell [ref=f5e241]:
+                  - checkbox "Furgonok – Szerkesztés" [checked] [ref=f5e244]
+                - cell [ref=f5e245]:
+                  - checkbox "Furgonok – Törlés" [checked] [ref=f5e248]
+              - row [ref=f5e249]:
+                - cell "Karbantartások" [ref=f5e250]
+                - cell [ref=f5e251]:
+                  - checkbox "Karbantartások – Hozzáférés" [checked] [ref=f5e254]
+                - cell [ref=f5e255]:
+                  - checkbox "Karbantartások – Szerkesztés" [checked] [ref=f5e258]
+                - cell [ref=f5e259]:
+                  - checkbox "Karbantartások – Törlés" [checked] [ref=f5e262]
+              - row [ref=f5e263]:
+                - cell "Sofőrök" [ref=f5e264]
+                - cell [ref=f5e265]:
+                  - checkbox "Sofőrök – Hozzáférés" [checked] [ref=f5e268]
+                - cell [ref=f5e269]:
+                  - checkbox "Sofőrök – Szerkesztés" [checked] [ref=f5e272]
+                - cell [ref=f5e273]:
+                  - checkbox "Sofőrök – Törlés" [checked] [ref=f5e276]
+              - row [ref=f5e277]:
+                - cell "Bejelentések" [ref=f5e278]
+                - cell [ref=f5e279]:
+                  - checkbox "Bejelentések – Hozzáférés" [checked] [ref=f5e282]
+                - cell [ref=f5e283]:
+                  - checkbox "Bejelentések – Szerkesztés" [checked] [ref=f5e286]
+                - cell [ref=f5e287]:
+                  - checkbox "Bejelentések – Törlés" [checked] [ref=f5e290]
+              - row [ref=f5e291]:
+                - cell "Szabadságok" [ref=f5e292]
+                - cell [ref=f5e293]:
+                  - checkbox "Szabadságok – Hozzáférés" [checked] [ref=f5e296]
+                - cell [ref=f5e297]:
+                  - checkbox "Szabadságok – Szerkesztés" [checked] [ref=f5e300]
+                - cell [ref=f5e301]:
+                  - checkbox "Szabadságok – Törlés" [checked] [ref=f5e304]
+              - row [ref=f5e305]:
+                - cell "Ügyfelek" [ref=f5e306]
+                - cell [ref=f5e307]:
+                  - checkbox "Ügyfelek – Hozzáférés" [checked] [ref=f5e310]
+                - cell [ref=f5e311]:
+                  - checkbox "Ügyfelek – Szerkesztés" [checked] [ref=f5e314]
+                - cell [ref=f5e315]:
+                  - checkbox "Ügyfelek – Törlés" [checked] [ref=f5e318]
+              - row [ref=f5e319]:
+                - cell "Napló" [ref=f5e320]
+                - cell [ref=f5e321]:
+                  - checkbox "Napló – Hozzáférés" [checked] [ref=f5e324]
+                - cell "—" [ref=f5e325]
+                - cell "—" [ref=f5e326]
+              - row [ref=f5e327]:
+                - cell "Pénzforgalom" [ref=f5e328]
+                - cell [ref=f5e329]:
+                  - checkbox "Pénzforgalom – Hozzáférés" [checked] [ref=f5e332]
+                - cell [ref=f5e333]:
+                  - checkbox "Pénzforgalom – Szerkesztés" [checked] [ref=f5e336]
+                - cell [ref=f5e337]:
+                  - checkbox "Pénzforgalom – Törlés" [checked] [ref=f5e340]
+              - row [ref=f5e341]:
+                - cell "Tachográf kártya" [ref=f5e342]
+                - cell [ref=f5e343]:
+                  - checkbox "Tachográf kártya – Hozzáférés" [checked] [ref=f5e346]
+                - cell [ref=f5e347]:
+                  - checkbox "Tachográf kártya – Szerkesztés" [checked] [ref=f5e350]
+                - cell "—" [ref=f5e351]
+        - button "Jogosultságok mentése" [ref=f5e353] [cursor=pointer]

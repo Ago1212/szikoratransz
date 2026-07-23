@@ -27,6 +27,7 @@ import {
   PiChartBarLight,
   PiSunLight,
   PiMoonLight,
+  PiIdentificationCardLight,
 } from "react-icons/pi";
 
 import NotificationDropdown from "components/Dropdowns/NotificationDropdown.js";
@@ -98,6 +99,11 @@ const mobileGroups = [
       { to: "/admin/soforok", icon: PiUsersLight, text: "Sofőrök" },
       { to: "/admin/sofor-riport", icon: PiChartBarLight, text: "Sofőr-riport" },
       {
+        to: "/admin/tachograf",
+        icon: PiIdentificationCardLight,
+        text: "Tachográf",
+      },
+      {
         to: "/admin/bejelentesek",
         icon: PiChatCircleTextLight,
         text: "Bejelentések",
@@ -117,6 +123,15 @@ const mobileGroups = [
     label: "Rendszer",
     icon: PiFilesLight,
     items: [
+      // UX-audit — a Ctrl+K globális keresésnek és a sötét mód kapcsolónak
+      // korábban NEM volt mobil belépési pontja (mindkettő kizárólag a
+      // desktop-only sidebar-sávban élt). `type: "action"` — nem navigáló,
+      // hanem egy komponens-szintű handlert hívó elem (ld. a render-ágat
+      // lentebb); a `mobileGroups` tömb modul-szinten, a komponensen kívül
+      // van deklarálva, ezért az ikon/felirat a sötét módnál dinamikusan,
+      // render közben dől el, nem itt van "beégetve".
+      { type: "action", action: "search", icon: PiMagnifyingGlassLight, text: "Keresés" },
+      { type: "action", action: "darkmode", icon: PiMoonLight, text: "Sötét mód" },
       { to: "/admin/fajlok", icon: PiFilesLight, text: "Fájlok" },
       { to: "/admin/naplo", icon: PiListMagnifyingGlassLight, text: "Napló" },
       {
@@ -174,6 +189,22 @@ const mobileGroups = [
 
 const TIPUS_LABEL = { kamion: "kamiont", potkocsi: "pótkocsit", furgon: "furgont" };
 
+// A lista- és a hozzá tartozó "form" (létrehozás/szerkesztés) route neve nem
+// áll substring-relációban (pl. `/admin/kamionok` vs. `/admin/kamionForm`) —
+// a nyers `.includes()`-es `isActive` emiatt egyik nav-itemet sem jelölte
+// aktívnak pont a form-oldalakon, ahol a leginkább kellene tudni, hol
+// vagyunk (ld. UX-audit). Ez a leképezés adja vissza az adott form-route-hoz
+// tartozó lista-route-ot.
+const FORM_ROUTE_TO_LIST_ROUTE = {
+  "/admin/kamionForm": "/admin/kamionok",
+  "/admin/potkocsiForm": "/admin/potkocsi",
+  "/admin/furgonForm": "/admin/furgonok",
+  "/admin/soforForm": "/admin/soforok",
+  "/admin/bejelentesForm": "/admin/bejelentesek",
+  "/admin/ugyfelForm": "/admin/ugyfelek",
+  "/admin/helyszinForm": "/admin/helyszinek",
+};
+
 export default function Sidebar({ isDark, onToggleDark }) {
   const [openGroup, setOpenGroup] = React.useState(null);
   const [kerelmek, setKerelmek] = React.useState([]);
@@ -182,7 +213,10 @@ export default function Sidebar({ isDark, onToggleDark }) {
   const location = useLocation();
   const history = useHistory();
 
-  const isActive = (path) => location.pathname.includes(path);
+  const isActive = (path) => {
+    if (location.pathname.includes(path)) return true;
+    return FORM_ROUTE_TO_LIST_ROUTE[location.pathname] === path;
+  };
 
   // Ctrl+K / Cmd+K globális gyorsbillentyű a kereséshez — a lenti, a lábléc
   // fölötti keresősáv "Ctrl+K" jelvénye csak ígéret lenne funkció nélkül.
@@ -627,6 +661,11 @@ export default function Sidebar({ isDark, onToggleDark }) {
                   text="Sofőr-riport"
                 />
                 <NavItem
+                  to="/admin/tachograf"
+                  icon={PiIdentificationCardLight}
+                  text="Tachográf"
+                />
+                <NavItem
                   to="/admin/szabadsagok"
                   icon={PiCalendarBlankLight}
                   text="Szabadságok"
@@ -844,6 +883,7 @@ export default function Sidebar({ isDark, onToggleDark }) {
                   .filter(
                     (item) =>
                       item.type === "divider" ||
+                      item.type === "action" ||
                       ((!item.adminOnly || isAdmin) && hasAccess(item.to)),
                   )
                   .map((item, i) => {
@@ -856,6 +896,27 @@ export default function Sidebar({ isDark, onToggleDark }) {
                           }`}
                         >
                           {item.label}
+                        </li>
+                      );
+                    }
+                    if (item.type === "action") {
+                      const isDarkmode = item.action === "darkmode";
+                      const ActionIcon = isDarkmode ? (isDark ? PiSunLight : PiMoonLight) : item.icon;
+                      const actionLabel = isDarkmode ? (isDark ? "Világos mód" : "Sötét mód") : item.text;
+                      return (
+                        <li key={`action-${item.action}`}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOpenGroup(null);
+                              if (item.action === "search") setSearchOpen(true);
+                              if (item.action === "darkmode") onToggleDark();
+                            }}
+                            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-[15px] font-medium text-ink-600 hover:bg-slate-100 dark:text-ink-300 dark:hover:bg-ink-800"
+                          >
+                            <ActionIcon className="h-[18px] w-[18px] flex-shrink-0" />
+                            {actionLabel}
+                          </button>
                         </li>
                       );
                     }

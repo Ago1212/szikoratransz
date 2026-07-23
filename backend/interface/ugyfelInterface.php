@@ -8,7 +8,9 @@ class UgyfelInterface {
         $this->db = $database->connect();
     }
 
-    public function getUgyfelek($id, $search = null, $page = null, $pageSize = null) {
+    private const RENDEZHETO_OSZLOPOK = ['nev' => 'nev', 'varos' => 'varos'];
+
+    public function getUgyfelek($id, $search = null, $page = null, $pageSize = null, $sortKey = null, $sortDir = 'asc') {
         try {
             $params = [':id' => $id];
             $query = "SELECT * FROM ugyfelek WHERE admin = :id AND torolt <> 'I'";
@@ -16,7 +18,9 @@ class UgyfelInterface {
                 $query .= " AND " . PaginationHelper::likeClause(['nev', 'varos', 'kapcsolattarto_nev', 'kapcsolattarto_telefon', 'kapcsolattarto_email'], 'search');
                 $params[':search'] = '%' . $search . '%';
             }
-            $query .= " ORDER BY nev ASC";
+            $rendezoOszlop = self::RENDEZHETO_OSZLOPOK[$sortKey] ?? 'nev';
+            $irany = strtolower((string) $sortDir) === 'desc' ? 'DESC' : 'ASC';
+            $query .= " ORDER BY $rendezoOszlop $irany";
 
             if ($page !== null) {
                 [$ugyfelek, $total, $page, $pageSize] = PaginationHelper::fetchPage($this->db, $query, $params, $page, $pageSize);

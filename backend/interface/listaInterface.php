@@ -15,7 +15,7 @@
 class ListaInterface {
     protected $db;
 
-    const TIPUSOK = ['kamion_meret', 'furgon_meret', 'jarmu_allapot', 'biztositas_utem', 'bejelentes_tipus', 'szabadsag_tipus', 'deviza'];
+    const TIPUSOK = ['kamion_meret', 'furgon_meret', 'potkocsi_meret', 'jarmu_allapot', 'biztositas_utem', 'bejelentes_tipus', 'szabadsag_tipus', 'deviza'];
 
     const TIPUS_TABLAK = [
         'kamion_meret' => [['kamion', 'meret']],
@@ -23,6 +23,11 @@ class ListaInterface {
         // vontató méretosztályok), ezért külön, admin által feltölthető
         // lista, nem a meglévő `kamion_meret` újrafelhasználása.
         'furgon_meret' => [['furgon', 'meret']],
+        // UX-audit (2026-07-23): a Pótkocsi modulból korábban hiányzott a
+        // Kamion/Furgon mellett már meglévő "Méret" mező — ugyanaz az elv,
+        // mint a furgon_meret-nél: saját lista, nem a kamion_meret
+        // újrafelhasználása.
+        'potkocsi_meret' => [['potkocsi', 'meret']],
         'jarmu_allapot' => [['kamion', 'allapot'], ['potkocsi', 'allapot'], ['furgon', 'allapot']],
         'biztositas_utem' => [
             ['kamion', 'kot_biz_utem'], ['kamion', 'kaszko_fizetesi_utem'],
@@ -119,6 +124,44 @@ class ListaInterface {
     // Nem törölhető egy "védett" (rendszer-alapértelmezett) elem, sem egy
     // olyan elem, amire még van hivatkozó adat (kamion/pótkocsi/bejelentés/
     // szabadság rekord) — előbb át kell sorolni azokat egy másik értékre.
+    // Az összesített találatszám a `TIPUS_TABLAK`-ban felsorolt összes
+    // hivatkozó táblán/oszlopon át — mind a törlés előtti (`deleteListaElem`
+    // hard block, már korábban is megvolt), mind az UX-audit szerint hiányzó
+    // előzetes UI-előnézet (`getListaElemHasznalat`) ugyanezt a logikát
+    // használja, hogy a két hely sose térhessen el egymástól.
+    private function szamoljHasznalatot($tipus, $kulcs, $ceg_id) {
+        $osszesen = 0;
+        foreach (self::TIPUS_TABLAK[$tipus] ?? [] as [$tabla, $oszlop]) {
+            $inUse = $this->db->prepare("SELECT COUNT(*) AS n FROM `$tabla` WHERE admin = :ceg_id AND `$oszlop` = :kulcs AND torolt <> 'I'");
+            $inUse->bindValue(':ceg_id', $ceg_id);
+            $inUse->bindValue(':kulcs', $kulcs);
+            $inUse->execute();
+            $osszesen += (int) $inUse->fetch(PDO::FETCH_ASSOC)['n'];
+        }
+        return $osszesen;
+    }
+
+    // UX-audit — törlés előtt eddig csak egy statikus figyelmeztető mondat
+    // volt ("győződj meg róla, hogy már semmi nem használja"), a tényleges
+    // ellenőrzés csak a törlés-kísérlet UTÁN, a `deleteListaElem` hard
+    // blokkjában derült ki. Ez az akció lehetővé teszi, hogy a felület MÁR
+    // a megerősítő kérdésben megmutassa a találatszámot.
+    public function getListaElemHasznalat($id, $ceg_id) {
+        try {
+            $find = $this->db->prepare("SELECT tipus, kulcs FROM listaelemek WHERE id = :id AND admin = :ceg_id AND torolt <> 'I'");
+            $find->bindValue(':id', $id);
+            $find->bindValue(':ceg_id', $ceg_id);
+            $find->execute();
+            $elem = $find->fetch(PDO::FETCH_ASSOC);
+            if (!$elem) {
+                return ['success' => false, 'message' => 'Az elem nem található.'];
+            }
+            return ['success' => true, 'darab' => $this->szamoljHasznalatot($elem['tipus'], $elem['kulcs'], $ceg_id)];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
     public function deleteListaElem($id, $ceg_id) {
         try {
             $find = $this->db->prepare("SELECT tipus, kulcs, vedett FROM listaelemek WHERE id = :id AND admin = :ceg_id AND torolt <> 'I'");
@@ -133,14 +176,8 @@ class ListaInterface {
                 return ['success' => false, 'message' => 'Ez egy alapértelmezett elem, nem törölhető.'];
             }
 
-            foreach (self::TIPUS_TABLAK[$elem['tipus']] ?? [] as [$tabla, $oszlop]) {
-                $inUse = $this->db->prepare("SELECT COUNT(*) AS n FROM `$tabla` WHERE admin = :ceg_id AND `$oszlop` = :kulcs AND torolt <> 'I'");
-                $inUse->bindValue(':ceg_id', $ceg_id);
-                $inUse->bindValue(':kulcs', $elem['kulcs']);
-                $inUse->execute();
-                if ((int) $inUse->fetch(PDO::FETCH_ASSOC)['n'] > 0) {
-                    return ['success' => false, 'message' => 'Ezt az értéket még használja legalább egy rekord — előbb módosítsd azokat egy másik értékre.'];
-                }
+            if ($this->szamoljHasznalatot($elem['tipus'], $elem['kulcs'], $ceg_id) > 0) {
+                return ['success' => false, 'message' => 'Ezt az értéket még használja legalább egy rekord — előbb módosítsd azokat egy másik értékre.'];
             }
 
             $query = "UPDATE listaelemek SET torolt = 'I' WHERE id = :id AND admin = :ceg_id";

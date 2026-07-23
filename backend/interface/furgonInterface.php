@@ -27,7 +27,9 @@ class FurgonInterface {
 
     // `$search`/`$page`/`$pageSize` NÉLKÜL hívva a teljes listát adja vissza,
     // lapozás nélkül — ugyanaz a mintát, mint a kamionInterface::getKamionok().
-    public function getFurgonok($id, $search = null, $page = null, $pageSize = null) {
+    private const RENDEZHETO_OSZLOPOK = ['rendszam' => 'rendszam', 'tipus' => 'tipus', 'meret' => 'meret', 'allapot' => 'allapot'];
+
+    public function getFurgonok($id, $search = null, $page = null, $pageSize = null, $sortKey = null, $sortDir = 'asc') {
         try {
             $params = [':id' => $id];
             $query = "SELECT * FROM furgon WHERE admin = :id AND torolt <> 'I'";
@@ -35,7 +37,9 @@ class FurgonInterface {
                 $query .= " AND " . PaginationHelper::likeClause(['rendszam', 'tipus', 'meret', 'allapot'], 'search');
                 $params[':search'] = '%' . $search . '%';
             }
-            $query .= " ORDER BY rendszam ASC";
+            $rendezoOszlop = self::RENDEZHETO_OSZLOPOK[$sortKey] ?? 'rendszam';
+            $irany = strtolower((string) $sortDir) === 'desc' ? 'DESC' : 'ASC';
+            $query .= " ORDER BY $rendezoOszlop $irany";
 
             if ($page !== null) {
                 [$furgonok, $total, $page, $pageSize] = PaginationHelper::fetchPage($this->db, $query, $params, $page, $pageSize);

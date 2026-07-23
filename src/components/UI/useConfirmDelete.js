@@ -1,6 +1,7 @@
 import { useHistory } from "react-router-dom";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
+import { confirmDialog } from "utils/confirm.js";
 
 // A törlés-megerősítés + fetchAction + hibakezelés + (opcionális) lista-
 // frissítés mintát korábban minden entitás-táblázat (kamion, sofőr,
@@ -12,7 +13,9 @@ export function useConfirmDelete({ action, confirmMessage, successMessage, listP
   const history = useHistory();
 
   return async (id) => {
-    if (!window.confirm(confirmMessage)) return;
+    // UX-audit — natív `window.confirm()` helyett a márkázott, Modal-alapú
+    // dialógus (ld. utils/confirm.js), sötét módban is konzisztens.
+    if (!(await confirmDialog(confirmMessage))) return;
 
     try {
       const result = await fetchAction(action, { id, ...extraParams });

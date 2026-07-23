@@ -1,0 +1,119 @@
+- generic [active]:
+  - generic:
+    - generic:
+      - link "Ugrás a tartalomra" [ref=f6e1] [cursor=pointer]:
+        - /url: "#admin-tartalom"
+      - navigation [ref=f6e2]:
+        - generic [ref=f6e3]:
+          - link [ref=f6e4] [cursor=pointer]:
+            - /url: /admin/dashboard
+            - img "Szikora Transz Kft" [ref=f6e5]
+          - generic [ref=f6e6]:
+            - button "Sötét mód bekapcsolása" [ref=f6e7] [cursor=pointer]
+            - button "Értesítések" [ref=f6e10] [cursor=pointer]
+        - generic [ref=f6e13]:
+          - list [ref=f6e15]:
+            - listitem [ref=f6e16]:
+              - link "Főmenü" [ref=f6e17] [cursor=pointer]:
+                - /url: /admin/dashboard
+            - listitem [ref=f6e20]:
+              - link "Karbantartások" [ref=f6e21] [cursor=pointer]:
+                - /url: /admin/karbantartasok
+            - listitem [ref=f6e24]:
+              - link "Bejelentések" [ref=f6e25] [cursor=pointer]:
+                - /url: /admin/bejelentesek
+            - listitem [ref=f6e28]:
+              - link "Pénzforgalom" [ref=f6e29] [cursor=pointer]:
+                - /url: /admin/koltsegek
+            - listitem [ref=f6e32]:
+              - link "Flottakövetés" [ref=f6e33] [cursor=pointer]:
+                - /url: /admin/flottakovetes
+          - generic [ref=f6e36]:
+            - button "Flotta" [expanded] [ref=f6e37] [cursor=pointer]
+            - list [ref=f6e41]:
+              - listitem [ref=f6e42]:
+                - link "Kamionok" [ref=f6e43] [cursor=pointer]:
+                  - /url: /admin/kamionok
+              - listitem [ref=f6e46]:
+                - link "Pótkocsik" [ref=f6e47] [cursor=pointer]:
+                  - /url: /admin/potkocsi
+              - listitem [ref=f6e50]:
+                - link "Furgonok" [ref=f6e51] [cursor=pointer]:
+                  - /url: /admin/furgonok
+          - button "Csapat" [ref=f6e55] [cursor=pointer]
+          - button "Partnerek" [ref=f6e60] [cursor=pointer]
+          - button "Pénzügyek" [ref=f6e65] [cursor=pointer]
+          - button "Rendszer" [ref=f6e70] [cursor=pointer]
+        - generic [ref=f6e75]:
+          - button "Piaci árak" [expanded] [ref=f6e76] [cursor=pointer]
+          - generic [ref=f6e80]:
+            - 'generic "Frissítve: 2026-07-23 23:30:44 · 0,0% (előző munkanaphoz képest)" [ref=f6e81]':
+              - generic [ref=f6e82]: EUR/HUF
+              - generic [ref=f6e83]:
+                - generic [ref=f6e84]: 364,16
+                - generic [ref=f6e85]: Ft
+            - 'generic "Frissítve: 2026-07-23 23:30:45 · 0,0% (előző munkanaphoz képest)" [ref=f6e86]':
+              - generic [ref=f6e87]: USD/HUF
+              - generic [ref=f6e88]:
+                - generic [ref=f6e89]: 319,13
+                - generic [ref=f6e90]: Ft
+            - 'generic "Frissítve: 2026-07-23 13:54:39 · 0,0% (előző havi árhoz képest)" [ref=f6e91]':
+              - generic [ref=f6e92]: Benzin (ESZ-95)
+              - generic [ref=f6e93]:
+                - generic [ref=f6e94]: "662"
+                - generic [ref=f6e95]: Ft/l
+            - paragraph [ref=f6e96]: "Frissítve: ma 13:54"
+        - button "Keresés Ctrl+K" [ref=f6e98] [cursor=pointer]:
+          - generic [ref=f6e101]: Keresés
+          - generic [ref=f6e102]: Ctrl+K
+        - generic [ref=f6e103]:
+          - link "SÁ Szikora Ágoston Adminisztrátor" [ref=f6e104] [cursor=pointer]:
+            - /url: /admin/settings
+            - generic [ref=f6e105]: SÁ
+            - generic [ref=f6e106]:
+              - generic [ref=f6e107]: Szikora Ágoston
+              - generic [ref=f6e108]: Adminisztrátor
+          - button "Kijelentkezés" [ref=f6e111] [cursor=pointer]
+      - generic [ref=f6e117]:
+        - generic [ref=f6e119]:
+          - paragraph [ref=f6e120]: Partnerek
+          - heading "Ügyfelek" [level=1] [ref=f6e121]
+        - generic [ref=f6e124]:
+          - generic [ref=f6e125]:
+            - heading "Ügyfelek" [level=3] [ref=f6e130]
+            - generic [ref=f6e131]:
+              - textbox "Keresés ügyfél, város, kapcsolattartó szerint..." [ref=f6e133]
+              - button "Excel" [ref=f6e134] [cursor=pointer]
+              - button "Új" [ref=f6e137] [cursor=pointer]
+          - table [ref=f6e141]:
+            - rowgroup [ref=f6e142]:
+              - row [ref=f6e143]:
+                - cell [ref=f6e144]
+                - cell [ref=f6e146]
+                - cell [ref=f6e148]
+                - cell [ref=f6e150]
+              - row [ref=f6e152]:
+                - cell [ref=f6e153]
+                - cell [ref=f6e155]
+                - cell [ref=f6e157]
+                - cell [ref=f6e159]
+              - row [ref=f6e161]:
+                - cell [ref=f6e162]
+                - cell [ref=f6e164]
+                - cell [ref=f6e166]
+                - cell [ref=f6e168]
+              - row [ref=f6e170]:
+                - cell [ref=f6e171]
+                - cell [ref=f6e173]
+                - cell [ref=f6e175]
+                - cell [ref=f6e177]
+              - row [ref=f6e179]:
+                - cell [ref=f6e180]
+                - cell [ref=f6e182]
+                - cell [ref=f6e184]
+                - cell [ref=f6e186]
+              - row [ref=f6e188]:
+                - cell [ref=f6e189]
+                - cell [ref=f6e191]
+                - cell [ref=f6e193]
+                - cell [ref=f6e195]

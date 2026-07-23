@@ -8,6 +8,7 @@ import "assets/styles/tailwind.css";
 import NotFound from "views/NotFound.js";
 
 import ToastContainer from "components/UI/ToastContainer.js";
+import ConfirmDialogContainer from "components/UI/ConfirmDialogContainer.js";
 import ScrollToTop from "components/UI/ScrollToTop.js";
 import UpdateBanner from "components/PWA/UpdateBanner.js";
 import { notifySwUpdate } from "utils/swUpdate";
@@ -92,6 +93,7 @@ const app = (
         <Route component={NotFound} />
       </Switch>
       <ToastContainer />
+      <ConfirmDialogContainer />
       <UpdateBanner />
     </Suspense>
   </BrowserRouter>

@@ -1,0 +1,381 @@
+- generic [ref=f6e3]:
+  - navigation [ref=f6e4]:
+    - generic [ref=f6e6]:
+      - link [ref=f6e8] [cursor=pointer]:
+        - /url: /
+        - img "Szikora Transz Kft" [ref=f6e9]
+      - generic [ref=f6e11]:
+        - link "Kezdőlap" [ref=f6e12] [cursor=pointer]:
+          - /url: "#home"
+        - link "Szolgáltatások" [ref=f6e13] [cursor=pointer]:
+          - /url: "#services"
+        - link "Rólunk" [ref=f6e14] [cursor=pointer]:
+          - /url: "#about"
+        - link "Kapcsolat" [ref=f6e15] [cursor=pointer]:
+          - /url: "#contact"
+        - link "Bejelentkezés" [ref=f6e16] [cursor=pointer]:
+          - /url: /auth/login
+  - main [ref=f6e17]:
+    - generic [ref=f6e18]:
+      - img [ref=f6e22]:
+        - generic [ref=f6e62]: Budapest
+        - generic [ref=f6e63]: Debrecen
+        - generic [ref=f6e64]: Szeged
+        - generic [ref=f6e65]: Pécs
+        - generic [ref=f6e66]: Bécs
+        - generic [ref=f6e67]: Pozsony
+        - generic [ref=f6e68]: Belgrád
+        - generic [ref=f6e69]: Bukarest
+        - generic [ref=f6e70]: Zágráb
+      - generic [ref=f6e72]:
+        - generic [ref=f6e73]:
+          - generic [ref=f6e74]: Belföldi és nemzetközi fuvarozás
+          - heading "Szállítás, amire percre pontosan számíthat." [level=1] [ref=f6e77]:
+            - generic [ref=f6e78]: Szállítás, amire
+            - generic [ref=f6e80]: percre pontosan
+            - generic [ref=f6e82]: számíthat.
+          - paragraph [ref=f6e85]: "Szikora Transz Kft — profi áruszállítás és logisztika 2010 óta: belföldi és nemzetközi fuvarozás, modern flotta, teljes körű biztosítás."
+          - link "Szolgáltatásaink megismerése" [ref=f6e87] [cursor=pointer]:
+            - /url: "#services"
+        - generic [ref=f6e90]:
+          - text: Ingyenes árajánlat
+          - heading "Kérjen árajánlatot még ma" [level=2] [ref=f6e92]
+          - paragraph [ref=f6e93]: Töltse ki pár adatát, és 24 órán belül egyedi árajánlattal válaszolunk — kötöttség nélkül.
+          - generic [ref=f6e94]:
+            - generic [ref=f6e95]: Teljesen ingyenes, nem kötelez semmire
+            - generic [ref=f6e99]: Válasz 24 órán belül
+            - generic [ref=f6e103]: Egyedi árazás minden fuvarra
+          - button "Ingyenes ajánlatot kérek" [ref=f6e107] [cursor=pointer]
+          - paragraph [ref=f6e108]:
+            - text: "vagy hívjon közvetlenül:"
+            - link "+36 30 811 5776" [ref=f6e109] [cursor=pointer]:
+              - /url: tel:+36308115776
+    - generic [ref=f6e111]:
+      - generic [ref=f6e112]:
+        - text: A folyamat
+        - heading "Így jut el az árujuk A-ból B-be" [level=2] [ref=f6e113]
+        - paragraph [ref=f6e114]: Négy lépés, amely minden fuvarra érvényes — a megrendeléstől a visszaigazolt kézbesítésig.
+      - generic [ref=f6e115]:
+        - generic [ref=f6e117]:
+          - generic [ref=f6e118]: "01"
+          - paragraph [ref=f6e119]: Megrendelés
+          - paragraph [ref=f6e120]: Küldje el ajánlatkérését az űrlapon, és 24 órán belül részletes választ kap tőlünk.
+        - generic [ref=f6e121]:
+          - generic [ref=f6e122]: "02"
+          - paragraph [ref=f6e123]: Tervezés
+          - paragraph [ref=f6e124]: Optimalizáljuk az útvonalat, és kiválasztjuk az áru jellegéhez illő járművet és sofőrt.
+        - generic [ref=f6e125]:
+          - generic [ref=f6e126]: "03"
+          - paragraph [ref=f6e127]: Szállítás
+          - paragraph [ref=f6e128]: Szakképzett sofőreink pontosan az ütemterv szerint szállítják az árut, az ország határain belül és kívül.
+        - generic [ref=f6e129]:
+          - generic [ref=f6e130]: "04"
+          - paragraph [ref=f6e131]: Kézbesítés
+          - paragraph [ref=f6e132]: Pontos, biztosított kiszállítás, írásos visszaigazolással a fuvar lezárásáról.
+    - generic [ref=f6e134]:
+      - generic [ref=f6e135]:
+        - text: Szolgáltatások
+        - heading "Szolgáltatásaink" [level=2] [ref=f6e136]
+        - paragraph [ref=f6e137]: Teljes körű fuvarozási megoldások, amelyek kielégítik ügyfeleink egyedi igényeit — belföldön és külföldön egyaránt.
+      - generic [ref=f6e138]:
+        - generic [ref=f6e140]:
+          - heading [level=3] [ref=f6e144]:
+            - link "Belföldi fuvarozás" [ref=f6e145] [cursor=pointer]:
+              - /url: /belfoldi-fuvarozas-arajanlat
+          - paragraph [ref=f6e146]: Gyors és megbízható áruszállítás Magyarország egész területén, rugalmas árazással és pontos határidőkkel. Egyaránt vállalunk egyszeri megbízásokat és rendszeres, ismétlődő fuvarokat.
+          - generic [ref=f6e147]: Részletek
+        - generic [ref=f6e151]:
+          - heading [level=3] [ref=f6e155]:
+            - link "Nemzetközi szállítás" [ref=f6e156] [cursor=pointer]:
+              - /url: /nemzetkozi-fuvarozas-vamugyintezessel
+          - paragraph [ref=f6e157]: Határon átnyúló fuvarozási szolgáltatás Európa-szerte, teljes körű vámügyintézéssel és okmányolással. Az útvonalat és a határidőt minden esetben az adott fuvarhoz igazítjuk.
+          - generic [ref=f6e158]: Részletek
+        - generic [ref=f6e162]:
+          - heading [level=3] [ref=f6e166]:
+            - link "Biztosított szállítás" [ref=f6e167] [cursor=pointer]:
+              - /url: /biztositott-szallitas
+          - paragraph [ref=f6e168]: Minden fuvarunk teljes biztosítási fedezettel történik — az árukészlete nálunk biztos kezekben van. Esetleges kár esetén csapatunk intézi a biztosítóval a kárrendezést.
+          - generic [ref=f6e169]: Részletek
+        - generic [ref=f6e173]:
+          - heading [level=3] [ref=f6e177]:
+            - link "Expressz szállítás" [ref=f6e178] [cursor=pointer]:
+              - /url: /expressz-fuvarozas
+          - paragraph [ref=f6e179]: Sürgős fuvarok soron kívüli kezelése, garantált kiszállítási idővel, ha az idő a legfontosabb tényező. Vegye fel velünk a kapcsolatot, és soron kívül egyeztetjük a részleteket.
+          - generic [ref=f6e180]: Részletek
+        - generic [ref=f6e184]:
+          - heading [level=3] [ref=f6e188]:
+            - link "Rendezvényszállítás" [ref=f6e189] [cursor=pointer]:
+              - /url: /rendezveny-szallitas
+          - paragraph [ref=f6e190]: Standok, berendezések, dekoráció és egyéb rendezvényanyagok szállítása a helyszínre és vissza, a rendezvény ütemezéséhez igazítva.
+          - generic [ref=f6e191]: Részletek
+        - generic [ref=f6e195]:
+          - heading [level=3] [ref=f6e199]:
+            - link "Egyedi árajánlat" [ref=f6e200] [cursor=pointer]:
+              - /url: /egyedi-arajanlat-fuvarozas
+          - paragraph [ref=f6e201]: Minden megrendelést egyedileg árazunk az útvonal, az áru jellege és a határidő alapján — gyors, személyre szabott ajánlattal. Nincs rejtett költség, az ajánlatban minden tétel átlátható.
+          - generic [ref=f6e202]: Részletek
+      - generic [ref=f6e205]:
+        - generic [ref=f6e206]:
+          - text: Miért mi
+          - heading "Miért válasszon minket?" [level=3] [ref=f6e207]
+          - paragraph [ref=f6e208]: 10+ éves tapasztalattal rendelkezünk a fuvarozási iparágban. Flottánk állandóan karban van tartva, sofőreink képzettek és megbízhatóak.
+          - generic [ref=f6e209]:
+            - generic [ref=f6e212]:
+              - paragraph [ref=f6e213]: Kiváló minőség
+              - paragraph [ref=f6e214]: Minden szállítási folyamat precíz tervezéssel és végrehajtással.
+            - generic [ref=f6e217]:
+              - paragraph [ref=f6e218]: Rugalmasság
+              - paragraph [ref=f6e219]: Személyre szabott megoldások minden egyedi igényre.
+            - generic [ref=f6e222]:
+              - paragraph [ref=f6e223]: Megbízhatóság
+              - paragraph [ref=f6e224]: Hosszú távú partnerségek, pontos határidőkkel és átlátható kommunikációval.
+            - generic [ref=f6e227]:
+              - paragraph [ref=f6e228]: Családias hozzáállás
+              - paragraph [ref=f6e229]: "Családi vállalkozásként indultunk, és így is kezelünk minden ügyfelet és sofőrt: emberközpontúan, tisztelettel."
+        - generic [ref=f6e230]:
+          - img "Szikora Transz Kft. modern kamionflottája fuvarozás közben" [ref=f6e232]
+          - generic [ref=f6e234]:
+            - paragraph [ref=f6e235]: Modern flotta
+            - paragraph [ref=f6e236]: Több modern, karbantartott kamionból álló flottánk és tapasztalt sofőreink garantálják a megbízható szállítást.
+    - generic [ref=f6e245]:
+      - img "Szikora Transz kamion borult égbolt alatt" [ref=f6e248]
+      - generic [ref=f6e250]:
+        - text: Rólunk
+        - heading "Cégtörténetünk" [level=2] [ref=f6e251]
+        - paragraph [ref=f6e252]: Szikora Transz Kft 2010-ben alakult kis családi vállalkozásként. Azóta folyamatosan bővült flottánk és szolgáltatási körünk, de megtartottuk személyes hangvételünket és ügyfélközpontú hozzáállásunkat.
+        - paragraph [ref=f6e253]: Mára belföldi és nemzetközi fuvarokat egyaránt vállalunk, a rövid távú, sürgős megbízásoktól a rendszeres, hosszú távú partnerségekig. Minden ügyfelünket úgy szolgáljuk ki, mintha a saját árujuk lenne — legyen szó egyszeri fuvarról vagy folyamatos együttműködésről.
+        - generic [ref=f6e254]:
+          - generic [ref=f6e259]:
+            - heading "Karbantartott flotta" [level=3] [ref=f6e260]
+            - paragraph [ref=f6e261]: Több modern kamionból álló, állandóan karbantartott flotta.
+          - generic [ref=f6e266]:
+            - heading "Tapasztalt sofőrök" [level=3] [ref=f6e267]
+            - paragraph [ref=f6e268]: Több tapasztalt, hosszú távú sofőr alkotja csapatunkat.
+    - generic [ref=f6e270]:
+      - generic [ref=f6e271]:
+        - text: Ügyfélvisszajelzések
+        - heading "Amit partnereink mondanak rólunk" [level=2] [ref=f6e272]
+      - generic [ref=f6e273]:
+        - generic [ref=f6e275]:
+          - paragraph [ref=f6e278]: A Szikora Transz csapatára mindig számíthatunk, akár sürgős, akár előre tervezett szállításról van szó. A kommunikáció gyors és pontos.
+          - generic [ref=f6e279]:
+            - generic [ref=f6e280]: NP
+            - generic [ref=f6e281]:
+              - generic [ref=f6e282]: Nagy Péter
+              - generic [ref=f6e283]: beszerzési vezető, Pannon Élelmiszer Zrt.
+        - generic [ref=f6e285]:
+          - paragraph [ref=f6e288]: Nemzetközi fuvarjaink mindig időben és hiánytalanul érkeznek meg. A vámügyintézést is teljes egészében átvállalják tőlünk.
+          - generic [ref=f6e289]:
+            - generic [ref=f6e290]: TA
+            - generic [ref=f6e291]:
+              - generic [ref=f6e292]: Tóth Andrea
+              - generic [ref=f6e293]: logisztikai menedzser, ÉszakBau Kft.
+        - generic [ref=f6e295]:
+          - paragraph [ref=f6e298]: Minden fuvarra gyorsan, az igényeinkre szabott árajánlatot kapunk, és bármikor el tudjuk érni a csapatot, ha kérdésünk van.
+          - generic [ref=f6e299]:
+            - generic [ref=f6e300]: KG
+            - generic [ref=f6e301]:
+              - generic [ref=f6e302]: Kovács Gábor
+              - generic [ref=f6e303]: ügyvezető, Dunapack Csomagolástechnika Kft.
+        - generic [ref=f6e305]:
+          - paragraph [ref=f6e308]: Egy károsodott szállítmány esetén a csapat azonnal intézte a biztosítóval a kárrendezést — nekünk semmilyen plusz utánajárással nem járt.
+          - generic [ref=f6e309]:
+            - generic [ref=f6e310]: SK
+            - generic [ref=f6e311]:
+              - generic [ref=f6e312]: Szabó Katalin
+              - generic [ref=f6e313]: pénzügyi vezető, Kelet-Bútor Kft.
+        - generic [ref=f6e315]:
+          - paragraph [ref=f6e318]: Egy váratlanul sürgőssé vált szállítást is pár órán belül megoldottak, amikor a gyártásunk emiatt állt volna le.
+          - generic [ref=f6e319]:
+            - generic [ref=f6e320]: FZ
+            - generic [ref=f6e321]:
+              - generic [ref=f6e322]: Farkas Zoltán
+              - generic [ref=f6e323]: üzemvezető, GyorsGyár Kft.
+        - generic [ref=f6e325]:
+          - paragraph [ref=f6e328]: A standunk ki- és beszállítását is pontosan a kiállítás ütemezéséhez igazítva végezték, egyeztetve a helyszíni be- és kirakodási időablakokkal.
+          - generic [ref=f6e329]:
+            - generic [ref=f6e330]: ME
+            - generic [ref=f6e331]:
+              - generic [ref=f6e332]: Molnár Eszter
+              - generic [ref=f6e333]: rendezvényszervező, EventLine Kft.
+      - paragraph [ref=f6e334]: "* A fenti referenciák minta-szövegek — érdemes őket valós ügyfelek visszajelzéseire cserélni a publikálás előtt."
+    - generic [ref=f6e336]:
+      - generic [ref=f6e337]:
+        - text: Gyakran ismételt kérdések
+        - heading "Kérdése van? Válaszolunk." [level=2] [ref=f6e338]
+      - generic [ref=f6e339]:
+        - generic [ref=f6e340]:
+          - heading [level=3] [ref=f6e341]:
+            - button "Mennyi idő alatt kapok ajánlatot?" [expanded] [ref=f6e342] [cursor=pointer]
+          - paragraph [ref=f6e345]: Általában 24 órán belül felvesszük Önnel a kapcsolatot egy részletes, az útvonalra és az áru jellegére szabott árajánlattal.
+        - heading [level=3] [ref=f6e347]:
+          - button "Mitől függ egy fuvar ára?" [ref=f6e348] [cursor=pointer]
+        - heading [level=3] [ref=f6e352]:
+          - button "Milyen járművekkel dolgoznak?" [ref=f6e353] [cursor=pointer]
+        - heading [level=3] [ref=f6e357]:
+          - button "Biztosított a szállított áru?" [ref=f6e358] [cursor=pointer]
+        - heading [level=3] [ref=f6e362]:
+          - button "Mi történik, ha kár keletkezik szállítás közben?" [ref=f6e363] [cursor=pointer]
+        - heading [level=3] [ref=f6e367]:
+          - button "Vállalnak nemzetközi szállítást?" [ref=f6e368] [cursor=pointer]
+        - heading [level=3] [ref=f6e372]:
+          - button "Kérhetek egyedi árajánlatot speciális igényekhez?" [ref=f6e373] [cursor=pointer]
+        - heading [level=3] [ref=f6e377]:
+          - button "Milyen fizetési feltételeket fogadnak el?" [ref=f6e378] [cursor=pointer]
+        - heading [level=3] [ref=f6e382]:
+          - button "Hogyan jelentkezhetek sofőrként?" [ref=f6e383] [cursor=pointer]
+    - generic [ref=f6e387]:
+      - generic [ref=f6e388]:
+        - text: Kapcsolat
+        - heading "Kapcsolatfelvétel" [level=2] [ref=f6e389]
+        - paragraph [ref=f6e390]: Kérjük töltse ki az alábbi űrlapot — gyors, ingyenes és semmilyen kötöttséggel nem jár.
+      - generic [ref=f6e391]:
+        - generic [ref=f6e393]:
+          - heading "Kérje egyedi árajánlatát" [level=3] [ref=f6e398]
+          - paragraph [ref=f6e399]: Töltse ki az alábbi űrlapot — 24 órán belül személyre szabott árajánlattal válaszolunk, kötelezettség nélkül.
+          - generic [ref=f6e400]: Válasz 24 órán belül
+          - generic [ref=f6e403]:
+            - generic [ref=f6e404]:
+              - generic [ref=f6e405]:
+                - generic [ref=f6e406]: Teljes név
+                - textbox "Teljes név" [ref=f6e407]
+              - generic [ref=f6e408]:
+                - generic [ref=f6e409]:
+                  - generic [ref=f6e410]: Telefonszám
+                  - textbox "Telefonszám" [ref=f6e411]
+                - generic [ref=f6e412]:
+                  - generic [ref=f6e413]: Email cím
+                  - textbox "Email cím" [ref=f6e414]
+              - generic [ref=f6e415]:
+                - paragraph [ref=f6e416]: Fuvar részletei — opcionális, segít pontosabb ajánlatot adni
+                - generic [ref=f6e417]:
+                  - generic [ref=f6e418]:
+                    - generic [ref=f6e419]: Belföldi vagy nemzetközi fuvar?
+                    - generic [ref=f6e420]:
+                      - button "Belföldi" [ref=f6e421] [cursor=pointer]
+                      - button "Nemzetközi" [ref=f6e422] [cursor=pointer]
+                      - button "Még nem tudom" [ref=f6e423] [cursor=pointer]
+                  - generic [ref=f6e424]:
+                    - generic [ref=f6e425]:
+                      - generic [ref=f6e426]: Honnan?
+                      - textbox "pl. Budapest" [ref=f6e427]
+                    - generic [ref=f6e428]:
+                      - generic [ref=f6e429]: Hová?
+                      - textbox "pl. München" [ref=f6e430]
+                  - generic [ref=f6e431]:
+                    - generic [ref=f6e432]: Mikorra lenne szükség rá?
+                    - generic [ref=f6e433]:
+                      - button "Sürgős (napokon belül)" [ref=f6e434] [cursor=pointer]
+                      - button "Pár héten belül" [ref=f6e435] [cursor=pointer]
+                      - button "Még csak tervezem" [ref=f6e436] [cursor=pointer]
+              - generic [ref=f6e437]:
+                - generic [ref=f6e438]: Mit és mennyit szállítanánk?
+                - textbox "pl. 2 raklap gépalkatrész, kb. 800 kg" [ref=f6e439]
+            - generic [ref=f6e440] [cursor=pointer]:
+              - checkbox "Elfogadom, hogy adataimat az ajánlatadás céljából kezeljék. Adatvédelmi tájékoztató" [ref=f6e441]
+              - generic [ref=f6e442]:
+                - text: Elfogadom, hogy adataimat az ajánlatadás céljából kezeljék.
+                - link "Adatvédelmi tájékoztató" [ref=f6e443]:
+                  - /url: /adatvedelem
+            - button "Árajánlatot kérek" [ref=f6e444] [cursor=pointer]
+            - paragraph [ref=f6e445]: Nem jár kötelezettséggel · Válasz 24 órán belül
+        - generic [ref=f6e448]:
+          - generic [ref=f6e449]: Sofőröket keresünk
+          - heading "Csatlakozzon a csapatunkhoz" [level=3] [ref=f6e455]
+          - generic [ref=f6e456]:
+            - generic [ref=f6e457]: Családias légkör — sok sofőrünk évek óta velünk dolgozik
+            - generic [ref=f6e461]: Modern, karbantartott flotta és rendezett munkakörülmények
+            - generic [ref=f6e465]: Versenyképes, rendszeres bérezés
+          - paragraph [ref=f6e472]: "Amit kérünk: érvényes C+E kategóriás jogosítvány és GKI kártya."
+          - paragraph [ref=f6e473]: Nem kérünk azonnal önéletrajzat — írjon pár sort, és hamarosan felvesszük Önnel a kapcsolatot.
+          - generic [ref=f6e474]:
+            - generic [ref=f6e475]:
+              - generic [ref=f6e476]:
+                - generic [ref=f6e477]: Teljes név
+                - textbox "Teljes név" [ref=f6e478]
+              - generic [ref=f6e479]:
+                - generic [ref=f6e480]: Telefonszám
+                - textbox "Telefonszám" [ref=f6e481]
+              - generic [ref=f6e482]:
+                - generic [ref=f6e483]: Email cím
+                - textbox "Email cím" [ref=f6e484]
+              - generic [ref=f6e485]:
+                - generic [ref=f6e486]: Pár sor Önről
+                - textbox "Pl. hány éve vezet kamiont, milyen jogosítványa/kártyája van..." [ref=f6e487]
+            - button "Jelentkezem sofőrnek" [ref=f6e488] [cursor=pointer]
+  - contentinfo [ref=f6e489]:
+    - generic [ref=f6e491]:
+      - generic [ref=f6e492]:
+        - generic [ref=f6e493]:
+          - img "Szikora Transz Kft" [ref=f6e494]
+          - paragraph [ref=f6e495]: Szikora Transz Kft. — belföldi és nemzetközi fuvarozás 2010 óta, modern flottával és teljes körű biztosítással.
+          - list [ref=f6e496]:
+            - listitem [ref=f6e497]: 10+ év tapasztalat
+            - listitem [ref=f6e498]: Teljes körű biztosítás
+            - listitem [ref=f6e499]: Válasz 24 órán belül
+        - generic [ref=f6e500]:
+          - text: Szolgáltatásaink
+          - list [ref=f6e501]:
+            - listitem [ref=f6e502]:
+              - link "Belföldi fuvarozás" [ref=f6e503] [cursor=pointer]:
+                - /url: /belfoldi-fuvarozas-arajanlat
+            - listitem [ref=f6e504]:
+              - link "Nemzetközi fuvarozás" [ref=f6e505] [cursor=pointer]:
+                - /url: /nemzetkozi-fuvarozas-vamugyintezessel
+            - listitem [ref=f6e506]:
+              - link "Biztosított szállítás" [ref=f6e507] [cursor=pointer]:
+                - /url: /biztositott-szallitas
+            - listitem [ref=f6e508]:
+              - link "Expressz fuvarozás" [ref=f6e509] [cursor=pointer]:
+                - /url: /expressz-fuvarozas
+            - listitem [ref=f6e510]:
+              - link "Rendezvényszállítás" [ref=f6e511] [cursor=pointer]:
+                - /url: /rendezveny-szallitas
+            - listitem [ref=f6e512]:
+              - link "Egyedi árajánlat" [ref=f6e513] [cursor=pointer]:
+                - /url: /egyedi-arajanlat-fuvarozas
+        - generic [ref=f6e514]:
+          - text: Cég
+          - list [ref=f6e515]:
+            - listitem [ref=f6e516]:
+              - link "Kezdőlap" [ref=f6e517] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=f6e518]:
+              - link "Rólunk" [ref=f6e519] [cursor=pointer]:
+                - /url: /#about
+            - listitem [ref=f6e520]:
+              - link "GYIK" [ref=f6e521] [cursor=pointer]:
+                - /url: /#gyik
+            - listitem [ref=f6e522]:
+              - link "Sofőr jelentkezés" [ref=f6e523] [cursor=pointer]:
+                - /url: /#contact
+            - listitem [ref=f6e524]:
+              - link "Bejelentkezés" [ref=f6e525] [cursor=pointer]:
+                - /url: /auth/login
+            - listitem [ref=f6e526]:
+              - link "Adatvédelmi tájékoztató" [ref=f6e527] [cursor=pointer]:
+                - /url: /adatvedelem
+        - generic [ref=f6e528]:
+          - text: Kapcsolat
+          - list [ref=f6e529]:
+            - listitem [ref=f6e530]:
+              - link "szikoratransz@gmail.com" [ref=f6e534] [cursor=pointer]:
+                - /url: mailto:szikoratransz@gmail.com
+            - listitem [ref=f6e535]:
+              - generic [ref=f6e539]:
+                - link "+36 30 811 5776" [ref=f6e540] [cursor=pointer]:
+                  - /url: tel:+36308115776
+                - text: /
+                - link "+36 20 243 3368" [ref=f6e541] [cursor=pointer]:
+                  - /url: tel:+36202433368
+            - listitem [ref=f6e542]:
+              - link "2518 Leányvár, Bécsi út 86" [ref=f6e546] [cursor=pointer]:
+                - /url: https://maps.google.com/?cid=5461176344810196052
+            - listitem [ref=f6e547]:
+              - generic [ref=f6e551]: "Adószám: 26381626-2-11"
+      - generic [ref=f6e552]:
+        - generic [ref=f6e553]: "© 2026 Szikora Transz Kft. · Adószám: 26381626-2-11"
+        - generic [ref=f6e554]:
+          - link "Adatvédelem" [ref=f6e555] [cursor=pointer]:
+            - /url: /adatvedelem
+          - generic [ref=f6e556]: Minden jog fenntartva.

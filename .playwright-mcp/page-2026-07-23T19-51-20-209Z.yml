@@ -1,0 +1,110 @@
+- generic [active]:
+  - generic:
+    - generic:
+      - navigation [ref=f23e1]:
+        - generic [ref=f23e2]:
+          - link [ref=f23e3] [cursor=pointer]:
+            - /url: /admin/dashboard
+            - img "Szikora Transz Kft" [ref=f23e4]
+          - generic [ref=f23e5]:
+            - button "Sötét mód bekapcsolása" [ref=f23e6] [cursor=pointer]
+            - button "Értesítések" [ref=f23e9] [cursor=pointer]
+        - generic [ref=f23e12]:
+          - list [ref=f23e14]:
+            - listitem [ref=f23e15]:
+              - link "Főmenü" [ref=f23e16] [cursor=pointer]:
+                - /url: /admin/dashboard
+            - listitem [ref=f23e19]:
+              - link "Karbantartások" [ref=f23e20] [cursor=pointer]:
+                - /url: /admin/karbantartasok
+            - listitem [ref=f23e24]:
+              - link "Bejelentések" [ref=f23e25] [cursor=pointer]:
+                - /url: /admin/bejelentesek
+            - listitem [ref=f23e28]:
+              - link "Pénzforgalom" [ref=f23e29] [cursor=pointer]:
+                - /url: /admin/koltsegek
+            - listitem [ref=f23e32]:
+              - link "Flottakövetés" [ref=f23e33] [cursor=pointer]:
+                - /url: /admin/flottakovetes
+          - generic [ref=f23e36]:
+            - button "Flotta" [expanded] [ref=f23e37] [cursor=pointer]
+            - list [ref=f23e41]:
+              - listitem [ref=f23e42]:
+                - link "Kamionok" [ref=f23e43] [cursor=pointer]:
+                  - /url: /admin/kamionok
+              - listitem [ref=f23e46]:
+                - link "Pótkocsik" [ref=f23e47] [cursor=pointer]:
+                  - /url: /admin/potkocsi
+              - listitem [ref=f23e50]:
+                - link "Furgonok" [ref=f23e51] [cursor=pointer]:
+                  - /url: /admin/furgonok
+          - button "Csapat" [ref=f23e55] [cursor=pointer]
+          - button "Partnerek" [ref=f23e60] [cursor=pointer]
+          - button "Pénzügyek" [ref=f23e65] [cursor=pointer]
+          - button "Rendszer" [ref=f23e70] [cursor=pointer]
+        - button "Piaci árak" [ref=f23e76] [cursor=pointer]
+        - button "Keresés Ctrl+K" [ref=f23e81] [cursor=pointer]:
+          - generic [ref=f23e84]: Keresés
+          - generic [ref=f23e85]: Ctrl+K
+        - generic [ref=f23e86]:
+          - link "SÁ Szikora Ágoston" [ref=f23e87] [cursor=pointer]:
+            - /url: /admin/settings
+            - generic [ref=f23e88]: SÁ
+            - generic [ref=f23e89]: Szikora Ágoston
+          - button "Kijelentkezés" [ref=f23e93] [cursor=pointer]
+      - generic [ref=f23e100]:
+        - generic [ref=f23e103]:
+          - paragraph [ref=f23e104]: Flotta
+          - heading "Karbantartások" [level=1] [ref=f23e105]
+        - generic [ref=f23e106]:
+          - button [ref=f23e107] [cursor=pointer]:
+            - heading "Szűrők" [level=2] [ref=f23e110]
+          - generic [ref=f23e114]:
+            - generic [ref=f23e116]:
+              - generic [ref=f23e117]:
+                - generic [ref=f23e118]: Kamion
+                - combobox [ref=f23e119]:
+                  - option "Összes kamion" [selected]
+              - generic [ref=f23e120]:
+                - generic [ref=f23e121]: Pótkocsi
+                - combobox [ref=f23e122]:
+                  - option "Összes pótkocsi" [selected]
+              - generic [ref=f23e123]:
+                - generic [ref=f23e124]: Furgon
+                - combobox [ref=f23e125]:
+                  - option "Összes furgon" [selected]
+              - generic [ref=f23e126]:
+                - generic [ref=f23e127]: Elvégezte
+                - textbox "Keresés elvégzőre" [ref=f23e128]
+              - generic [ref=f23e129]:
+                - generic [ref=f23e130]: Dátumtól
+                - button "Válasszon dátumot" [ref=f23e132] [cursor=pointer]
+              - generic [ref=f23e136]:
+                - generic [ref=f23e137]: Dátumig
+                - button "Válasszon dátumot" [ref=f23e139] [cursor=pointer]
+            - button "Összes szűrő törlése" [ref=f23e143] [cursor=pointer]
+        - generic [ref=f23e147]:
+          - generic [ref=f23e148]:
+            - heading "Karbantartások" [level=3] [ref=f23e153]
+            - generic [ref=f23e154]:
+              - textbox "Keresés leírás, elvégezte, rendszám szerint..." [ref=f23e156]
+              - button "Excel" [ref=f23e157] [cursor=pointer]
+              - button "Új karbantartás" [ref=f23e160] [cursor=pointer]
+          - table [ref=f23e164]:
+            - rowgroup [ref=f23e165]:
+              - row [ref=f23e166]:
+                - columnheader "Jármű típusa" [ref=f23e167]
+                - columnheader "Rendszám" [ref=f23e168]
+                - columnheader "Dátum" [ref=f23e169]
+                - columnheader "Leírás" [ref=f23e170]
+                - columnheader "Km óraállás" [ref=f23e171]
+                - columnheader "Elvégezte" [ref=f23e172]
+                - columnheader "Költség" [ref=f23e173]
+                - columnheader "Státusz" [ref=f23e174]
+                - columnheader "Műveletek" [ref=f23e175]
+            - rowgroup [ref=f23e176]:
+              - row [ref=f23e177]:
+                - cell "Nincsenek megjeleníthető karbantartások Új karbantartás" [ref=f23e178]:
+                  - generic [ref=f23e179]:
+                    - generic [ref=f23e182]: Nincsenek megjeleníthető karbantartások
+                    - button "Új karbantartás" [ref=f23e183] [cursor=pointer]

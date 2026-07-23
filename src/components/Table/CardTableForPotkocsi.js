@@ -11,7 +11,7 @@ import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
 import AllapotBadge from "components/UI/AllapotBadge.js";
 
-const CardTable = ({ potkocsik = [], loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll }) => {
+const CardTable = ({ potkocsik = [], loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll, sortKey, sortDir, onSortChange }) => {
   const history = useHistory();
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -32,11 +32,13 @@ const CardTable = ({ potkocsik = [], loading, total, page, pageSize, onPageChang
   });
 
   const columns = [
-    { key: "rendszam", label: "Rendszám", className: "font-semibold text-brand-900 dark:text-ink-50" },
-    { key: "tipus", label: "Típus", render: (row) => row.tipus || "Nincs" },
+    { key: "rendszam", label: "Rendszám", sortable: true, className: "font-semibold text-brand-900 dark:text-ink-50" },
+    { key: "tipus", label: "Típus", sortable: true, render: (row) => row.tipus || "Nincs" },
+    { key: "meret", label: "Méret", sortable: true, render: (row) => row.meret || "Nincs" },
     {
       key: "allapot",
       label: "Állapot",
+      sortable: true,
       render: (row) => <AllapotBadge allapot={row.allapot} />,
     },
     {
@@ -66,6 +68,7 @@ const CardTable = ({ potkocsik = [], loading, total, page, pageSize, onPageChang
   const exportColumns = [
     { key: "rendszam", label: "Rendszám" },
     { key: "tipus", label: "Típus" },
+    { key: "meret", label: "Méret" },
     { key: "allapot", label: "Állapot" },
     { key: "aktualis_km", label: "Km óraállás" },
     { key: "muszaki_lejarat", label: "Műszaki vizsga lejárata" },
@@ -105,6 +108,9 @@ const CardTable = ({ potkocsik = [], loading, total, page, pageSize, onPageChang
       onPageChange={onPageChange}
       onSearchChange={onSearchChange}
       onExportAll={onExportAll}
+      sortKey={sortKey}
+      sortDir={sortDir}
+      onSortChange={onSortChange}
     />
   );
 };

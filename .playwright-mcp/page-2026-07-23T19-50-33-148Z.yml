@@ -1,0 +1,230 @@
+- generic [active]:
+  - generic:
+    - generic:
+      - navigation [ref=f20e1]:
+        - generic [ref=f20e2]:
+          - link [ref=f20e3] [cursor=pointer]:
+            - /url: /admin/dashboard
+            - img "Szikora Transz Kft" [ref=f20e4]
+          - generic [ref=f20e5]:
+            - button "Sötét mód bekapcsolása" [ref=f20e6] [cursor=pointer]
+            - button "Értesítések" [ref=f20e9] [cursor=pointer]
+        - generic [ref=f20e12]:
+          - list [ref=f20e14]:
+            - listitem [ref=f20e103]:
+              - link "Főmenü" [ref=f20e104] [cursor=pointer]:
+                - /url: /admin/dashboard
+            - listitem [ref=f20e108]:
+              - link "Karbantartások" [ref=f20e109] [cursor=pointer]:
+                - /url: /admin/karbantartasok
+            - listitem [ref=f20e112]:
+              - link "Bejelentések" [ref=f20e113] [cursor=pointer]:
+                - /url: /admin/bejelentesek
+            - listitem [ref=f20e116]:
+              - link "Pénzforgalom" [ref=f20e117] [cursor=pointer]:
+                - /url: /admin/koltsegek
+            - listitem [ref=f20e120]:
+              - link "Flottakövetés" [ref=f20e121] [cursor=pointer]:
+                - /url: /admin/flottakovetes
+          - generic [ref=f20e36]:
+            - button "Flotta" [expanded] [ref=f20e124] [cursor=pointer]
+            - list [ref=f20e41]:
+              - listitem [ref=f20e128]:
+                - link "Kamionok" [ref=f20e129] [cursor=pointer]:
+                  - /url: /admin/kamionok
+              - listitem [ref=f20e132]:
+                - link "Pótkocsik" [ref=f20e133] [cursor=pointer]:
+                  - /url: /admin/potkocsi
+              - listitem [ref=f20e136]:
+                - link "Furgonok" [ref=f20e137] [cursor=pointer]:
+                  - /url: /admin/furgonok
+          - button "Csapat" [ref=f20e140] [cursor=pointer]
+          - button "Partnerek" [ref=f20e144] [cursor=pointer]
+          - button "Pénzügyek" [ref=f20e148] [cursor=pointer]
+          - button "Rendszer" [ref=f20e152] [cursor=pointer]
+        - button "Piaci árak" [ref=f20e76] [cursor=pointer]
+        - button "Keresés Ctrl+K" [ref=f20e81] [cursor=pointer]:
+          - generic [ref=f20e84]: Keresés
+          - generic [ref=f20e85]: Ctrl+K
+        - generic [ref=f20e86]:
+          - link "SÁ Szikora Ágoston Adminisztrátor" [ref=f20e87] [cursor=pointer]:
+            - /url: /admin/settings
+            - generic [ref=f20e88]: SÁ
+            - generic [ref=f20e89]:
+              - generic [ref=f20e90]: Szikora Ágoston
+              - generic [ref=f20e91]: Adminisztrátor
+          - button "Kijelentkezés" [ref=f20e94] [cursor=pointer]
+      - generic [ref=f20e101]:
+        - 'button "Nettó eredmény (e havi) Pénzforgalom -5 153 936 Ft Bevétel 8 168 332 Ft Kiadás 13 322 269 Ft Várható eredmény (jövő hónap, becslés) 20 898 709 Ft Bevétel (6 havi átlag): 20 948 709 Ft · Fix költségek (biztosítás + bérek): 50 000 Ft" [ref=f20e156] [cursor=pointer]':
+          - generic [ref=f20e157]:
+            - paragraph [ref=f20e158]: Nettó eredmény (e havi)
+            - generic [ref=f20e159]: Pénzforgalom
+          - paragraph [ref=f20e162]: "-5 153 936 Ft"
+          - generic [ref=f20e163]:
+            - generic [ref=f20e164]:
+              - text: Bevétel
+              - generic [ref=f20e167]: 8 168 332 Ft
+            - generic [ref=f20e168]:
+              - text: Kiadás
+              - generic [ref=f20e171]: 13 322 269 Ft
+          - generic [ref=f20e172]:
+            - generic [ref=f20e173]: Várható eredmény (jövő hónap, becslés)
+            - generic [ref=f20e174]: 20 898 709 Ft
+          - paragraph [ref=f20e175]: "Bevétel (6 havi átlag): 20 948 709 Ft · Fix költségek (biztosítás + bérek): 50 000 Ft"
+        - generic [ref=f20e176]:
+          - generic [ref=f20e177]:
+            - generic [ref=f20e178]:
+              - heading "Mire figyeljek ma 10" [level=3] [ref=f20e179]:
+                - text: Mire figyeljek ma
+                - generic [ref=f20e182]: "10"
+              - button "Összes" [ref=f20e183] [cursor=pointer]
+            - list [ref=f20e187]:
+              - listitem [ref=f20e188]:
+                - generic [ref=f20e190]:
+                  - paragraph [ref=f20e191]: Szikora Ágoston Gépjármű-kötelező biztosítás lejárat
+                  - paragraph [ref=f20e192]: 2025. 01. 01.
+                - generic [ref=f20e193]: Lejárt
+              - listitem [ref=f20e194]:
+                - generic [ref=f20e196]:
+                  - paragraph [ref=f20e197]: sadasd sadsda dsafsdf
+                  - paragraph [ref=f20e198]: 2025. 05. 22.
+                - generic [ref=f20e199]: Lejárt
+              - listitem [ref=f20e200]:
+                - generic [ref=f20e202]:
+                  - paragraph [ref=f20e203]: RED-001 – Teszt
+                  - paragraph [ref=f20e204]: 2025. 05. 22.
+                - generic [ref=f20e205]: Lejárt
+              - listitem [ref=f20e206]:
+                - generic [ref=f20e208]:
+                  - paragraph [ref=f20e209]: RED-001 – CCCCCCCCCCCCCCC
+                  - paragraph [ref=f20e210]: 2025. 06. 09.
+                - generic [ref=f20e211]: Lejárt
+          - generic [ref=f20e212]:
+            - heading "Eseménynaptár" [level=3] [ref=f20e214]
+            - generic [ref=f20e218]:
+              - generic [ref=f20e219]:
+                - generic [ref=f20e220]:
+                  - button "Ma" [ref=f20e221] [cursor=pointer]
+                  - button "◄" [ref=f20e222] [cursor=pointer]
+                  - button "►" [ref=f20e223] [cursor=pointer]
+                - generic [ref=f20e224]: július 2026
+                - generic [ref=f20e225]:
+                  - button "Hónap" [ref=f20e226] [cursor=pointer]
+                  - button "Lista" [ref=f20e227] [cursor=pointer]
+                  - button "Nap" [ref=f20e228] [cursor=pointer]
+                  - button "Hét" [ref=f20e229] [cursor=pointer]
+              - table "Month View" [ref=f20e230]:
+                - row [ref=f20e231]:
+                  - columnheader "hét" [ref=f20e233]
+                  - columnheader "kedd" [ref=f20e235]
+                  - columnheader "sze" [ref=f20e237]
+                  - columnheader "csüt" [ref=f20e239]
+                  - columnheader "pén" [ref=f20e241]
+                  - columnheader "szo" [ref=f20e243]
+                  - columnheader "vas" [ref=f20e245]
+                - rowgroup [ref=f20e246]:
+                  - row [ref=f20e255]:
+                    - generic [ref=f20e256]:
+                      - cell [ref=f20e257]:
+                        - button "29" [ref=f20e258] [cursor=pointer]
+                      - cell [ref=f20e259]:
+                        - button "30" [ref=f20e260] [cursor=pointer]
+                      - cell [ref=f20e261]:
+                        - button "01" [ref=f20e262] [cursor=pointer]
+                      - cell [ref=f20e263]:
+                        - button "02" [ref=f20e264] [cursor=pointer]
+                      - cell [ref=f20e265]:
+                        - button "03" [ref=f20e266] [cursor=pointer]
+                      - cell [ref=f20e267]:
+                        - button "04" [ref=f20e268] [cursor=pointer]
+                      - cell [ref=f20e269]:
+                        - button "05" [ref=f20e270] [cursor=pointer]
+                - rowgroup [ref=f20e271]:
+                  - row "06 07 08 09 10 11 12 RED-0011 Műszaki vizsga lejárat RED-0011 – Egyéb — Egyéb +5 további +2 további" [ref=f20e280]:
+                    - generic [ref=f20e281]:
+                      - cell [ref=f20e282]:
+                        - button "06" [ref=f20e283] [cursor=pointer]
+                      - cell [ref=f20e284]:
+                        - button "07" [ref=f20e285] [cursor=pointer]
+                      - cell [ref=f20e286]:
+                        - button "08" [ref=f20e287] [cursor=pointer]
+                      - cell [ref=f20e288]:
+                        - button "09" [ref=f20e289] [cursor=pointer]
+                      - cell [ref=f20e290]:
+                        - button "10" [ref=f20e291] [cursor=pointer]
+                      - cell [ref=f20e292]:
+                        - button "11" [ref=f20e293] [cursor=pointer]
+                      - cell [ref=f20e294]:
+                        - button "12" [ref=f20e295] [cursor=pointer]
+                    - generic [ref=f20e296]:
+                      - generic "RED-0011 Műszaki vizsga lejárat" [ref=f20e300] [cursor=pointer]
+                      - generic "RED-0011 – Egyéb — Egyéb" [ref=f20e304] [cursor=pointer]
+                    - generic [ref=f20e305]:
+                      - button "+5 további" [ref=f20e308] [cursor=pointer]
+                      - button "+2 további" [ref=f20e311] [cursor=pointer]
+                - rowgroup [ref=f20e312]:
+                  - row "13 14 15 16 17 18 19 TEST-FURGON-001 – Teszt olajcsere" [ref=f20e321]:
+                    - generic [ref=f20e322]:
+                      - cell [ref=f20e323]:
+                        - button "13" [ref=f20e324] [cursor=pointer]
+                      - cell [ref=f20e325]:
+                        - button "14" [ref=f20e326] [cursor=pointer]
+                      - cell [ref=f20e327]:
+                        - button "15" [ref=f20e328] [cursor=pointer]
+                      - cell [ref=f20e329]:
+                        - button "16" [ref=f20e330] [cursor=pointer]
+                      - cell [ref=f20e331]:
+                        - button "17" [ref=f20e332] [cursor=pointer]
+                      - cell [ref=f20e333]:
+                        - button "18" [ref=f20e334] [cursor=pointer]
+                      - cell [ref=f20e335]:
+                        - button "19" [ref=f20e336] [cursor=pointer]
+                    - generic "TEST-FURGON-001 – Teszt olajcsere" [ref=f20e341] [cursor=pointer]
+                - rowgroup [ref=f20e342]:
+                  - row [ref=f20e351]:
+                    - generic [ref=f20e352]:
+                      - cell [ref=f20e353]:
+                        - button "20" [ref=f20e354] [cursor=pointer]
+                      - cell [ref=f20e355]:
+                        - button "21" [ref=f20e356] [cursor=pointer]
+                      - cell [ref=f20e357]:
+                        - button "22" [ref=f20e358] [cursor=pointer]
+                      - cell [ref=f20e359]:
+                        - button "23" [ref=f20e360] [cursor=pointer]
+                      - cell [ref=f20e361]:
+                        - button "24" [ref=f20e362] [cursor=pointer]
+                      - cell [ref=f20e363]:
+                        - button "25" [ref=f20e364] [cursor=pointer]
+                      - cell [ref=f20e365]:
+                        - button "26" [ref=f20e366] [cursor=pointer]
+                - rowgroup [ref=f20e367]:
+                  - row "27 28 29 30 31 01 02 Szikora Ágoston Személyi igazolvány lejárat" [ref=f20e376]:
+                    - generic [ref=f20e377]:
+                      - cell [ref=f20e378]:
+                        - button "27" [ref=f20e379] [cursor=pointer]
+                      - cell [ref=f20e380]:
+                        - button "28" [ref=f20e381] [cursor=pointer]
+                      - cell [ref=f20e382]:
+                        - button "29" [ref=f20e383] [cursor=pointer]
+                      - cell [ref=f20e384]:
+                        - button "30" [ref=f20e385] [cursor=pointer]
+                      - cell [ref=f20e386]:
+                        - button "31" [ref=f20e387] [cursor=pointer]
+                      - cell [ref=f20e388]:
+                        - button "01" [ref=f20e389] [cursor=pointer]
+                      - cell [ref=f20e390]:
+                        - button "02" [ref=f20e391] [cursor=pointer]
+                    - generic "Szikora Ágoston Személyi igazolvány lejárat" [ref=f20e396] [cursor=pointer]
+        - generic [ref=f20e397]:
+          - button "1 Sofőrök" [ref=f20e398] [cursor=pointer]:
+            - generic [ref=f20e401]: "1"
+            - generic [ref=f20e402]: Sofőrök
+          - button "4 Kamionok" [ref=f20e403] [cursor=pointer]:
+            - generic [ref=f20e406]: "4"
+            - generic [ref=f20e407]: Kamionok
+          - button "20 Pótkocsik" [ref=f20e408] [cursor=pointer]:
+            - generic [ref=f20e411]: "20"
+            - generic [ref=f20e412]: Pótkocsik
+          - button "1 Furgonok" [ref=f20e413] [cursor=pointer]:
+            - generic [ref=f20e416]: "1"
+            - generic [ref=f20e417]: Furgonok

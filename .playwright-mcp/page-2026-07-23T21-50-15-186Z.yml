@@ -1,0 +1,143 @@
+- generic [active]:
+  - generic:
+    - generic:
+      - navigation [ref=f14e1]:
+        - generic [ref=f14e2]:
+          - link [ref=f14e3] [cursor=pointer]:
+            - /url: /admin/dashboard
+            - img "Szikora Transz Kft" [ref=f14e4]
+          - generic [ref=f14e5]:
+            - button "Sötét mód bekapcsolása" [ref=f14e6] [cursor=pointer]
+            - button "Értesítések" [ref=f14e9] [cursor=pointer]
+        - generic [ref=f14e12]:
+          - list [ref=f14e14]:
+            - listitem [ref=f14e15]:
+              - link "Főmenü" [ref=f14e16] [cursor=pointer]:
+                - /url: /admin/dashboard
+            - listitem [ref=f14e19]:
+              - link "Karbantartások" [ref=f14e20] [cursor=pointer]:
+                - /url: /admin/karbantartasok
+            - listitem [ref=f14e23]:
+              - link "Bejelentések" [ref=f14e24] [cursor=pointer]:
+                - /url: /admin/bejelentesek
+            - listitem [ref=f14e27]:
+              - link "Pénzforgalom" [ref=f14e28] [cursor=pointer]:
+                - /url: /admin/koltsegek
+            - listitem [ref=f14e31]:
+              - link "Flottakövetés" [ref=f14e32] [cursor=pointer]:
+                - /url: /admin/flottakovetes
+          - generic [ref=f14e35]:
+            - button "Flotta" [expanded] [ref=f14e36] [cursor=pointer]
+            - list [ref=f14e40]:
+              - listitem [ref=f14e41]:
+                - link "Kamionok" [ref=f14e42] [cursor=pointer]:
+                  - /url: /admin/kamionok
+              - listitem [ref=f14e45]:
+                - link "Pótkocsik" [ref=f14e46] [cursor=pointer]:
+                  - /url: /admin/potkocsi
+              - listitem [ref=f14e49]:
+                - link "Furgonok" [ref=f14e50] [cursor=pointer]:
+                  - /url: /admin/furgonok
+          - generic [ref=f14e53]:
+            - button "Csapat" [expanded] [ref=f14e54] [cursor=pointer]
+            - list [ref=f14e58]:
+              - listitem [ref=f14e59]:
+                - link "Sofőrök" [ref=f14e60] [cursor=pointer]:
+                  - /url: /admin/soforok
+              - listitem [ref=f14e63]:
+                - link "Sofőr-riport" [ref=f14e64] [cursor=pointer]:
+                  - /url: /admin/sofor-riport
+              - listitem [ref=f14e67]:
+                - link "Tachográf kártya" [ref=f14e68] [cursor=pointer]:
+                  - /url: /admin/tachograf
+              - listitem [ref=f14e72]:
+                - link "Szabadságok" [ref=f14e73] [cursor=pointer]:
+                  - /url: /admin/szabadsagok
+          - button "Partnerek" [ref=f14e77] [cursor=pointer]
+          - button "Pénzügyek" [ref=f14e82] [cursor=pointer]
+          - button "Rendszer" [ref=f14e87] [cursor=pointer]
+        - button "Piaci árak" [ref=f14e93] [cursor=pointer]
+        - button "Keresés Ctrl+K" [ref=f14e98] [cursor=pointer]:
+          - generic [ref=f14e101]: Keresés
+          - generic [ref=f14e102]: Ctrl+K
+        - generic [ref=f14e103]:
+          - link "SÁ Szikora Ágoston Adminisztrátor" [ref=f14e104] [cursor=pointer]:
+            - /url: /admin/settings
+            - generic [ref=f14e105]: SÁ
+            - generic [ref=f14e106]:
+              - generic [ref=f14e107]: Szikora Ágoston
+              - generic [ref=f14e108]: Adminisztrátor
+          - button "Kijelentkezés" [ref=f14e111] [cursor=pointer]
+      - generic [ref=f14e118]:
+        - generic [ref=f14e120]:
+          - generic [ref=f14e121]:
+            - paragraph [ref=f14e122]: Csapat
+            - heading "Tachográf kártya" [level=1] [ref=f14e123]
+          - button "Import" [ref=f14e124] [cursor=pointer]
+        - generic [ref=f14e127]:
+          - generic [ref=f14e132]:
+            - paragraph [ref=f14e133]: 0 km
+            - paragraph [ref=f14e134]: Vezetett km (elmúlt 7 nap)
+          - generic [ref=f14e139]:
+            - paragraph [ref=f14e140]: "0"
+            - paragraph [ref=f14e141]: Rögzített napok száma
+          - generic [ref=f14e146]:
+            - paragraph [ref=f14e147]: "0"
+            - paragraph [ref=f14e148]: Napok 9 óra feletti vezetéssel
+            - paragraph [ref=f14e149]: Napi 9 óra (EU 561/2006) — nyers küszöbérték, nem jogi minősítés
+        - generic [ref=f14e151]:
+          - generic [ref=f14e152]:
+            - heading "Napi vezetési/pihenő idő" [level=3] [ref=f14e157]
+            - generic [ref=f14e158]:
+              - textbox "Keresés dátum vagy sofőr szerint..." [ref=f14e160]
+              - button "Excel" [ref=f14e161] [cursor=pointer]
+          - table [ref=f14e165]:
+            - rowgroup [ref=f14e166]:
+              - row [ref=f14e167]:
+                - cell [ref=f14e168]
+                - cell [ref=f14e170]
+                - cell [ref=f14e172]
+                - cell [ref=f14e174]
+                - cell [ref=f14e176]
+                - cell [ref=f14e178]
+                - cell [ref=f14e180]
+              - row [ref=f14e182]:
+                - cell [ref=f14e183]
+                - cell [ref=f14e185]
+                - cell [ref=f14e187]
+                - cell [ref=f14e189]
+                - cell [ref=f14e191]
+                - cell [ref=f14e193]
+                - cell [ref=f14e195]
+              - row [ref=f14e197]:
+                - cell [ref=f14e198]
+                - cell [ref=f14e200]
+                - cell [ref=f14e202]
+                - cell [ref=f14e204]
+                - cell [ref=f14e206]
+                - cell [ref=f14e208]
+                - cell [ref=f14e210]
+              - row [ref=f14e212]:
+                - cell [ref=f14e213]
+                - cell [ref=f14e215]
+                - cell [ref=f14e217]
+                - cell [ref=f14e219]
+                - cell [ref=f14e221]
+                - cell [ref=f14e223]
+                - cell [ref=f14e225]
+              - row [ref=f14e227]:
+                - cell [ref=f14e228]
+                - cell [ref=f14e230]
+                - cell [ref=f14e232]
+                - cell [ref=f14e234]
+                - cell [ref=f14e236]
+                - cell [ref=f14e238]
+                - cell [ref=f14e240]
+              - row [ref=f14e242]:
+                - cell [ref=f14e243]
+                - cell [ref=f14e245]
+                - cell [ref=f14e247]
+                - cell [ref=f14e249]
+                - cell [ref=f14e251]
+                - cell [ref=f14e253]
+                - cell [ref=f14e255]

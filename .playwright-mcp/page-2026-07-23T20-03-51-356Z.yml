@@ -1,0 +1,85 @@
+- generic [active]:
+  - generic:
+    - generic:
+      - navigation [ref=f33e1]:
+        - generic [ref=f33e2]:
+          - link [ref=f33e3] [cursor=pointer]:
+            - /url: /admin/dashboard
+            - img "Szikora Transz Kft" [ref=f33e4]
+          - generic [ref=f33e5]:
+            - button "Világos mód bekapcsolása" [ref=f33e6] [cursor=pointer]
+            - button "Értesítések" [ref=f33e9] [cursor=pointer]
+        - generic [ref=f33e12]:
+          - list [ref=f33e14]:
+            - listitem [ref=f33e15]:
+              - link "Főmenü" [ref=f33e16] [cursor=pointer]:
+                - /url: /admin/dashboard
+            - listitem [ref=f33e19]:
+              - link "Karbantartások" [ref=f33e20] [cursor=pointer]:
+                - /url: /admin/karbantartasok
+            - listitem [ref=f33e23]:
+              - link "Bejelentések" [ref=f33e24] [cursor=pointer]:
+                - /url: /admin/bejelentesek
+            - listitem [ref=f33e27]:
+              - link "Pénzforgalom" [ref=f33e28] [cursor=pointer]:
+                - /url: /admin/koltsegek
+            - listitem [ref=f33e31]:
+              - link "Flottakövetés" [ref=f33e32] [cursor=pointer]:
+                - /url: /admin/flottakovetes
+          - generic [ref=f33e35]:
+            - button "Flotta" [expanded] [ref=f33e36] [cursor=pointer]
+            - list [ref=f33e40]:
+              - listitem [ref=f33e41]:
+                - link "Kamionok" [ref=f33e42] [cursor=pointer]:
+                  - /url: /admin/kamionok
+              - listitem [ref=f33e45]:
+                - link "Pótkocsik" [ref=f33e46] [cursor=pointer]:
+                  - /url: /admin/potkocsi
+              - listitem [ref=f33e49]:
+                - link "Furgonok" [ref=f33e50] [cursor=pointer]:
+                  - /url: /admin/furgonok
+          - button "Csapat" [ref=f33e54] [cursor=pointer]
+          - button "Partnerek" [ref=f33e59] [cursor=pointer]
+          - button "Pénzügyek" [ref=f33e64] [cursor=pointer]
+          - button "Rendszer" [ref=f33e69] [cursor=pointer]
+        - generic [ref=f33e74]:
+          - button "Piaci árak" [expanded] [ref=f33e75] [cursor=pointer]
+          - generic [ref=f33e79]:
+            - 'generic "Frissítve: 2026-07-23 21:27:42 · 0,0% (előző munkanaphoz képest)" [ref=f33e80]':
+              - generic [ref=f33e81]: EUR/HUF
+              - generic [ref=f33e82]:
+                - generic [ref=f33e83]: 364,16
+                - generic [ref=f33e84]: Ft
+            - 'generic "Frissítve: 2026-07-23 21:27:43 · 0,0% (előző munkanaphoz képest)" [ref=f33e85]':
+              - generic [ref=f33e86]: USD/HUF
+              - generic [ref=f33e87]:
+                - generic [ref=f33e88]: 319,13
+                - generic [ref=f33e89]: Ft
+            - 'generic "Frissítve: 2026-07-23 13:54:39 · 0,0% (előző havi árhoz képest)" [ref=f33e90]':
+              - generic [ref=f33e91]: Benzin (ESZ-95)
+              - generic [ref=f33e92]:
+                - generic [ref=f33e93]: "662"
+                - generic [ref=f33e94]: Ft/l
+            - paragraph [ref=f33e95]: "Frissítve: ma 13:54"
+        - button "Keresés Ctrl+K" [ref=f33e97] [cursor=pointer]:
+          - generic [ref=f33e100]: Keresés
+          - generic [ref=f33e101]: Ctrl+K
+        - generic [ref=f33e102]:
+          - link "SÁ Szikora Ágoston" [ref=f33e103] [cursor=pointer]:
+            - /url: /admin/settings
+            - generic [ref=f33e104]: SÁ
+            - generic [ref=f33e105]: Szikora Ágoston
+          - button "Kijelentkezés" [ref=f33e109] [cursor=pointer]
+      - generic [ref=f33e116]:
+        - generic [ref=f33e117]:
+          - generic [ref=f33e118]:
+            - paragraph [ref=f33e119]: Saját adatok
+            - heading "Felhasználók" [level=1] [ref=f33e120]
+          - button "Új felhasználó" [ref=f33e121] [cursor=pointer]
+        - paragraph [ref=f33e124]: Minden ember egy helyen, aki hozzáfér a rendszerhez — csapattagok (teljes admin-hozzáférés) és sofőrök (saját mobil felület) együtt.
+        - generic [ref=f33e125]:
+          - textbox "Név vagy email keresése" [ref=f33e129]
+          - generic [ref=f33e130]:
+            - button "Mind" [ref=f33e131] [cursor=pointer]
+            - button "Csapattagok" [ref=f33e132] [cursor=pointer]
+            - button "Sofőrök" [ref=f33e133] [cursor=pointer]

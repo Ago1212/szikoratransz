@@ -71,7 +71,7 @@ export default function Helyszinek() {
       />
 
       {adding && (
-        <div className="flex items-center gap-2 rounded-2xl border border-ink-100 bg-white p-3 shadow-soft">
+        <div className="flex items-center gap-2 rounded-2xl border border-ink-100 bg-white p-3 shadow-soft focus-within:ring-2 focus-within:ring-brand-300">
           <input
             autoFocus
             value={ujNev}
@@ -90,7 +90,7 @@ export default function Helyszinek() {
         </div>
       )}
 
-      <div className="flex items-center gap-2 rounded-xl border border-ink-100 bg-white px-3 py-2.5">
+      <div className="flex items-center gap-2 rounded-xl border border-ink-100 bg-white px-3 py-2.5 focus-within:ring-2 focus-within:ring-brand-300">
         <PiMagnifyingGlassLight className="h-4 w-4 flex-shrink-0 text-ink-400" />
         <input
           value={search}

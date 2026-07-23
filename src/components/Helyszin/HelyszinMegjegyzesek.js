@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { confirmDialog } from "utils/confirm.js";
 import { format } from "date-fns";
 import { PiChatCircleTextLight, PiTrashLight } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
@@ -47,7 +48,7 @@ export default function HelyszinMegjegyzesek({ helyszinId, szerzoTipus, szerzoId
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Biztosan törlöd ezt a megjegyzést?")) return;
+    if (!(await confirmDialog("Biztosan törlöd ezt a megjegyzést?"))) return;
     const result = await fetchAction("deleteHelyszinMegjegyzes", { id });
     if (result?.success) {
       await load();

@@ -224,7 +224,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
           icon={PiIdentificationCardLight}
           label="Rendszám"
           id="rendszam"
-          value={kamion.rendszam}
+          value={kamion.rendszam || ""}
           onChange={handleFormChange}
           required
         />

@@ -1,0 +1,197 @@
+- generic [active]:
+  - generic:
+    - generic:
+      - navigation [ref=f6e1]:
+        - generic [ref=f6e2]:
+          - link [ref=f6e3] [cursor=pointer]:
+            - /url: /admin/dashboard
+            - img "Szikora Transz Kft" [ref=f6e4]
+          - generic [ref=f6e5]:
+            - button "Sötét mód bekapcsolása" [ref=f6e6] [cursor=pointer]
+            - button "Értesítések" [ref=f6e9] [cursor=pointer]
+        - generic [ref=f6e12]:
+          - list [ref=f6e14]:
+            - listitem [ref=f6e410]:
+              - link "Főmenü" [ref=f6e411] [cursor=pointer]:
+                - /url: /admin/dashboard
+            - listitem [ref=f6e414]:
+              - link "Karbantartások" [ref=f6e415] [cursor=pointer]:
+                - /url: /admin/karbantartasok
+            - listitem [ref=f6e418]:
+              - link "Bejelentések" [ref=f6e419] [cursor=pointer]:
+                - /url: /admin/bejelentesek
+            - listitem [ref=f6e422]:
+              - link "Pénzforgalom" [ref=f6e423] [cursor=pointer]:
+                - /url: /admin/koltsegek
+            - listitem [ref=f6e426]:
+              - link "Flottakövetés" [ref=f6e427] [cursor=pointer]:
+                - /url: /admin/flottakovetes
+          - generic [ref=f6e35]:
+            - button "Flotta" [expanded] [ref=f6e430] [cursor=pointer]
+            - list [ref=f6e40]:
+              - listitem [ref=f6e434]:
+                - link "Kamionok" [ref=f6e435] [cursor=pointer]:
+                  - /url: /admin/kamionok
+              - listitem [ref=f6e438]:
+                - link "Pótkocsik" [ref=f6e439] [cursor=pointer]:
+                  - /url: /admin/potkocsi
+              - listitem [ref=f6e443]:
+                - link "Furgonok" [ref=f6e444] [cursor=pointer]:
+                  - /url: /admin/furgonok
+          - button "Csapat" [ref=f6e447] [cursor=pointer]
+          - button "Partnerek" [ref=f6e451] [cursor=pointer]
+          - button "Pénzügyek" [ref=f6e455] [cursor=pointer]
+          - button "Rendszer" [ref=f6e459] [cursor=pointer]
+        - generic [ref=f6e75]:
+          - button "Piaci árak" [expanded] [ref=f6e76] [cursor=pointer]
+          - generic [ref=f6e80]:
+            - 'generic "Frissítve: 2026-07-23 22:30:17 · 0,0% (előző munkanaphoz képest)" [ref=f6e81]':
+              - generic [ref=f6e82]: EUR/HUF
+              - generic [ref=f6e83]:
+                - generic [ref=f6e84]: 364,16
+                - generic [ref=f6e85]: Ft
+            - 'generic "Frissítve: 2026-07-23 22:30:18 · 0,0% (előző munkanaphoz képest)" [ref=f6e86]':
+              - generic [ref=f6e87]: USD/HUF
+              - generic [ref=f6e88]:
+                - generic [ref=f6e89]: 319,13
+                - generic [ref=f6e90]: Ft
+            - 'generic "Frissítve: 2026-07-23 13:54:39 · 0,0% (előző havi árhoz képest)" [ref=f6e91]':
+              - generic [ref=f6e92]: Benzin (ESZ-95)
+              - generic [ref=f6e93]:
+                - generic [ref=f6e94]: "662"
+                - generic [ref=f6e95]: Ft/l
+            - paragraph [ref=f6e96]: "Frissítve: ma 13:54"
+        - button "Keresés Ctrl+K" [ref=f6e98] [cursor=pointer]:
+          - generic [ref=f6e101]: Keresés
+          - generic [ref=f6e102]: Ctrl+K
+        - generic [ref=f6e103]:
+          - link "SÁ Szikora Ágoston Adminisztrátor" [ref=f6e104] [cursor=pointer]:
+            - /url: /admin/settings
+            - generic [ref=f6e105]: SÁ
+            - generic [ref=f6e106]:
+              - generic [ref=f6e107]: Szikora Ágoston
+              - generic [ref=f6e108]: Adminisztrátor
+          - button "Kijelentkezés" [ref=f6e111] [cursor=pointer]
+      - generic [ref=f6e465]:
+        - button "Vissza a pótkocsikhoz" [ref=f6e466] [cursor=pointer]
+        - generic [ref=f6e469]:
+          - heading "RED-001" [level=3] [ref=f6e474]
+          - generic [ref=f6e475]:
+            - button "Adatok" [ref=f6e476] [cursor=pointer]
+            - button "Fájlok" [ref=f6e480] [cursor=pointer]
+          - generic [ref=f6e485]:
+            - generic [ref=f6e486]:
+              - heading "Fő adatok" [level=4] [ref=f6e487]
+              - generic [ref=f6e490]:
+                - generic [ref=f6e491]:
+                  - generic [ref=f6e492]:
+                    - text: Rendszám
+                    - generic [ref=f6e495]: "*"
+                  - textbox "Rendszám *" [ref=f6e496]: RED-001
+                - generic [ref=f6e497]:
+                  - generic [ref=f6e498]: Típus
+                  - textbox "Típus" [ref=f6e501]:
+                    - /placeholder: Pótkocsi típusa
+                    - text: haharddd
+                - generic [ref=f6e502]:
+                  - generic [ref=f6e503]: Méret
+                  - combobox "Méret" [ref=f6e506]:
+                    - option "Válassz..." [selected]
+                - generic [ref=f6e507]:
+                  - generic [ref=f6e508]: Állapot
+                  - combobox "Állapot" [ref=f6e511]:
+                    - option "Szabad" [selected]
+                    - option "Úton"
+                    - option "Szervizben"
+                - generic [ref=f6e512]:
+                  - generic [ref=f6e513]: Jelenlegi km-óraállás
+                  - spinbutton "Jelenlegi km-óraállás" [ref=f6e516]
+            - generic [ref=f6e517]:
+              - heading "Lejárati dátumok" [level=4] [ref=f6e518]
+              - generic [ref=f6e521]:
+                - generic [ref=f6e522]:
+                  - generic [ref=f6e523]: Műszaki
+                  - button "Műszaki" [ref=f6e527] [cursor=pointer]:
+                    - generic [ref=f6e530]: Válasszon dátumot
+                - generic [ref=f6e531]:
+                  - generic [ref=f6e532]: Adr
+                  - button "Adr" [ref=f6e536] [cursor=pointer]:
+                    - generic [ref=f6e539]: Válasszon dátumot
+                - generic [ref=f6e540]:
+                  - generic [ref=f6e541]: Taográf illesztés
+                  - button "Taográf illesztés" [ref=f6e545] [cursor=pointer]:
+                    - generic [ref=f6e548]: Válasszon dátumot
+                - generic [ref=f6e549]:
+                  - generic [ref=f6e550]: Emelő hátfal
+                  - button "Emelő hátfal" [ref=f6e554] [cursor=pointer]:
+                    - generic [ref=f6e557]: Válasszon dátumot
+                - generic [ref=f6e558]:
+                  - generic [ref=f6e559]: "Poroltó #1"
+                  - 'button "Poroltó #1" [ref=f6e563] [cursor=pointer]':
+                    - generic [ref=f6e566]: Válasszon dátumot
+                - generic [ref=f6e567]:
+                  - generic [ref=f6e568]: "Poroltó #2"
+                  - 'button "Poroltó #2" [ref=f6e572] [cursor=pointer]':
+                    - generic [ref=f6e575]: Válasszon dátumot
+            - generic [ref=f6e576]:
+              - generic [ref=f6e577]:
+                - heading "Kötelező biztosítás" [level=4] [ref=f6e578]
+                - generic [ref=f6e581]:
+                  - generic [ref=f6e582]:
+                    - generic [ref=f6e583]: Ütem
+                    - combobox "Ütem" [ref=f6e586]:
+                      - option "Válassz..." [selected]
+                      - option "Nincs"
+                      - option "Negyed év"
+                      - option "Fél év"
+                      - option "Éves"
+                  - generic [ref=f6e587]:
+                    - generic [ref=f6e588]: Kezdő dátum
+                    - button "Kezdő dátum" [ref=f6e592] [cursor=pointer]:
+                      - generic [ref=f6e595]: Válasszon dátumot
+                  - generic [ref=f6e596]:
+                    - generic [ref=f6e597]:
+                      - generic [ref=f6e598]: Éves díj
+                      - textbox [ref=f6e601]
+                    - generic: Ft
+                  - generic [ref=f6e602]:
+                    - generic [ref=f6e603]: Biztosító neve
+                    - textbox "Biztosító neve" [ref=f6e606]:
+                      - /placeholder: Kötelező bizt. biztosítója
+                  - generic [ref=f6e607]:
+                    - generic [ref=f6e608]: Következő fizetés dátuma
+                    - generic [ref=f6e611]: "-"
+                  - generic [ref=f6e612]:
+                    - generic [ref=f6e613]: Következő fizetés összege
+                    - generic [ref=f6e616]: "-"
+              - generic [ref=f6e617]:
+                - heading "Kaszkó biztosítás" [level=4] [ref=f6e618]
+                - generic [ref=f6e621]:
+                  - generic [ref=f6e622]:
+                    - generic [ref=f6e623]: Ütem
+                    - combobox "Ütem" [ref=f6e626]:
+                      - option "Válassz..." [selected]
+                      - option "Nincs"
+                      - option "Negyed év"
+                      - option "Fél év"
+                      - option "Éves"
+                  - generic [ref=f6e627]:
+                    - generic [ref=f6e628]: Kezdő dátum
+                    - button "Kezdő dátum" [ref=f6e632] [cursor=pointer]:
+                      - generic [ref=f6e635]: Válasszon dátumot
+                  - generic [ref=f6e636]:
+                    - generic [ref=f6e637]:
+                      - generic [ref=f6e638]: Éves díj
+                      - textbox [ref=f6e641]
+                    - generic: Ft
+                  - generic [ref=f6e642]:
+                    - generic [ref=f6e643]: Biztosító neve
+                    - textbox "Biztosító neve" [ref=f6e646]:
+                      - /placeholder: Kaszkó bizt. biztosítója
+                  - generic [ref=f6e647]:
+                    - generic [ref=f6e648]: Következő fizetés dátuma
+                    - generic [ref=f6e651]: "-"
+                  - generic [ref=f6e652]:
+                    - generic [ref=f6e653]: Következő fizetés összege
+                    - generic [ref=f6e656]: "-"
+            - button "Mentés" [ref=f6e658] [cursor=pointer]

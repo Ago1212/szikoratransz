@@ -1,0 +1,100 @@
+- generic [active]:
+  - generic:
+    - generic:
+      - navigation [ref=f15e1]:
+        - generic [ref=f15e2]:
+          - link [ref=f15e3] [cursor=pointer]:
+            - /url: /admin/dashboard
+            - img "Szikora Transz Kft" [ref=f15e4]
+          - generic [ref=f15e5]:
+            - button "Sötét mód bekapcsolása" [ref=f15e6] [cursor=pointer]
+            - button "Értesítések" [ref=f15e9] [cursor=pointer]
+        - generic [ref=f15e12]:
+          - list [ref=f15e14]:
+            - listitem [ref=f15e15]:
+              - link "Főmenü" [ref=f15e16] [cursor=pointer]:
+                - /url: /admin/dashboard
+            - listitem [ref=f15e19]:
+              - link "Karbantartások" [ref=f15e20] [cursor=pointer]:
+                - /url: /admin/karbantartasok
+            - listitem [ref=f15e23]:
+              - link "Bejelentések" [ref=f15e24] [cursor=pointer]:
+                - /url: /admin/bejelentesek
+            - listitem [ref=f15e27]:
+              - link "Pénzforgalom" [ref=f15e28] [cursor=pointer]:
+                - /url: /admin/koltsegek
+            - listitem [ref=f15e31]:
+              - link "Flottakövetés" [ref=f15e32] [cursor=pointer]:
+                - /url: /admin/flottakovetes
+          - generic [ref=f15e35]:
+            - button "Flotta" [expanded] [ref=f15e36] [cursor=pointer]
+            - list [ref=f15e40]:
+              - listitem [ref=f15e41]:
+                - link "Kamionok" [ref=f15e42] [cursor=pointer]:
+                  - /url: /admin/kamionok
+              - listitem [ref=f15e45]:
+                - link "Pótkocsik" [ref=f15e46] [cursor=pointer]:
+                  - /url: /admin/potkocsi
+              - listitem [ref=f15e49]:
+                - link "Furgonok" [ref=f15e50] [cursor=pointer]:
+                  - /url: /admin/furgonok
+          - generic [ref=f15e53]:
+            - button "Csapat" [expanded] [ref=f15e54] [cursor=pointer]
+            - list [ref=f15e58]:
+              - listitem [ref=f15e59]:
+                - link "Sofőrök" [ref=f15e60] [cursor=pointer]:
+                  - /url: /admin/soforok
+              - listitem [ref=f15e63]:
+                - link "Sofőr-riport" [ref=f15e64] [cursor=pointer]:
+                  - /url: /admin/sofor-riport
+              - listitem [ref=f15e67]:
+                - link "Tachográf kártya" [ref=f15e68] [cursor=pointer]:
+                  - /url: /admin/tachograf
+              - listitem [ref=f15e71]:
+                - link "Szabadságok" [ref=f15e72] [cursor=pointer]:
+                  - /url: /admin/szabadsagok
+          - button "Partnerek" [ref=f15e76] [cursor=pointer]
+          - button "Pénzügyek" [ref=f15e81] [cursor=pointer]
+          - button "Rendszer" [ref=f15e86] [cursor=pointer]
+        - button "Piaci árak" [ref=f15e92] [cursor=pointer]
+        - button "Keresés Ctrl+K" [ref=f15e97] [cursor=pointer]:
+          - generic [ref=f15e100]: Keresés
+          - generic [ref=f15e101]: Ctrl+K
+        - generic [ref=f15e102]:
+          - link "SÁ Szikora Ágoston Adminisztrátor" [ref=f15e103] [cursor=pointer]:
+            - /url: /admin/settings
+            - generic [ref=f15e104]: SÁ
+            - generic [ref=f15e105]:
+              - generic [ref=f15e106]: Szikora Ágoston
+              - generic [ref=f15e107]: Adminisztrátor
+          - button "Kijelentkezés" [ref=f15e110] [cursor=pointer]
+      - generic [ref=f15e117]:
+        - generic [ref=f15e120]:
+          - paragraph [ref=f15e121]: Rendszer
+          - heading "Értesítési előzmények" [level=1] [ref=f15e122]
+        - generic [ref=f15e124]:
+          - generic [ref=f15e125]:
+            - heading "Minden, ami valaha megjelent a haranG-ban" [level=3] [ref=f15e130]
+            - generic [ref=f15e131]:
+              - textbox "Keresés az értesítés szövegében..." [ref=f15e133]
+              - button "Excel" [ref=f15e134] [cursor=pointer]
+          - table [ref=f15e138]:
+            - rowgroup [ref=f15e139]:
+              - row [ref=f15e140]:
+                - cell [ref=f15e141]
+                - cell [ref=f15e143]
+              - row [ref=f15e145]:
+                - cell [ref=f15e146]
+                - cell [ref=f15e148]
+              - row [ref=f15e150]:
+                - cell [ref=f15e151]
+                - cell [ref=f15e153]
+              - row [ref=f15e155]:
+                - cell [ref=f15e156]
+                - cell [ref=f15e158]
+              - row [ref=f15e160]:
+                - cell [ref=f15e161]
+                - cell [ref=f15e163]
+              - row [ref=f15e165]:
+                - cell [ref=f15e166]
+                - cell [ref=f15e168]

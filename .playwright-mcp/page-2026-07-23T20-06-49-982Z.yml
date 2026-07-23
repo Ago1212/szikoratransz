@@ -1,0 +1,94 @@
+- generic [active]:
+  - generic:
+    - generic:
+      - navigation [ref=f41e1]:
+        - generic [ref=f41e2]:
+          - link [ref=f41e3] [cursor=pointer]:
+            - /url: /admin/dashboard
+            - img "Szikora Transz Kft" [ref=f41e4]
+          - generic [ref=f41e5]:
+            - button "Sötét mód bekapcsolása" [ref=f41e6] [cursor=pointer]
+            - button "Értesítések" [ref=f41e9] [cursor=pointer]
+        - generic [ref=f41e12]:
+          - list [ref=f41e14]:
+            - listitem [ref=f41e15]:
+              - link "Főmenü" [ref=f41e16] [cursor=pointer]:
+                - /url: /admin/dashboard
+            - listitem [ref=f41e19]:
+              - link "Karbantartások" [ref=f41e20] [cursor=pointer]:
+                - /url: /admin/karbantartasok
+            - listitem [ref=f41e23]:
+              - link "Bejelentések" [ref=f41e24] [cursor=pointer]:
+                - /url: /admin/bejelentesek
+            - listitem [ref=f41e27]:
+              - link "Pénzforgalom" [ref=f41e28] [cursor=pointer]:
+                - /url: /admin/koltsegek
+            - listitem [ref=f41e31]:
+              - link "Flottakövetés" [ref=f41e32] [cursor=pointer]:
+                - /url: /admin/flottakovetes
+          - generic [ref=f41e35]:
+            - button "Flotta" [expanded] [ref=f41e36] [cursor=pointer]
+            - list [ref=f41e40]:
+              - listitem [ref=f41e41]:
+                - link "Kamionok" [ref=f41e42] [cursor=pointer]:
+                  - /url: /admin/kamionok
+              - listitem [ref=f41e45]:
+                - link "Pótkocsik" [ref=f41e46] [cursor=pointer]:
+                  - /url: /admin/potkocsi
+              - listitem [ref=f41e49]:
+                - link "Furgonok" [ref=f41e50] [cursor=pointer]:
+                  - /url: /admin/furgonok
+          - button "Csapat" [ref=f41e54] [cursor=pointer]
+          - button "Partnerek" [ref=f41e59] [cursor=pointer]
+          - button "Pénzügyek" [ref=f41e64] [cursor=pointer]
+          - button "Rendszer" [ref=f41e69] [cursor=pointer]
+        - generic [ref=f41e74]:
+          - button "Piaci árak" [expanded] [ref=f41e75] [cursor=pointer]
+          - generic [ref=f41e79]:
+            - 'generic "Frissítve: 2026-07-23 21:27:42 · 0,0% (előző munkanaphoz képest)" [ref=f41e80]':
+              - generic [ref=f41e81]: EUR/HUF
+              - generic [ref=f41e82]:
+                - generic [ref=f41e83]: 364,16
+                - generic [ref=f41e84]: Ft
+            - 'generic "Frissítve: 2026-07-23 21:27:43 · 0,0% (előző munkanaphoz képest)" [ref=f41e85]':
+              - generic [ref=f41e86]: USD/HUF
+              - generic [ref=f41e87]:
+                - generic [ref=f41e88]: 319,13
+                - generic [ref=f41e89]: Ft
+            - 'generic "Frissítve: 2026-07-23 13:54:39 · 0,0% (előző havi árhoz képest)" [ref=f41e90]':
+              - generic [ref=f41e91]: Benzin (ESZ-95)
+              - generic [ref=f41e92]:
+                - generic [ref=f41e93]: "662"
+                - generic [ref=f41e94]: Ft/l
+            - paragraph [ref=f41e95]: "Frissítve: ma 13:54"
+        - button "Keresés Ctrl+K" [ref=f41e97] [cursor=pointer]:
+          - generic [ref=f41e100]: Keresés
+          - generic [ref=f41e101]: Ctrl+K
+        - generic [ref=f41e102]:
+          - link "SÁ Szikora Ágoston" [ref=f41e103] [cursor=pointer]:
+            - /url: /admin/settings
+            - generic [ref=f41e104]: SÁ
+            - generic [ref=f41e105]: Szikora Ágoston
+          - button "Kijelentkezés" [ref=f41e109] [cursor=pointer]
+      - generic [ref=f41e115]:
+        - generic [ref=f41e117]:
+          - paragraph [ref=f41e118]: Rendszer
+          - heading "Események" [level=1] [ref=f41e119]
+        - generic [ref=f41e122]:
+          - generic [ref=f41e123]:
+            - heading "Események" [level=3] [ref=f41e128]
+            - generic [ref=f41e129]:
+              - textbox "Keresés leírás szerint..." [ref=f41e131]
+              - button "Új esemény" [ref=f41e132] [cursor=pointer]
+          - table [ref=f41e136]:
+            - rowgroup [ref=f41e137]:
+              - row [ref=f41e138]:
+                - columnheader "Esemény" [ref=f41e139]
+                - columnheader "Dátum" [ref=f41e140]
+                - columnheader "Műveletek" [ref=f41e141]
+            - rowgroup [ref=f41e142]:
+              - row [ref=f41e143]:
+                - cell "Nincsenek események megjelenítve Új esemény" [ref=f41e144]:
+                  - generic [ref=f41e145]:
+                    - generic [ref=f41e148]: Nincsenek események megjelenítve
+                    - button "Új esemény" [ref=f41e149] [cursor=pointer]

@@ -1,0 +1,92 @@
+- generic [active]:
+  - generic:
+    - generic:
+      - navigation [ref=f42e1]:
+        - generic [ref=f42e2]:
+          - link [ref=f42e3] [cursor=pointer]:
+            - /url: /admin/dashboard
+            - img "Szikora Transz Kft" [ref=f42e4]
+          - generic [ref=f42e5]:
+            - button "Sötét mód bekapcsolása" [ref=f42e6] [cursor=pointer]
+            - button "Értesítések" [ref=f42e9] [cursor=pointer]
+        - generic [ref=f42e12]:
+          - list [ref=f42e14]:
+            - listitem [ref=f42e15]:
+              - link "Főmenü" [ref=f42e16] [cursor=pointer]:
+                - /url: /admin/dashboard
+            - listitem [ref=f42e19]:
+              - link "Karbantartások" [ref=f42e20] [cursor=pointer]:
+                - /url: /admin/karbantartasok
+            - listitem [ref=f42e23]:
+              - link "Bejelentések" [ref=f42e24] [cursor=pointer]:
+                - /url: /admin/bejelentesek
+            - listitem [ref=f42e27]:
+              - link "Pénzforgalom" [ref=f42e28] [cursor=pointer]:
+                - /url: /admin/koltsegek
+            - listitem [ref=f42e32]:
+              - link "Flottakövetés" [ref=f42e33] [cursor=pointer]:
+                - /url: /admin/flottakovetes
+          - generic [ref=f42e36]:
+            - button "Flotta" [expanded] [ref=f42e37] [cursor=pointer]
+            - list [ref=f42e41]:
+              - listitem [ref=f42e42]:
+                - link "Kamionok" [ref=f42e43] [cursor=pointer]:
+                  - /url: /admin/kamionok
+              - listitem [ref=f42e46]:
+                - link "Pótkocsik" [ref=f42e47] [cursor=pointer]:
+                  - /url: /admin/potkocsi
+              - listitem [ref=f42e50]:
+                - link "Furgonok" [ref=f42e51] [cursor=pointer]:
+                  - /url: /admin/furgonok
+          - button "Csapat" [ref=f42e55] [cursor=pointer]
+          - button "Partnerek" [ref=f42e60] [cursor=pointer]
+          - button "Pénzügyek" [ref=f42e65] [cursor=pointer]
+          - button "Rendszer" [ref=f42e70] [cursor=pointer]
+        - generic [ref=f42e75]:
+          - button "Piaci árak" [expanded] [ref=f42e76] [cursor=pointer]
+          - generic [ref=f42e80]:
+            - 'generic "Frissítve: 2026-07-23 21:27:42 · 0,0% (előző munkanaphoz képest)" [ref=f42e81]':
+              - generic [ref=f42e82]: EUR/HUF
+              - generic [ref=f42e83]:
+                - generic [ref=f42e84]: 364,16
+                - generic [ref=f42e85]: Ft
+            - 'generic "Frissítve: 2026-07-23 21:27:43 · 0,0% (előző munkanaphoz képest)" [ref=f42e86]':
+              - generic [ref=f42e87]: USD/HUF
+              - generic [ref=f42e88]:
+                - generic [ref=f42e89]: 319,13
+                - generic [ref=f42e90]: Ft
+            - 'generic "Frissítve: 2026-07-23 13:54:39 · 0,0% (előző havi árhoz képest)" [ref=f42e91]':
+              - generic [ref=f42e92]: Benzin (ESZ-95)
+              - generic [ref=f42e93]:
+                - generic [ref=f42e94]: "662"
+                - generic [ref=f42e95]: Ft/l
+            - paragraph [ref=f42e96]: "Frissítve: ma 13:54"
+        - button "Keresés Ctrl+K" [ref=f42e98] [cursor=pointer]:
+          - generic [ref=f42e101]: Keresés
+          - generic [ref=f42e102]: Ctrl+K
+        - generic [ref=f42e103]:
+          - link "SÁ Szikora Ágoston" [ref=f42e104] [cursor=pointer]:
+            - /url: /admin/settings
+            - generic [ref=f42e105]: SÁ
+            - generic [ref=f42e106]: Szikora Ágoston
+          - button "Kijelentkezés" [ref=f42e110] [cursor=pointer]
+      - generic [ref=f42e118]:
+        - generic [ref=f42e119]:
+          - paragraph [ref=f42e120]: Pénzügyek
+          - heading "Pénzforgalom" [level=1] [ref=f42e121]
+        - generic [ref=f42e122]:
+          - generic [ref=f42e123]:
+            - button "Ez a hónap" [ref=f42e124] [cursor=pointer]
+            - button "Elmúlt 30 nap" [ref=f42e125] [cursor=pointer]
+            - button "Ez az év" [ref=f42e126] [cursor=pointer]
+            - generic [ref=f42e127]: Egyedi
+          - generic [ref=f42e128]:
+            - generic [ref=f42e129]: Dátumtól
+            - button "2026. 07. 01." [ref=f42e131] [cursor=pointer]
+          - generic [ref=f42e135]:
+            - generic [ref=f42e136]: Dátumig
+            - button "2026. 07. 23." [ref=f42e138] [cursor=pointer]
+          - generic [ref=f42e142]:
+            - button "Előző év (teljes évre ugrás)" [ref=f42e143] [cursor=pointer]
+            - generic [ref=f42e146]: "2026"
+            - button "Következő év (teljes évre ugrás)" [ref=f42e147] [cursor=pointer]

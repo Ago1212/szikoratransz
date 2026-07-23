@@ -15,6 +15,7 @@ import {
   PiEnvelopeSimpleLight,
   PiCheckLight,
   PiXLight,
+  PiIdentificationCardLight,
 } from "react-icons/pi";
 
 // components
@@ -109,11 +110,18 @@ function PenzugyiAllapotCard({ className, cashflow, varhato, varhatoLoading, isA
 // két adatforrás, mint korábban, csak most egy kártyában.
 function MireFigyeljekMaCard({ className, hatarido, events, limit, onNavigate }) {
   const ma = moment().startOf("day");
-  const tetelek = events
+  const naptolSzamitott = events
     .map((e) => ({ ...e, _napok: moment(e.start).startOf("day").diff(ma, "days") }))
-    .filter((e) => e._napok <= 30)
-    .sort((a, b) => a._napok - b._napok)
-    .slice(0, limit);
+    .filter((e) => e._napok <= 30);
+  // A ma/holnap/e héten esedékes tételek mindig megelőzik a régen lejárt
+  // tételeket — enélkül egy évekkel ezelőtt lejárt tétel kiszoríthatta a
+  // limitált (mobilon 4 elemes) listából a ténylegesen sürgős, holnap
+  // esedékes tételt (növekvő _napok szerinti rendezésnél a legnegatívabb,
+  // azaz legrégebben lejárt tétel került volna elsőnek). A közelgő tételek
+  // dátum szerint növekvő, a lejártak a legfrissebben lejárt elöl sorrendben.
+  const kozelgo = naptolSzamitott.filter((e) => e._napok >= 0).sort((a, b) => a._napok - b._napok);
+  const lejart = naptolSzamitott.filter((e) => e._napok < 0).sort((a, b) => b._napok - a._napok);
+  const tetelek = [...kozelgo, ...lejart].slice(0, limit);
 
   const napCimke = (napok) => {
     if (napok < 0) return "Lejárt";
@@ -187,7 +195,8 @@ const JARMU_TIPUS_LABEL = { kamion: "kamiont", potkocsi: "pótkocsit", furgon: "
 // (minden rendben) nem foglal helyet a Dashboardon, ugyanaz az elv, mint az
 // "Onboarding checklist"-szerű, csak-ha-releváns kártyáknál.
 function TeendokCard({ className, teendok, onElbiral, onAjanlatkeresFelvette, onNavigate, elbiralasAlatt }) {
-  const osszesen = teendok.jarmuValtas.length + teendok.bejelentesek.length + teendok.ajanlatkeresek.length;
+  const osszesen =
+    teendok.jarmuValtas.length + teendok.bejelentesek.length + teendok.ajanlatkeresek.length + teendok.tachografLetoltesek.length;
   if (osszesen === 0) return null;
 
   return (
@@ -277,6 +286,27 @@ function TeendokCard({ className, teendok, onElbiral, onAjanlatkeresFelvette, on
                 Megnyitás
               </button>
             </div>
+          </li>
+        ))}
+        {teendok.tachografLetoltesek.map((t) => (
+          <li key={`tacho-${t.sofor_id}`} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between md:px-6">
+            <div className="flex items-start gap-2.5 min-w-0">
+              <PiIdentificationCardLight className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-500" />
+              <p className="min-w-0 text-sm text-ink-700 dark:text-ink-100">
+                <span className="font-semibold">{t.nev}</span>{" "}
+                {t.statusz === "lejart" ? "kártya-letöltése lejárt" : "kártya-letöltése esedékes"}
+                <span className="block text-xs text-ink-400 dark:text-ink-500">
+                  {t.utolsoDatum ? `utolsó letöltés: ${t.utolsoDatum} · ${t.napokOta} napja` : "még nincs adat"}
+                </span>
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => onNavigate(`/admin/tachograf?sofor=${t.sofor_id}`)}
+              className="flex flex-shrink-0 items-center gap-1 self-end rounded-lg bg-brand-50 px-2.5 py-1.5 text-xs font-bold text-brand-700 hover:bg-brand-100 dark:bg-brand-950/40 dark:text-brand-300 sm:self-auto"
+            >
+              Megnyitás <PiArrowRightLight className="h-3.5 w-3.5" />
+            </button>
           </li>
         ))}
       </ul>
@@ -417,7 +447,7 @@ export default function Dashboard() {
   // (ugyanaz a minta, mint a Sidebar haranG-jának `loadKerelmek()`-je),
   // nem optimista frontend-only eltávolítás — ez a kártya ritkán frissül,
   // a plusz kérés elhanyagolható áráért cserébe sosem mutat elavult állapotot.
-  const [teendok, setTeendok] = useState({ jarmuValtas: [], bejelentesek: [], ajanlatkeresek: [] });
+  const [teendok, setTeendok] = useState({ jarmuValtas: [], bejelentesek: [], ajanlatkeresek: [], tachografLetoltesek: [] });
   const [elbiralasAlatt, setElbiralasAlatt] = useState(null);
 
   const loadTeendok = React.useCallback(() => {
@@ -428,6 +458,7 @@ export default function Dashboard() {
           jarmuValtas: result.jarmuValtas || [],
           bejelentesek: result.bejelentesek || [],
           ajanlatkeresek: result.ajanlatkeresek || [],
+          tachografLetoltesek: result.tachografLetoltesek || [],
         });
       }
     });

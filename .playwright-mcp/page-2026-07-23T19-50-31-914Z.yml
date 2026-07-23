@@ -1,0 +1,53 @@
+- navigation [ref=f20e1]:
+  - generic [ref=f20e2]:
+    - link [ref=f20e3] [cursor=pointer]:
+      - /url: /admin/dashboard
+      - img "Szikora Transz Kft" [ref=f20e4]
+    - generic [ref=f20e5]:
+      - button "Sötét mód bekapcsolása" [ref=f20e6] [cursor=pointer]
+      - button "Értesítések" [ref=f20e9] [cursor=pointer]
+  - generic [ref=f20e12]:
+    - list [ref=f20e14]:
+      - listitem [ref=f20e15]:
+        - link "Főmenü" [ref=f20e16] [cursor=pointer]:
+          - /url: /admin/dashboard
+      - listitem [ref=f20e20]:
+        - link "Karbantartások" [ref=f20e21] [cursor=pointer]:
+          - /url: /admin/karbantartasok
+      - listitem [ref=f20e24]:
+        - link "Bejelentések" [ref=f20e25] [cursor=pointer]:
+          - /url: /admin/bejelentesek
+      - listitem [ref=f20e28]:
+        - link "Pénzforgalom" [ref=f20e29] [cursor=pointer]:
+          - /url: /admin/koltsegek
+      - listitem [ref=f20e32]:
+        - link "Flottakövetés" [ref=f20e33] [cursor=pointer]:
+          - /url: /admin/flottakovetes
+    - generic [ref=f20e36]:
+      - button "Flotta" [expanded] [ref=f20e37] [cursor=pointer]
+      - list [ref=f20e41]:
+        - listitem [ref=f20e42]:
+          - link "Kamionok" [ref=f20e43] [cursor=pointer]:
+            - /url: /admin/kamionok
+        - listitem [ref=f20e46]:
+          - link "Pótkocsik" [ref=f20e47] [cursor=pointer]:
+            - /url: /admin/potkocsi
+        - listitem [ref=f20e50]:
+          - link "Furgonok" [ref=f20e51] [cursor=pointer]:
+            - /url: /admin/furgonok
+    - button "Csapat" [ref=f20e55] [cursor=pointer]
+    - button "Partnerek" [ref=f20e60] [cursor=pointer]
+    - button "Pénzügyek" [ref=f20e65] [cursor=pointer]
+    - button "Rendszer" [ref=f20e70] [cursor=pointer]
+  - button "Piaci árak" [ref=f20e76] [cursor=pointer]
+  - button "Keresés Ctrl+K" [ref=f20e81] [cursor=pointer]:
+    - generic [ref=f20e84]: Keresés
+    - generic [ref=f20e85]: Ctrl+K
+  - generic [ref=f20e86]:
+    - link "SÁ Szikora Ágoston Adminisztrátor" [ref=f20e87] [cursor=pointer]:
+      - /url: /admin/settings
+      - generic [ref=f20e88]: SÁ
+      - generic [ref=f20e89]:
+        - generic [ref=f20e90]: Szikora Ágoston
+        - generic [ref=f20e91]: Adminisztrátor
+    - button "Kijelentkezés" [ref=f20e94] [cursor=pointer]

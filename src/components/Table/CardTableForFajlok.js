@@ -13,7 +13,17 @@ import { downloadFileAction } from "utils/downloadFileAction";
 import { toast } from "utils/toast";
 
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
+import { confirmDialog } from "utils/confirm.js";
 
+// Ez a komponens KIZÁRÓLAG a beágyazott, egy adott rekordhoz (kamion,
+// karbantartás, sofőr, helyszín, furgon, pótkocsi) tartozó, eleve kicsi
+// fájllistákhoz való (CardJarmuFajlok.js, CardFurgonFajlok.js,
+// CardPotkocsiFajlok.js, CardHelyszinFajlok.js, CardSoforFajlok.js). A
+// teljes, önálló "Fájlok" listaoldal (src/views/admin/Fajlok.js) mostantól
+// SAJÁT komponensfát használ (`src/components/Fajlok/`, grid-nézet,
+// dashboard-statok, szűrő-chipek, feltöltési sor stb.) — ez a komponens
+// tudatosan visszaegyszerűsödött, mert a beágyazott lista sosem igényelt
+// szűrést/lapozást/rendezést.
 const getFileIcon = (filename) => {
   const ext = filename.split(".").pop().toLowerCase();
 
@@ -54,36 +64,20 @@ const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString("hu-HU", options);
 };
 
-const PAGE_SIZE = 10;
-
 export default function CardTableForFajlok({ id, tabla }) {
   const [files, setFiles] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const storedUserData = localStorage.getItem("user");
   const admin = storedUserData ? JSON.parse(storedUserData).ceg_id : "0";
-  // A lapozás/keresés csak az admin saját, önálló "Fájlok" listaoldalán
-  // (tabla === "admin") aktív — a komponens más kontextusban (pl.
-  // Karbantartasok.js egy adott karbantartáshoz tartozó pár fájlja) egy
-  // eleve kicsi, beágyazott listát mutat, ahol ez felesleges lenne.
-  const isListPage = tabla === "admin";
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
 
   const fetchFiles = async () => {
     setIsLoading(true);
     try {
-      const result = await fetchAction("getFiles", {
-        id,
-        tabla,
-        ...(isListPage ? { search: search || undefined, page, pageSize: PAGE_SIZE } : {}),
-      });
+      const result = await fetchAction("getFiles", { id, tabla });
       if (result?.success) {
         setFiles(result.files);
-        if (isListPage) setTotal(result.total ?? (result.files || []).length);
       } else {
         toast.error(result?.message || "Fájlok betöltése sikertelen.");
-        if (isListPage) setTotal(0);
       }
     } catch (error) {
       console.error("Hiba történt a fájlok betöltésekor:", error);
@@ -96,11 +90,10 @@ export default function CardTableForFajlok({ id, tabla }) {
   useEffect(() => {
     fetchFiles();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, page, search]);
-
+  }, [id]);
 
   const handleFileDelete = async (file_id) => {
-    if (!window.confirm("Biztosan törölni szeretné ezt a fájlt?")) return;
+    if (!(await confirmDialog("Biztosan törölni szeretné ezt a fájlt?"))) return;
 
     try {
       const result = await fetchAction("deleteFile", { id: file_id });
@@ -175,7 +168,7 @@ export default function CardTableForFajlok({ id, tabla }) {
   // halmozhat fel, és eddig ezt kizárólag egyesével lehetett törölni.
   const handleBulkDelete = async (rows) => {
     if (rows.length === 0) return;
-    if (!window.confirm(`Biztosan törli a kijelölt ${rows.length} fájlt?`)) return;
+    if (!(await confirmDialog(`Biztosan törli a kijelölt ${rows.length} fájlt?`))) return;
     const results = await Promise.all(
       rows.map((row) => fetchAction("deleteFile", { id: row.sorszam })),
     );
@@ -269,18 +262,6 @@ export default function CardTableForFajlok({ id, tabla }) {
           <p className="mt-2 text-sm">Nincsenek feltöltött fájlok</p>
         </div>
       }
-      {...(isListPage
-        ? {
-            searchable: true,
-            searchPlaceholder: "Keresés fájlnév szerint...",
-            serverSide: true,
-            totalRows: total,
-            page,
-            pageSize: PAGE_SIZE,
-            onPageChange: setPage,
-            onSearchChange: setSearch,
-          }
-        : {})}
     />
   );
 }

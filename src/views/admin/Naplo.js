@@ -7,9 +7,14 @@ import StatusBadge from "components/UI/StatusBadge.js";
 
 const PAGE_SIZE = 20;
 
+// UX-audit — a `furgon`/`jarmu_valtas_kerelmek` (és néhány ritkábban
+// módosuló tábla) fordítatlanul, nyers snake_case formában jelent meg az
+// Entitás oszlopban, mert kimaradt ebből a térképből — a `backend/
+// ApiHandler.php` tényleges `logAudit()` hívásaival átfésülve pótolva.
 const TABLA_LABEL = {
   kamion: "Kamion",
   potkocsi: "Pótkocsi",
+  furgon: "Furgon",
   user: "Sofőr",
   bejelentesek: "Bejelentés",
   sofor_szabadsag: "Szabadság",
@@ -22,6 +27,9 @@ const TABLA_LABEL = {
   egyeb_koltsegek: "Pénzforgalom tétel",
   fuvarok: "Fuvar",
   vezetesi_naplo: "Vezetési napló",
+  jarmu_valtas_kerelmek: "Jármű-váltási kérelem",
+  gpsmart_beallitasok: "GPSmart beállítások",
+  nav_szamla_beallitasok: "NAV számla beállítások",
 };
 
 const MUVELET_TONE = {
@@ -102,12 +110,10 @@ export default function Naplo() {
   ];
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-7xl flex-col">
+    <div className="flex h-full w-full flex-col px-0 md:px-4">
       <div className="flex-shrink-0">
-        <PageHeader
-          title="Módosítási napló"
-          eyebrow="Teljes előzmény, lapozva"
-        />
+        <PageHeader title="Módosítási napló" eyebrow="Rendszer" />
+        <p className="-mt-6 mb-4 text-sm text-ink-500 dark:text-ink-400">Teljes előzmény, lapozva</p>
       </div>
       <div className="min-h-0 flex-1">
         <DataTable

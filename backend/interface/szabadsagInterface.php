@@ -87,6 +87,42 @@ class SzabadsagInterface {
         }
     }
 
+    // UX-audit — korábban nem volt szerkesztés, csak létrehozás/törlés — egy
+    // elgépelt dátum/típus javításának egyetlen útja a teljes rekord törlése
+    // és újra-felvitele volt.
+    public function updateSzabadsag($data, $ceg_id) {
+        try {
+            $soforStmt = $this->db->prepare("SELECT id FROM user WHERE id = :sofor_id AND admin = :ceg_id AND torolt <> 'I'");
+            $soforStmt->bindValue(':sofor_id', $data['sofor_id']);
+            $soforStmt->bindValue(':ceg_id', $ceg_id);
+            $soforStmt->execute();
+            if (!$soforStmt->fetch(PDO::FETCH_ASSOC)) {
+                return ['success' => false, 'message' => 'A sofőr nem található, vagy nem a te céged sofőrje.'];
+            }
+
+            $query = "UPDATE sofor_szabadsag
+                      SET sofor_id = :sofor_id, datum_tol = :datum_tol, datum_ig = :datum_ig, tipus = :tipus, megjegyzes = :megjegyzes
+                      WHERE id = :id AND admin = :ceg_id";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindValue(':id', $data['id']);
+            $stmt->bindValue(':ceg_id', $ceg_id);
+            $stmt->bindValue(':sofor_id', $data['sofor_id']);
+            $stmt->bindValue(':datum_tol', $data['datum_tol']);
+            $stmt->bindValue(':datum_ig', $data['datum_ig']);
+            $stmt->bindValue(':tipus', empty($data['tipus']) ? 'szabadsag' : $data['tipus']);
+            $stmt->bindValue(':megjegyzes', $data['megjegyzes'] ?? null);
+            $stmt->execute();
+
+            if ($stmt->rowCount() === 0) {
+                return ['success' => false, 'message' => 'A szabadság nem található, vagy nem a te céged tulajdona.'];
+            }
+
+            return ['success' => true, 'message' => 'Szabadság módosítva.'];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
     public function deleteSzabadsag($id, $ceg_id) {
         try {
             $query = "UPDATE sofor_szabadsag SET torolt = 'I' WHERE id = :id AND admin = :ceg_id";

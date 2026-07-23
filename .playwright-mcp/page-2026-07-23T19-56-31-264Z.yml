@@ -1,0 +1,27 @@
+- generic [active]:
+  - generic:
+    - generic:
+      - navigation [ref=f19e3]:
+        - link "Menü" [ref=f19e4] [cursor=pointer]:
+          - /url: /admin/dashboard
+        - link "Profil" [ref=f19e8] [cursor=pointer]:
+          - /url: /admin/settings
+        - button "Flotta" [ref=f19e12] [cursor=pointer]
+        - button "Csapat" [ref=f19e17] [cursor=pointer]
+        - button "Rendszer" [ref=f19e22] [cursor=pointer]
+        - button "Értesítések" [ref=f19e27] [cursor=pointer]
+      - generic [ref=f19e36]:
+        - generic [ref=f19e38]:
+          - generic [ref=f19e39]:
+            - paragraph [ref=f19e40]: Flotta
+            - heading "Karbantartások" [level=1] [ref=f19e41]
+          - button "Szűrők" [ref=f19e42] [cursor=pointer]
+        - generic [ref=f19e46]:
+          - generic [ref=f19e47]:
+            - heading "Karbantartások" [level=3] [ref=f19e52]
+            - generic [ref=f19e53]:
+              - textbox "Keresés leírás, elvégezte, rendszám szerint..." [ref=f19e55]
+              - button "Új karbantartás" [ref=f19e56] [cursor=pointer]
+          - generic [ref=f19e61]:
+            - generic [ref=f19e64]: Nincsenek megjeleníthető karbantartások
+            - button "Új karbantartás" [ref=f19e65] [cursor=pointer]

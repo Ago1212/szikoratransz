@@ -115,6 +115,20 @@ export default function DatePicker({
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
 
+  // Escape zárja a naptár-panelt, és a fókusz visszakerül a nyitó gombra —
+  // korábban csak kattintás-kívülre záródott (ld. UX-audit).
+  useEffect(() => {
+    if (!open) return undefined;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        wrapperRef.current?.querySelector("button")?.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [open]);
+
   const emitChange = (date) => {
     onChange?.({ target: { name, id, value: date ? format(date, "yyyy-MM-dd") : "" } });
   };
@@ -127,8 +141,11 @@ export default function DatePicker({
     <div className={`relative ${className}`} ref={wrapperRef}>
       <button
         type="button"
+        id={id || name}
         disabled={disabled}
         onClick={() => setOpen((o) => !o)}
+        aria-haspopup="dialog"
+        aria-expanded={open}
         className="flex w-full items-center gap-2 rounded-lg border border-ink-100 bg-slate-50 px-3 py-2 text-left text-sm text-brand-900 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300 disabled:cursor-not-allowed disabled:opacity-60 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-50 dark:focus:border-brand-500"
       >
         <PiCalendarBlankLight className="h-3.5 w-3.5 flex-shrink-0 text-ink-400 dark:text-ink-400" />

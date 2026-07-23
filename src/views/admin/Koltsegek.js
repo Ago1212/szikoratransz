@@ -35,6 +35,7 @@ import Modal from "components/UI/Modal.js";
 import FormField, { FormSection } from "components/UI/FormField.js";
 import Spinner from "components/UI/Spinner.js";
 import CardStats from "components/Cards/CardStats.js";
+import { confirmDialog } from "utils/confirm.js";
 // A CardUzemanyagElemzes (üzemanyag-fogyasztás anomália-elemzés) import és
 // megjelenítés egyenlőre szándékosan ki van véve (felhasználói kérésre) — a
 // komponens fájlja változatlan, később egy `import` + JSX-sor
@@ -395,13 +396,20 @@ function PeriodControl({ filter, onPreset, onFieldChange, displayedYear, onChang
             {p.label}
           </button>
         ))}
-        <span
-          className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
-            !activePreset ? "bg-white text-brand-700 shadow-soft dark:bg-ink-700 dark:text-brand-300" : "text-ink-400 dark:text-ink-500"
+        {/* UX-audit: korábban egy passzív `<span>` volt, vizuálisan azonos a
+            preset-gombokkal, de kattintásra semmi nem történt (Nielsen-
+            heurisztika sérülés — úgy néz ki, mint ami kattintható). Most
+            valódi gomb, ami a "Dátumtól" mezőre fókuszál — a mező `id`-ja a
+            `name="datumTol"`-ból származik (ld. FormField `fieldId` fallback). */}
+        <button
+          type="button"
+          onClick={() => document.getElementById("datumTol")?.focus()}
+          className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors duration-150 ${
+            !activePreset ? "bg-white text-brand-700 shadow-soft dark:bg-ink-700 dark:text-brand-300" : "text-ink-400 hover:text-ink-700 dark:text-ink-500 dark:hover:text-ink-100"
           }`}
         >
           Egyedi
-        </span>
+        </button>
       </div>
       <FormField
         type="date"
@@ -446,10 +454,15 @@ function PeriodControl({ filter, onPreset, onFieldChange, displayedYear, onChang
   );
 }
 
+// `mobileLabel` — UX-audit: mobilon (375px) a 3 fül teljes szélessége
+// kilóg a viewportból, a 3. ("Havi alakulás") fül gyakorlatilag
+// felfedezhetetlen maradt, csak egy alig észrevehető scroll-thumb jelezte a
+// folytatást. Rövidebb feliratok mobilon + egy jobb szélen megjelenő
+// fade-jelzés (ld. lentebb) együtt oldja meg.
 const TABS = [
   { key: "tetelek", label: "Tételek", icon: PiReceiptLight },
-  { key: "jarmuvenkent", label: "Jármű szerinti bontás", icon: PiTruckLight },
-  { key: "chart", label: "Havi alakulás", icon: PiChartBarLight },
+  { key: "jarmuvenkent", label: "Jármű szerinti bontás", mobileLabel: "Jármű bontás", icon: PiTruckLight },
+  { key: "chart", label: "Havi alakulás", mobileLabel: "Havi", icon: PiChartBarLight },
 ];
 
 export default function Koltsegek() {
@@ -586,6 +599,7 @@ export default function Koltsegek() {
   // felhasználó a fejléc előnézete alapján, kézzel adja meg.
   const [bankModalOpen, setBankModalOpen] = useState(false);
   const [bankCsvSzoveg, setBankCsvSzoveg] = useState("");
+  const [bankFajlnev, setBankFajlnev] = useState("");
   const [bankFejlec, setBankFejlec] = useState([]);
   const [bankOszlopok, setBankOszlopok] = useState({ datum: "", osszeg: "", kozlemeny: "" });
   const [bankElemzesLoading, setBankElemzesLoading] = useState(false);
@@ -841,6 +855,7 @@ export default function Koltsegek() {
   const handleBankFajlValasztas = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setBankFajlnev(file.name);
     const reader = new FileReader();
     reader.onload = () => {
       const szoveg = String(reader.result || "");
@@ -882,6 +897,7 @@ export default function Koltsegek() {
         ceg_id: user.ceg_id,
         kerelmezo_id: user.id,
         csv: bankCsvSzoveg,
+        fajlnev: bankFajlnev,
         oszlopok: {
           datum: Number(bankOszlopok.datum),
           osszeg: Number(bankOszlopok.osszeg),
@@ -970,6 +986,7 @@ export default function Koltsegek() {
           ceg_id: user.ceg_id,
           kerelmezo_id: user.id,
           pdf: base64,
+          fajlnev: file.name,
         });
         if (result?.success) {
           // Alapból csak a felismert rendszámú (jármühöz köthető) és még
@@ -1135,7 +1152,7 @@ export default function Koltsegek() {
   };
 
   const handleDeleteTetel = async (id) => {
-    if (!window.confirm("Biztosan törlöd ezt a tételt?")) return;
+    if (!(await confirmDialog("Biztosan törlöd ezt a tételt?"))) return;
     const result = await fetchAction("deleteEgyebKoltseg", {
       id,
       ceg_id: user.ceg_id,
@@ -1480,7 +1497,7 @@ export default function Koltsegek() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+    <div className="flex w-full flex-col gap-6 px-0 md:px-4">
       <PageHeader
         eyebrow="Pénzügyek"
         title="Pénzforgalom"
@@ -1584,22 +1601,28 @@ export default function Koltsegek() {
               vissza kellett görgetni egy fülváltáshoz. Asztalon (`md:`)
               változatlanul statikus marad, ott ez sosem volt probléma. */}
           <div className="sticky top-0 z-10 -mx-4 bg-slate-50 px-4 pb-2 pt-1 dark:bg-ink-950 md:static md:z-auto md:mx-0 md:bg-transparent md:px-0 md:py-0">
-            <div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1 dark:bg-ink-800">
-              {TABS.map((t) => (
-                <button
-                  key={t.key}
-                  type="button"
-                  onClick={() => setActiveTab(t.key)}
-                  className={`flex flex-shrink-0 items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors duration-150 ${
-                    activeTab === t.key
-                      ? "bg-white text-brand-700 shadow-soft dark:bg-ink-700 dark:text-brand-300"
-                      : "text-ink-500 hover:text-ink-700 dark:text-ink-400 dark:hover:text-ink-100"
-                  }`}
-                >
-                  <t.icon className="h-4 w-4" />
-                  {t.label}
-                </button>
-              ))}
+            <div className="relative">
+              <div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1 dark:bg-ink-800">
+                {TABS.map((t) => (
+                  <button
+                    key={t.key}
+                    type="button"
+                    onClick={() => setActiveTab(t.key)}
+                    className={`flex flex-shrink-0 items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors duration-150 ${
+                      activeTab === t.key
+                        ? "bg-white text-brand-700 shadow-soft dark:bg-ink-700 dark:text-brand-300"
+                        : "text-ink-500 hover:text-ink-700 dark:text-ink-400 dark:hover:text-ink-100"
+                    }`}
+                  >
+                    <t.icon className="h-4 w-4" />
+                    <span className="sm:hidden">{t.mobileLabel || t.label}</span>
+                    <span className="hidden sm:inline">{t.label}</span>
+                  </button>
+                ))}
+              </div>
+              {/* Jobb szélen elhelyezkedő fade — vizuális jelzés, hogy a fülsor
+                  vízszintesen görgethető, ha nem fér ki mind a 3 fül. */}
+              <div className="pointer-events-none absolute inset-y-1 right-0 w-6 rounded-r-xl bg-gradient-to-l from-slate-100 to-transparent dark:from-ink-800 sm:hidden" />
             </div>
           </div>
 

@@ -1,0 +1,69 @@
+- generic [active]:
+  - generic:
+    - generic:
+      - navigation [ref=f18e1]:
+        - generic [ref=f18e2]:
+          - link [ref=f18e3] [cursor=pointer]:
+            - /url: /admin/dashboard
+            - img "Szikora Transz Kft" [ref=f18e4]
+          - generic [ref=f18e5]:
+            - button "Sötét mód bekapcsolása" [ref=f18e6] [cursor=pointer]
+            - button "Értesítések" [ref=f18e9] [cursor=pointer]
+        - generic [ref=f18e12]:
+          - list [ref=f18e14]:
+            - listitem [ref=f18e102]:
+              - link "Főmenü" [ref=f18e103] [cursor=pointer]:
+                - /url: /admin/dashboard
+            - listitem [ref=f18e106]:
+              - link "Karbantartások" [ref=f18e107] [cursor=pointer]:
+                - /url: /admin/karbantartasok
+            - listitem [ref=f18e110]:
+              - link "Bejelentések" [ref=f18e111] [cursor=pointer]:
+                - /url: /admin/bejelentesek
+            - listitem [ref=f18e114]:
+              - link "Pénzforgalom" [ref=f18e115] [cursor=pointer]:
+                - /url: /admin/koltsegek
+            - listitem [ref=f18e118]:
+              - link "Flottakövetés" [ref=f18e119] [cursor=pointer]:
+                - /url: /admin/flottakovetes
+          - generic [ref=f18e35]:
+            - button "Flotta" [expanded] [ref=f18e122] [cursor=pointer]
+            - list [ref=f18e40]:
+              - listitem [ref=f18e126]:
+                - link "Kamionok" [ref=f18e127] [cursor=pointer]:
+                  - /url: /admin/kamionok
+              - listitem [ref=f18e130]:
+                - link "Pótkocsik" [ref=f18e131] [cursor=pointer]:
+                  - /url: /admin/potkocsi
+              - listitem [ref=f18e134]:
+                - link "Furgonok" [ref=f18e135] [cursor=pointer]:
+                  - /url: /admin/furgonok
+          - button "Csapat" [ref=f18e138] [cursor=pointer]
+          - button "Partnerek" [ref=f18e142] [cursor=pointer]
+          - button "Pénzügyek" [ref=f18e146] [cursor=pointer]
+          - button "Rendszer" [ref=f18e150] [cursor=pointer]
+        - button "Piaci árak" [ref=f18e156] [cursor=pointer]
+        - button "Keresés Ctrl+K" [ref=f18e74] [cursor=pointer]:
+          - generic [ref=f18e77]: Keresés
+          - generic [ref=f18e78]: Ctrl+K
+        - generic [ref=f18e79]:
+          - link "SÁ Szikora Ágoston Adminisztrátor" [ref=f18e80] [cursor=pointer]:
+            - /url: /admin/settings
+            - generic [ref=f18e81]: SÁ
+            - generic [ref=f18e82]:
+              - generic [ref=f18e83]: Szikora Ágoston
+              - generic [ref=f18e84]: Adminisztrátor
+          - button "Kijelentkezés" [ref=f18e87] [cursor=pointer]
+      - generic [ref=f18e94]:
+        - generic [ref=f18e96]:
+          - paragraph [ref=f18e97]: Saját adatok
+          - heading "Jogosultságok" [level=1] [ref=f18e98]
+        - paragraph [ref=f18e99]: Itt hozhatsz létre saját szerepköröket (pl. Diszpécser, Könyvelő), és állíthatod be szerepkörönként, hogy mely modulokhoz férhetnek hozzá, mit szerkeszthetnek és törölhetnek. Alapértelmezetten minden modul teljes hozzáférésű — csak azt kell kikapcsolni, amit korlátozni szeretnél.
+        - generic [ref=f18e160]:
+          - button "Adminisztrátor" [ref=f18e161] [cursor=pointer]
+          - button "Fuvarszervező" [ref=f18e162] [cursor=pointer]
+          - button "Új szerepkör" [ref=f18e163] [cursor=pointer]
+        - paragraph [ref=f18e169]:
+          - text: Az
+          - strong [ref=f18e170]: Adminisztrátor
+          - text: szerepkör mindig teljes hozzáférésű — ez nem korlátozható és nem törölhető.

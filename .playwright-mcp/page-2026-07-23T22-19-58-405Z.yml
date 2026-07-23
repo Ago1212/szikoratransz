@@ -1,0 +1,151 @@
+- generic:
+  - generic:
+    - generic:
+      - link "Ugrás a tartalomra" [ref=f3e1] [cursor=pointer]:
+        - /url: "#admin-tartalom"
+      - navigation [ref=f3e2]:
+        - generic [ref=f3e3]:
+          - link [ref=f3e4] [cursor=pointer]:
+            - /url: /admin/dashboard
+            - img "Szikora Transz Kft" [ref=f3e5]
+          - generic [ref=f3e6]:
+            - button "Sötét mód bekapcsolása" [ref=f3e7] [cursor=pointer]
+            - button "Értesítések" [ref=f3e10] [cursor=pointer]
+        - generic [ref=f3e13]:
+          - list [ref=f3e15]:
+            - listitem [ref=f3e161]:
+              - link "Főmenü" [ref=f3e162] [cursor=pointer]:
+                - /url: /admin/dashboard
+            - listitem [ref=f3e165]:
+              - link "Karbantartások" [ref=f3e166] [cursor=pointer]:
+                - /url: /admin/karbantartasok
+            - listitem [ref=f3e169]:
+              - link "Bejelentések" [ref=f3e170] [cursor=pointer]:
+                - /url: /admin/bejelentesek
+            - listitem [ref=f3e173]:
+              - link "Pénzforgalom" [ref=f3e174] [cursor=pointer]:
+                - /url: /admin/koltsegek
+            - listitem [ref=f3e177]:
+              - link "Flottakövetés" [ref=f3e178] [cursor=pointer]:
+                - /url: /admin/flottakovetes
+          - generic [ref=f3e36]:
+            - button "Flotta" [expanded] [ref=f3e181] [cursor=pointer]
+            - list [ref=f3e41]:
+              - listitem [ref=f3e185]:
+                - link "Kamionok" [ref=f3e186] [cursor=pointer]:
+                  - /url: /admin/kamionok
+              - listitem [ref=f3e189]:
+                - link "Pótkocsik" [ref=f3e190] [cursor=pointer]:
+                  - /url: /admin/potkocsi
+              - listitem [ref=f3e193]:
+                - link "Furgonok" [ref=f3e194] [cursor=pointer]:
+                  - /url: /admin/furgonok
+          - button "Csapat" [ref=f3e197] [cursor=pointer]
+          - button "Partnerek" [ref=f3e201] [cursor=pointer]
+          - button "Pénzügyek" [ref=f3e205] [cursor=pointer]
+          - button "Rendszer" [ref=f3e209] [cursor=pointer]
+        - generic [ref=f3e75]:
+          - button "Piaci árak" [expanded] [ref=f3e76] [cursor=pointer]
+          - generic [ref=f3e80]:
+            - 'generic "Frissítve: 2026-07-23 23:30:44 · 0,0% (előző munkanaphoz képest)" [ref=f3e81]':
+              - generic [ref=f3e82]: EUR/HUF
+              - generic [ref=f3e83]:
+                - generic [ref=f3e84]: 364,16
+                - generic [ref=f3e85]: Ft
+            - 'generic "Frissítve: 2026-07-23 23:30:45 · 0,0% (előző munkanaphoz képest)" [ref=f3e86]':
+              - generic [ref=f3e87]: USD/HUF
+              - generic [ref=f3e88]:
+                - generic [ref=f3e89]: 319,13
+                - generic [ref=f3e90]: Ft
+            - 'generic "Frissítve: 2026-07-23 13:54:39 · 0,0% (előző havi árhoz képest)" [ref=f3e91]':
+              - generic [ref=f3e92]: Benzin (ESZ-95)
+              - generic [ref=f3e93]:
+                - generic [ref=f3e94]: "662"
+                - generic [ref=f3e95]: Ft/l
+            - paragraph [ref=f3e96]: "Frissítve: ma 13:54"
+        - button "Keresés Ctrl+K" [ref=f3e98] [cursor=pointer]:
+          - generic [ref=f3e101]: Keresés
+          - generic [ref=f3e102]: Ctrl+K
+        - generic [ref=f3e103]:
+          - link "SÁ Szikora Ágoston Adminisztrátor" [ref=f3e104] [cursor=pointer]:
+            - /url: /admin/settings
+            - generic [ref=f3e105]: SÁ
+            - generic [ref=f3e106]:
+              - generic [ref=f3e107]: Szikora Ágoston
+              - generic [ref=f3e108]: Adminisztrátor
+          - button "Kijelentkezés" [ref=f3e111] [cursor=pointer]
+      - generic [ref=f3e118]:
+        - generic [ref=f3e121]:
+          - paragraph [ref=f3e122]: Csapat
+          - heading "Sofőr szabadságok" [level=1] [ref=f3e123]
+        - generic [ref=f3e125]:
+          - generic [ref=f3e126]:
+            - heading "Szabadságok / elérhetőség" [level=3] [ref=f3e131]
+            - generic [ref=f3e132]:
+              - textbox "Keresés sofőr, típus, megjegyzés szerint..." [ref=f3e134]
+              - button "Excel" [ref=f3e135] [cursor=pointer]
+              - button "Új bejegyzés" [ref=f3e138] [cursor=pointer]
+          - table [ref=f3e142]:
+            - rowgroup [ref=f3e143]:
+              - row [ref=f3e144]:
+                - columnheader "Sofőr" [ref=f3e145]
+                - columnheader "Kezdete" [ref=f3e146]
+                - columnheader "Vége" [ref=f3e147]
+                - columnheader "Típus" [ref=f3e148]
+                - columnheader "Megjegyzés" [ref=f3e149]
+                - columnheader "Műveletek" [ref=f3e150]
+            - rowgroup [ref=f3e151]:
+              - row [ref=f3e213]:
+                - cell "Szikora Ágoston" [ref=f3e214]
+                - cell "2026-08-01" [ref=f3e215]
+                - cell "2026-08-10" [ref=f3e216]
+                - cell "Szabadság" [ref=f3e217]
+                - cell "Nyari szabi" [ref=f3e218]
+                - cell [ref=f3e219]:
+                  - generic [ref=f3e220]:
+                    - button "Szerkesztés" [ref=f3e221] [cursor=pointer]
+                    - button "Törlés" [ref=f3e224] [cursor=pointer]
+          - generic [ref=f3e227]:
+            - generic [ref=f3e228]: 1–1 / 1
+            - generic [ref=f3e229]:
+              - button "Előző oldal" [disabled] [ref=f3e230]
+              - generic [ref=f3e233]: 1 / 1
+              - button "Következő oldal" [disabled] [ref=f3e234]
+  - dialog [ref=f3e237]:
+    - generic [ref=f3e239]:
+      - generic [ref=f3e240]:
+        - heading "Szabadság/elérhetőség szerkesztése" [level=3] [ref=f3e241]
+        - button "Bezárás" [active] [ref=f3e242] [cursor=pointer]
+      - generic [ref=f3e246]:
+        - generic [ref=f3e247]:
+          - generic [ref=f3e248]:
+            - text: Sofőr
+            - generic [ref=f3e249]: "*"
+          - combobox "Sofőr *" [ref=f3e250]:
+            - option "Válassz sofőrt"
+            - option "Szikora Ágoston" [selected]
+        - generic [ref=f3e252]:
+          - generic [ref=f3e253]:
+            - generic [ref=f3e254]:
+              - text: Kezdete
+              - generic [ref=f3e255]: "*"
+            - button "Kezdete *" [ref=f3e257] [cursor=pointer]:
+              - generic [ref=f3e260]: 2026. 08. 01.
+          - generic [ref=f3e261]:
+            - generic [ref=f3e262]:
+              - text: Vége
+              - generic [ref=f3e263]: "*"
+            - button "Vége *" [ref=f3e265] [cursor=pointer]:
+              - generic [ref=f3e268]: 2026. 08. 10.
+        - generic [ref=f3e269]:
+          - generic [ref=f3e270]: Típus
+          - combobox "Típus" [ref=f3e271]:
+            - option "Szabadság" [selected]
+            - option "Betegszabadság"
+            - option "Egyéb"
+        - generic [ref=f3e272]:
+          - generic [ref=f3e273]: Megjegyzés
+          - textbox "Megjegyzés" [ref=f3e274]: Nyari szabi
+        - generic [ref=f3e275]:
+          - button "Mégse" [ref=f3e276] [cursor=pointer]
+          - button "Mentés" [ref=f3e277] [cursor=pointer]

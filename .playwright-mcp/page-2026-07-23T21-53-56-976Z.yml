@@ -1,0 +1,113 @@
+- generic [active]:
+  - generic:
+    - generic:
+      - navigation [ref=f23e1]:
+        - generic [ref=f23e2]:
+          - link [ref=f23e3] [cursor=pointer]:
+            - /url: /admin/dashboard
+            - img "Szikora Transz Kft" [ref=f23e4]
+          - generic [ref=f23e5]:
+            - button "Sötét mód bekapcsolása" [ref=f23e6] [cursor=pointer]
+            - button "Értesítések" [ref=f23e9] [cursor=pointer]
+        - generic [ref=f23e12]:
+          - list [ref=f23e14]:
+            - listitem [ref=f23e15]:
+              - link "Főmenü" [ref=f23e16] [cursor=pointer]:
+                - /url: /admin/dashboard
+            - listitem [ref=f23e19]:
+              - link "Karbantartások" [ref=f23e20] [cursor=pointer]:
+                - /url: /admin/karbantartasok
+            - listitem [ref=f23e23]:
+              - link "Bejelentések" [ref=f23e24] [cursor=pointer]:
+                - /url: /admin/bejelentesek
+            - listitem [ref=f23e27]:
+              - link "Pénzforgalom" [ref=f23e28] [cursor=pointer]:
+                - /url: /admin/koltsegek
+            - listitem [ref=f23e31]:
+              - link "Flottakövetés" [ref=f23e32] [cursor=pointer]:
+                - /url: /admin/flottakovetes
+          - generic [ref=f23e35]:
+            - button "Flotta" [expanded] [ref=f23e36] [cursor=pointer]
+            - list [ref=f23e40]:
+              - listitem [ref=f23e41]:
+                - link "Kamionok" [ref=f23e42] [cursor=pointer]:
+                  - /url: /admin/kamionok
+              - listitem [ref=f23e45]:
+                - link "Pótkocsik" [ref=f23e46] [cursor=pointer]:
+                  - /url: /admin/potkocsi
+              - listitem [ref=f23e49]:
+                - link "Furgonok" [ref=f23e50] [cursor=pointer]:
+                  - /url: /admin/furgonok
+          - generic [ref=f23e53]:
+            - button "Csapat" [expanded] [ref=f23e54] [cursor=pointer]
+            - list [ref=f23e58]:
+              - listitem [ref=f23e59]:
+                - link "Sofőrök" [ref=f23e60] [cursor=pointer]:
+                  - /url: /admin/soforok
+              - listitem [ref=f23e63]:
+                - link "Sofőr-riport" [ref=f23e64] [cursor=pointer]:
+                  - /url: /admin/sofor-riport
+              - listitem [ref=f23e67]:
+                - link "Tachográf kártya" [ref=f23e68] [cursor=pointer]:
+                  - /url: /admin/tachograf
+              - listitem [ref=f23e71]:
+                - link "Szabadságok" [ref=f23e72] [cursor=pointer]:
+                  - /url: /admin/szabadsagok
+          - button "Partnerek" [ref=f23e76] [cursor=pointer]
+          - button "Pénzügyek" [ref=f23e81] [cursor=pointer]
+          - button "Rendszer" [ref=f23e86] [cursor=pointer]
+        - button "Piaci árak" [ref=f23e92] [cursor=pointer]
+        - button "Keresés Ctrl+K" [ref=f23e97] [cursor=pointer]:
+          - generic [ref=f23e100]: Keresés
+          - generic [ref=f23e101]: Ctrl+K
+        - generic [ref=f23e102]:
+          - link "SÁ Szikora Ágoston Adminisztrátor" [ref=f23e103] [cursor=pointer]:
+            - /url: /admin/settings
+            - generic [ref=f23e104]: SÁ
+            - generic [ref=f23e105]:
+              - generic [ref=f23e106]: Szikora Ágoston
+              - generic [ref=f23e107]: Adminisztrátor
+          - button "Kijelentkezés" [ref=f23e110] [cursor=pointer]
+      - generic [ref=f23e117]:
+        - generic [ref=f23e118]:
+          - generic [ref=f23e119]:
+            - paragraph [ref=f23e120]: Rendszer
+            - heading "Felhasználók" [level=1] [ref=f23e121]
+          - button "Új felhasználó" [ref=f23e122] [cursor=pointer]
+        - paragraph [ref=f23e125]: Minden ember egy helyen, aki hozzáfér a rendszerhez — csapattagok (teljes admin-hozzáférés) és sofőrök (saját mobil felület) együtt.
+        - generic [ref=f23e126]:
+          - button "Mind" [ref=f23e127] [cursor=pointer]
+          - button "Csapattagok" [ref=f23e128] [cursor=pointer]
+          - button "Sofőrök" [ref=f23e129] [cursor=pointer]
+        - generic [ref=f23e130]:
+          - generic [ref=f23e131]:
+            - heading "Csapattagok és sofőrök" [level=3] [ref=f23e136]
+            - generic [ref=f23e137]:
+              - textbox "Név vagy email keresése..." [ref=f23e139]
+              - button "Excel" [ref=f23e140] [cursor=pointer]
+          - table [ref=f23e144]:
+            - rowgroup [ref=f23e145]:
+              - row [ref=f23e146]:
+                - cell [ref=f23e147]
+                - cell [ref=f23e149]
+                - cell [ref=f23e151]
+              - row [ref=f23e153]:
+                - cell [ref=f23e154]
+                - cell [ref=f23e156]
+                - cell [ref=f23e158]
+              - row [ref=f23e160]:
+                - cell [ref=f23e161]
+                - cell [ref=f23e163]
+                - cell [ref=f23e165]
+              - row [ref=f23e167]:
+                - cell [ref=f23e168]
+                - cell [ref=f23e170]
+                - cell [ref=f23e172]
+              - row [ref=f23e174]:
+                - cell [ref=f23e175]
+                - cell [ref=f23e177]
+                - cell [ref=f23e179]
+              - row [ref=f23e181]:
+                - cell [ref=f23e182]
+                - cell [ref=f23e184]
+                - cell [ref=f23e186]

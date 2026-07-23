@@ -1,0 +1,79 @@
+- generic [active]:
+  - generic:
+    - generic:
+      - navigation [ref=f5e1]:
+        - generic [ref=f5e2]:
+          - link [ref=f5e3] [cursor=pointer]:
+            - /url: /admin/dashboard
+            - img "Szikora Transz Kft" [ref=f5e4]
+          - generic [ref=f5e5]:
+            - button "Sötét mód bekapcsolása" [ref=f5e6] [cursor=pointer]
+            - button "Értesítések" [ref=f5e9] [cursor=pointer]
+        - generic [ref=f5e12]:
+          - list [ref=f5e14]:
+            - listitem [ref=f5e15]:
+              - link "Főmenü" [ref=f5e16] [cursor=pointer]:
+                - /url: /admin/dashboard
+            - listitem [ref=f5e19]:
+              - link "Karbantartások" [ref=f5e20] [cursor=pointer]:
+                - /url: /admin/karbantartasok
+            - listitem [ref=f5e23]:
+              - link "Bejelentések" [ref=f5e24] [cursor=pointer]:
+                - /url: /admin/bejelentesek
+            - listitem [ref=f5e27]:
+              - link "Pénzforgalom" [ref=f5e28] [cursor=pointer]:
+                - /url: /admin/koltsegek
+            - listitem [ref=f5e31]:
+              - link "Flottakövetés" [ref=f5e32] [cursor=pointer]:
+                - /url: /admin/flottakovetes
+          - generic [ref=f5e35]:
+            - button "Flotta" [expanded] [ref=f5e36] [cursor=pointer]
+            - list [ref=f5e40]:
+              - listitem [ref=f5e41]:
+                - link "Kamionok" [ref=f5e42] [cursor=pointer]:
+                  - /url: /admin/kamionok
+              - listitem [ref=f5e45]:
+                - link "Pótkocsik" [ref=f5e46] [cursor=pointer]:
+                  - /url: /admin/potkocsi
+              - listitem [ref=f5e49]:
+                - link "Furgonok" [ref=f5e50] [cursor=pointer]:
+                  - /url: /admin/furgonok
+          - button "Csapat" [ref=f5e54] [cursor=pointer]
+          - button "Partnerek" [ref=f5e59] [cursor=pointer]
+          - button "Pénzügyek" [ref=f5e64] [cursor=pointer]
+          - button "Rendszer" [ref=f5e69] [cursor=pointer]
+        - generic [ref=f5e74]:
+          - button "Piaci árak" [expanded] [ref=f5e75] [cursor=pointer]
+          - generic [ref=f5e79]:
+            - 'generic "Frissítve: 2026-07-23 22:30:17 · 0,0% (előző munkanaphoz képest)" [ref=f5e80]':
+              - generic [ref=f5e81]: EUR/HUF
+              - generic [ref=f5e82]:
+                - generic [ref=f5e83]: 364,16
+                - generic [ref=f5e84]: Ft
+            - 'generic "Frissítve: 2026-07-23 22:30:18 · 0,0% (előző munkanaphoz képest)" [ref=f5e85]':
+              - generic [ref=f5e86]: USD/HUF
+              - generic [ref=f5e87]:
+                - generic [ref=f5e88]: 319,13
+                - generic [ref=f5e89]: Ft
+            - 'generic "Frissítve: 2026-07-23 13:54:39 · 0,0% (előző havi árhoz képest)" [ref=f5e90]':
+              - generic [ref=f5e91]: Benzin (ESZ-95)
+              - generic [ref=f5e92]:
+                - generic [ref=f5e93]: "662"
+                - generic [ref=f5e94]: Ft/l
+            - paragraph [ref=f5e95]: "Frissítve: ma 13:54"
+        - button "Keresés Ctrl+K" [ref=f5e97] [cursor=pointer]:
+          - generic [ref=f5e100]: Keresés
+          - generic [ref=f5e101]: Ctrl+K
+        - generic [ref=f5e102]:
+          - link "SÁ Szikora Ágoston Adminisztrátor" [ref=f5e103] [cursor=pointer]:
+            - /url: /admin/settings
+            - generic [ref=f5e104]: SÁ
+            - generic [ref=f5e105]:
+              - generic [ref=f5e106]: Szikora Ágoston
+              - generic [ref=f5e107]: Adminisztrátor
+          - button "Kijelentkezés" [ref=f5e110] [cursor=pointer]
+      - generic [ref=f5e117]:
+        - generic [ref=f5e119]:
+          - paragraph [ref=f5e120]: Rendszer
+          - heading "Jogosultságok" [level=1] [ref=f5e121]
+        - paragraph [ref=f5e122]: Itt hozhatsz létre saját szerepköröket (pl. Diszpécser, Könyvelő), és állíthatod be szerepkörönként, hogy mely modulokhoz férhetnek hozzá, mit szerkeszthetnek és törölhetnek. Alapértelmezetten minden modul teljes hozzáférésű — csak azt kell kikapcsolni, amit korlátozni szeretnél.

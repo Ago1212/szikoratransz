@@ -1,0 +1,145 @@
+- generic [active]:
+  - generic:
+    - generic:
+      - navigation [ref=e1]:
+        - generic [ref=e2]:
+          - link [ref=e3] [cursor=pointer]:
+            - /url: /admin/dashboard
+            - img "Szikora Transz Kft" [ref=e4]
+          - generic [ref=e5]:
+            - button "Sötét mód bekapcsolása" [ref=e6] [cursor=pointer]
+            - button "Értesítések" [ref=e9] [cursor=pointer]
+        - generic [ref=e12]:
+          - list [ref=e14]:
+            - listitem [ref=e15]:
+              - link "Főmenü" [ref=e16] [cursor=pointer]:
+                - /url: /admin/dashboard
+            - listitem [ref=e19]:
+              - link "Karbantartások" [ref=e20] [cursor=pointer]:
+                - /url: /admin/karbantartasok
+            - listitem [ref=e23]:
+              - link "Bejelentések" [ref=e24] [cursor=pointer]:
+                - /url: /admin/bejelentesek
+            - listitem [ref=e27]:
+              - link "Pénzforgalom" [ref=e28] [cursor=pointer]:
+                - /url: /admin/koltsegek
+            - listitem [ref=e31]:
+              - link "Flottakövetés" [ref=e32] [cursor=pointer]:
+                - /url: /admin/flottakovetes
+          - generic [ref=e35]:
+            - button "Flotta" [expanded] [ref=e36] [cursor=pointer]
+            - list [ref=e40]:
+              - listitem [ref=e41]:
+                - link "Kamionok" [ref=e42] [cursor=pointer]:
+                  - /url: /admin/kamionok
+              - listitem [ref=e46]:
+                - link "Pótkocsik" [ref=e47] [cursor=pointer]:
+                  - /url: /admin/potkocsi
+              - listitem [ref=e50]:
+                - link "Furgonok" [ref=e51] [cursor=pointer]:
+                  - /url: /admin/furgonok
+          - button "Csapat" [ref=e55] [cursor=pointer]
+          - button "Partnerek" [ref=e60] [cursor=pointer]
+          - button "Pénzügyek" [ref=e65] [cursor=pointer]
+          - button "Rendszer" [ref=e70] [cursor=pointer]
+        - generic [ref=e75]:
+          - button "Piaci árak" [expanded] [ref=e76] [cursor=pointer]
+          - generic [ref=e80]:
+            - 'generic "Frissítve: 2026-07-23 23:30:44 · 0,0% (előző munkanaphoz képest)" [ref=e81]':
+              - generic [ref=e82]: EUR/HUF
+              - generic [ref=e83]:
+                - generic [ref=e84]: 364,16
+                - generic [ref=e85]: Ft
+            - 'generic "Frissítve: 2026-07-23 23:30:45 · 0,0% (előző munkanaphoz képest)" [ref=e86]':
+              - generic [ref=e87]: USD/HUF
+              - generic [ref=e88]:
+                - generic [ref=e89]: 319,13
+                - generic [ref=e90]: Ft
+            - 'generic "Frissítve: 2026-07-23 13:54:39 · 0,0% (előző havi árhoz képest)" [ref=e91]':
+              - generic [ref=e92]: Benzin (ESZ-95)
+              - generic [ref=e93]:
+                - generic [ref=e94]: "662"
+                - generic [ref=e95]: Ft/l
+            - paragraph [ref=e96]: "Frissítve: ma 13:54"
+        - button "Keresés Ctrl+K" [ref=e98] [cursor=pointer]:
+          - generic [ref=e101]: Keresés
+          - generic [ref=e102]: Ctrl+K
+        - generic [ref=e103]:
+          - link "SÁ Szikora Ágoston Adminisztrátor" [ref=e104] [cursor=pointer]:
+            - /url: /admin/settings
+            - generic [ref=e105]: SÁ
+            - generic [ref=e106]:
+              - generic [ref=e107]: Szikora Ágoston
+              - generic [ref=e108]: Adminisztrátor
+          - button "Kijelentkezés" [ref=e111] [cursor=pointer]
+      - generic [ref=e117]:
+        - generic [ref=e119]:
+          - paragraph [ref=e120]: Flotta
+          - heading "Kamionok" [level=1] [ref=e121]
+        - generic [ref=e124]:
+          - generic [ref=e125]:
+            - heading "Kamionok" [level=3] [ref=e130]
+            - generic [ref=e131]:
+              - textbox "Keresés rendszám, típus szerint..." [ref=e133]
+              - button "Excel" [ref=e134] [cursor=pointer]
+              - button "Új" [ref=e137] [cursor=pointer]
+          - table [ref=e242]:
+            - rowgroup [ref=e243]:
+              - row [ref=e244]:
+                - columnheader [ref=e245]:
+                  - button "Rendszám" [ref=e246] [cursor=pointer]
+                - columnheader [ref=e249]:
+                  - button "Típus" [ref=e250] [cursor=pointer]
+                - columnheader [ref=e253]:
+                  - button "Méret" [ref=e254] [cursor=pointer]
+                - columnheader "Pótkocsi" [ref=e257]
+                - columnheader [ref=e258]:
+                  - button "Állapot" [ref=e259] [cursor=pointer]
+                - columnheader "Műveletek" [ref=e262]
+            - rowgroup [ref=e263]:
+              - row [ref=e264] [cursor=pointer]:
+                - cell "RED-0011" [ref=e265]
+                - cell "Nincs" [ref=e266]
+                - cell "Nincs" [ref=e267]
+                - cell "Nincs" [ref=e268]
+                - cell "Szabad" [ref=e269]
+                - cell [ref=e271]:
+                  - generic [ref=e272]:
+                    - button "Szerkesztés" [ref=e273]
+                    - button "Törlés" [ref=e276]
+              - row [ref=e279] [cursor=pointer]:
+                - cell "RLP-018" [ref=e280]
+                - cell "Nincs" [ref=e281]
+                - cell "Nincs" [ref=e282]
+                - cell "Nincs" [ref=e283]
+                - cell "Szabad" [ref=e284]
+                - cell [ref=e286]:
+                  - generic [ref=e287]:
+                    - button "Szerkesztés" [ref=e288]
+                    - button "Törlés" [ref=e291]
+              - row [ref=e294] [cursor=pointer]:
+                - cell "AAEO-881" [ref=e295]
+                - cell "NAGY" [ref=e296]
+                - cell "24T" [ref=e297]
+                - cell "Nincs" [ref=e298]
+                - cell "Szabad" [ref=e299]
+                - cell [ref=e301]:
+                  - generic [ref=e302]:
+                    - button "Szerkesztés" [ref=e303]
+                    - button "Törlés" [ref=e306]
+              - row [ref=e309] [cursor=pointer]:
+                - cell "RED-0099" [ref=e310]
+                - cell "Scania R450 (teszt)" [ref=e311]
+                - cell "Nincs" [ref=e312]
+                - cell "RED-001" [ref=e313]
+                - cell "Szabad" [ref=e314]
+                - cell [ref=e316]:
+                  - generic [ref=e317]:
+                    - button "Szerkesztés" [ref=e318]
+                    - button "Törlés" [ref=e321]
+          - generic [ref=e324]:
+            - generic [ref=e325]: 1–4 / 4
+            - generic [ref=e326]:
+              - button "Előző oldal" [disabled] [ref=e327]
+              - generic [ref=e330]: 1 / 1
+              - button "Következő oldal" [disabled] [ref=e331]

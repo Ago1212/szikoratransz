@@ -1,0 +1,69 @@
+- navigation [ref=f30e1]:
+  - generic [ref=f30e2]:
+    - link [ref=f30e3] [cursor=pointer]:
+      - /url: /admin/dashboard
+      - img "Szikora Transz Kft" [ref=f30e4]
+    - generic [ref=f30e5]:
+      - button "Sötét mód bekapcsolása" [ref=f30e6] [cursor=pointer]
+      - button "Értesítések" [ref=f30e9] [cursor=pointer]
+  - generic [ref=f30e12]:
+    - list [ref=f30e14]:
+      - listitem [ref=f30e15]:
+        - link "Főmenü" [ref=f30e16] [cursor=pointer]:
+          - /url: /admin/dashboard
+      - listitem [ref=f30e20]:
+        - link "Karbantartások" [ref=f30e21] [cursor=pointer]:
+          - /url: /admin/karbantartasok
+      - listitem [ref=f30e24]:
+        - link "Bejelentések" [ref=f30e25] [cursor=pointer]:
+          - /url: /admin/bejelentesek
+      - listitem [ref=f30e28]:
+        - link "Pénzforgalom" [ref=f30e29] [cursor=pointer]:
+          - /url: /admin/koltsegek
+      - listitem [ref=f30e32]:
+        - link "Flottakövetés" [ref=f30e33] [cursor=pointer]:
+          - /url: /admin/flottakovetes
+    - generic [ref=f30e36]:
+      - button "Flotta" [expanded] [ref=f30e37] [cursor=pointer]
+      - list [ref=f30e41]:
+        - listitem [ref=f30e42]:
+          - link "Kamionok" [ref=f30e43] [cursor=pointer]:
+            - /url: /admin/kamionok
+        - listitem [ref=f30e46]:
+          - link "Pótkocsik" [ref=f30e47] [cursor=pointer]:
+            - /url: /admin/potkocsi
+        - listitem [ref=f30e50]:
+          - link "Furgonok" [ref=f30e51] [cursor=pointer]:
+            - /url: /admin/furgonok
+    - button "Csapat" [ref=f30e55] [cursor=pointer]
+    - button "Partnerek" [ref=f30e60] [cursor=pointer]
+    - button "Pénzügyek" [ref=f30e65] [cursor=pointer]
+    - button "Rendszer" [ref=f30e70] [cursor=pointer]
+  - generic [ref=f30e75]:
+    - button "Piaci árak" [expanded] [ref=f30e76] [cursor=pointer]
+    - generic [ref=f30e80]:
+      - 'generic "Frissítve: 2026-07-23 21:27:42 · 0,0% (előző munkanaphoz képest)" [ref=f30e81]':
+        - generic [ref=f30e82]: EUR/HUF
+        - generic [ref=f30e83]:
+          - generic [ref=f30e84]: 364,16
+          - generic [ref=f30e85]: Ft
+      - 'generic "Frissítve: 2026-07-23 21:27:43 · 0,0% (előző munkanaphoz képest)" [ref=f30e86]':
+        - generic [ref=f30e87]: USD/HUF
+        - generic [ref=f30e88]:
+          - generic [ref=f30e89]: 319,13
+          - generic [ref=f30e90]: Ft
+      - 'generic "Frissítve: 2026-07-23 13:54:39 · 0,0% (előző havi árhoz képest)" [ref=f30e91]':
+        - generic [ref=f30e92]: Benzin (ESZ-95)
+        - generic [ref=f30e93]:
+          - generic [ref=f30e94]: "662"
+          - generic [ref=f30e95]: Ft/l
+      - paragraph [ref=f30e96]: "Frissítve: ma 13:54"
+  - button "Keresés Ctrl+K" [ref=f30e98] [cursor=pointer]:
+    - generic [ref=f30e101]: Keresés
+    - generic [ref=f30e102]: Ctrl+K
+  - generic [ref=f30e103]:
+    - link "SÁ Szikora Ágoston" [ref=f30e104] [cursor=pointer]:
+      - /url: /admin/settings
+      - generic [ref=f30e105]: SÁ
+      - generic [ref=f30e106]: Szikora Ágoston
+    - button "Kijelentkezés" [ref=f30e110] [cursor=pointer]

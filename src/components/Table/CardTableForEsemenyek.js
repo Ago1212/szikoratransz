@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { confirmDialog } from "utils/confirm.js";
 import PropTypes from "prop-types";
 import { PiPencilSimpleLight, PiTrashLight, PiCalendarBlankLight } from "react-icons/pi";
 import { format } from "date-fns";
@@ -43,7 +44,7 @@ const CardTableForEsemenyek = ({ id }) => {
 
 
   const handleEsemenyDelete = async (esemeny_id) => {
-    if (!window.confirm("Biztosan törölni szeretné ezt az eseményt?")) return;
+    if (!(await confirmDialog("Biztosan törölni szeretné ezt az eseményt?"))) return;
 
     const result = await fetchAction("deleteEgyediHatarido", { id: esemeny_id, ceg_id: id });
     if (result?.success) {

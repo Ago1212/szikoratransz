@@ -1,0 +1,85 @@
+- generic [active]:
+  - generic:
+    - generic:
+      - navigation [ref=f6e1]:
+        - generic [ref=f6e2]:
+          - link [ref=f6e3] [cursor=pointer]:
+            - /url: /admin/dashboard
+            - img "Szikora Transz Kft" [ref=f6e4]
+          - generic [ref=f6e5]:
+            - button "Sötét mód bekapcsolása" [ref=f6e6] [cursor=pointer]
+            - button "Értesítések" [ref=f6e9] [cursor=pointer]
+        - generic [ref=f6e12]:
+          - list [ref=f6e14]:
+            - listitem [ref=f6e15]:
+              - link "Főmenü" [ref=f6e16] [cursor=pointer]:
+                - /url: /admin/dashboard
+            - listitem [ref=f6e19]:
+              - link "Karbantartások" [ref=f6e20] [cursor=pointer]:
+                - /url: /admin/karbantartasok
+            - listitem [ref=f6e23]:
+              - link "Bejelentések" [ref=f6e24] [cursor=pointer]:
+                - /url: /admin/bejelentesek
+            - listitem [ref=f6e27]:
+              - link "Pénzforgalom" [ref=f6e28] [cursor=pointer]:
+                - /url: /admin/koltsegek
+            - listitem [ref=f6e31]:
+              - link "Flottakövetés" [ref=f6e32] [cursor=pointer]:
+                - /url: /admin/flottakovetes
+          - generic [ref=f6e35]:
+            - button "Flotta" [expanded] [ref=f6e36] [cursor=pointer]
+            - list [ref=f6e40]:
+              - listitem [ref=f6e41]:
+                - link "Kamionok" [ref=f6e42] [cursor=pointer]:
+                  - /url: /admin/kamionok
+              - listitem [ref=f6e45]:
+                - link "Pótkocsik" [ref=f6e46] [cursor=pointer]:
+                  - /url: /admin/potkocsi
+              - listitem [ref=f6e49]:
+                - link "Furgonok" [ref=f6e50] [cursor=pointer]:
+                  - /url: /admin/furgonok
+          - button "Csapat" [ref=f6e54] [cursor=pointer]
+          - button "Partnerek" [ref=f6e59] [cursor=pointer]
+          - button "Pénzügyek" [ref=f6e64] [cursor=pointer]
+          - button "Rendszer" [ref=f6e69] [cursor=pointer]
+        - generic [ref=f6e74]:
+          - button "Piaci árak" [expanded] [ref=f6e75] [cursor=pointer]
+          - generic [ref=f6e79]:
+            - 'generic "Frissítve: 2026-07-23 21:27:42 · 0,0% (előző munkanaphoz képest)" [ref=f6e80]':
+              - generic [ref=f6e81]: EUR/HUF
+              - generic [ref=f6e82]:
+                - generic [ref=f6e83]: 364,16
+                - generic [ref=f6e84]: Ft
+            - 'generic "Frissítve: 2026-07-23 21:27:43 · 0,0% (előző munkanaphoz képest)" [ref=f6e85]':
+              - generic [ref=f6e86]: USD/HUF
+              - generic [ref=f6e87]:
+                - generic [ref=f6e88]: 319,13
+                - generic [ref=f6e89]: Ft
+            - 'generic "Frissítve: 2026-07-23 13:54:39 · 0,0% (előző havi árhoz képest)" [ref=f6e90]':
+              - generic [ref=f6e91]: Benzin (ESZ-95)
+              - generic [ref=f6e92]:
+                - generic [ref=f6e93]: "662"
+                - generic [ref=f6e94]: Ft/l
+            - paragraph [ref=f6e95]: "Frissítve: ma 13:54"
+        - button "Keresés Ctrl+K" [ref=f6e97] [cursor=pointer]:
+          - generic [ref=f6e100]: Keresés
+          - generic [ref=f6e101]: Ctrl+K
+        - generic [ref=f6e102]:
+          - link "SÁ Szikora Ágoston" [ref=f6e103] [cursor=pointer]:
+            - /url: /admin/settings
+            - generic [ref=f6e104]: SÁ
+            - generic [ref=f6e105]: Szikora Ágoston
+          - button "Kijelentkezés" [ref=f6e109] [cursor=pointer]
+      - generic [ref=f6e116]:
+        - generic [ref=f6e118]:
+          - paragraph [ref=f6e119]: Saját adatok
+          - heading "Jogosultságok" [level=1] [ref=f6e120]
+        - paragraph [ref=f6e121]: Itt hozhatsz létre saját szerepköröket (pl. Diszpécser, Könyvelő), és állíthatod be szerepkörönként, hogy mely modulokhoz férhetnek hozzá, mit szerkeszthetnek és törölhetnek. Alapértelmezetten minden modul teljes hozzáférésű — csak azt kell kikapcsolni, amit korlátozni szeretnél.
+        - button "Új szerepkör" [ref=f6e123] [cursor=pointer]
+        - paragraph [ref=f6e129]:
+          - text: Az
+          - strong [ref=f6e130]: Adminisztrátor
+          - text: szerepkör mindig teljes hozzáférésű — ez nem korlátozható és nem törölhető.
+    - status [ref=f6e132]:
+      - paragraph [ref=f6e136]: "Hiányzó paraméter: id."
+      - button [ref=f6e137] [cursor=pointer]

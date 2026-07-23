@@ -14,6 +14,8 @@ export default function Furgonok() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [sortKey, setSortKey] = useState(null);
+  const [sortDir, setSortDir] = useState("asc");
 
   useEffect(() => {
     let cancelled = false;
@@ -25,6 +27,8 @@ export default function Furgonok() {
         search: search || undefined,
         page,
         pageSize: PAGE_SIZE,
+        sortKey: sortKey || undefined,
+        sortDir,
       });
       if (cancelled) return;
       if (result.success) {
@@ -42,7 +46,13 @@ export default function Furgonok() {
     return () => {
       cancelled = true;
     };
-  }, [page, search]);
+  }, [page, search, sortKey, sortDir]);
+
+  const handleSortChange = (key, dir) => {
+    setSortKey(key);
+    setSortDir(dir);
+    setPage(1);
+  };
 
   const handleExportAll = useCallback(async () => {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -67,6 +77,9 @@ export default function Furgonok() {
             onPageChange={setPage}
             onSearchChange={setSearch}
             onExportAll={handleExportAll}
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSortChange={handleSortChange}
           />
         </div>
       </div>

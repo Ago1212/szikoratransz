@@ -17,7 +17,9 @@ class HelyszinInterface {
         $this->db = $database->connect();
     }
 
-    public function getHelyszinek($ceg_id, $search = null, $page = null, $pageSize = null) {
+    private const RENDEZHETO_OSZLOPOK = ['nev' => 'nev'];
+
+    public function getHelyszinek($ceg_id, $search = null, $page = null, $pageSize = null, $sortKey = null, $sortDir = 'asc') {
         try {
             $params = [':id' => $ceg_id];
             $query = "SELECT * FROM helyszinek WHERE admin = :id AND torolt <> 'I'";
@@ -25,7 +27,9 @@ class HelyszinInterface {
                 $query .= " AND " . PaginationHelper::likeClause(['nev'], 'search');
                 $params[':search'] = '%' . $search . '%';
             }
-            $query .= " ORDER BY nev ASC";
+            $rendezoOszlop = self::RENDEZHETO_OSZLOPOK[$sortKey] ?? 'nev';
+            $irany = strtolower((string) $sortDir) === 'desc' ? 'DESC' : 'ASC';
+            $query .= " ORDER BY $rendezoOszlop $irany";
 
             if ($page !== null) {
                 [$helyszinek, $total, $page, $pageSize] = PaginationHelper::fetchPage($this->db, $query, $params, $page, $pageSize);

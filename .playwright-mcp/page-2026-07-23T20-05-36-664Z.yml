@@ -1,0 +1,19 @@
+- generic [active]:
+  - generic:
+    - generic:
+      - navigation [ref=f38e3]:
+        - link "Menü" [ref=f38e4] [cursor=pointer]:
+          - /url: /admin/dashboard
+        - link "Profil" [ref=f38e8] [cursor=pointer]:
+          - /url: /admin/settings
+        - button "Flotta" [ref=f38e12] [cursor=pointer]
+        - button "Csapat" [ref=f38e17] [cursor=pointer]
+        - button "Rendszer" [ref=f38e22] [cursor=pointer]
+        - button "Értesítések" [ref=f38e27] [cursor=pointer]
+      - generic [ref=f38e36]:
+        - generic [ref=f38e39]:
+          - paragraph [ref=f38e40]: Rendszer
+          - heading "Ajánlatkérések" [level=1] [ref=f38e41]
+        - generic [ref=f38e44]:
+          - heading "Beérkezett érdeklődések" [level=3] [ref=f38e49]
+          - textbox "Keresés név, email, üzenet szerint..." [ref=f38e52]

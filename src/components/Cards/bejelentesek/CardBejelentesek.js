@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { confirmDialog } from "utils/confirm.js";
 import { useHistory } from "react-router-dom";
 import { fetchAction } from "utils/fetchAction";
 import { downloadFileAction } from "utils/downloadFileAction";
@@ -198,7 +199,7 @@ export default function CardBejelentesek({ initBejelentesek }) {
   };
 
   const handleFileDelete = async (fileId) => {
-    if (!window.confirm("Biztosan törölni szeretné ezt a fájlt?")) return;
+    if (!(await confirmDialog("Biztosan törölni szeretné ezt a fájlt?"))) return;
     const result = await fetchAction("deleteFile", { id: fileId });
     if (result?.success) {
       await fetchFiles();

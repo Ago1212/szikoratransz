@@ -1,0 +1,55 @@
+- generic [active]:
+  - generic:
+    - generic:
+      - navigation [ref=f25e1]:
+        - generic [ref=f25e2]:
+          - link [ref=f25e3] [cursor=pointer]:
+            - /url: /admin/dashboard
+            - img "Szikora Transz Kft" [ref=f25e4]
+          - generic [ref=f25e5]:
+            - button "Sötét mód bekapcsolása" [ref=f25e6] [cursor=pointer]
+            - button "Értesítések" [ref=f25e9] [cursor=pointer]
+        - generic [ref=f25e12]:
+          - list [ref=f25e14]:
+            - listitem [ref=f25e15]:
+              - link "Főmenü" [ref=f25e16] [cursor=pointer]:
+                - /url: /admin/dashboard
+            - listitem [ref=f25e20]:
+              - link "Karbantartások" [ref=f25e21] [cursor=pointer]:
+                - /url: /admin/karbantartasok
+            - listitem [ref=f25e24]:
+              - link "Bejelentések" [ref=f25e25] [cursor=pointer]:
+                - /url: /admin/bejelentesek
+            - listitem [ref=f25e28]:
+              - link "Pénzforgalom" [ref=f25e29] [cursor=pointer]:
+                - /url: /admin/koltsegek
+            - listitem [ref=f25e32]:
+              - link "Flottakövetés" [ref=f25e33] [cursor=pointer]:
+                - /url: /admin/flottakovetes
+          - generic [ref=f25e36]:
+            - button "Flotta" [expanded] [ref=f25e37] [cursor=pointer]
+            - list [ref=f25e41]:
+              - listitem [ref=f25e42]:
+                - link "Kamionok" [ref=f25e43] [cursor=pointer]:
+                  - /url: /admin/kamionok
+              - listitem [ref=f25e46]:
+                - link "Pótkocsik" [ref=f25e47] [cursor=pointer]:
+                  - /url: /admin/potkocsi
+              - listitem [ref=f25e50]:
+                - link "Furgonok" [ref=f25e51] [cursor=pointer]:
+                  - /url: /admin/furgonok
+          - button "Csapat" [ref=f25e55] [cursor=pointer]
+          - button "Partnerek" [ref=f25e60] [cursor=pointer]
+          - button "Pénzügyek" [ref=f25e65] [cursor=pointer]
+          - button "Rendszer" [ref=f25e70] [cursor=pointer]
+        - button "Piaci árak" [ref=f25e76] [cursor=pointer]
+        - button "Keresés Ctrl+K" [ref=f25e81] [cursor=pointer]:
+          - generic [ref=f25e84]: Keresés
+          - generic [ref=f25e85]: Ctrl+K
+        - generic [ref=f25e86]:
+          - link "SÁ Szikora Ágoston" [ref=f25e87] [cursor=pointer]:
+            - /url: /admin/settings
+            - generic [ref=f25e88]: SÁ
+            - generic [ref=f25e89]: Szikora Ágoston
+          - button "Kijelentkezés" [ref=f25e93] [cursor=pointer]
+      - paragraph [ref=f25e103]: "Hiányzó paraméter: id."

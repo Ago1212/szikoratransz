@@ -31,7 +31,13 @@ class KamionInterface {
     // `$search`/`$page`/`$pageSize` NÉLKÜL hívva (a régi viselkedés) a teljes
     // listát adja vissza, lapozás nélkül — a lapozás szigorúan opt-in, hogy
     // más (nem a Kamionok lista-oldali) hívók ne törjenek el emiatt.
-    public function getKamionok($id, $search = null, $page = null, $pageSize = null) {
+    // UX-audit (2026-07-23): opt-in oszloprendezés — ugyanaz a fehérlistás
+    // `$sortKey`/`$sortDir` minta, mint a Pénzforgalom (koltsegInterface.php
+    // RENDEZHETO_OSZLOPOK) és a Fájlok modulnál, hogy a rendezés sosem a
+    // kliens nyers oszlopnevéből épüljön be az SQL-be.
+    private const RENDEZHETO_OSZLOPOK = ['rendszam' => 'rendszam', 'tipus' => 'tipus', 'meret' => 'meret', 'allapot' => 'allapot'];
+
+    public function getKamionok($id, $search = null, $page = null, $pageSize = null, $sortKey = null, $sortDir = 'asc') {
         try {
             $params = [':id' => $id];
             $query = "SELECT * FROM kamion WHERE admin = :id AND torolt <> 'I'";
@@ -39,7 +45,9 @@ class KamionInterface {
                 $query .= " AND " . PaginationHelper::likeClause(['rendszam', 'tipus', 'meret', 'potkocsi', 'allapot'], 'search');
                 $params[':search'] = '%' . $search . '%';
             }
-            $query .= " ORDER BY rendszam ASC";
+            $rendezoOszlop = self::RENDEZHETO_OSZLOPOK[$sortKey] ?? 'rendszam';
+            $irany = strtolower((string) $sortDir) === 'desc' ? 'DESC' : 'ASC';
+            $query .= " ORDER BY $rendezoOszlop $irany";
 
             if ($page !== null) {
                 [$kamionok, $total, $page, $pageSize] = PaginationHelper::fetchPage($this->db, $query, $params, $page, $pageSize);

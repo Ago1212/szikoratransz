@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 // components
 
 import CardTable from "components/Table/CardTableForPotkocsi";
+import PageHeader from "components/UI/PageHeader.js";
 import { fetchAction } from "utils/fetchAction";
 
 const PAGE_SIZE = 10;
@@ -12,6 +13,8 @@ export default function Potkocsi() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [sortKey, setSortKey] = useState(null);
+  const [sortDir, setSortDir] = useState("asc");
 
   useEffect(() => {
     let cancelled = false;
@@ -23,6 +26,8 @@ export default function Potkocsi() {
         search: search || undefined,
         page,
         pageSize: PAGE_SIZE,
+        sortKey: sortKey || undefined,
+        sortDir,
       });
       if (cancelled) return;
       if (result.success) {
@@ -40,7 +45,13 @@ export default function Potkocsi() {
     return () => {
       cancelled = true;
     };
-  }, [page, search]);
+  }, [page, search, sortKey, sortDir]);
+
+  const handleSortChange = (key, dir) => {
+    setSortKey(key);
+    setSortDir(dir);
+    setPage(1);
+  };
 
   const handleExportAll = useCallback(async () => {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -53,6 +64,7 @@ export default function Potkocsi() {
 
   return (
     <>
+      <PageHeader eyebrow="Flotta" title="Pótkocsik" />
       <div className="flex flex-wrap mt-0">
         <div className="w-full mb-12 px-0 md:px-4">
           <CardTable
@@ -64,6 +76,9 @@ export default function Potkocsi() {
             onPageChange={setPage}
             onSearchChange={setSearch}
             onExportAll={handleExportAll}
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSortChange={handleSortChange}
           />
         </div>
       </div>

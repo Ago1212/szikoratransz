@@ -1,0 +1,273 @@
+- generic [active]:
+  - generic:
+    - generic:
+      - navigation [ref=f44e1]:
+        - generic [ref=f44e2]:
+          - link [ref=f44e3] [cursor=pointer]:
+            - /url: /admin/dashboard
+            - img "Szikora Transz Kft" [ref=f44e4]
+          - generic [ref=f44e5]:
+            - button "Sötét mód bekapcsolása" [ref=f44e6] [cursor=pointer]
+            - button "Értesítések" [ref=f44e9] [cursor=pointer]
+        - generic [ref=f44e12]:
+          - list [ref=f44e14]:
+            - listitem [ref=f44e561]:
+              - link "Főmenü" [ref=f44e562] [cursor=pointer]:
+                - /url: /admin/dashboard
+            - listitem [ref=f44e565]:
+              - link "Karbantartások" [ref=f44e566] [cursor=pointer]:
+                - /url: /admin/karbantartasok
+            - listitem [ref=f44e569]:
+              - link "Bejelentések" [ref=f44e570] [cursor=pointer]:
+                - /url: /admin/bejelentesek
+            - listitem [ref=f44e573]:
+              - link "Pénzforgalom" [ref=f44e574] [cursor=pointer]:
+                - /url: /admin/koltsegek
+            - listitem [ref=f44e578]:
+              - link "Flottakövetés" [ref=f44e579] [cursor=pointer]:
+                - /url: /admin/flottakovetes
+          - generic [ref=f44e36]:
+            - button "Flotta" [expanded] [ref=f44e582] [cursor=pointer]
+            - list [ref=f44e41]:
+              - listitem [ref=f44e586]:
+                - link "Kamionok" [ref=f44e587] [cursor=pointer]:
+                  - /url: /admin/kamionok
+              - listitem [ref=f44e590]:
+                - link "Pótkocsik" [ref=f44e591] [cursor=pointer]:
+                  - /url: /admin/potkocsi
+              - listitem [ref=f44e594]:
+                - link "Furgonok" [ref=f44e595] [cursor=pointer]:
+                  - /url: /admin/furgonok
+          - button "Csapat" [ref=f44e598] [cursor=pointer]
+          - button "Partnerek" [ref=f44e602] [cursor=pointer]
+          - button "Pénzügyek" [ref=f44e606] [cursor=pointer]
+          - button "Rendszer" [ref=f44e610] [cursor=pointer]
+        - generic [ref=f44e75]:
+          - button "Piaci árak" [expanded] [ref=f44e76] [cursor=pointer]
+          - generic [ref=f44e80]:
+            - 'generic "Frissítve: 2026-07-23 21:27:42 · 0,0% (előző munkanaphoz képest)" [ref=f44e81]':
+              - generic [ref=f44e82]: EUR/HUF
+              - generic [ref=f44e83]:
+                - generic [ref=f44e84]: 364,16
+                - generic [ref=f44e85]: Ft
+            - 'generic "Frissítve: 2026-07-23 21:27:43 · 0,0% (előző munkanaphoz képest)" [ref=f44e86]':
+              - generic [ref=f44e87]: USD/HUF
+              - generic [ref=f44e88]:
+                - generic [ref=f44e89]: 319,13
+                - generic [ref=f44e90]: Ft
+            - 'generic "Frissítve: 2026-07-23 13:54:39 · 0,0% (előző havi árhoz képest)" [ref=f44e91]':
+              - generic [ref=f44e92]: Benzin (ESZ-95)
+              - generic [ref=f44e93]:
+                - generic [ref=f44e94]: "662"
+                - generic [ref=f44e95]: Ft/l
+            - paragraph [ref=f44e96]: "Frissítve: ma 13:54"
+        - button "Keresés Ctrl+K" [ref=f44e98] [cursor=pointer]:
+          - generic [ref=f44e101]: Keresés
+          - generic [ref=f44e102]: Ctrl+K
+        - generic [ref=f44e103]:
+          - link "SÁ Szikora Ágoston" [ref=f44e104] [cursor=pointer]:
+            - /url: /admin/settings
+            - generic [ref=f44e105]: SÁ
+            - generic [ref=f44e106]: Szikora Ágoston
+          - button "Kijelentkezés" [ref=f44e110] [cursor=pointer]
+      - generic [ref=f44e117]:
+        - generic [ref=f44e118]:
+          - generic [ref=f44e119]:
+            - paragraph [ref=f44e120]: Pénzügyek
+            - heading "Pénzforgalom" [level=1] [ref=f44e121]
+          - generic [ref=f44e122]:
+            - generic [ref=f44e123]:
+              - button "Ez a hónap" [ref=f44e124] [cursor=pointer]
+              - button "Elmúlt 30 nap" [ref=f44e125] [cursor=pointer]
+              - button "Ez az év" [ref=f44e126] [cursor=pointer]
+              - generic [ref=f44e127]: Egyedi
+            - generic [ref=f44e128]:
+              - generic [ref=f44e129]: Dátumtól
+              - button "2026. 07. 01." [ref=f44e131] [cursor=pointer]
+            - generic [ref=f44e135]:
+              - generic [ref=f44e136]: Dátumig
+              - button "2026. 07. 23." [ref=f44e138] [cursor=pointer]
+            - generic [ref=f44e142]:
+              - button "Előző év (teljes évre ugrás)" [ref=f44e143] [cursor=pointer]
+              - generic [ref=f44e146]: "2026"
+              - button "Következő év (teljes évre ugrás)" [ref=f44e147] [cursor=pointer]
+        - generic [ref=f44e205]:
+          - generic [ref=f44e210]:
+            - paragraph [ref=f44e211]: 6 287 717 Ft
+            - paragraph [ref=f44e212]: Bevétel
+            - paragraph [ref=f44e213]:
+              - generic [ref=f44e214]: 70% előző időszakhoz képest
+          - generic [ref=f44e221]:
+            - paragraph [ref=f44e222]: 12 907 369 Ft
+            - paragraph [ref=f44e223]: Kiadás
+            - paragraph [ref=f44e224]:
+              - generic [ref=f44e225]: 5% előző időszakhoz képest
+          - generic [ref=f44e232]:
+            - paragraph [ref=f44e233]: "-6 619 652 Ft"
+            - paragraph [ref=f44e234]: Nettó
+            - paragraph [ref=f44e235]:
+              - generic [ref=f44e236]: 193% előző időszakhoz képest
+          - generic [ref=f44e243]:
+            - paragraph [ref=f44e244]: 20 898 709 Ft
+            - paragraph [ref=f44e245]: Várható eredmény (jövő hónap)
+            - paragraph [ref=f44e246]: 6 havi átlag alapján
+        - generic [ref=f44e248]:
+          - button "Tételek" [ref=f44e249] [cursor=pointer]
+          - button "Jármű szerinti bontás" [ref=f44e252] [cursor=pointer]
+          - button "Havi alakulás" [ref=f44e255] [cursor=pointer]
+        - generic [ref=f44e258]:
+          - generic [ref=f44e259]:
+            - generic [ref=f44e260]: Karbantartás
+            - generic [ref=f44e265]: 45 000 Ft
+          - generic [ref=f44e266]:
+            - generic [ref=f44e267]: Üzemanyag
+            - generic [ref=f44e272]: 2 337 310 Ft
+          - generic [ref=f44e273]:
+            - generic [ref=f44e274]: Biztosítás
+            - generic [ref=f44e279]: 0 Ft
+          - generic [ref=f44e280]:
+            - generic [ref=f44e281]: Egyéb kiadás
+            - generic [ref=f44e286]: 10 475 058 Ft
+        - generic [ref=f44e287]:
+          - generic [ref=f44e288]:
+            - button "Mind" [ref=f44e289] [cursor=pointer]
+            - button "Bevétel" [ref=f44e290] [cursor=pointer]
+            - button "Kiadás" [ref=f44e291] [cursor=pointer]
+          - combobox "Kategória szerinti szűrés — csak a listában ténylegesen jelölt tételekre" [ref=f44e292]:
+            - option "Minden kategória" [selected]
+            - option "Üzemanyag"
+            - option "Egyéb kiadás"
+            - option "Karbantartás (a Karbantartások oldalon szűrhető)" [disabled]
+            - option "Biztosítás (a jármű adatlapján szűrhető)" [disabled]
+          - button "Import" [ref=f44e294] [cursor=pointer]
+          - button "Új tétel" [ref=f44e297] [cursor=pointer]
+        - generic [ref=f44e300]:
+          - generic [ref=f44e301]:
+            - heading "Tételek" [level=3] [ref=f44e306]
+            - generic [ref=f44e307]:
+              - textbox "Keresés a tételek közt..." [ref=f44e309]
+              - button "Excel" [ref=f44e310] [cursor=pointer]
+          - table [ref=f44e314]:
+            - rowgroup [ref=f44e315]:
+              - row [ref=f44e316]:
+                - columnheader [ref=f44e317]:
+                  - button "Dátum" [ref=f44e318] [cursor=pointer]
+                - columnheader "Irány" [ref=f44e321]
+                - columnheader "Megnevezés" [ref=f44e322]
+                - columnheader [ref=f44e323]:
+                  - button "Összeg" [ref=f44e324] [cursor=pointer]
+                - columnheader "Jármű" [ref=f44e327]
+                - columnheader "Számlaszám" [ref=f44e328]
+                - columnheader "Megjegyzés" [ref=f44e329]
+                - columnheader "Műveletek" [ref=f44e330]
+            - rowgroup [ref=f44e331]:
+              - row [ref=f44e332]:
+                - cell "2026-07-18" [ref=f44e333]
+                - cell "Kiadás" [ref=f44e334]
+                - cell "Teszt furgon parkolas" [ref=f44e336]
+                - cell "2500 Ft" [ref=f44e339]
+                - cell [ref=f44e342]:
+                  - button "TEST-FURGON-001" [ref=f44e343] [cursor=pointer]
+                - cell "—" [ref=f44e344]
+                - cell "—" [ref=f44e345]
+                - cell [ref=f44e346]:
+                  - generic [ref=f44e347]:
+                    - button "Szerkesztés" [ref=f44e348] [cursor=pointer]
+                    - button "Törlés" [ref=f44e351] [cursor=pointer]
+              - row [ref=f44e354]:
+                - cell "2026-07-16" [ref=f44e355]
+                - cell "Kiadás" [ref=f44e356]
+                - cell "Kártérítés" [ref=f44e358]
+                - cell "71 842 Ft 200 EUR" [ref=f44e361]:
+                  - generic [ref=f44e362]:
+                    - generic [ref=f44e363]: 71 842 Ft
+                    - generic [ref=f44e364]: 200 EUR
+                - cell "—" [ref=f44e365]
+                - cell "—" [ref=f44e366]
+                - cell "—" [ref=f44e367]
+                - cell [ref=f44e368]:
+                  - generic [ref=f44e369]:
+                    - button "Szerkesztés" [ref=f44e370] [cursor=pointer]
+                    - button "Törlés" [ref=f44e373] [cursor=pointer]
+              - row [ref=f44e376]:
+                - cell "2026-07-15" [ref=f44e377]
+                - cell "Kiadás" [ref=f44e378]
+                - cell "MOL tankolás — HU 64300 TOLNA-MÖZS, BÉRI BALOGH ÁDÁM U. 4. Üzemanyag" [ref=f44e380]:
+                  - generic [ref=f44e381]:
+                    - generic [ref=f44e382]: MOL tankolás — HU 64300 TOLNA-MÖZS, BÉRI BALOGH ÁDÁM U. 4.
+                    - generic "Üzemanyag kategóriába sorolva" [ref=f44e383]: Üzemanyag
+                - cell "108 720 Ft" [ref=f44e384]
+                - cell [ref=f44e387]:
+                  - button "RED-0011" [ref=f44e388] [cursor=pointer]
+                - cell "000089" [ref=f44e389]
+                - cell "—" [ref=f44e390]
+                - cell "Tankolás" [ref=f44e391]:
+                  - generic "Ez a sor a MOL tankolás-importból származik — a Tankolás modulban szerkeszthető, itt nem" [ref=f44e392]: Tankolás
+              - row [ref=f44e393]:
+                - cell "2026-07-14" [ref=f44e394]
+                - cell "Kiadás" [ref=f44e395]
+                - cell "MOL tankolás — HU 60000 BUDAPEST, GÉMESKÚT U. 12. (III.) Üzemanyag" [ref=f44e397]:
+                  - generic [ref=f44e398]:
+                    - generic [ref=f44e399]: MOL tankolás — HU 60000 BUDAPEST, GÉMESKÚT U. 12. (III.)
+                    - generic "Üzemanyag kategóriába sorolva" [ref=f44e400]: Üzemanyag
+                - cell "119 609 Ft" [ref=f44e401]
+                - cell [ref=f44e404]:
+                  - button "RLP-018" [ref=f44e405] [cursor=pointer]
+                - cell "072299" [ref=f44e406]
+                - cell "—" [ref=f44e407]
+                - cell "Tankolás" [ref=f44e408]:
+                  - generic "Ez a sor a MOL tankolás-importból származik — a Tankolás modulban szerkeszthető, itt nem" [ref=f44e409]: Tankolás
+              - row [ref=f44e410]:
+                - cell "2026-07-13" [ref=f44e411]
+                - cell "Kiadás" [ref=f44e412]
+                - cell "SKUBA Hungária Kft" [ref=f44e414]
+                - cell "-55 880 Ft" [ref=f44e417]
+                - cell "—" [ref=f44e420]
+                - cell "KRC 010754" [ref=f44e421]
+                - cell "NAV Online Számlából importálva" [ref=f44e422]
+                - cell [ref=f44e423]:
+                  - generic [ref=f44e424]:
+                    - button "Szerkesztés" [ref=f44e425] [cursor=pointer]
+                    - button "Törlés" [ref=f44e428] [cursor=pointer]
+              - row [ref=f44e431]:
+                - cell "2026-07-13" [ref=f44e432]
+                - cell "Kiadás" [ref=f44e433]
+                - cell "Volvo Hungária Kft.Nagykanizsa" [ref=f44e435]
+                - cell "106 656 Ft" [ref=f44e438]
+                - cell "—" [ref=f44e441]
+                - cell "9227683" [ref=f44e442]
+                - cell "NAV Online Számlából importálva" [ref=f44e443]
+                - cell [ref=f44e444]:
+                  - generic [ref=f44e445]:
+                    - button "Szerkesztés" [ref=f44e446] [cursor=pointer]
+                    - button "Törlés" [ref=f44e449] [cursor=pointer]
+              - row [ref=f44e452]:
+                - cell "2026-07-13" [ref=f44e453]
+                - cell "Kiadás" [ref=f44e454]
+                - cell "Szécsi Márta, 59539993" [ref=f44e456]
+                - cell "60 000 Ft" [ref=f44e459]
+                - cell "—" [ref=f44e462]
+                - cell "SM-2026-1" [ref=f44e463]
+                - cell "NAV Online Számlából importálva" [ref=f44e464]
+                - cell [ref=f44e465]:
+                  - generic [ref=f44e466]:
+                    - button "Szerkesztés" [ref=f44e467] [cursor=pointer]
+                    - button "Törlés" [ref=f44e470] [cursor=pointer]
+              - row [ref=f44e473]:
+                - cell "2026-07-13" [ref=f44e474]
+                - cell "Kiadás" [ref=f44e475]
+                - cell "E-BESt Computer Bt." [ref=f44e477]
+                - cell "508 000 Ft" [ref=f44e480]
+                - cell "—" [ref=f44e483]
+                - cell "E-BEST-2026-185" [ref=f44e484]
+                - cell "NAV Online Számlából importálva" [ref=f44e485]
+                - cell [ref=f44e486]:
+                  - generic [ref=f44e487]:
+                    - button "Szerkesztés" [ref=f44e488] [cursor=pointer]
+                    - button "Törlés" [ref=f44e491] [cursor=pointer]
+          - generic [ref=f44e494]:
+            - generic [ref=f44e495]: 1–8 / 78
+            - generic [ref=f44e496]:
+              - button "Előző oldal" [disabled] [ref=f44e497]
+              - generic [ref=f44e500]: 1 / 10
+              - button "Következő oldal" [ref=f44e501] [cursor=pointer]

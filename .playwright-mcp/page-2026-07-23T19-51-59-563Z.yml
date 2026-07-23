@@ -1,0 +1,79 @@
+- generic [active]:
+  - generic:
+    - generic:
+      - navigation [ref=f28e1]:
+        - generic [ref=f28e2]:
+          - link [ref=f28e3] [cursor=pointer]:
+            - /url: /admin/dashboard
+            - img "Szikora Transz Kft" [ref=f28e4]
+          - generic [ref=f28e5]:
+            - button "Sötét mód bekapcsolása" [ref=f28e6] [cursor=pointer]
+            - button "Értesítések" [ref=f28e9] [cursor=pointer]
+        - generic [ref=f28e12]:
+          - list [ref=f28e14]:
+            - listitem [ref=f28e15]:
+              - link "Főmenü" [ref=f28e16] [cursor=pointer]:
+                - /url: /admin/dashboard
+            - listitem [ref=f28e19]:
+              - link "Karbantartások" [ref=f28e20] [cursor=pointer]:
+                - /url: /admin/karbantartasok
+            - listitem [ref=f28e23]:
+              - link "Bejelentések" [ref=f28e24] [cursor=pointer]:
+                - /url: /admin/bejelentesek
+            - listitem [ref=f28e27]:
+              - link "Pénzforgalom" [ref=f28e28] [cursor=pointer]:
+                - /url: /admin/koltsegek
+            - listitem [ref=f28e31]:
+              - link "Flottakövetés" [ref=f28e32] [cursor=pointer]:
+                - /url: /admin/flottakovetes
+          - generic [ref=f28e35]:
+            - button "Flotta" [expanded] [ref=f28e36] [cursor=pointer]
+            - list [ref=f28e40]:
+              - listitem [ref=f28e41]:
+                - link "Kamionok" [ref=f28e42] [cursor=pointer]:
+                  - /url: /admin/kamionok
+              - listitem [ref=f28e45]:
+                - link "Pótkocsik" [ref=f28e46] [cursor=pointer]:
+                  - /url: /admin/potkocsi
+              - listitem [ref=f28e49]:
+                - link "Furgonok" [ref=f28e50] [cursor=pointer]:
+                  - /url: /admin/furgonok
+          - button "Csapat" [ref=f28e54] [cursor=pointer]
+          - button "Partnerek" [ref=f28e59] [cursor=pointer]
+          - button "Pénzügyek" [ref=f28e64] [cursor=pointer]
+          - button "Rendszer" [ref=f28e69] [cursor=pointer]
+        - generic [ref=f28e74]:
+          - button "Piaci árak" [expanded] [ref=f28e75] [cursor=pointer]
+          - generic [ref=f28e79]:
+            - 'generic "Frissítve: 2026-07-23 21:27:42 · 0,0% (előző munkanaphoz képest)" [ref=f28e80]':
+              - generic [ref=f28e81]: EUR/HUF
+              - generic [ref=f28e82]:
+                - generic [ref=f28e83]: 364,16
+                - generic [ref=f28e84]: Ft
+            - 'generic "Frissítve: 2026-07-23 21:27:43 · 0,0% (előző munkanaphoz képest)" [ref=f28e85]':
+              - generic [ref=f28e86]: USD/HUF
+              - generic [ref=f28e87]:
+                - generic [ref=f28e88]: 319,13
+                - generic [ref=f28e89]: Ft
+            - 'generic "Frissítve: 2026-07-23 13:54:39 · 0,0% (előző havi árhoz képest)" [ref=f28e90]':
+              - generic [ref=f28e91]: Benzin (ESZ-95)
+              - generic [ref=f28e92]:
+                - generic [ref=f28e93]: "662"
+                - generic [ref=f28e94]: Ft/l
+            - paragraph [ref=f28e95]: "Frissítve: ma 13:54"
+        - button "Keresés Ctrl+K" [ref=f28e97] [cursor=pointer]:
+          - generic [ref=f28e100]: Keresés
+          - generic [ref=f28e101]: Ctrl+K
+        - generic [ref=f28e102]:
+          - link "SÁ Szikora Ágoston Adminisztrátor" [ref=f28e103] [cursor=pointer]:
+            - /url: /admin/settings
+            - generic [ref=f28e104]: SÁ
+            - generic [ref=f28e105]:
+              - generic [ref=f28e106]: Szikora Ágoston
+              - generic [ref=f28e107]: Adminisztrátor
+          - button "Kijelentkezés" [ref=f28e110] [cursor=pointer]
+      - generic [ref=f28e117]:
+        - generic [ref=f28e119]:
+          - paragraph [ref=f28e120]: Saját adatok
+          - heading "Jogosultságok" [level=1] [ref=f28e121]
+        - paragraph [ref=f28e122]: Itt hozhatsz létre saját szerepköröket (pl. Diszpécser, Könyvelő), és állíthatod be szerepkörönként, hogy mely modulokhoz férhetnek hozzá, mit szerkeszthetnek és törölhetnek. Alapértelmezetten minden modul teljes hozzáférésű — csak azt kell kikapcsolni, amit korlátozni szeretnél.

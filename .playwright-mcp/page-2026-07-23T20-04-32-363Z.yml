@@ -1,0 +1,58 @@
+- generic [active]:
+  - generic:
+    - generic:
+      - navigation [ref=f36e1]:
+        - generic [ref=f36e2]:
+          - link [ref=f36e3] [cursor=pointer]:
+            - /url: /admin/dashboard
+            - img "Szikora Transz Kft" [ref=f36e4]
+          - generic [ref=f36e5]:
+            - button "Világos mód bekapcsolása" [ref=f36e6] [cursor=pointer]
+            - button "Értesítések" [ref=f36e9] [cursor=pointer]
+        - generic [ref=f36e12]:
+          - list [ref=f36e14]:
+            - listitem [ref=f36e15]:
+              - link "Főmenü" [ref=f36e16] [cursor=pointer]:
+                - /url: /admin/dashboard
+            - listitem [ref=f36e19]:
+              - link "Karbantartások" [ref=f36e20] [cursor=pointer]:
+                - /url: /admin/karbantartasok
+            - listitem [ref=f36e23]:
+              - link "Bejelentések" [ref=f36e24] [cursor=pointer]:
+                - /url: /admin/bejelentesek
+            - listitem [ref=f36e27]:
+              - link "Pénzforgalom" [ref=f36e28] [cursor=pointer]:
+                - /url: /admin/koltsegek
+            - listitem [ref=f36e31]:
+              - link "Flottakövetés" [ref=f36e32] [cursor=pointer]:
+                - /url: /admin/flottakovetes
+          - generic [ref=f36e35]:
+            - button "Flotta" [expanded] [ref=f36e36] [cursor=pointer]
+            - list [ref=f36e40]:
+              - listitem [ref=f36e41]:
+                - link "Kamionok" [ref=f36e42] [cursor=pointer]:
+                  - /url: /admin/kamionok
+              - listitem [ref=f36e45]:
+                - link "Pótkocsik" [ref=f36e46] [cursor=pointer]:
+                  - /url: /admin/potkocsi
+              - listitem [ref=f36e49]:
+                - link "Furgonok" [ref=f36e50] [cursor=pointer]:
+                  - /url: /admin/furgonok
+          - button "Csapat" [ref=f36e54] [cursor=pointer]
+          - button "Partnerek" [ref=f36e59] [cursor=pointer]
+          - button "Pénzügyek" [ref=f36e64] [cursor=pointer]
+          - button "Rendszer" [ref=f36e69] [cursor=pointer]
+        - button "Keresés Ctrl+K" [ref=f36e74] [cursor=pointer]:
+          - generic [ref=f36e77]: Keresés
+          - generic [ref=f36e78]: Ctrl+K
+        - generic [ref=f36e79]:
+          - link "SÁ Szikora Ágoston" [ref=f36e80] [cursor=pointer]:
+            - /url: /admin/settings
+            - generic [ref=f36e81]: SÁ
+            - generic [ref=f36e82]: Szikora Ágoston
+          - button "Kijelentkezés" [ref=f36e86] [cursor=pointer]
+      - generic [ref=f36e93]:
+        - button "Vissza a felhasználókhoz" [ref=f36e94] [cursor=pointer]
+        - generic [ref=f36e98]:
+          - paragraph [ref=f36e99]: Új felhasználó
+          - heading "Milyen szerepkörben dolgozik?" [level=1] [ref=f36e100]

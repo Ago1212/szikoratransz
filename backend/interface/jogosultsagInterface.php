@@ -29,6 +29,7 @@ class JogosultsagInterface {
         'ugyfelek' => ['hozzaferes', 'szerkesztes', 'torles'],
         'naplo' => ['hozzaferes'],
         'koltsegek' => ['hozzaferes', 'szerkesztes', 'torles'],
+        'tachograf' => ['hozzaferes', 'szerkesztes'],
     ];
 
     public function __construct() {

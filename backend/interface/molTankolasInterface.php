@@ -35,7 +35,11 @@ class MolTankolasInterface {
     // ezért kimarad a `tankolasok` importból.
     const TERMEK_KEYWORDS = ['AD BLUE pump', 'DIESEL', 'OTHER'];
 
-    public function elemezPdf($pdfBase64, $ceg_id) {
+    // `$fajlnev`/`$feltolto*` — a nyers PDF a "Fájlok" központi
+    // fájlkezelőbe is bekerül (ld. FilesInterface::fileUpload(),
+    // `tabla='mol_import'`), FÜGGETLENÜL attól, hogy az admin később
+    // ténylegesen alkalmazza-e az importot.
+    public function elemezPdf($pdfBase64, $ceg_id, $fajlnev = null, $feltoltoTipus = null, $feltoltoId = null, $feltoltoNev = null) {
         $tmpPath = null;
         try {
             $raw = base64_decode((string) $pdfBase64, true);
@@ -54,7 +58,11 @@ class MolTankolasInterface {
                 ];
             }
 
-            return $this->szovegFeldolgozasa($szoveg, $ceg_id);
+            $eredmeny = $this->szovegFeldolgozasa($szoveg, $ceg_id);
+            if (!empty($eredmeny['success'])) {
+                $this->mentsNyersFajlt($ceg_id, $pdfBase64, $fajlnev, $feltoltoTipus, $feltoltoId, $feltoltoNev);
+            }
+            return $eredmeny;
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         } finally {
@@ -62,6 +70,15 @@ class MolTankolasInterface {
                 unlink($tmpPath);
             }
         }
+    }
+
+    // Csendben elnyeli a hibát — egy fájl-mentési gond sosem akaszthatja
+    // meg a már sikeresen lefutott PDF-elemzést.
+    private function mentsNyersFajlt($ceg_id, $pdfBase64, $fajlnev, $feltoltoTipus, $feltoltoId, $feltoltoNev) {
+        global $filesInterface;
+        $nev = $fajlnev ?: 'mol_import.pdf';
+        $raw = base64_decode((string) $pdfBase64, true);
+        $filesInterface->fileUpload($ceg_id, 'mol_import', $ceg_id, $pdfBase64, $nev, strlen((string) $raw), null, $feltoltoTipus, $feltoltoId, $feltoltoNev);
     }
 
     // `pdftotext -layout` a MOL "Számla melléklet" táblázatos elrendezését

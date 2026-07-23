@@ -6,6 +6,7 @@ import { PiSignOutLight } from "react-icons/pi";
 
 import CardSettings from "components/Cards/CardSettings.js";
 import PushFeliratkozas from "components/UI/PushFeliratkozas.js";
+import PageHeader from "components/UI/PageHeader.js";
 import { fetchAction } from "utils/fetchAction";
 
 export default function Settings() {
@@ -30,6 +31,7 @@ export default function Settings() {
 
   return (
     <>
+      <PageHeader eyebrow="Saját adatok" title="Beállítások" />
       <div className="flex flex-wrap">
         <div className="w-full lg:w-12/12 px-4">
           <CardSettings />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { PiCalendarBlankLight, PiTrashLight } from "react-icons/pi";
+import { PiCalendarBlankLight, PiTrashLight, PiPencilSimpleLight } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
 import { useListaElemek } from "utils/useListaElemek.js";
@@ -8,6 +8,7 @@ import PageHeader from "components/UI/PageHeader.js";
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import Modal from "components/UI/Modal.js";
 import FormField, { FormSection } from "components/UI/FormField.js";
+import { confirmDialog } from "utils/confirm.js";
 
 const PAGE_SIZE = 10;
 
@@ -25,6 +26,11 @@ export default function Szabadsagok() {
   const [szabadsagok, setSzabadsagok] = useState([]);
   const [soforok, setSoforok] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
+  // UX-audit — korábban csak létrehozás/törlés volt lehetséges, egy
+  // elgépelt dátum/típus javításának egyetlen útja a teljes törlés+újra-
+  // felvitel volt. `editingId` — ha nem null, a modal szerkesztés módban
+  // nyílik, előtöltött adatokkal, és `updateSzabadsag`-et hív mentéskor.
+  const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptySzabadsag(user.ceg_id));
   const { elemek: tipusok } = useListaElemek("szabadsag_tipus");
   const [total, setTotal] = useState(0);
@@ -76,10 +82,13 @@ export default function Szabadsagok() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    const result = await fetchAction("newSzabadsag", { ...form, kerelmezo_id: user.id });
+    const action = editingId ? "updateSzabadsag" : "newSzabadsag";
+    const payload = editingId ? { ...form, id: editingId, kerelmezo_id: user.id } : { ...form, kerelmezo_id: user.id };
+    const result = await fetchAction(action, payload);
     if (result?.success) {
-      toast.success("Szabadság rögzítve.");
+      toast.success(editingId ? "Szabadság módosítva." : "Szabadság rögzítve.");
       setOpenDialog(false);
+      setEditingId(null);
       setForm(emptySzabadsag(user.ceg_id));
       fetchSzabadsagok();
     } else {
@@ -87,8 +96,21 @@ export default function Szabadsagok() {
     }
   };
 
+  const handleEditClick = (row) => {
+    setEditingId(row.id);
+    setForm({
+      admin: user.ceg_id,
+      sofor_id: row.sofor_id,
+      datum_tol: row.datum_tol,
+      datum_ig: row.datum_ig,
+      tipus: row.tipus || "szabadsag",
+      megjegyzes: row.megjegyzes || "",
+    });
+    setOpenDialog(true);
+  };
+
   const handleDelete = async (id) => {
-    if (!window.confirm("Biztosan törölni szeretnéd ezt a bejegyzést?")) return;
+    if (!(await confirmDialog("Biztosan törölni szeretnéd ezt a bejegyzést?"))) return;
     const result = await fetchAction("deleteSzabadsag", { id, kerelmezo_id: user.id });
     if (result?.success) {
       toast.success("Törölve.");
@@ -116,6 +138,11 @@ export default function Szabadsagok() {
       render: (row) => (
         <div className="flex justify-end gap-1">
           <ActionIcon
+            icon={<PiPencilSimpleLight />}
+            onClick={() => handleEditClick(row)}
+            title="Szerkesztés"
+          />
+          <ActionIcon
             icon={<PiTrashLight />}
             danger
             onClick={() => handleDelete(row.id)}
@@ -127,16 +154,20 @@ export default function Szabadsagok() {
   ];
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-7xl flex-col">
+    <div className="flex h-full w-full flex-col px-0 md:px-4">
       <div className="flex-shrink-0">
-        <PageHeader title="Sofőr szabadságok" />
+        <PageHeader eyebrow="Csapat" title="Sofőr szabadságok" />
       </div>
 
       <div className="min-h-0 flex-1">
         <DataTable
           icon={PiCalendarBlankLight}
           title="Szabadságok / elérhetőség"
-          onAdd={() => setOpenDialog(true)}
+          onAdd={() => {
+            setEditingId(null);
+            setForm(emptySzabadsag(user.ceg_id));
+            setOpenDialog(true);
+          }}
           addLabel="Új bejegyzés"
           exportFilename="szabadsagok"
           columns={columns}
@@ -156,7 +187,14 @@ export default function Szabadsagok() {
         />
       </div>
 
-      <Modal open={openDialog} onClose={() => setOpenDialog(false)} title="Új szabadság/elérhetőség bejegyzés">
+      <Modal
+        open={openDialog}
+        onClose={() => {
+          setOpenDialog(false);
+          setEditingId(null);
+        }}
+        title={editingId ? "Szabadság/elérhetőség szerkesztése" : "Új szabadság/elérhetőség bejegyzés"}
+      >
         <form onSubmit={handleSave} className="space-y-4">
           <FormField
             as="select"
@@ -215,7 +253,10 @@ export default function Szabadsagok() {
           <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
-              onClick={() => setOpenDialog(false)}
+              onClick={() => {
+                setOpenDialog(false);
+                setEditingId(null);
+              }}
               className="rounded-xl px-4 py-2 text-sm font-medium text-ink-500 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-800 dark:text-ink-400 dark:hover:bg-ink-800 dark:hover:text-ink-100"
             >
               Mégse
@@ -224,7 +265,7 @@ export default function Szabadsagok() {
               type="submit"
               className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-soft transition-colors duration-200 hover:bg-brand-700"
             >
-              Hozzáadás
+              {editingId ? "Mentés" : "Hozzáadás"}
             </button>
           </div>
         </form>

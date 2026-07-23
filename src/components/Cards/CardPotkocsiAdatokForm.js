@@ -11,12 +11,17 @@ import {
   PiTruckTrailerLight,
   PiGaugeLight,
   PiMapPinLight,
+  PiRulerLight,
 } from "react-icons/pi";
 import FormField, { FormSection } from "components/UI/FormField.js";
 import SaveButton from "components/UI/SaveButton.js";
 import { useListaElemek } from "utils/useListaElemek.js";
 
 const CardPotkocsiAdatokForm = ({ potkocsi, setFormData, handleSave }) => {
+  // UX-audit (2026-07-23): a Kamion/Furgon modul mellett a Pótkocsiból
+  // korábban hiányzott a "Méret" mező — ld. potkocsi_meret a listaInterface
+  // TIPUSOK regiszterében.
+  const { elemek: meretOptions } = useListaElemek("potkocsi_meret");
   const { elemek: allapotOptions } = useListaElemek("jarmu_allapot");
   const { elemek: utemOptions } = useListaElemek("biztositas_utem");
   const [nextKotBizInfo, setNextKotBizInfo] = useState({ date: "", amount: "" });
@@ -208,7 +213,7 @@ const CardPotkocsiAdatokForm = ({ potkocsi, setFormData, handleSave }) => {
           icon={PiIdentificationCardLight}
           label="Rendszám"
           id="rendszam"
-          value={potkocsi.rendszam}
+          value={potkocsi.rendszam || ""}
           onChange={handleFormChange}
           required
         />
@@ -220,6 +225,21 @@ const CardPotkocsiAdatokForm = ({ potkocsi, setFormData, handleSave }) => {
           onChange={handleFormChange}
           placeholder="Pótkocsi típusa"
         />
+        <FormField
+          as="select"
+          icon={PiRulerLight}
+          label="Méret"
+          id="meret"
+          value={potkocsi.meret || ""}
+          onChange={handleFormChange}
+        >
+          <option value="">Válassz...</option>
+          {meretOptions.map((o) => (
+            <option key={o.kulcs} value={o.kulcs}>
+              {o.nev}
+            </option>
+          ))}
+        </FormField>
         <FormField
           as="select"
           icon={PiMapPinLight}

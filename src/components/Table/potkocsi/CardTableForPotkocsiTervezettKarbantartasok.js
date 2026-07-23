@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { confirmDialog } from "utils/confirm.js";
 import PropTypes from "prop-types";
 import { PiPencilSimpleLight, PiTrashLight, PiArrowRightLight, PiWrenchLight } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
@@ -57,7 +58,7 @@ const CardTableForPotkocsiTervezettKarbantartasok = ({ potkocsi_id, refresh, onR
   };
 
   const handleKarbantartasDelete = async (id) => {
-    if (!window.confirm("Biztosan törölni szeretnéd a karbantartást?")) return;
+    if (!(await confirmDialog("Biztosan törölni szeretnéd a karbantartást?"))) return;
 
     try {
       const result = await fetchAction("deletePotkocsiKarbantartas", { id, kerelmezo_id: user.id });

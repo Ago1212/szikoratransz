@@ -23,8 +23,12 @@ class BankImportInterface {
 
     // `$oszlopok` = ['datum' => 0, 'osszeg' => 2, 'kozlemeny' => 4] — a CSV
     // fejléc utáni sorok megfelelő index-oszlopai (frontend a fejléc
-    // előnézete alapján állítja össze).
-    public function elemezCsv($csvSzoveg, $oszlopok, $ceg_id) {
+    // előnézete alapján állítja össze). `$fajlnev`/`$feltolto*` — a nyers
+    // CSV a "Fájlok" központi fájlkezelőbe is bekerül (ld.
+    // FilesInterface::fileUpload(), `tabla='bank_import'`), FÜGGETLENÜL
+    // attól, hogy az admin később ténylegesen alkalmazza-e az importot —
+    // egy elemzett, de el nem fogadott feltöltés is valódi feltöltés volt.
+    public function elemezCsv($csvSzoveg, $oszlopok, $ceg_id, $fajlnev = null, $feltoltoTipus = null, $feltoltoId = null, $feltoltoNev = null) {
         try {
             if (empty($oszlopok['datum']) && $oszlopok['datum'] !== 0) {
                 return ['success' => false, 'message' => 'Nincs kiválasztva dátum-oszlop.'];
@@ -73,6 +77,8 @@ class BankImportInterface {
                 ];
             }
 
+            $this->mentsNyersFajlt($ceg_id, $csvSzoveg, $fajlnev, $feltoltoTipus, $feltoltoId, $feltoltoNev);
+
             return [
                 'success' => true,
                 'sorok' => $digest,
@@ -82,6 +88,17 @@ class BankImportInterface {
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
+    }
+
+    // A sikeresen elemzett nyers CSV elmentése a központi Fájlok
+    // fájlkezelőbe — csendben elnyeli a hibát (pl. ismeretlen kiterjesztés,
+    // ha az admin fájlneve nem `.csv`-re végződik), mert egy fájl-mentési
+    // gond sosem akaszthatja meg a már sikeresen lefutott CSV-elemzést.
+    private function mentsNyersFajlt($ceg_id, $csvSzoveg, $fajlnev, $feltoltoTipus, $feltoltoId, $feltoltoNev) {
+        global $filesInterface;
+        $nev = $fajlnev ?: 'bank_import.csv';
+        $base64 = base64_encode($csvSzoveg);
+        $filesInterface->fileUpload($ceg_id, 'bank_import', $ceg_id, $base64, $nev, strlen($csvSzoveg), null, $feltoltoTipus, $feltoltoId, $feltoltoNev);
     }
 
     // +/- 5 nap dátum-ablak, +/- 1 Ft kerekítési tolerancia az összegen (a

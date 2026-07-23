@@ -6,7 +6,7 @@ import { PiPencilSimpleLight, PiTrashLight, PiMapPinLight } from "react-icons/pi
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
 
-const CardTable = ({ helyszinek = [], loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll }) => {
+const CardTable = ({ helyszinek = [], loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll, sortKey, sortDir, onSortChange }) => {
   const history = useHistory();
 
   const handleNewHelyszin = () => {
@@ -19,13 +19,15 @@ const CardTable = ({ helyszinek = [], loading, total, page, pageSize, onPageChan
 
   const handleDelete = useConfirmDelete({
     action: "deleteHelyszin",
-    confirmMessage: "Biztosan törölni szeretnéd ezt a helyszínt?",
+    // UX-audit — a többi modul egységesen "...szeretnéd A X-t?" mintát követ,
+    // ez itt "...szeretnéd EZT A helyszínt?" volt, stiláris kilógás.
+    confirmMessage: "Biztosan törölni szeretnéd a helyszínt?",
     successMessage: "A helyszín sikeresen törölve.",
     listPath: "/admin/helyszinek",
   });
 
   const columns = [
-    { key: "nev", label: "Név", className: "font-semibold text-brand-900 dark:text-ink-50" },
+    { key: "nev", label: "Név", sortable: true, className: "font-semibold text-brand-900 dark:text-ink-50" },
     {
       key: "actions",
       label: "Műveletek",
@@ -68,6 +70,9 @@ const CardTable = ({ helyszinek = [], loading, total, page, pageSize, onPageChan
       onPageChange={onPageChange}
       onSearchChange={onSearchChange}
       onExportAll={onExportAll}
+      sortKey={sortKey}
+      sortDir={sortDir}
+      onSortChange={onSortChange}
     />
   );
 };

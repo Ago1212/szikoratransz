@@ -13,7 +13,9 @@ class SoforokInterface {
     // mezőt itt, szerver oldalon vágjuk ki a válaszból, nem a frontendre
     // bízzuk, hogy egyszerűen nem jeleníti meg (a nyers API-válasz
     // böngésző dev toolsból amúgy is látszódna).
-    public function getSoforok($id, $search = null, $page = null, $pageSize = null, $isAdmin = false) {
+    private const RENDEZHETO_OSZLOPOK = ['name' => 'name', 'email' => 'email', 'phone' => 'phone'];
+
+    public function getSoforok($id, $search = null, $page = null, $pageSize = null, $isAdmin = false, $sortKey = null, $sortDir = 'asc') {
 
         try {
             $params = [':id' => $id];
@@ -22,7 +24,9 @@ class SoforokInterface {
                 $query .= " AND " . PaginationHelper::likeClause(['name', 'email', 'phone', 'lakcim'], 'search');
                 $params[':search'] = '%' . $search . '%';
             }
-            $query .= " ORDER BY name ASC";
+            $rendezoOszlop = self::RENDEZHETO_OSZLOPOK[$sortKey] ?? 'name';
+            $irany = strtolower((string) $sortDir) === 'desc' ? 'DESC' : 'ASC';
+            $query .= " ORDER BY $rendezoOszlop $irany";
 
             $szur = function ($sorok) use ($isAdmin) {
                 if ($isAdmin) {

@@ -1,0 +1,98 @@
+- generic [active]:
+  - generic:
+    - generic:
+      - navigation [ref=f5e1]:
+        - generic [ref=f5e2]:
+          - link [ref=f5e3] [cursor=pointer]:
+            - /url: /admin/dashboard
+            - img "Szikora Transz Kft" [ref=f5e4]
+          - generic [ref=f5e5]:
+            - button "Sötét mód bekapcsolása" [ref=f5e6] [cursor=pointer]
+            - button "Értesítések" [ref=f5e9] [cursor=pointer]
+        - generic [ref=f5e12]:
+          - list [ref=f5e14]:
+            - listitem [ref=f5e15]:
+              - link "Főmenü" [ref=f5e16] [cursor=pointer]:
+                - /url: /admin/dashboard
+            - listitem [ref=f5e19]:
+              - link "Karbantartások" [ref=f5e20] [cursor=pointer]:
+                - /url: /admin/karbantartasok
+            - listitem [ref=f5e23]:
+              - link "Bejelentések" [ref=f5e24] [cursor=pointer]:
+                - /url: /admin/bejelentesek
+            - listitem [ref=f5e27]:
+              - link "Pénzforgalom" [ref=f5e28] [cursor=pointer]:
+                - /url: /admin/koltsegek
+            - listitem [ref=f5e31]:
+              - link "Flottakövetés" [ref=f5e32] [cursor=pointer]:
+                - /url: /admin/flottakovetes
+          - generic [ref=f5e35]:
+            - button "Flotta" [expanded] [ref=f5e36] [cursor=pointer]
+            - list [ref=f5e40]:
+              - listitem [ref=f5e41]:
+                - link "Kamionok" [ref=f5e42] [cursor=pointer]:
+                  - /url: /admin/kamionok
+              - listitem [ref=f5e46]:
+                - link "Pótkocsik" [ref=f5e47] [cursor=pointer]:
+                  - /url: /admin/potkocsi
+              - listitem [ref=f5e50]:
+                - link "Furgonok" [ref=f5e51] [cursor=pointer]:
+                  - /url: /admin/furgonok
+          - button "Csapat" [ref=f5e55] [cursor=pointer]
+          - button "Partnerek" [ref=f5e60] [cursor=pointer]
+          - button "Pénzügyek" [ref=f5e65] [cursor=pointer]
+          - button "Rendszer" [ref=f5e70] [cursor=pointer]
+        - generic [ref=f5e75]:
+          - button "Piaci árak" [expanded] [ref=f5e76] [cursor=pointer]
+          - generic [ref=f5e80]:
+            - 'generic "Frissítve: 2026-07-23 21:27:42 · 0,0% (előző munkanaphoz képest)" [ref=f5e81]':
+              - generic [ref=f5e82]: EUR/HUF
+              - generic [ref=f5e83]:
+                - generic [ref=f5e84]: 364,16
+                - generic [ref=f5e85]: Ft
+            - 'generic "Frissítve: 2026-07-23 21:27:43 · 0,0% (előző munkanaphoz képest)" [ref=f5e86]':
+              - generic [ref=f5e87]: USD/HUF
+              - generic [ref=f5e88]:
+                - generic [ref=f5e89]: 319,13
+                - generic [ref=f5e90]: Ft
+            - 'generic "Frissítve: 2026-07-23 13:54:39 · 0,0% (előző havi árhoz képest)" [ref=f5e91]':
+              - generic [ref=f5e92]: Benzin (ESZ-95)
+              - generic [ref=f5e93]:
+                - generic [ref=f5e94]: "662"
+                - generic [ref=f5e95]: Ft/l
+            - paragraph [ref=f5e96]: "Frissítve: ma 13:54"
+        - button "Keresés Ctrl+K" [ref=f5e98] [cursor=pointer]:
+          - generic [ref=f5e101]: Keresés
+          - generic [ref=f5e102]: Ctrl+K
+        - generic [ref=f5e103]:
+          - link "SÁ Szikora Ágoston" [ref=f5e104] [cursor=pointer]:
+            - /url: /admin/settings
+            - generic [ref=f5e105]: SÁ
+            - generic [ref=f5e106]: Szikora Ágoston
+          - button "Kijelentkezés" [ref=f5e110] [cursor=pointer]
+      - generic [ref=f5e116]:
+        - generic [ref=f5e118]:
+          - paragraph [ref=f5e119]: Flotta
+          - heading "Kamionok" [level=1] [ref=f5e120]
+        - generic [ref=f5e123]:
+          - generic [ref=f5e124]:
+            - heading "Kamionok" [level=3] [ref=f5e129]
+            - generic [ref=f5e130]:
+              - textbox "Keresés rendszám, típus szerint..." [ref=f5e132]
+              - button "Excel" [ref=f5e133] [cursor=pointer]
+              - button "Új" [ref=f5e136] [cursor=pointer]
+          - table [ref=f5e140]:
+            - rowgroup [ref=f5e141]:
+              - row [ref=f5e142]:
+                - columnheader "Rendszám" [ref=f5e143]
+                - columnheader "Típus" [ref=f5e144]
+                - columnheader "Méret" [ref=f5e145]
+                - columnheader "Pótkocsi" [ref=f5e146]
+                - columnheader "Állapot" [ref=f5e147]
+                - columnheader "Műveletek" [ref=f5e148]
+            - rowgroup [ref=f5e149]:
+              - row [ref=f5e150]:
+                - cell "Nincsenek kamionok megjelenítve Új" [ref=f5e151]:
+                  - generic [ref=f5e152]:
+                    - generic [ref=f5e155]: Nincsenek kamionok megjelenítve
+                    - button "Új" [ref=f5e156] [cursor=pointer]

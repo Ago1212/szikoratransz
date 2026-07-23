@@ -1,0 +1,105 @@
+- generic [active]:
+  - generic:
+    - generic:
+      - navigation [ref=f13e1]:
+        - generic [ref=f13e2]:
+          - link [ref=f13e3] [cursor=pointer]:
+            - /url: /admin/dashboard
+            - img "Szikora Transz Kft" [ref=f13e4]
+          - generic [ref=f13e5]:
+            - button "Sötét mód bekapcsolása" [ref=f13e6] [cursor=pointer]
+            - button "Értesítések" [ref=f13e9] [cursor=pointer]
+        - generic [ref=f13e12]:
+          - list [ref=f13e14]:
+            - listitem [ref=f13e15]:
+              - link "Főmenü" [ref=f13e16] [cursor=pointer]:
+                - /url: /admin/dashboard
+            - listitem [ref=f13e19]:
+              - link "Karbantartások" [ref=f13e20] [cursor=pointer]:
+                - /url: /admin/karbantartasok
+            - listitem [ref=f13e23]:
+              - link "Bejelentések" [ref=f13e24] [cursor=pointer]:
+                - /url: /admin/bejelentesek
+            - listitem [ref=f13e27]:
+              - link "Pénzforgalom" [ref=f13e28] [cursor=pointer]:
+                - /url: /admin/koltsegek
+            - listitem [ref=f13e31]:
+              - link "Flottakövetés" [ref=f13e32] [cursor=pointer]:
+                - /url: /admin/flottakovetes
+          - generic [ref=f13e35]:
+            - button "Flotta" [expanded] [ref=f13e36] [cursor=pointer]
+            - list [ref=f13e40]:
+              - listitem [ref=f13e41]:
+                - link "Kamionok" [ref=f13e42] [cursor=pointer]:
+                  - /url: /admin/kamionok
+              - listitem [ref=f13e45]:
+                - link "Pótkocsik" [ref=f13e46] [cursor=pointer]:
+                  - /url: /admin/potkocsi
+              - listitem [ref=f13e49]:
+                - link "Furgonok" [ref=f13e50] [cursor=pointer]:
+                  - /url: /admin/furgonok
+          - generic [ref=f13e53]:
+            - button "Csapat" [expanded] [ref=f13e54] [cursor=pointer]
+            - list [ref=f13e58]:
+              - listitem [ref=f13e59]:
+                - link "Sofőrök" [ref=f13e60] [cursor=pointer]:
+                  - /url: /admin/soforok
+              - listitem [ref=f13e63]:
+                - link "Sofőr-riport" [ref=f13e64] [cursor=pointer]:
+                  - /url: /admin/sofor-riport
+              - listitem [ref=f13e67]:
+                - link "Tachográf kártya" [ref=f13e68] [cursor=pointer]:
+                  - /url: /admin/tachograf
+              - listitem [ref=f13e71]:
+                - link "Szabadságok" [ref=f13e72] [cursor=pointer]:
+                  - /url: /admin/szabadsagok
+          - button "Partnerek" [ref=f13e77] [cursor=pointer]
+          - button "Pénzügyek" [ref=f13e82] [cursor=pointer]
+          - button "Rendszer" [ref=f13e87] [cursor=pointer]
+        - button "Piaci árak" [ref=f13e93] [cursor=pointer]
+        - button "Keresés Ctrl+K" [ref=f13e98] [cursor=pointer]:
+          - generic [ref=f13e101]: Keresés
+          - generic [ref=f13e102]: Ctrl+K
+        - generic [ref=f13e103]:
+          - link "SÁ Szikora Ágoston Adminisztrátor" [ref=f13e104] [cursor=pointer]:
+            - /url: /admin/settings
+            - generic [ref=f13e105]: SÁ
+            - generic [ref=f13e106]:
+              - generic [ref=f13e107]: Szikora Ágoston
+              - generic [ref=f13e108]: Adminisztrátor
+          - button "Kijelentkezés" [ref=f13e111] [cursor=pointer]
+      - generic [ref=f13e118]:
+        - generic [ref=f13e121]:
+          - paragraph [ref=f13e122]: Csapat
+          - heading "Sofőr szabadságok" [level=1] [ref=f13e123]
+        - generic [ref=f13e125]:
+          - generic [ref=f13e126]:
+            - heading "Szabadságok / elérhetőség" [level=3] [ref=f13e131]
+            - generic [ref=f13e132]:
+              - textbox "Keresés sofőr, típus, megjegyzés szerint..." [ref=f13e134]
+              - button "Excel" [ref=f13e135] [cursor=pointer]
+              - button "Új bejegyzés" [ref=f13e138] [cursor=pointer]
+          - table [ref=f13e142]:
+            - rowgroup [ref=f13e143]:
+              - row [ref=f13e144]:
+                - columnheader "Sofőr" [ref=f13e145]
+                - columnheader "Kezdete" [ref=f13e146]
+                - columnheader "Vége" [ref=f13e147]
+                - columnheader "Típus" [ref=f13e148]
+                - columnheader "Megjegyzés" [ref=f13e149]
+                - columnheader "Műveletek" [ref=f13e150]
+            - rowgroup [ref=f13e151]:
+              - row [ref=f13e152]:
+                - cell "Szikora Ágoston" [ref=f13e153]
+                - cell "2026-08-01" [ref=f13e154]
+                - cell "2026-08-10" [ref=f13e155]
+                - cell "Szabadság" [ref=f13e156]
+                - cell "Nyari szabi" [ref=f13e157]
+                - cell [ref=f13e158]:
+                  - button "Törlés" [ref=f13e160] [cursor=pointer]
+          - generic [ref=f13e163]:
+            - generic [ref=f13e164]: 1–1 / 1
+            - generic [ref=f13e165]:
+              - button "Előző oldal" [disabled] [ref=f13e166]
+              - generic [ref=f13e169]: 1 / 1
+              - button "Következő oldal" [disabled] [ref=f13e170]

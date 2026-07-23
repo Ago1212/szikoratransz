@@ -1,0 +1,41 @@
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - link [ref=e4] [cursor=pointer]:
+      - /url: /landing
+      - img "Szikora Transz Kft" [ref=e5]
+    - link "Főoldal" [ref=e6] [cursor=pointer]:
+      - /url: /landing
+  - main [ref=e9]:
+    - generic [ref=e12]:
+      - img [ref=e15]:
+        - generic [ref=e55]: Budapest
+        - generic [ref=e56]: Debrecen
+        - generic [ref=e57]: Szeged
+        - generic [ref=e58]: Pécs
+        - generic [ref=e59]: Bécs
+        - generic [ref=e60]: Pozsony
+        - generic [ref=e61]: Belgrád
+        - generic [ref=e62]: Bukarest
+        - generic [ref=e63]: Zágráb
+      - generic [ref=e65]:
+        - generic [ref=e66]:
+          - heading "Üdvözöljük újra." [level=1] [ref=e67]: Üdvözöljükújra.
+          - paragraph [ref=e68]: Jelentkezzen be a flottakezelő rendszerbe a fuvarok, dokumentumok és karbantartások eléréséhez.
+          - generic [ref=e69]:
+            - generic [ref=e70]: Belföldi és nemzetközi fuvarok egy helyen
+            - generic [ref=e74]: Biztonságos, jogosultság alapú hozzáférés
+            - generic [ref=e78]: Naprakész állapot, bármikor elérhető
+        - generic [ref=e83]:
+          - heading "Bejelentkezés" [level=2] [ref=e85]
+          - paragraph [ref=e86]: Kérjük adja meg belépési adatait a fiókja eléréséhez.
+          - generic [ref=e87]:
+            - generic [ref=e88]:
+              - generic [ref=e89]: Email cím
+              - textbox "Email cím" [ref=e91]:
+                - /placeholder: email@pelda.hu
+            - generic [ref=e92]:
+              - generic [ref=e93]: Jelszó
+              - textbox "Jelszó" [ref=e95]:
+                - /placeholder: ••••••••
+              - button "Elfelejtett jelszó?" [ref=e97] [cursor=pointer]
+          - button "Bejelentkezés" [ref=e98] [cursor=pointer]
