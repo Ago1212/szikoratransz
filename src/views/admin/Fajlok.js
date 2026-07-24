@@ -8,6 +8,8 @@ import {
   PiTrashLight,
   PiFileLight,
   PiUploadSimpleLight,
+  PiCaretLeftLight,
+  PiCaretRightLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
@@ -339,32 +341,71 @@ export default function Fajlok() {
         </div>
       )}
 
-      <div className="min-h-0 flex-1">
+      <div className="flex min-h-0 flex-1 flex-col">
         {viewMode === "grid" ? (
-          <FajlGrid
-            files={files}
-            loading={loading}
-            selectedIds={selectedIds}
-            onToggleSelect={toggleSelect}
-            onOpenPreview={setPreviewFile}
-            onDelete={handleDelete}
-            onRename={handleRename}
-            emptyState={
-              <div className="rounded-2xl border border-ink-100 bg-white p-10 dark:border-ink-800 dark:bg-ink-900">
-                <div className="mx-auto max-w-md text-center">
-                  <PiUploadSimpleLight className="mx-auto mb-3 h-10 w-10 text-ink-300 dark:text-ink-700" />
-                  <p className="mb-4 text-sm text-ink-500 dark:text-ink-400">
-                    {search || kategoria || ezAHet ? "Nincs a szűrésnek megfelelő fájl." : "Még nincs feltöltött fájl."}
-                  </p>
-                </div>
-                {!search && !kategoria && !ezAHet && (
-                  <div className="mx-auto mt-4 max-w-md">
-                    <FajlUploadZone admin={admin} id={admin} tabla="admin" onUploadSuccess={frissitesUtan} />
+          <>
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <FajlGrid
+                files={files}
+                loading={loading}
+                selectedIds={selectedIds}
+                onToggleSelect={toggleSelect}
+                onOpenPreview={setPreviewFile}
+                onDelete={handleDelete}
+                onRename={handleRename}
+                emptyState={
+                  <div className="rounded-2xl border border-ink-100 bg-white p-10 dark:border-ink-800 dark:bg-ink-900">
+                    <div className="mx-auto max-w-md text-center">
+                      <PiUploadSimpleLight className="mx-auto mb-3 h-10 w-10 text-ink-300 dark:text-ink-700" />
+                      <p className="mb-4 text-sm text-ink-500 dark:text-ink-400">
+                        {search || kategoria || ezAHet ? "Nincs a szűrésnek megfelelő fájl." : "Még nincs feltöltött fájl."}
+                      </p>
+                    </div>
+                    {!search && !kategoria && !ezAHet && (
+                      <div className="mx-auto mt-4 max-w-md">
+                        <FajlUploadZone admin={admin} id={admin} tabla="admin" onUploadSuccess={frissitesUtan} />
+                      </div>
+                    )}
                   </div>
-                )}
+                }
+              />
+            </div>
+            {/* UX-hiba: a grid-nézet korábban egyáltalán nem kapott lapozó
+                sávot (a DataTable-alapú táblázat-nézet igen) — a `page`
+                state létezett, csak semmi nem tudta módosítani grid módban,
+                így 20 fájl felett a többi elérhetetlen maradt. Ugyanaz a
+                sáv-elrendezés/stílus, mint a DataTable.js belső lapozójáé. */}
+            {!loading && total > 0 && (
+              <div className="flex flex-shrink-0 items-center justify-between gap-3 border-t border-ink-100 py-2.5 pl-4 pr-20 text-xs text-ink-500 dark:border-ink-800 dark:text-ink-400 sm:pl-6 md:pr-6">
+                <span className="tabular-nums">
+                  {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} / {total}
+                </span>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    disabled={page <= 1}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-ink-200 text-ink-500 transition-colors duration-150 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-ink-700 dark:text-ink-400 dark:hover:bg-ink-800"
+                    aria-label="Előző oldal"
+                  >
+                    <PiCaretLeftLight className="h-3.5 w-3.5" />
+                  </button>
+                  <span className="w-14 text-center tabular-nums">
+                    {page} / {Math.max(1, Math.ceil(total / PAGE_SIZE))}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={page >= Math.max(1, Math.ceil(total / PAGE_SIZE))}
+                    onClick={() => setPage((p) => p + 1)}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-ink-200 text-ink-500 transition-colors duration-150 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-ink-700 dark:text-ink-400 dark:hover:bg-ink-800"
+                    aria-label="Következő oldal"
+                  >
+                    <PiCaretRightLight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
-            }
-          />
+            )}
+          </>
         ) : (
           <DataTable
             icon={PiFileLight}

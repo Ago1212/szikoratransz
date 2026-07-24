@@ -16,7 +16,7 @@ import PageHeader from "components/UI/PageHeader.js";
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import CardStats from "components/Cards/CardStats.js";
 import Modal from "components/UI/Modal.js";
-import MegfelelosegiWidget from "components/Tachograf/MegfelelosegiWidget.js";
+import MegfelelosegiWidget, { rendezettSorok } from "components/Tachograf/MegfelelosegiWidget.js";
 import SoforHeatmapLista from "components/Tachograf/SoforHeatmapLista.js";
 import SoforokLista from "components/Tachograf/SoforokLista.js";
 import SoforDrawer from "components/Tachograf/SoforDrawer.js";
@@ -159,6 +159,12 @@ export default function Tachograf() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kezdoSoforId]);
+
+  // Egyszer rendezve, a két egymás melletti panel (megfelelőségi lista +
+  // heatmap-lista) között megosztva — mindkettőnek UGYANABBAN a sorrendben
+  // kell mutatnia a sofőröket, hogy a soronkénti párosítás (N. sor bal ⇄
+  // N. sor jobb) tényleg ugyanarra a sofőrre vonatkozzon.
+  const megfelelosegRendezve = useMemo(() => rendezettSorok(megfeleloseg), [megfeleloseg]);
 
   const hetKm = sorok
     .filter((s) => {
@@ -304,11 +310,11 @@ export default function Tachograf() {
                 <PiClockCountdownLight className="h-5 w-5 text-brand-600 dark:text-brand-400" />
                 Kártya-letöltés esedékessége
               </h3>
-              <MegfelelosegiWidget sorok={megfeleloseg} onSoforClick={megySoforre} />
+              <MegfelelosegiWidget sorok={megfelelosegRendezve} onSoforClick={megySoforre} />
             </div>
             <div className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft dark:border-ink-800 dark:bg-ink-900 xl:col-span-2">
               <h3 className="mb-3 font-display text-base font-semibold text-brand-900 dark:text-ink-50">Vezetési idő, elmúlt 4 hét</h3>
-              <SoforHeatmapLista soforok={megfeleloseg} napiSorok={sorok} />
+              <SoforHeatmapLista soforok={megfelelosegRendezve} napiSorok={sorok} />
             </div>
           </div>
         </>
