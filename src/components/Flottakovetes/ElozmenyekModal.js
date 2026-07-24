@@ -96,7 +96,7 @@ export default function ElozmenyekModal({
               type="button"
               onClick={handleLekerdezes}
               disabled={loading}
-              className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? "Lekérdezés..." : "Lekérdezés"}
             </button>

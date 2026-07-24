@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { useHistory } from "react-router-dom";
-import { PiNotePencilLight, PiTrashLight, PiChatCircleTextLight } from "react-icons/pi";
+import { PiNotePencilLight, PiTrashLight, PiChatCircleTextLight, PiChatDotsFill } from "react-icons/pi";
 
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
@@ -33,7 +33,29 @@ export default function CardTable({ bejelentesek = [], isLoading = false, select
   });
 
   const columns = [
-    { key: "cim", label: "Cím", className: "font-semibold text-brand-900 dark:text-ink-50" },
+    {
+      key: "cim",
+      label: "Cím",
+      className: "font-semibold text-brand-900 dark:text-ink-50",
+      // UX-audit — korábban semmi nem jelezte a listában, melyik
+      // bejelentésnek van új, admin által még nem megválaszolt sofőr-
+      // üzenete; az admin csak úgy tudta meg, ha egyenként megnyitotta és
+      // legörgetett mindegyiket az "Üzenetek" szekcióig.
+      render: (row) => (
+        <span className="inline-flex items-center gap-1.5">
+          {row.cim}
+          {row.van_olvasatlan_uzenet && (
+            <span
+              className="flex items-center gap-1 rounded-full bg-red-50 px-1.5 py-0.5 text-[10px] font-bold text-red-600 dark:bg-red-950/50 dark:text-red-300"
+              title={`${row.uzenet_szam} üzenet — a sofőr utolsó üzenetére még nem érkezett válasz`}
+            >
+              <PiChatDotsFill className="h-3 w-3" />
+              Új üzenet
+            </span>
+          )}
+        </span>
+      ),
+    },
     { key: "kamion_rendszam", label: "Rendszám", render: (row) => row.kamion_rendszam || "—" },
     { key: "sofor_nev", label: "Bejelentő", render: (row) => row.sofor_nev || "Ismeretlen" },
     { key: "bejelentve", label: "Bejelentve" },

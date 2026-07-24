@@ -103,6 +103,24 @@ const formatHonap = (honap) => {
 
 const TETEL_PAGE_SIZE = 8;
 
+// UX-audit — az "Új tétel" modal kötelező natív mezői (Összeg/Eredeti
+// összeg/Megnevezés — a Dátum mező a `DatePicker.js`-en fut, ami egy
+// teljesen gombalapú, natív `<input>` nélküli komponens, ott nincs mit
+// `onInvalid`-olni) korábban csak a natív HTML5 `required`-re
+// támaszkodtak, ami a böngésző saját, angol/nem-testreszabott validációs
+// buborékját mutatta ("Please fill out this field.") — ugyanaz a minta,
+// mint a publikus `QuoteForm.js`-en (`INVALID_MESSAGES` + `onInvalid`/
+// kitörlés `onChange`-en).
+const UJ_TETEL_INVALID_MESSAGES = {
+  osszeg: "Adja meg az összeget.",
+  eredeti_osszeg: "Adja meg az eredeti összeget.",
+  megnevezes: "Adjon meg egy megnevezést.",
+};
+
+function handleUjTetelInvalid(e) {
+  e.target.setCustomValidity(UJ_TETEL_INVALID_MESSAGES[e.target.name] || "");
+}
+
 // Kézzel felvett/módosított tétel kategória-jelvénye a tétel-listában — csak
 // a ténylegesen tárolt `kategoria` oszlop-értékekhez van jelvény ('egyeb'/null
 // esetén nincs, hiszen az a lista alapértelmezett, jelvény nélküli állapota).
@@ -139,14 +157,30 @@ const emptyEgyebTetel = (irany = "kiado") => ({
 function ImportMenu({ navUjSzam, onNav, navTitle, onBank, onMol }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
+  const triggerRef = useRef(null);
+  const menuId = React.useId();
 
   useEffect(() => {
     if (!open) return undefined;
     const handleClick = (e) => {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false);
     };
+    // UX-audit — a menü korábban csak kattintás-kívülre záródott;
+    // Escape-re nyitva maradt (billentyűzet-csapda), és a menü/menüpontok
+    // sem hordoztak ARIA menü-szemantikát, így egy képernyőolvasó egy sima
+    // gomblistaként, nem összefüggő menüként hirdette.
+    const handleKey = (e) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
     document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
   }, [open]);
 
   const items = [
@@ -158,9 +192,12 @@ function ImportMenu({ navUjSzam, onNav, navTitle, onBank, onMol }) {
   return (
     <div className="relative" ref={ref}>
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((o) => !o)}
+        aria-haspopup="menu"
         aria-expanded={open}
+        aria-controls={open ? menuId : undefined}
         className="flex items-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-ink-600 shadow-soft transition-all duration-300 ease-fluid hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 active:scale-95 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-300 dark:hover:border-brand-700 dark:hover:bg-brand-950/40 dark:hover:text-brand-300"
       >
         Import
@@ -172,11 +209,17 @@ function ImportMenu({ navUjSzam, onNav, navTitle, onBank, onMol }) {
         <PiCaretDownLight className={`h-3.5 w-3.5 transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="absolute left-0 top-full z-20 mt-1.5 w-56 overflow-hidden rounded-xl border border-ink-100 bg-white py-1 shadow-soft-lg dark:border-ink-800 dark:bg-ink-900">
+        <div
+          id={menuId}
+          role="menu"
+          aria-label="Import"
+          className="absolute left-0 top-full z-20 mt-1.5 w-56 overflow-hidden rounded-xl border border-ink-100 bg-white py-1 shadow-soft-lg dark:border-ink-800 dark:bg-ink-900"
+        >
           {items.map((item) => (
             <button
               key={item.key}
               type="button"
+              role="menuitem"
               title={item.title}
               onClick={() => {
                 setOpen(false);
@@ -1057,6 +1100,7 @@ export default function Koltsegek() {
   };
 
   const handleUjTetelChange = (e) => {
+    e.target.setCustomValidity("");
     const { name, value } = e.target;
     setUjTetel((prev) => ({
       ...prev,
@@ -1839,6 +1883,7 @@ export default function Koltsegek() {
                 name="eredeti_osszeg"
                 value={ujTetel.eredeti_osszeg}
                 onChange={handleUjTetelChange}
+                onInvalid={handleUjTetelInvalid}
                 required
               />
             ) : (
@@ -1848,6 +1893,7 @@ export default function Koltsegek() {
                 name="osszeg"
                 value={ujTetel.osszeg}
                 onChange={handleUjTetelChange}
+                onInvalid={handleUjTetelInvalid}
                 required
               />
             )}
@@ -1863,6 +1909,7 @@ export default function Koltsegek() {
             name="megnevezes"
             value={ujTetel.megnevezes}
             onChange={handleUjTetelChange}
+            onInvalid={handleUjTetelInvalid}
             placeholder={
               ujTetel.irany === "bevetel"
                 ? "pl. Kártérítés, egyéb bevétel"
@@ -1959,7 +2006,7 @@ export default function Koltsegek() {
             <button
               type="submit"
               disabled={isSaving}
-              className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSaving ? "Mentés..." : editingTetelId ? "Mentés" : "Hozzáadás"}
             </button>
@@ -1999,7 +2046,7 @@ export default function Koltsegek() {
                   type="button"
                   onClick={handleNavLekerdezes}
                   disabled={navLekerdezesLoading}
-                  className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {navLekerdezesLoading ? "Lekérdezés..." : "Lekérdezés"}
                 </button>
@@ -2104,7 +2151,7 @@ export default function Koltsegek() {
                     type="button"
                     onClick={handleNavImport}
                     disabled={navImportLoading || navKivalasztott.size === 0}
-                    className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {navImportLoading
                       ? "Importálás..."
@@ -2189,7 +2236,7 @@ export default function Koltsegek() {
                       type="button"
                       onClick={handleBankElemzes}
                       disabled={bankElemzesLoading}
-                      className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {bankElemzesLoading ? "Elemzés..." : "Elemzés"}
                     </button>
@@ -2296,7 +2343,7 @@ export default function Koltsegek() {
                     type="button"
                     onClick={handleBankAlkalmazas}
                     disabled={bankAlkalmazasLoading}
-                    className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {bankAlkalmazasLoading ? "Alkalmazás..." : `Alkalmazás (${bankSorok.length})`}
                   </button>
@@ -2438,7 +2485,7 @@ export default function Koltsegek() {
                     type="button"
                     onClick={handleMolAlkalmazas}
                     disabled={molAlkalmazasLoading || molSorok.filter((s) => s.betoltendo).length === 0}
-                    className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {molAlkalmazasLoading
                       ? "Alkalmazás..."

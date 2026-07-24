@@ -1261,6 +1261,10 @@ h1,
   margin-left: 0.25rem;
 }
 
+.ml-1\.5 {
+  margin-left: 0.375rem;
+}
+
 .ml-10 {
   margin-left: 2.5rem;
 }
@@ -2107,10 +2111,6 @@ h1,
   gap: 2rem;
 }
 
-.gap-\[3px\] {
-  gap: 3px;
-}
-
 .gap-x-2 {
   column-gap: 0.5rem;
 }
@@ -2294,6 +2294,10 @@ h1,
 
 .rounded-\[3px\] {
   border-radius: 3px;
+}
+
+.rounded-\[4px\] {
+  border-radius: 4px;
 }
 
 .rounded-\[calc\(1rem-0\.25rem\)\] {
@@ -2872,6 +2876,11 @@ h1,
 .bg-purple-500 {
   --tw-bg-opacity: 1;
   background-color: rgb(168 85 247 / var(--tw-bg-opacity, 1));
+}
+
+.bg-red-100 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 226 226 / var(--tw-bg-opacity, 1));
 }
 
 .bg-red-200 {
@@ -6123,6 +6132,10 @@ h1,
 
   .xl\:grid-cols-4 {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .xl\:grid-cols-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
   .xl\:grid-cols-6 {

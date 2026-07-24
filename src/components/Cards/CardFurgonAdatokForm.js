@@ -14,6 +14,7 @@ import {
   PiMapPinLight,
 } from "react-icons/pi";
 import FormField, { FormSection } from "components/UI/FormField.js";
+import LejaratTag from "components/UI/LejaratTag.js";
 import SaveButton from "components/UI/SaveButton.js";
 import { useListaElemek } from "utils/useListaElemek.js";
 
@@ -266,7 +267,7 @@ const CardFurgonAdatokForm = ({ furgon, setFormData, handleSave }) => {
         <FormField
           type="date"
           icon={PiCarLight}
-          label="Műszaki"
+          label={<>Műszaki <LejaratTag date={furgon.muszaki_lejarat} /></>}
           id="muszaki_lejarat"
           value={furgon.muszaki_lejarat}
           onChange={handleFormChange}
@@ -274,7 +275,7 @@ const CardFurgonAdatokForm = ({ furgon, setFormData, handleSave }) => {
         <FormField
           type="date"
           icon={PiShieldCheckLight}
-          label="Adr"
+          label={<>Adr <LejaratTag date={furgon.adr_lejarat} /></>}
           id="adr_lejarat"
           value={furgon.adr_lejarat}
           onChange={handleFormChange}
@@ -282,7 +283,7 @@ const CardFurgonAdatokForm = ({ furgon, setFormData, handleSave }) => {
         <FormField
           type="date"
           icon={PiIdentificationCardLight}
-          label="Taográf illesztés"
+          label={<>Taográf illesztés <LejaratTag date={furgon.taograf_illesztes} /></>}
           id="taograf_illesztes"
           value={furgon.taograf_illesztes}
           onChange={handleFormChange}
@@ -290,7 +291,7 @@ const CardFurgonAdatokForm = ({ furgon, setFormData, handleSave }) => {
         <FormField
           type="date"
           icon={PiVanLight}
-          label="Emelő hátfal"
+          label={<>Emelő hátfal <LejaratTag date={furgon.emelohatfal_vizsga} /></>}
           id="emelohatfal_vizsga"
           value={furgon.emelohatfal_vizsga}
           onChange={handleFormChange}
@@ -298,7 +299,7 @@ const CardFurgonAdatokForm = ({ furgon, setFormData, handleSave }) => {
         <FormField
           type="date"
           icon={PiFireExtinguisherLight}
-          label="Poroltó #1"
+          label={<>Poroltó #1 <LejaratTag date={furgon.porolto_lejarat} /></>}
           id="porolto_lejarat"
           value={furgon.porolto_lejarat}
           onChange={handleFormChange}
@@ -306,7 +307,7 @@ const CardFurgonAdatokForm = ({ furgon, setFormData, handleSave }) => {
         <FormField
           type="date"
           icon={PiFireExtinguisherLight}
-          label="Poroltó #2"
+          label={<>Poroltó #2 <LejaratTag date={furgon.porolto_lejarat_2} /></>}
           id="porolto_lejarat_2"
           value={furgon.porolto_lejarat_2}
           onChange={handleFormChange}

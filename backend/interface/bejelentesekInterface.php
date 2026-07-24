@@ -58,9 +58,20 @@ class BejelentesekInterface {
 
             $soforNevek = $this->getSoforNevek($ceg_id);
             $kamionRendszamok = $this->getKamionRendszamok($ceg_id);
+            // UX-audit — a lista korábban semmivel nem jelezte, melyik
+            // bejelentésnek van új sofőr-üzenete, az admin csak úgy tudta
+            // meg, ha egyenként megnyitotta és legörgetett mindegyiket.
+            // `van_olvasatlan_uzenet`: igaz, ha a szál utolsó üzenetét sofőr
+            // írta (az admin még nem válaszolt rá) — nincs valódi, admin-
+            // szintű "olvasva" jelölés (a csapattagok közös `admin` táblát
+            // használnak, ld. CLAUDE.md), ez egy egyszerű, de honest proxy.
+            $uzenetInfok = $this->getUzenetInfok(array_column($bejelentesek, 'id'));
             foreach ($bejelentesek as &$b) {
                 $b['sofor_nev'] = $soforNevek[$b['sofor_id']] ?? null;
                 $b['kamion_rendszam'] = $kamionRendszamok[$b['kamion_id']] ?? null;
+                $info = $uzenetInfok[$b['id']] ?? null;
+                $b['uzenet_szam'] = $info['osszes'] ?? 0;
+                $b['van_olvasatlan_uzenet'] = $info['utolsoSofortol'] ?? false;
             }
 
             $result = ['success' => true, 'bejelentesek' => $bejelentesek];
@@ -302,6 +313,33 @@ class BejelentesekInterface {
         }
         $stmt->execute();
         return (bool) $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // `bejelentes_id => ['osszes' => N, 'utolsoSofortol' => bool]` — egyetlen
+    // lekérdezéssel az ÖSSZES kért bejelentés üzenet-metaadata, nem N+1
+    // (a projekt konvenciója szerint a táblákat sosem kapcsoljuk össze egy
+    // lekérdezésen belül).
+    private function getUzenetInfok($bejelentesIds) {
+        $bejelentesIds = array_values(array_filter($bejelentesIds, fn($id) => $id !== null));
+        if (empty($bejelentesIds)) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($bejelentesIds), '?'));
+        $query = "SELECT bejelentes_id, szerzo_tipus FROM bejelentes_uzenetek
+                  WHERE bejelentes_id IN ($placeholders) AND torolt <> 'I'
+                  ORDER BY letrehozva ASC, id ASC";
+        $stmt = $this->db->prepare($query);
+        $stmt->execute($bejelentesIds);
+        $infok = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $id = $row['bejelentes_id'];
+            if (!isset($infok[$id])) {
+                $infok[$id] = ['osszes' => 0, 'utolsoSofortol' => false];
+            }
+            $infok[$id]['osszes']++;
+            $infok[$id]['utolsoSofortol'] = ($row['szerzo_tipus'] === 'sofor');
+        }
+        return $infok;
     }
 
     public function getMessages($bejelentes_id, $ceg_id, $sofor_id = null) {

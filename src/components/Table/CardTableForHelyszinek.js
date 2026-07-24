@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { useHistory } from "react-router-dom";
-import { PiPencilSimpleLight, PiTrashLight, PiMapPinLight } from "react-icons/pi";
+import { PiPencilSimpleLight, PiTrashLight, PiMapPinLight, PiChatCircleTextLight } from "react-icons/pi";
 
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
@@ -28,6 +28,20 @@ const CardTable = ({ helyszinek = [], loading, total, page, pageSize, onPageChan
 
   const columns = [
     { key: "nev", label: "Név", sortable: true, className: "font-semibold text-brand-900 dark:text-ink-50" },
+    {
+      key: "megjegyzesek_szama",
+      label: "Megjegyzések",
+      render: (row) =>
+        row.megjegyzesek_szama > 0 ? (
+          <span className="inline-flex items-center gap-1 text-ink-500 dark:text-ink-400">
+            <PiChatCircleTextLight className="h-3.5 w-3.5 flex-shrink-0" />
+            {row.megjegyzesek_szama}
+          </span>
+        ) : (
+          <span className="text-ink-300 dark:text-ink-600">—</span>
+        ),
+      exportValue: (row) => row.megjegyzesek_szama || 0,
+    },
     {
       key: "actions",
       label: "Műveletek",

@@ -28,6 +28,7 @@ require 'interface/pushInterface.php';
 require 'interface/bankImportInterface.php';
 require 'interface/molTankolasInterface.php';
 require 'interface/tachografInterface.php';
+require 'interface/tachografVuInterface.php';
 require_once 'WebAuthnHelper.php';
 class ApiHandler {
     protected string $auth_hash;
@@ -179,6 +180,12 @@ class ApiHandler {
         'getTachografSoforOsszesito' => ['tachograf', 'hozzaferes'],
         'getTachografImportNaplo' => ['tachograf', 'hozzaferes'],
         'atparositTachografNap' => ['tachograf', 'szerkesztes'],
+        'elemezTachografVuDdd' => ['tachograf', 'hozzaferes'],
+        'alkalmazTachografVuImport' => ['tachograf', 'szerkesztes'],
+        'getTachografVuNapiAktivitas' => ['tachograf', 'hozzaferes'],
+        'getTachografVuMegfeleloseg' => ['tachograf', 'hozzaferes'],
+        'getTachografVuJarmuOsszesito' => ['tachograf', 'hozzaferes'],
+        'getTachografVuImportNaplo' => ['tachograf', 'hozzaferes'],
         'getGpsmartBeallitasokStatusz' => ['kamionok', 'hozzaferes'],
         'gpsmartPoziciok' => ['kamionok', 'hozzaferes'],
         'gpsmartMegtettUtMa' => ['kamionok', 'hozzaferes'],
@@ -313,6 +320,12 @@ class ApiHandler {
             'getTachografSoforOsszesito' => ['ceg_id', 'kerelmezo_id'],
             'getTachografImportNaplo' => ['ceg_id', 'kerelmezo_id'],
             'atparositTachografNap' => ['id', 'ujSoforId', 'ceg_id', 'kerelmezo_id'],
+            'elemezTachografVuDdd' => ['ddd', 'ceg_id', 'kerelmezo_id'],
+            'alkalmazTachografVuImport' => ['napok', 'jarmuTipus', 'jarmuId', 'vin', 'rendszam', 'ceg_id', 'kerelmezo_id'],
+            'getTachografVuNapiAktivitas' => ['ceg_id', 'kerelmezo_id'],
+            'getTachografVuMegfeleloseg' => ['ceg_id', 'kerelmezo_id'],
+            'getTachografVuJarmuOsszesito' => ['ceg_id', 'kerelmezo_id'],
+            'getTachografVuImportNaplo' => ['ceg_id', 'kerelmezo_id'],
 
             'getSzabadsagok' => ['id', 'kerelmezo_id'],
             'newSzabadsag' => ['admin', 'sofor_id', 'datum_tol', 'datum_ig', 'kerelmezo_id'],
@@ -645,7 +658,7 @@ class ApiHandler {
     }
 
     public function process(?array $request) {
-        global $kamionInterface, $potkocsiInterface, $furgonInterface, $soforokInterface, $filesInterface, $emailInterface, $bejelentesekInterface, $karbantartasInterface, $szabadsagInterface, $tankolasInterface, $jarmuValtasInterface, $ugyfelInterface, $csapatInterface, $helyszinInterface, $jogosultsagInterface, $szerepkorInterface, $listaInterface, $keresesInterface, $koltsegInterface, $ertesitesInterface, $navSzamlaInterface, $gpsmartInterface, $piaciArakInterface, $pushInterface, $bankImportInterface, $molTankolasInterface, $tachografInterface;
+        global $kamionInterface, $potkocsiInterface, $furgonInterface, $soforokInterface, $filesInterface, $emailInterface, $bejelentesekInterface, $karbantartasInterface, $szabadsagInterface, $tankolasInterface, $jarmuValtasInterface, $ugyfelInterface, $csapatInterface, $helyszinInterface, $jogosultsagInterface, $szerepkorInterface, $listaInterface, $keresesInterface, $koltsegInterface, $ertesitesInterface, $navSzamlaInterface, $gpsmartInterface, $piaciArakInterface, $pushInterface, $bankImportInterface, $molTankolasInterface, $tachografInterface, $tachografVuInterface;
         try {
             $this->validation($request);
             $action = $request['action'];
@@ -1556,6 +1569,50 @@ class ApiHandler {
                 case 'atparositTachografNap':
                     $kerelmezo = $this->resolveKerelmezo($request);
                     echo json_encode($tachografInterface->atparositNap($request['id'], $request['ujSoforId'], $kerelmezo['ceg_id']));
+                    return;
+                case 'elemezTachografVuDdd':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    [$feltoltoTipus, $feltoltoId, $feltoltoNev] = $this->resolveFeltolto($request);
+                    echo json_encode($tachografVuInterface->elemezVuDdd($request['ddd'], $kerelmezo['ceg_id'], $request['fajlnev'] ?? null, $feltoltoTipus, $feltoltoId, $feltoltoNev));
+                    return;
+                case 'alkalmazTachografVuImport':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    [$feltoltoTipus, $feltoltoId, $feltoltoNev] = $this->resolveFeltolto($request);
+                    echo json_encode($tachografVuInterface->alkalmazVuImport(
+                        $request['napok'],
+                        $request['jarmuTipus'],
+                        $request['jarmuId'],
+                        $request['vin'],
+                        $request['rendszam'],
+                        $request['forrasFajlnev'] ?? null,
+                        $kerelmezo['ceg_id'],
+                        $request['generacio'] ?? 2,
+                        $feltoltoTipus,
+                        $feltoltoId,
+                        $feltoltoNev
+                    ));
+                    return;
+                case 'getTachografVuNapiAktivitas':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($tachografVuInterface->getVuNapiAktivitas(
+                        $request['jarmuTipus'] ?? null,
+                        $request['jarmuId'] ?? null,
+                        $request['datumTol'] ?? null,
+                        $request['datumIg'] ?? null,
+                        $kerelmezo['ceg_id']
+                    ));
+                    return;
+                case 'getTachografVuMegfeleloseg':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($tachografVuInterface->getVuMegfelelosegiLista($kerelmezo['ceg_id']));
+                    return;
+                case 'getTachografVuJarmuOsszesito':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($tachografVuInterface->getJarmuAttekintes($kerelmezo['ceg_id']));
+                    return;
+                case 'getTachografVuImportNaplo':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($tachografVuInterface->getVuImportNaplo($kerelmezo['ceg_id']));
                     return;
                 case 'getTachografNapiAktivitas':
                     $kerelmezo = $this->resolveKerelmezo($request);

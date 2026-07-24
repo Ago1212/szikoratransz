@@ -10,6 +10,32 @@ import "./CustomCalander.css";
 moment.locale("hu");
 const localizer = momentLocalizer(moment);
 
+// UX-audit — a naptár eseményei korábban mind ugyanazzal a semleges
+// react-big-calendar alapszínnel jelentek meg, miközben a Dashboard "Mire
+// figyeljek ma" kártyája ugyanerre az adatra (getEsemenyek) már egy
+// 3-fokozatú (lejárt/piros — 7 napon belüli/borostyán — távolabbi/semleges)
+// sürgősségi színkódolást használ. Ugyanaz a küszöb/logika itt, hogy a két
+// felület ne mondjon vizuálisan ellent egymásnak ugyanarra az eseményre.
+const naptolNapok = (start) => moment(start).startOf("day").diff(moment().startOf("day"), "days");
+
+const esemenySurgossegSzin = (napok) => {
+  if (napok < 0) return { bg: "#ef4444", border: "#dc2626" }; // lejárt — piros
+  if (napok <= 7) return { bg: "#f59e0b", border: "#d97706" }; // e héten — borostyán
+  return null; // távolabbi — marad az alapértelmezett naptár-szín
+};
+
+const eventPropGetter = (event) => {
+  const tone = esemenySurgossegSzin(naptolNapok(event.start));
+  if (!tone) return {};
+  return { style: { backgroundColor: tone.bg, borderColor: tone.border } };
+};
+
+const napDotOsztaly = (napok) => {
+  if (napok < 0) return "bg-red-500";
+  if (napok <= 7) return "bg-amber-500";
+  return "bg-brand-500";
+};
+
 const EventModal = ({ event, onClose }) => {
   if (!event) return null;
 
@@ -146,6 +172,7 @@ export default function CustomCalendar({ onEventsChange }) {
             onSelectSlot={handleSelectSlot}
             onDrillDown={handleDrillDown}
             dayPropGetter={dayPropGetter}
+            eventPropGetter={eventPropGetter}
             onSelectEvent={(event) => setSelectedDate(event.start)}
             messages={calendarMessages}
           />
@@ -168,7 +195,7 @@ export default function CustomCalendar({ onEventsChange }) {
                     key={idx}
                     className="flex items-center gap-2.5 rounded-xl bg-slate-50 px-3 py-2.5 dark:bg-ink-800"
                   >
-                    <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-brand-500" />
+                    <span className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${napDotOsztaly(naptolNapok(event.start))}`} />
                     <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink-700 dark:text-ink-100">
                       {event.title}
                     </span>
@@ -195,6 +222,7 @@ export default function CustomCalendar({ onEventsChange }) {
           defaultDate={new Date()}
           defaultView="month"
           popup
+          eventPropGetter={eventPropGetter}
           onSelectEvent={handleEventClick}
           messages={calendarMessages}
         />

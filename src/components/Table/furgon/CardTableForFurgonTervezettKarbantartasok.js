@@ -176,7 +176,7 @@ const CardTableForFurgonTervezettKarbantartasok = ({ furgon_id, refresh, onRefre
             </button>
             <button
               type="submit"
-              className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-soft transition-colors duration-200 hover:bg-brand-700"
+              className="rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-colors duration-200 hover:bg-brand-700"
             >
               Mentés
             </button>

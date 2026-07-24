@@ -5,7 +5,10 @@ import React, { useMemo } from "react";
 // szélességet tölti ki, sosem tördelődik és sosem igényel vízszintes
 // görgetést, akárhány napot (`napokSzama`) is mutat vagy akármilyen keskeny
 // a befoglaló kártya.
-const SZINTEK = [
+// Exportálva — a `MegfelelosegiWidget.js` egy közös, egyszeri jelmagyarázatot
+// jelenít meg a sofőrönkénti mini-sávok fölött (soronként megismételve
+// zajos lenne), ugyanezekkel a szintekkel.
+export const SZINTEK = [
   { max: 0, cls: "bg-ink-100 dark:bg-ink-800" },
   { max: 240, cls: "bg-brand-200 dark:bg-brand-900" },
   { max: 480, cls: "bg-brand-400 dark:bg-brand-700" },
@@ -18,7 +21,7 @@ function szintOsztaly(perc) {
   return (SZINTEK.find((sz) => perc <= sz.max) || SZINTEK[SZINTEK.length - 1]).cls;
 }
 
-export default function Heatmap({ sorok, napokSzama = 28 }) {
+export default function Heatmap({ sorok, napokSzama = 28, showLegend = true }) {
   const cellak = useMemo(() => {
     const map = {};
     (sorok || []).forEach((s) => {
@@ -39,22 +42,24 @@ export default function Heatmap({ sorok, napokSzama = 28 }) {
 
   return (
     <div>
-      <div className="flex gap-[3px]">
+      <div className="flex gap-1">
         {cellak.map((c) => (
           <div
             key={c.datum}
-            className={`h-3.5 min-w-0 flex-1 rounded-[3px] transition-shadow duration-100 ${szintOsztaly(c.perc)} hover:ring-2 hover:ring-brand-400 dark:hover:ring-brand-300`}
+            className={`h-5 min-w-0 flex-1 rounded-[4px] transition-shadow duration-100 ${szintOsztaly(c.perc)} hover:ring-2 hover:ring-brand-400 dark:hover:ring-brand-300`}
             title={`${c.datum} — ${c.perc != null ? oraPerc(c.perc) : "nincs adat"}`}
           />
         ))}
       </div>
-      <div className="mt-2.5 flex flex-nowrap items-center gap-1.5 text-[11px] text-ink-400 dark:text-ink-500">
-        <span>Kevesebb</span>
-        {SZINTEK.map((sz) => (
-          <span key={sz.cls} className={`h-2.5 w-2.5 flex-shrink-0 rounded-[3px] ${sz.cls}`} />
-        ))}
-        <span>Több</span>
-      </div>
+      {showLegend && (
+        <div className="mt-2.5 flex flex-nowrap items-center gap-1.5 text-[11px] text-ink-400 dark:text-ink-500">
+          <span>Kevesebb</span>
+          {SZINTEK.map((sz) => (
+            <span key={sz.cls} className={`h-2.5 w-2.5 flex-shrink-0 rounded-[3px] ${sz.cls}`} />
+          ))}
+          <span>Több</span>
+        </div>
+      )}
     </div>
   );
 }
