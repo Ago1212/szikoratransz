@@ -1,9 +1,0 @@
-- navigation [ref=f26e3]:
-  - link "Menü" [ref=f26e4] [cursor=pointer]:
-    - /url: /admin/dashboard
-  - link "Profil" [ref=f26e8] [cursor=pointer]:
-    - /url: /admin/settings
-  - button "Flotta" [ref=f26e12] [cursor=pointer]
-  - button "Csapat" [ref=f26e17] [cursor=pointer]
-  - button "Rendszer" [ref=f26e22] [cursor=pointer]
-  - button "Értesítések" [ref=f26e27] [cursor=pointer]

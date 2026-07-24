@@ -1,3 +1,0 @@
-[      81ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/static/js/bundle.js:34955
-[     117ms] [ERROR] Warning: ReactDOM.render is no longer supported in React 18. Use createRoot instead. Until you switch to the new API, your app will behave as if it's running React 17. Learn more: https://reactjs.org/link/switch-to-createroot @ http://localhost:3000/static/js/bundle.js:9269
-[     281ms] [ERROR] Error fetching stats: Hiányzó paraméter: id. @ http://localhost:3000/static/js/src_views_admin_Kamionok_js.chunk.js:423
