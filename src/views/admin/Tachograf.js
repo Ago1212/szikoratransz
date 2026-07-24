@@ -18,6 +18,7 @@ import CardStats from "components/Cards/CardStats.js";
 import Modal from "components/UI/Modal.js";
 import MegfelelosegiWidget, { rendezettSorok } from "components/Tachograf/MegfelelosegiWidget.js";
 import SoforHeatmapLista from "components/Tachograf/SoforHeatmapLista.js";
+import { SZINTEK } from "components/Tachograf/Heatmap.js";
 import SoforokLista from "components/Tachograf/SoforokLista.js";
 import SoforDrawer from "components/Tachograf/SoforDrawer.js";
 import ImportElozmenyek from "components/Tachograf/ImportElozmenyek.js";
@@ -313,7 +314,16 @@ export default function Tachograf() {
               <MegfelelosegiWidget sorok={megfelelosegRendezve} onSoforClick={megySoforre} />
             </div>
             <div className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft dark:border-ink-800 dark:bg-ink-900 xl:col-span-2">
-              <h3 className="mb-3 font-display text-base font-semibold text-brand-900 dark:text-ink-50">Vezetési idő, elmúlt 4 hét</h3>
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <h3 className="font-display text-base font-semibold text-brand-900 dark:text-ink-50">Vezetési idő, elmúlt 4 hét</h3>
+                <div className="flex flex-shrink-0 items-center gap-1.5 text-[11px] text-ink-400 dark:text-ink-500">
+                  <span>Kevesebb</span>
+                  {SZINTEK.map((sz) => (
+                    <span key={sz.cls} className={`h-2.5 w-2.5 flex-shrink-0 rounded-[3px] ${sz.cls}`} />
+                  ))}
+                  <span>Több</span>
+                </div>
+              </div>
               <SoforHeatmapLista soforok={megfelelosegRendezve} napiSorok={sorok} />
             </div>
           </div>
