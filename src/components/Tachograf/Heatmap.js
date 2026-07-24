@@ -16,29 +16,39 @@ export const SZINTEK = [
   { max: Infinity, cls: "bg-amber-500 dark:bg-amber-400" },
 ];
 
-function szintOsztaly(perc) {
+export function szintOsztaly(perc) {
   if (perc == null || perc === 0) return SZINTEK[0].cls;
   return (SZINTEK.find((sz) => perc <= sz.max) || SZINTEK[SZINTEK.length - 1]).cls;
 }
 
-export default function Heatmap({ sorok, napokSzama = 28, showLegend = true }) {
-  const cellak = useMemo(() => {
-    const map = {};
-    (sorok || []).forEach((s) => {
-      map[s.datum] = (map[s.datum] || 0) + (s.vezetes_perc || 0);
-    });
-    const ma = new Date();
-    const eredmeny = [];
-    for (let i = napokSzama - 1; i >= 0; i -= 1) {
-      const nap = new Date(ma);
-      nap.setDate(nap.getDate() - i);
-      const datum = nap.toISOString().slice(0, 10);
-      eredmeny.push({ datum, perc: map[datum] ?? null });
-    }
-    return eredmeny;
-  }, [sorok, napokSzama]);
+// Exportálva — a `SoforHeatmapLista.js` több sofőr sávját EGY közös rácsban
+// jeleníti meg (ld. ott a komment), hogy az oszlopok (napok) garantáltan
+// egy vonalban legyenek soronként; ehhez ugyanez a nap-lista kell mindegyik
+// sorhoz, ugyanabból a forrásból építve.
+export function oraPercSzoveg(perc) {
+  return `${Math.floor(perc / 60)}:${String(perc % 60).padStart(2, "0")} óra vezetés`;
+}
 
-  const oraPerc = (perc) => `${Math.floor(perc / 60)}:${String(perc % 60).padStart(2, "0")} óra vezetés`;
+export function epitsNapiCellak(sorok, napokSzama) {
+  const map = {};
+  (sorok || []).forEach((s) => {
+    map[s.datum] = (map[s.datum] || 0) + (s.vezetes_perc || 0);
+  });
+  const ma = new Date();
+  const eredmeny = [];
+  for (let i = napokSzama - 1; i >= 0; i -= 1) {
+    const nap = new Date(ma);
+    nap.setDate(nap.getDate() - i);
+    const datum = nap.toISOString().slice(0, 10);
+    eredmeny.push({ datum, perc: map[datum] ?? null });
+  }
+  return eredmeny;
+}
+
+export default function Heatmap({ sorok, napokSzama = 28, showLegend = true }) {
+  const cellak = useMemo(() => epitsNapiCellak(sorok, napokSzama), [sorok, napokSzama]);
+
+  const oraPerc = oraPercSzoveg;
 
   return (
     <div>

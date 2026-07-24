@@ -97,7 +97,11 @@ const mobileGroups = [
     icon: PiUsersLight,
     items: [
       { to: "/admin/soforok", icon: PiUsersLight, text: "Sofőrök" },
-      { to: "/admin/sofor-riport", icon: PiChartBarLight, text: "Sofőr-riport" },
+      {
+        to: "/admin/sofor-riport",
+        icon: PiChartBarLight,
+        text: "Sofőr-riport",
+      },
       {
         to: "/admin/tachograf",
         icon: PiIdentificationCardLight,
@@ -130,8 +134,18 @@ const mobileGroups = [
       // lentebb); a `mobileGroups` tömb modul-szinten, a komponensen kívül
       // van deklarálva, ezért az ikon/felirat a sötét módnál dinamikusan,
       // render közben dől el, nem itt van "beégetve".
-      { type: "action", action: "search", icon: PiMagnifyingGlassLight, text: "Keresés" },
-      { type: "action", action: "darkmode", icon: PiMoonLight, text: "Sötét mód" },
+      {
+        type: "action",
+        action: "search",
+        icon: PiMagnifyingGlassLight,
+        text: "Keresés",
+      },
+      {
+        type: "action",
+        action: "darkmode",
+        icon: PiMoonLight,
+        text: "Sötét mód",
+      },
       { to: "/admin/fajlok", icon: PiFilesLight, text: "Fájlok" },
       { to: "/admin/naplo", icon: PiListMagnifyingGlassLight, text: "Napló" },
       {
@@ -187,7 +201,11 @@ const mobileGroups = [
   },
 ];
 
-const TIPUS_LABEL = { kamion: "kamiont", potkocsi: "pótkocsit", furgon: "furgont" };
+const TIPUS_LABEL = {
+  kamion: "kamiont",
+  potkocsi: "pótkocsit",
+  furgon: "furgont",
+};
 
 // A lista- és a hozzá tartozó "form" (létrehozás/szerkesztés) route neve nem
 // áll substring-relációban (pl. `/admin/kamionok` vs. `/admin/kamionForm`) —
@@ -257,7 +275,13 @@ export default function Sidebar({ isDark, onToggleDark }) {
     } catch (e) {
       // ignore corrupt/legacy localStorage érték
     }
-    return { flotta: true, csapat: false, partnerek: false, penzugyek: false, rendszer: false };
+    return {
+      flotta: true,
+      csapat: false,
+      partnerek: false,
+      penzugyek: false,
+      rendszer: false,
+    };
   });
   React.useEffect(() => {
     if (!user?.id) return;
@@ -552,7 +576,9 @@ export default function Sidebar({ isDark, onToggleDark }) {
               onClick={onToggleDark}
               className="relative flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-ink-400 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-700 dark:text-ink-400 dark:hover:bg-ink-800 dark:hover:text-ink-50"
               title={isDark ? "Világos mód" : "Sötét mód"}
-              aria-label={isDark ? "Világos mód bekapcsolása" : "Sötét mód bekapcsolása"}
+              aria-label={
+                isDark ? "Világos mód bekapcsolása" : "Sötét mód bekapcsolása"
+              }
             >
               {isDark ? (
                 <PiSunLight className="h-[18px] w-[18px]" />
@@ -611,6 +637,11 @@ export default function Sidebar({ isDark, onToggleDark }) {
                 to="/admin/flottakovetes"
                 icon={PiMapTrifoldLight}
                 text="Flottakövetés"
+              />
+              <NavItem
+                to="/admin/tachograf"
+                icon={PiIdentificationCardLight}
+                text="Tachográf"
               />
             </ul>
           </div>
@@ -901,8 +932,16 @@ export default function Sidebar({ isDark, onToggleDark }) {
                     }
                     if (item.type === "action") {
                       const isDarkmode = item.action === "darkmode";
-                      const ActionIcon = isDarkmode ? (isDark ? PiSunLight : PiMoonLight) : item.icon;
-                      const actionLabel = isDarkmode ? (isDark ? "Világos mód" : "Sötét mód") : item.text;
+                      const ActionIcon = isDarkmode
+                        ? isDark
+                          ? PiSunLight
+                          : PiMoonLight
+                        : item.icon;
+                      const actionLabel = isDarkmode
+                        ? isDark
+                          ? "Világos mód"
+                          : "Sötét mód"
+                        : item.text;
                       return (
                         <li key={`action-${item.action}`}>
                           <button
@@ -974,7 +1013,9 @@ export default function Sidebar({ isDark, onToggleDark }) {
                 to={item.to}
                 aria-current={active ? "page" : undefined}
                 className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[11px] font-medium leading-none transition-colors duration-150 ${
-                  active ? "bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300" : "text-ink-400 dark:text-ink-500"
+                  active
+                    ? "bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300"
+                    : "text-ink-400 dark:text-ink-500"
                 }`}
                 onClick={() => setOpenGroup(null)}
               >
@@ -996,7 +1037,9 @@ export default function Sidebar({ isDark, onToggleDark }) {
                 aria-expanded={openGroup === group.key}
                 aria-controls={`mobile-group-panel-${group.key}`}
                 className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[11px] font-medium leading-none transition-colors duration-150 ${
-                  active ? "bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300" : "text-ink-400 dark:text-ink-500"
+                  active
+                    ? "bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300"
+                    : "text-ink-400 dark:text-ink-500"
                 }`}
                 onClick={() =>
                   setOpenGroup(openGroup === group.key ? null : group.key)
@@ -1017,7 +1060,9 @@ export default function Sidebar({ isDark, onToggleDark }) {
           <button
             type="button"
             className={`relative flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[11px] font-medium leading-none transition-colors duration-150 ${
-              notifOpen ? "bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300" : "text-ink-400 dark:text-ink-500"
+              notifOpen
+                ? "bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300"
+                : "text-ink-400 dark:text-ink-500"
             }`}
             onClick={() => setNotifOpen(true)}
           >
