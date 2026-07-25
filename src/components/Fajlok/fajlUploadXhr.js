@@ -3,7 +3,7 @@
 // ez a segédfüggvény ugyanazt a kérés-alakot (authHash/sessionToken/action
 // + payload) építi fel, de XHR-en keresztül, hogy a feltöltési sor valódi,
 // nem kitalált százalékot mutathasson.
-export const uploadFajlXhr = (payload, onProgress) => {
+export const uploadFajlXhr = (payload, onProgress, action = "fileUpload") => {
   const authHash = "nIrINP&o!PU|+pM*Q8'j1R07U57W,qD";
   const modulename =
     process.env.NODE_ENV === "development"
@@ -32,7 +32,7 @@ export const uploadFajlXhr = (payload, onProgress) => {
       JSON.stringify({
         authHash,
         sessionToken: localStorage.getItem("sessionToken") || "",
-        action: "fileUpload",
+        action,
         ...payload,
       }),
     );
