@@ -14,6 +14,11 @@ require_once __DIR__ . '/../GeminiOcrClient.php';
 class BeerkezettDokumentumInterface {
     protected $db;
 
+    const RENDEZHETO_OSZLOPOK = [
+        'letrehozva' => 'bd.letrehozva',
+        'tipus' => 'bd.tipus',
+    ];
+
     public function __construct() {
         $database = new Database();
         $this->db = $database->connect();
@@ -155,7 +160,19 @@ class BeerkezettDokumentumInterface {
     // nem engedélyezett, ld. `helyszinInterface::hozzafuzMegjegyzesekSzama()`/
     // `bejelentesekInterface::getUzenetInfok()` ugyanezen mintája) egy külön,
     // `fajl_id IN (...)` lekérdezéssel fűzzük hozzá PHP-oldalon.
-    public function getDokumentumok($ceg_id, $ocrAllapot = null, $csakFeldolgozatlan = true) {
+    public function getDokumentumok(
+        $ceg_id,
+        $ocrAllapot = null,
+        $csakFeldolgozatlan = true,
+        $tipus = null,
+        $search = null,
+        $datumTol = null,
+        $datumIg = null,
+        $sortKey = null,
+        $sortDir = 'asc',
+        $page = null,
+        $pageSize = null
+    ) {
         $query = "SELECT bd.id, bd.fajl_id, bd.tipus, bd.ocr_allapot, bd.ocr_adatok,
                          bd.feltolto_tipus, bd.feltolto_id, bd.feltolto_nev, bd.fuvar_id, bd.letrehozva
                   FROM beerkezett_dokumentumok bd
@@ -169,21 +186,72 @@ class BeerkezettDokumentumInterface {
             $query .= " AND bd.ocr_allapot = :ocr_allapot";
             $params[':ocr_allapot'] = $ocrAllapot;
         }
-        $query .= " ORDER BY bd.letrehozva DESC";
-
-        $stmt = $this->db->prepare($query);
-        foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value);
+        if (!empty($tipus)) {
+            $query .= " AND bd.tipus = :tipus";
+            $params[':tipus'] = $tipus;
         }
-        $stmt->execute();
+        if (!empty($datumTol)) {
+            $query .= " AND bd.letrehozva >= :datum_tol";
+            $params[':datum_tol'] = $datumTol . ' 00:00:00';
+        }
+        if (!empty($datumIg)) {
+            $query .= " AND bd.letrehozva <= :datum_ig";
+            $params[':datum_ig'] = $datumIg . ' 23:59:59';
+        }
+        if (!empty($search)) {
+            $fajlIdk = $this->keresFajlIdkNevAlapjan($ceg_id, $search);
+            $feltetel = "bd.ocr_adatok LIKE :search";
+            if (!empty($fajlIdk)) {
+                $feltetel .= " OR bd.fajl_id IN (" . implode(',', $fajlIdk) . ")";
+            }
+            $query .= " AND ($feltetel)";
+            $params[':search'] = '%' . $search . '%';
+        }
 
-        $sorok = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $rendezoOszlop = self::RENDEZHETO_OSZLOPOK[$sortKey] ?? 'bd.letrehozva';
+        $irany = strtolower((string) $sortDir) === 'desc' ? 'DESC' : 'ASC';
+        $query .= " ORDER BY $rendezoOszlop $irany";
+
+        $total = null;
+        if ($page !== null) {
+            [$sorok, $total, $page, $pageSize] = PaginationHelper::fetchPage($this->db, $query, $params, $page, $pageSize);
+        } else {
+            $stmt = $this->db->prepare($query);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            $stmt->execute();
+            $sorok = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+
         $fajlnevek = $this->fajlnevekFeloldasa(array_column($sorok, 'fajl_id'));
         foreach ($sorok as &$sor) {
             $sor['filename'] = $fajlnevek[$sor['fajl_id']] ?? null;
             $sor['ocr_adatok'] = $sor['ocr_adatok'] !== null ? json_decode($sor['ocr_adatok'], true) : null;
         }
-        return ['success' => true, 'dokumentumok' => $sorok];
+        unset($sor);
+
+        $valasz = ['success' => true, 'dokumentumok' => $sorok];
+        if ($page !== null) {
+            $valasz['total'] = $total;
+            $valasz['page'] = $page;
+            $valasz['pageSize'] = $pageSize;
+        }
+        return $valasz;
+    }
+
+    // Fájlnév alapján keres id-ket a `fajlok` táblában (ugyanaz a JOIN-
+    // mentes, PHP-oldali összefésülő minta, mint `FuvarInterface::
+    // keresIdkNevAlapjan()`), hogy a getDokumentumok() keresése a fájlnévre
+    // is kiterjedjen, ne csak az ocr_adatok nyers JSON-szövegére.
+    private function keresFajlIdkNevAlapjan($ceg_id, $search) {
+        $stmt = $this->db->prepare(
+            "SELECT sorszam FROM fajlok WHERE admin = :ceg_id AND tabla = 'beerkezett_dokumentum' AND filename LIKE :search"
+        );
+        $stmt->bindValue(':ceg_id', $ceg_id, PDO::PARAM_INT);
+        $stmt->bindValue(':search', '%' . $search . '%');
+        $stmt->execute();
+        return array_map('intval', array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'sorszam'));
     }
 
     private function fajlnevekFeloldasa($fajlIdk) {

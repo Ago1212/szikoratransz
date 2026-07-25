@@ -1671,7 +1671,19 @@ class ApiHandler {
                     return;
                 case 'getBeerkezettDokumentumok':
                     $kerelmezo = $this->resolveKerelmezo($request);
-                    echo json_encode($beerkezettDokumentumInterface->getDokumentumok($kerelmezo['ceg_id'], $request['ocrAllapot'] ?? null, $request['csakFeldolgozatlan'] ?? true));
+                    echo json_encode($beerkezettDokumentumInterface->getDokumentumok(
+                        $kerelmezo['ceg_id'],
+                        $request['ocrAllapot'] ?? null,
+                        $request['csakFeldolgozatlan'] ?? true,
+                        $request['tipus'] ?? null,
+                        $request['search'] ?? null,
+                        $request['datumTol'] ?? null,
+                        $request['datumIg'] ?? null,
+                        $request['sortKey'] ?? null,
+                        $request['sortDir'] ?? 'asc',
+                        $request['page'] ?? null,
+                        $request['pageSize'] ?? null
+                    ));
                     return;
                 case 'getBeerkezettDokumentumokSzama':
                     $kerelmezo = $this->resolveKerelmezo($request);
