@@ -1524,6 +1524,10 @@ h1,
   height: 2.25rem;
 }
 
+.h-96 {
+  height: 24rem;
+}
+
 .h-\[18px\] {
   height: 18px;
 }
@@ -1758,6 +1762,10 @@ h1,
 
 .min-w-\[1rem\] {
   min-width: 1rem;
+}
+
+.min-w-\[200px\] {
+  min-width: 200px;
 }
 
 .min-w-\[20px\] {
@@ -3627,6 +3635,10 @@ h1,
   letter-spacing: 0.2em;
 }
 
+.tracking-normal {
+  letter-spacing: 0em;
+}
+
 .tracking-tight {
   letter-spacing: -0.025em;
 }
@@ -5347,6 +5359,10 @@ h1,
 .dark\:hover\:bg-red-950:hover:is(.dark *) {
   --tw-bg-opacity: 1;
   background-color: rgb(69 10 10 / var(--tw-bg-opacity, 1));
+}
+
+.dark\:hover\:bg-red-950\/30:hover:is(.dark *) {
+  background-color: rgb(69 10 10 / 0.3);
 }
 
 .dark\:hover\:bg-red-950\/40:hover:is(.dark *) {
