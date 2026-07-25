@@ -4397,6 +4397,11 @@ h1,
   background-color: rgb(35 38 43 / 0.05);
 }
 
+.hover\:bg-amber-100:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 243 199 / var(--tw-bg-opacity, 1));
+}
+
 .hover\:bg-amber-50:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(255 251 235 / var(--tw-bg-opacity, 1));
@@ -4454,6 +4459,11 @@ h1,
 .hover\:bg-red-700:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(185 28 28 / var(--tw-bg-opacity, 1));
+}
+
+.hover\:bg-sand-100:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(244 240 232 / var(--tw-bg-opacity, 1));
 }
 
 .hover\:bg-slate-100:hover {

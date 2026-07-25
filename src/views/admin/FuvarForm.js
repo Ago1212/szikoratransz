@@ -12,6 +12,7 @@ import {
 import PageHeader from "components/UI/PageHeader.js";
 import FormField, { FormSection } from "components/UI/FormField.js";
 import AutocompleteSelect from "components/UI/AutocompleteSelect.js";
+import FuvarDokumentumLink from "components/Fuvarok/FuvarDokumentumLink.js";
 import PageCard from "components/UI/PageCard.js";
 import SaveButton from "components/UI/SaveButton.js";
 import { fetchAction } from "utils/fetchAction";
@@ -251,6 +252,8 @@ export default function FuvarForm() {
       </button>
 
       <PageHeader eyebrow="Fuvarok" title={isNew ? "Új fuvar" : "Fuvar szerkesztése"} />
+
+      <FuvarDokumentumLink beerkezettDokumentumId={formData.beerkezett_dokumentum_id} />
 
       <PageCard icon={PiClipboardTextLight} title={isNew ? "Új fuvar" : "Fuvar szerkesztése"}>
         <div className="px-4 py-4 lg:px-6">
