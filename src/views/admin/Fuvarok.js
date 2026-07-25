@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useHistory } from "react-router-dom";
+import { PiListLight, PiKanbanLight } from "react-icons/pi";
 
 import CardTable from "components/Table/CardTableForFuvarok.js";
 import PageHeader from "components/UI/PageHeader.js";
 import AllapotOsszesitoChips from "components/Fuvarok/AllapotOsszesitoChips.js";
+import KanbanBoard from "components/Fuvarok/KanbanBoard.js";
 import { fetchAction } from "utils/fetchAction";
+import { toast } from "utils/toast";
 
 const PAGE_SIZE = 10;
 
@@ -20,6 +23,11 @@ export default function Fuvarok() {
   const [dokSzam, setDokSzam] = useState(0);
   const [allapotSzuro, setAllapotSzuro] = useState("");
   const [osszesito, setOsszesito] = useState(null);
+  const [nezetMod, setNezetMod] = useState(() => localStorage.getItem("fuvarok-nezet-mod") || "tablazat");
+
+  useEffect(() => {
+    localStorage.setItem("fuvarok-nezet-mod", nezetMod);
+  }, [nezetMod]);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -71,6 +79,22 @@ export default function Fuvarok() {
     setPage(1);
   };
 
+  const handleKanbanAllapotChange = async (fuvarId, ujAllapot) => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    const result = await fetchAction("updateFuvarAllapot", {
+      ceg_id: user.ceg_id,
+      kerelmezo_id: user.id,
+      id: fuvarId,
+      allapot: ujAllapot,
+    });
+    if (result?.success) {
+      fetchData();
+      loadOsszesito();
+    } else {
+      toast.error(result?.message || "Az állapot módosítása sikertelen.");
+    }
+  };
+
   const handleExportAll = useCallback(async () => {
     const user = JSON.parse(localStorage.getItem("user"));
     const result = await fetchAction("getFuvarok", {
@@ -105,27 +129,52 @@ export default function Fuvarok() {
           setPage(1);
         }}
       />
-      <div className="flex flex-wrap mt-0">
-        <div className="w-full mb-12 px-0 md:px-4">
-          <CardTable
-            fuvarok={fuvarok}
-            loading={loading}
-            total={total}
-            page={page}
-            pageSize={PAGE_SIZE}
-            onPageChange={setPage}
-            onSearchChange={setSearch}
-            onExportAll={handleExportAll}
-            sortKey={sortKey}
-            sortDir={sortDir}
-            onSortChange={handleSortChange}
-            onAllapotValtozott={() => {
-              fetchData();
-              loadOsszesito();
-            }}
-          />
-        </div>
+      <div className="mb-3 flex justify-end gap-1">
+        <button
+          type="button"
+          onClick={() => setNezetMod("tablazat")}
+          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${
+            nezetMod === "tablazat" ? "bg-brand-600 text-white" : "bg-slate-100 text-ink-600 dark:bg-ink-800 dark:text-ink-300"
+          }`}
+        >
+          <PiListLight className="h-4 w-4" /> Táblázat
+        </button>
+        <button
+          type="button"
+          onClick={() => setNezetMod("kanban")}
+          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${
+            nezetMod === "kanban" ? "bg-brand-600 text-white" : "bg-slate-100 text-ink-600 dark:bg-ink-800 dark:text-ink-300"
+          }`}
+        >
+          <PiKanbanLight className="h-4 w-4" /> Kanban
+        </button>
       </div>
+
+      {nezetMod === "kanban" ? (
+        <KanbanBoard fuvarok={fuvarok} onAllapotChange={handleKanbanAllapotChange} />
+      ) : (
+        <div className="flex flex-wrap mt-0">
+          <div className="w-full mb-12 px-0 md:px-4">
+            <CardTable
+              fuvarok={fuvarok}
+              loading={loading}
+              total={total}
+              page={page}
+              pageSize={PAGE_SIZE}
+              onPageChange={setPage}
+              onSearchChange={setSearch}
+              onExportAll={handleExportAll}
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onSortChange={handleSortChange}
+              onAllapotValtozott={() => {
+                fetchData();
+                loadOsszesito();
+              }}
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 }
