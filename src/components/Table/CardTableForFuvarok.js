@@ -47,7 +47,35 @@ const CardTable = ({
     }
   };
 
+  // Nincs Számlázz.hu API-integráció — az admin saját maga állítja ki a
+  // számlát a Számlázz.hu felületén, ez a tömeges művelet csak a szám
+  // UTÓLAGOS, kézi rögzítését végzi egyszerre több (azonos számlához
+  // tartozó) fuvarra. `window.prompt` ugyanaz a minta, mint a Fájlok
+  // modul tömeges címkézésénél.
+  const hozzarendelSzamlaszamot = async (rows) => {
+    const szamlaszam = window.prompt("Add meg a számlaszámot (minden kijelölt fuvarra ráíródik):");
+    if (szamlaszam === null || szamlaszam.trim() === "") {
+      return;
+    }
+    const result = await fetchAction("hozzarendelFuvarSzamlaszamot", {
+      ceg_id: user.ceg_id,
+      kerelmezo_id: user.id,
+      idk: rows.map((row) => row.id),
+      szamlaszam: szamlaszam.trim(),
+    });
+    if (result?.success) {
+      toast.success(`Számlaszám hozzárendelve ${result.darab} fuvarhoz.`);
+      onAllapotValtozott?.();
+    } else {
+      toast.error(result?.message || "A számlaszám hozzárendelése sikertelen.");
+    }
+  };
+
   const bulkActions = [
+    {
+      label: "Számla készítése",
+      onClick: hozzarendelSzamlaszamot,
+    },
     {
       label: `Állapot: ${ALLAPOT_LABEL.szamlazasra_var}`,
       onClick: async (rows) => {
@@ -105,6 +133,12 @@ const CardTable = ({
       ),
     },
     {
+      key: "szamlaszam",
+      label: "Számlaszám",
+      render: (row) => row.szamlaszam || "—",
+      mobileHidden: true,
+    },
+    {
       key: "actions",
       label: "Műveletek",
       align: "right",
@@ -127,6 +161,7 @@ const CardTable = ({
     { key: "egyeb_koltseg", label: "Egyéb költség" },
     { key: "osszesen", label: "Összesen" },
     { key: "allapot", label: "Állapot" },
+    { key: "szamlaszam", label: "Számlaszám" },
   ];
 
   return (

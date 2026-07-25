@@ -144,6 +144,29 @@ class FuvarInterface {
         return ['success' => true, 'message' => 'Állapot frissítve.', 'fuvar' => $this->getFuvar($id, $ceg_id)['fuvar']];
     }
 
+    // Nincs Számlázz.hu API-integráció (ld. project memory) — az admin
+    // saját maga állítja ki a számlát a Számlázz.hu felületén, ez a
+    // metódus csak a szám UTÓLAGOS, kézi rögzítését végzi, egyszerre
+    // több (tömegesen kijelölt), ugyanazon számlához tartozó fuvarra —
+    // N:1 kapcsolat, ezért `$idk` egy id-lista, nem egyetlen id.
+    public function hozzarendelSzamlaszamot($idk, $ceg_id, $szamlaszam) {
+        $szamlaszam = trim((string) $szamlaszam);
+        if ($szamlaszam === '') {
+            return ['success' => false, 'message' => 'A számlaszám nem lehet üres.'];
+        }
+        $idk = array_values(array_unique(array_filter(array_map('intval', (array) $idk))));
+        if (empty($idk)) {
+            return ['success' => false, 'message' => 'Nincs kiválasztott fuvar.'];
+        }
+        $helyorzok = implode(',', array_fill(0, count($idk), '?'));
+        $params = array_merge([$szamlaszam, $ceg_id], $idk);
+        $stmt = $this->db->prepare(
+            "UPDATE fuvarok SET szamlaszam = ?, allapot = 'szamlazva' WHERE admin = ? AND torolt <> 'I' AND id IN ($helyorzok)"
+        );
+        $stmt->execute($params);
+        return ['success' => true, 'message' => 'Számlaszám hozzárendelve.', 'darab' => $stmt->rowCount()];
+    }
+
     // Mindig a TELJES állomány állapotonkénti száma, függetlenül a lista
     // aktuális keresésétől/szűrőjétől — az összesítő-chipek "hol tartunk
     // összesen" áttekintést adnak, nem a szűrt eredményhalmaz számát.
@@ -411,23 +434,46 @@ class FuvarInterface {
         // metódust), nem admin-szerkeszthető mező.
         $adatok['beerkezett_dokumentum_id'] = $dokumentumId;
 
-        $letrehozas = $this->newFuvar($adatok, $ceg_id);
-        if (!$letrehozas['success']) {
+        // Whole-branch review Minor finding: a fuvar-létrehozás + a
+        // dokumentum `fuvar_id`-jének beírása + a `fajlok` sor
+        // reparentálása korábban 3 független statement volt tranzakció
+        // nélkül — egy a középső/harmadik lépés közben bekövetkező hiba
+        // (pl. DB-kapcsolat megszakadás) egy már létrehozott, de a forrás-
+        // dokumentumhoz vissza nem kötött fuvart hagyott volna maga után
+        // (vagy egy `beerkezett_dokumentumok.fuvar_id`-t a `fajlok`
+        // reparentálása nélkül). Minden érintett tábla (`fuvarok`,
+        // `beerkezett_dokumentumok`, `fajlok`) InnoDB, tehát a tranzakció
+        // ténylegesen atomi. A validáló/olvasó lépések (dokumentum
+        // lekérdezése, idegenkulcs-ellenőrzés `newFuvar()`-on belül) a
+        // tranzakción KÍVÜL maradnak — csak a tényleges írásokat kell
+        // egyben visszagörgetni.
+        $this->db->beginTransaction();
+        try {
+            $letrehozas = $this->newFuvar($adatok, $ceg_id);
+            if (!$letrehozas['success']) {
+                $this->db->rollBack();
+                return $letrehozas;
+            }
+            $ujFuvarId = $letrehozas['fuvar']['id'];
+
+            $update = $this->db->prepare("UPDATE beerkezett_dokumentumok SET fuvar_id = :fuvar_id WHERE id = :id");
+            $update->bindValue(':fuvar_id', $ujFuvarId, PDO::PARAM_INT);
+            $update->bindValue(':id', $dokumentumId, PDO::PARAM_INT);
+            $update->execute();
+
+            $reparent = $this->db->prepare("UPDATE fajlok SET tabla = 'fuvar', rowid = :fuvar_id WHERE sorszam = :fajl_id");
+            $reparent->bindValue(':fuvar_id', $ujFuvarId, PDO::PARAM_INT);
+            $reparent->bindValue(':fajl_id', $dokumentum['fajl_id'], PDO::PARAM_INT);
+            $reparent->execute();
+
+            $this->db->commit();
             return $letrehozas;
+        } catch (\Throwable $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            return ['success' => false, 'message' => $e->getMessage()];
         }
-        $ujFuvarId = $letrehozas['fuvar']['id'];
-
-        $update = $this->db->prepare("UPDATE beerkezett_dokumentumok SET fuvar_id = :fuvar_id WHERE id = :id");
-        $update->bindValue(':fuvar_id', $ujFuvarId, PDO::PARAM_INT);
-        $update->bindValue(':id', $dokumentumId, PDO::PARAM_INT);
-        $update->execute();
-
-        $reparent = $this->db->prepare("UPDATE fajlok SET tabla = 'fuvar', rowid = :fuvar_id WHERE sorszam = :fajl_id");
-        $reparent->bindValue(':fuvar_id', $ujFuvarId, PDO::PARAM_INT);
-        $reparent->bindValue(':fajl_id', $dokumentum['fajl_id'], PDO::PARAM_INT);
-        $reparent->execute();
-
-        return $letrehozas;
     }
 
     private function normalizaltRendszam($rendszam) {
@@ -491,12 +537,20 @@ class FuvarInterface {
     // ld. design spec 6.2. Útvonalanként erősen eltérhet a díj, ezért a
     // frontend csak megjeleníti, nem tölti be automatikusan a fuvardij
     // mezőbe.
+    // Whole-branch review Minor finding: `ORDER BY teljesites_datuma DESC`
+    // önmagában NULL `teljesites_datuma`-jú sorokat mindig a lista VÉGÉRE
+    // sorolt (MySQL NULL-DESC szemantika) — egy ténylegesen friss, de még
+    // dátum nélküli fuvar így kieshetett a `LIMIT`-ből egy régebbi, de
+    // dátumozott sor mögött. A `letrehozva DESC` másodlagos rendezőkulcs
+    // egyrészt a NULL-datumú sorokat is ésszerű (rögzítés-időrendi)
+    // sorrendbe teszi egymás között, másrészt tiebreaker azonos
+    // `teljesites_datuma` esetén is.
     public function getUgyfelElozmeny($ugyfelId, $ceg_id, $limit = 5) {
         $stmt = $this->db->prepare(
             "SELECT teljesites_datuma, felrako, lerako, fuvardij
              FROM fuvarok
              WHERE megbizo_id = :megbizo_id AND admin = :admin AND torolt <> 'I'
-             ORDER BY teljesites_datuma DESC
+             ORDER BY teljesites_datuma DESC, letrehozva DESC
              LIMIT " . (int) $limit
         );
         $stmt->bindValue(':megbizo_id', $ugyfelId, PDO::PARAM_INT);

@@ -147,6 +147,7 @@ class ApiHandler {
         'letrehozFuvarDokumentumbol' => ['fuvarok', 'szerkesztes'],
         'getUgyfelFuvarElozmeny' => ['fuvarok', 'hozzaferes'],
         'updateFuvarAllapot' => ['fuvarok', 'szerkesztes'],
+        'hozzarendelFuvarSzamlaszamot' => ['fuvarok', 'szerkesztes'],
         'getFuvarAllapotOsszesito' => ['fuvarok', 'hozzaferes'],
 
         'getKarbantartasok' => ['karbantartasok', 'hozzaferes'],
@@ -367,6 +368,7 @@ class ApiHandler {
             'getFuvarok' => ['ceg_id'],
             'letrehozFuvarDokumentumbol' => ['dokumentumId', 'ceg_id', 'kerelmezo_id'],
             'updateFuvarAllapot' => ['id', 'ceg_id', 'kerelmezo_id', 'allapot'],
+            'hozzarendelFuvarSzamlaszamot' => ['idk', 'ceg_id', 'kerelmezo_id', 'szamlaszam'],
             'getFuvarAllapotOsszesito' => ['ceg_id'],
 
             'getSzabadsagok' => ['id', 'kerelmezo_id'],
@@ -1755,6 +1757,14 @@ class ApiHandler {
                     }
                     echo json_encode($result);
                     return;
+                case 'hozzarendelFuvarSzamlaszamot':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    $result = $fuvarInterface->hozzarendelSzamlaszamot($request['idk'], $kerelmezo['ceg_id'], $request['szamlaszam']);
+                    if ($result['success']) {
+                        $this->logAudit($kerelmezo['ceg_id'], 'fuvarok', null, 'szamlaszam_hozzarendeles', $request['szamlaszam']);
+                    }
+                    echo json_encode($result);
+                    return;
                 case 'getTachografNapiAktivitas':
                     $kerelmezo = $this->resolveKerelmezo($request);
                     echo json_encode($tachografInterface->getNapiAktivitas(
@@ -1879,7 +1889,8 @@ class ApiHandler {
                         $request['gki_lejarat'],
                         $request['adr_lejarat'],
                         $kerelmezo['szerepkor'],
-                        $request['cegnev'] ?? null
+                        $request['cegnev'] ?? null,
+                        $kerelmezo['is_root']
                     ));
 
                     return;
@@ -2573,11 +2584,23 @@ class ApiHandler {
     // admin-fiók is tartozhat (ld. backend/sql/6.sql, CsapatInterface),
     // de közöttük nincs jogosultsági különbségtétel: mindenki, aki egy
     // céghez tartozik, ugyanazt látja/szerkeszti.
-    private function saveAdminData($id, $name, $email, $phone, $szul_datum, $szemelyi, $varos, $irsz, $cim, $szemelyi_lejarat, $jogsi_lejarat, $gki_lejarat, $adr_lejarat, $szerepkor = 'admin', $cegnev = null) {
+    // `$isRoot` — whole-branch-review Minor finding: a `cegnev` mező a UI-n
+    // (`CardSettings.js`) csak root/tulajdonos adminnak látszik, de a
+    // backend eddig bármelyik csapattag munkamenetéből érkező
+    // `saveAdminData` híváson feltétel nélkül felülírta — egy nem-root
+    // csapattag kérése emiatt csendben átírhatta a cég nevét mindenki
+    // számára. A `cegnev = CASE WHEN :is_root THEN :cegnev ELSE cegnev END`
+    // ág nem-root hívónál változatlanul hagyja a meglévő DB-értéket
+    // (nincs hozzá extra SELECT sem szükséges), root hívónál változatlanul
+    // felülírja — ugyanaz a "resolve server-side, never trust client" elv,
+    // mint a `ceg_id`/`kerelmezo_id`-nél, `$isRoot` is a szerver-oldalon
+    // feloldott `resolveKerelmezo()['is_root']`-ból jön, sosem a kliens
+    // kérésből.
+    private function saveAdminData($id, $name, $email, $phone, $szul_datum, $szemelyi, $varos, $irsz, $cim, $szemelyi_lejarat, $jogsi_lejarat, $gki_lejarat, $adr_lejarat, $szerepkor = 'admin', $cegnev = null, $isRoot = false) {
         try {
             $query = "UPDATE admin
                       SET name = :name,
-                          cegnev = :cegnev,
+                          cegnev = CASE WHEN :is_root THEN :cegnev ELSE cegnev END,
                           email = :email,
                           phone = :phone,
                           szul_datum = :szul_datum,
@@ -2597,6 +2620,7 @@ class ApiHandler {
             // Paraméterek kötése
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             $stmt->bindParam(':name', $name, PDO::PARAM_STR);
+            $stmt->bindValue(':is_root', $isRoot ? 1 : 0, PDO::PARAM_INT);
             $stmt->bindParam(':cegnev', $cegnev, PDO::PARAM_STR);
             $stmt->bindParam(':email', $email, PDO::PARAM_STR);
             $stmt->bindParam(':phone', $phone, PDO::PARAM_STR);
