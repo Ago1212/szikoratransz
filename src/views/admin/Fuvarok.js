@@ -3,6 +3,7 @@ import { useHistory } from "react-router-dom";
 
 import CardTable from "components/Table/CardTableForFuvarok.js";
 import PageHeader from "components/UI/PageHeader.js";
+import AllapotOsszesitoChips from "components/Fuvarok/AllapotOsszesitoChips.js";
 import { fetchAction } from "utils/fetchAction";
 
 const PAGE_SIZE = 10;
@@ -17,6 +18,8 @@ export default function Fuvarok() {
   const [sortKey, setSortKey] = useState(null);
   const [sortDir, setSortDir] = useState("asc");
   const [dokSzam, setDokSzam] = useState(0);
+  const [allapotSzuro, setAllapotSzuro] = useState("");
+  const [osszesito, setOsszesito] = useState(null);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -24,6 +27,16 @@ export default function Fuvarok() {
       if (result?.success) setDokSzam(result.szam);
     });
   }, []);
+
+  const loadOsszesito = useCallback(async () => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    const result = await fetchAction("getFuvarAllapotOsszesito", { ceg_id: user.ceg_id });
+    if (result?.success) setOsszesito(result.osszesito);
+  }, []);
+
+  useEffect(() => {
+    loadOsszesito();
+  }, [loadOsszesito]);
 
   useEffect(() => {
     let cancelled = false;
@@ -37,6 +50,7 @@ export default function Fuvarok() {
         pageSize: PAGE_SIZE,
         sortKey: sortKey || undefined,
         sortDir,
+        allapot: allapotSzuro || undefined,
       });
       if (cancelled) return;
       if (result.success) {
@@ -54,7 +68,7 @@ export default function Fuvarok() {
     return () => {
       cancelled = true;
     };
-  }, [page, search, sortKey, sortDir]);
+  }, [page, search, sortKey, sortDir, allapotSzuro]);
 
   const handleSortChange = (key, dir) => {
     setSortKey(key);
@@ -87,6 +101,14 @@ export default function Fuvarok() {
             </button>
           )
         }
+      />
+      <AllapotOsszesitoChips
+        osszesito={osszesito}
+        active={allapotSzuro}
+        onSelect={(v) => {
+          setAllapotSzuro(v);
+          setPage(1);
+        }}
       />
       <div className="flex flex-wrap mt-0">
         <div className="w-full mb-12 px-0 md:px-4">
