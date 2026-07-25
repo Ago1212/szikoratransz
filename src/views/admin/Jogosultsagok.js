@@ -11,6 +11,7 @@ const MODUL_LABEL = {
   kamionok: "Kamionok",
   potkocsik: "Pótkocsik",
   furgonok: "Furgonok",
+  fuvarok: "Fuvarok",
   karbantartasok: "Karbantartások",
   soforok: "Sofőrök",
   bejelentesek: "Bejelentések",

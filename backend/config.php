@@ -9,6 +9,7 @@ require_once __DIR__ . '/env.php';
 // lehetővé.
 $apiConfig = [
     "authHash"=> envOrDefault('API_AUTH_HASH', "nIrINP&o!PU|+pM*Q8'j1R07U57W,qD"),
+    "geminiApiKey" => envOrDefault('GEMINI_API_KEY', null),
     // Külső rendszerek (NAV Online Számla, GPSmart flottakövetés) valódi
     // jelszavát/kulcsait ez titkosítja (openssl_encrypt, AES-256-CBC) —
     // ezek valódi külső fiókokhoz adnak hozzáférést, ezért nem nyílt

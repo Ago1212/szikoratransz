@@ -273,6 +273,19 @@ export default function CardSettings() {
             A szerepkör itt csak megtekinthető — módosítani a Felhasználók listáján lehet.
           </p>
 
+          {isOwnerAdmin && (
+            <FormSection id="ceg-adatai" title="Cég adatai" icon={PiBuildingsLight} columns={4}>
+              <FormField
+                icon={PiBuildingsLight}
+                label="Cégnév"
+                name="cegnev"
+                value={userData.cegnev || ""}
+                onChange={handleInputChange}
+                className="md:col-span-2"
+              />
+            </FormSection>
+          )}
+
           <FormSection id="kapcsolat" title="Kapcsolat" columns={3}>
             <FormField
               icon={PiBuildingsLight}

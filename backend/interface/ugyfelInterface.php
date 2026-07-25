@@ -40,8 +40,8 @@ class UgyfelInterface {
 
     public function newUgyfel($data) {
         try {
-            $query = "INSERT INTO ugyfelek (admin, nev, adoszam, cim, irsz, varos, kapcsolattarto_nev, kapcsolattarto_email, kapcsolattarto_telefon, megjegyzes)
-                      VALUES (:admin, :nev, :adoszam, :cim, :irsz, :varos, :kapcsolattarto_nev, :kapcsolattarto_email, :kapcsolattarto_telefon, :megjegyzes)";
+            $query = "INSERT INTO ugyfelek (admin, nev, adoszam, cim, irsz, varos, kapcsolattarto_nev, kapcsolattarto_email, kapcsolattarto_telefon, fizetesi_hatarido_nap, megjegyzes)
+                      VALUES (:admin, :nev, :adoszam, :cim, :irsz, :varos, :kapcsolattarto_nev, :kapcsolattarto_email, :kapcsolattarto_telefon, :fizetesi_hatarido_nap, :megjegyzes)";
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(':admin', $data['admin']);
             $stmt->bindValue(':nev', $data['nev']);
@@ -52,6 +52,7 @@ class UgyfelInterface {
             $stmt->bindValue(':kapcsolattarto_nev', $data['kapcsolattarto_nev'] ?? null);
             $stmt->bindValue(':kapcsolattarto_email', $data['kapcsolattarto_email'] ?? null);
             $stmt->bindValue(':kapcsolattarto_telefon', $data['kapcsolattarto_telefon'] ?? null);
+            $stmt->bindValue(':fizetesi_hatarido_nap', empty($data['fizetesi_hatarido_nap']) ? null : (int) $data['fizetesi_hatarido_nap'], empty($data['fizetesi_hatarido_nap']) ? PDO::PARAM_NULL : PDO::PARAM_INT);
             $stmt->bindValue(':megjegyzes', $data['megjegyzes'] ?? null);
             $stmt->execute();
 
@@ -72,7 +73,8 @@ class UgyfelInterface {
                       nev = :nev, adoszam = :adoszam,
                       cim = :cim, irsz = :irsz, varos = :varos,
                       kapcsolattarto_nev = :kapcsolattarto_nev, kapcsolattarto_email = :kapcsolattarto_email,
-                      kapcsolattarto_telefon = :kapcsolattarto_telefon, megjegyzes = :megjegyzes
+                      kapcsolattarto_telefon = :kapcsolattarto_telefon, fizetesi_hatarido_nap = :fizetesi_hatarido_nap,
+                      megjegyzes = :megjegyzes
                       WHERE id = :id AND admin = :ceg_id";
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(':id', $data['id']);
@@ -85,6 +87,7 @@ class UgyfelInterface {
             $stmt->bindValue(':kapcsolattarto_nev', $data['kapcsolattarto_nev'] ?? null);
             $stmt->bindValue(':kapcsolattarto_email', $data['kapcsolattarto_email'] ?? null);
             $stmt->bindValue(':kapcsolattarto_telefon', $data['kapcsolattarto_telefon'] ?? null);
+            $stmt->bindValue(':fizetesi_hatarido_nap', empty($data['fizetesi_hatarido_nap']) ? null : (int) $data['fizetesi_hatarido_nap'], empty($data['fizetesi_hatarido_nap']) ? PDO::PARAM_NULL : PDO::PARAM_INT);
             $stmt->bindValue(':megjegyzes', $data['megjegyzes'] ?? null);
             $stmt->execute();
 

@@ -22,6 +22,7 @@ class JogosultsagInterface {
         'kamionok' => ['hozzaferes', 'szerkesztes', 'torles'],
         'potkocsik' => ['hozzaferes', 'szerkesztes', 'torles'],
         'furgonok' => ['hozzaferes', 'szerkesztes', 'torles'],
+        'fuvarok' => ['hozzaferes', 'szerkesztes', 'torles'],
         'karbantartasok' => ['hozzaferes', 'szerkesztes', 'torles'],
         'soforok' => ['hozzaferes', 'szerkesztes', 'torles'],
         'bejelentesek' => ['hozzaferes', 'szerkesztes', 'torles'],

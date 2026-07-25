@@ -28,6 +28,8 @@ import {
   PiSunLight,
   PiMoonLight,
   PiIdentificationCardLight,
+  PiFileTextLight,
+  PiClipboardTextLight,
 } from "react-icons/pi";
 
 import NotificationDropdown from "components/Dropdowns/NotificationDropdown.js";
@@ -82,6 +84,19 @@ const mobileGroups = [
         text: "Karbantartások",
       },
       { to: "/admin/koltsegek", icon: PiCoinsLight, text: "Pénzforgalom" },
+    ],
+  },
+  {
+    key: "fuvarok",
+    label: "Fuvarok",
+    icon: PiClipboardTextLight,
+    items: [
+      {
+        to: "/admin/beerkezettDokumentumok",
+        icon: PiFileTextLight,
+        text: "Beérkezett dokumentumok",
+      },
+      { to: "/admin/fuvarok", icon: PiClipboardTextLight, text: "Fuvarok" },
     ],
   },
   // Csapat + Partnerek EGY mobil fülbe összevonva (divider-rel elválasztva) —
@@ -277,6 +292,7 @@ export default function Sidebar({ isDark, onToggleDark }) {
     }
     return {
       flotta: true,
+      fuvarok: false,
       csapat: false,
       partnerek: false,
       penzugyek: false,
@@ -668,6 +684,28 @@ export default function Sidebar({ isDark, onToggleDark }) {
                   to="/admin/furgonok"
                   icon={PiVanLight}
                   text="Furgonok"
+                />
+              </ul>
+            )}
+          </div>
+
+          <div>
+            <GroupHeader
+              label="Fuvarok"
+              open={openGroups.fuvarok}
+              onToggle={() => toggleGroup("fuvarok")}
+            />
+            {openGroups.fuvarok && (
+              <ul className="space-y-0.5">
+                <NavItem
+                  to="/admin/beerkezettDokumentumok"
+                  icon={PiFileTextLight}
+                  text="Beérkezett dokumentumok"
+                />
+                <NavItem
+                  to="/admin/fuvarok"
+                  icon={PiClipboardTextLight}
+                  text="Fuvarok"
                 />
               </ul>
             )}

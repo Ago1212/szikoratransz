@@ -10,6 +10,7 @@ import {
   PiPhoneLight,
   PiCaretRightLight,
   PiMapPinLight,
+  PiCameraLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import StatusBadge from "components/UI/StatusBadge.js";
@@ -59,6 +60,12 @@ const quickActions = [
     to: "/user/tankolas",
     icon: PiGasPumpLight,
     label: "Tankolás",
+    tone: "brand",
+  },
+  {
+    to: "/user/dokumentum-feltoltes",
+    icon: PiCameraLight,
+    label: "Dokumentum",
     tone: "brand",
   },
 ];

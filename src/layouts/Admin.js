@@ -43,6 +43,11 @@ const Ajanlatkeresek = lazy(() => import("views/admin/Ajanlatkeresek.js"));
 const SoforScorecard = lazy(() => import("views/admin/SoforScorecard.js"));
 const ErtesitesiElozmenyek = lazy(() => import("views/admin/ErtesitesiElozmenyek.js"));
 const Tachograf = lazy(() => import("views/admin/Tachograf.js"));
+const BeerkezettDokumentumok = lazy(() =>
+  import("views/admin/BeerkezettDokumentumok.js"),
+);
+const Fuvarok = lazy(() => import("views/admin/Fuvarok.js"));
+const FuvarForm = lazy(() => import("views/admin/FuvarForm.js"));
 
 // A backend a session-típus alapján (admin vs sofőr) elutasítja a nem
 // megfelelő akciókat, de a frontend guard korábban csak bejelentkezettséget
@@ -219,6 +224,17 @@ export default function Admin() {
               path="/admin/helyszinForm"
               exact
               component={HelyszinForm}
+            />
+            <PrivateRoute
+              path="/admin/beerkezettDokumentumok"
+              exact
+              component={BeerkezettDokumentumok}
+            />
+            <PrivateRoute path="/admin/fuvarok" exact component={Fuvarok} />
+            <PrivateRoute
+              path="/admin/fuvarForm"
+              exact
+              component={FuvarForm}
             />
             <Route path="/auth/login" exact component={LoginPage} />
             <Redirect from="/admin" to="/admin/dashboard" />
