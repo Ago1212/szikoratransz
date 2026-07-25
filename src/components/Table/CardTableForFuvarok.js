@@ -4,7 +4,9 @@ import { PiPencilSimpleLight, PiTrashLight, PiClipboardTextLight } from "react-i
 
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
-import StatusBadge from "components/UI/StatusBadge.js";
+import StatusChangePopover from "components/UI/StatusChangePopover.js";
+import { fetchAction } from "utils/fetchAction";
+import { toast } from "utils/toast";
 
 const ALLAPOT_LABEL = {
   rogzitett: "Rögzítve",
@@ -12,19 +14,6 @@ const ALLAPOT_LABEL = {
   szamlazva: "Számlázva",
   fizetesre_var: "Fizetésre vár",
   teljesitve: "Teljesítve",
-};
-
-// StatusBadge.js ténylegesen `success`/`warning`/`danger`/`info`/`neutral`
-// tónusokat ismer (ld. TONE_CLASSES) — a tervben szereplő `brand`/`positive`
-// nevek nem léteznek a komponensben (ismeretlen tónusnál a badge csendben
-// `neutral`-ra esne vissza), ezért itt `info` (márka-kék, ld. AllapotBadge.js
-// hasonló használata) és `success` váltja őket.
-const ALLAPOT_TONE = {
-  rogzitett: "neutral",
-  szamlazasra_var: "warning",
-  szamlazva: "info",
-  fizetesre_var: "warning",
-  teljesitve: "success",
 };
 
 const CardTable = ({
@@ -39,9 +28,39 @@ const CardTable = ({
   sortKey,
   sortDir,
   onSortChange,
+  onAllapotValtozott,
 }) => {
   const history = useHistory();
   const user = JSON.parse(localStorage.getItem("user"));
+
+  const valtAllapotot = async (id, ujAllapot) => {
+    const result = await fetchAction("updateFuvarAllapot", {
+      ceg_id: user.ceg_id,
+      kerelmezo_id: user.id,
+      id,
+      allapot: ujAllapot,
+    });
+    if (result?.success) {
+      onAllapotValtozott?.();
+    } else {
+      toast.error(result?.message || "Az állapot módosítása sikertelen.");
+    }
+  };
+
+  const bulkActions = [
+    {
+      label: `Állapot: ${ALLAPOT_LABEL.szamlazasra_var}`,
+      onClick: async (rows) => {
+        await Promise.all(rows.map((row) => valtAllapotot(row.id, "szamlazasra_var")));
+      },
+    },
+    {
+      label: `Állapot: ${ALLAPOT_LABEL.teljesitve}`,
+      onClick: async (rows) => {
+        await Promise.all(rows.map((row) => valtAllapotot(row.id, "teljesitve")));
+      },
+    },
+  ];
 
   const handleNewFuvar = () => {
     history.push("/admin/fuvarForm", { data: {} });
@@ -81,7 +100,9 @@ const CardTable = ({
       key: "allapot",
       label: "Állapot",
       sortable: true,
-      render: (row) => <StatusBadge tone={ALLAPOT_TONE[row.allapot] || "neutral"}>{ALLAPOT_LABEL[row.allapot] || row.allapot}</StatusBadge>,
+      render: (row) => (
+        <StatusChangePopover value={row.allapot} onChange={(ujAllapot) => valtAllapotot(row.id, ujAllapot)} />
+      ),
     },
     {
       key: "actions",
@@ -132,6 +153,8 @@ const CardTable = ({
       sortKey={sortKey}
       sortDir={sortDir}
       onSortChange={onSortChange}
+      selectable
+      bulkActions={bulkActions}
     />
   );
 };

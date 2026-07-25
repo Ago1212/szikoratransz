@@ -38,37 +38,32 @@ export default function Fuvarok() {
     loadOsszesito();
   }, [loadOsszesito]);
 
-  useEffect(() => {
-    let cancelled = false;
-    const fetchData = async () => {
-      setLoading(true);
-      const user = JSON.parse(localStorage.getItem("user"));
-      const result = await fetchAction("getFuvarok", {
-        ceg_id: user.ceg_id,
-        search: search || undefined,
-        page,
-        pageSize: PAGE_SIZE,
-        sortKey: sortKey || undefined,
-        sortDir,
-        allapot: allapotSzuro || undefined,
-      });
-      if (cancelled) return;
-      if (result.success) {
-        setFuvarok(result.fuvarok || []);
-        setTotal(result.total ?? (result.fuvarok || []).length);
-      } else {
-        setFuvarok([]);
-        setTotal(0);
-        console.error("Error fetching fuvarok:", result.message);
-      }
-      setLoading(false);
-    };
-
-    fetchData();
-    return () => {
-      cancelled = true;
-    };
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    const user = JSON.parse(localStorage.getItem("user"));
+    const result = await fetchAction("getFuvarok", {
+      ceg_id: user.ceg_id,
+      search: search || undefined,
+      page,
+      pageSize: PAGE_SIZE,
+      sortKey: sortKey || undefined,
+      sortDir,
+      allapot: allapotSzuro || undefined,
+    });
+    if (result.success) {
+      setFuvarok(result.fuvarok || []);
+      setTotal(result.total ?? (result.fuvarok || []).length);
+    } else {
+      setFuvarok([]);
+      setTotal(0);
+      console.error("Error fetching fuvarok:", result.message);
+    }
+    setLoading(false);
   }, [page, search, sortKey, sortDir, allapotSzuro]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleSortChange = (key, dir) => {
     setSortKey(key);
@@ -124,6 +119,10 @@ export default function Fuvarok() {
             sortKey={sortKey}
             sortDir={sortDir}
             onSortChange={handleSortChange}
+            onAllapotValtozott={() => {
+              fetchData();
+              loadOsszesito();
+            }}
           />
         </div>
       </div>
