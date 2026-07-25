@@ -57,11 +57,15 @@ class BeerkezettDokumentumInterface {
             }
 
             $sajatCegnev = $this->sajatCegnev($ceg_id);
-            $geminiKulcs = $apiConfig['geminiApiKey'] ?? null;
+            // `geminiApiKeys` (tömb, ld. config.php) — nem a régi, egyetlen
+            // `geminiApiKey`-t olvassuk, hogy a GeminiOcrClient kvóta-túllépés
+            // esetén tényleg tudjon másik (külön projektben generált) kulcsra
+            // váltani, ne csak egyetlen kulcsot lásson.
+            $geminiKulcsok = $apiConfig['geminiApiKeys'] ?? [];
 
             $adatok = null;
-            if (!empty($geminiKulcs)) {
-                $client = new GeminiOcrClient($geminiKulcs);
+            if (!empty($geminiKulcsok)) {
+                $client = new GeminiOcrClient($geminiKulcsok);
                 $adatok = $client->extractFuvarAdatok($kepBytes, $kepMime, $sajatCegnev);
             }
 
