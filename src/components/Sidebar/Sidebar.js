@@ -383,6 +383,29 @@ export default function Sidebar({ isDark, onToggleDark }) {
     return () => clearInterval(intervalId);
   }, [loadNyitottBejelentesek]);
 
+  // Feldolgozásra váró Beérkezett dokumentumok darabszáma — ugyanaz a
+  // route-change + 60s poll minta, mint a Bejelentések unread-badge-nél
+  // fentebb, hogy az admin ne felejtse el megnézni az inboxot.
+  const [beerkezettDokSzam, setBeerkezettDokSzam] = React.useState(0);
+  const loadBeerkezettDokSzam = React.useCallback(() => {
+    if (!user?.ceg_id) return;
+    fetchAction("getBeerkezettDokumentumokSzama", { ceg_id: user.ceg_id }).then(
+      (result) => {
+        if (result?.success) setBeerkezettDokSzam(result.szam);
+      },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.ceg_id]);
+
+  React.useEffect(() => {
+    loadBeerkezettDokSzam();
+  }, [loadBeerkezettDokSzam, location.pathname]);
+
+  React.useEffect(() => {
+    const intervalId = setInterval(loadBeerkezettDokSzam, 60000);
+    return () => clearInterval(intervalId);
+  }, [loadBeerkezettDokSzam]);
+
   // A menüpontok elrejtéséhez a fuvarszervező a SAJÁT jogosultságait kéri le
   // (nem a admin-only `getJogosultsagok`-ot) — ld. ApiHandler `getSajatJogosultsagok`
   // komment. Amíg nem admin/root, `null` marad, és minden menüpont látszik
@@ -701,6 +724,7 @@ export default function Sidebar({ isDark, onToggleDark }) {
                   to="/admin/beerkezettDokumentumok"
                   icon={PiFileTextLight}
                   text="Beérkezett dokumentumok"
+                  badge={beerkezettDokSzam}
                 />
                 <NavItem
                   to="/admin/fuvarok"
