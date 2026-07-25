@@ -58,7 +58,7 @@ class BeerkezettDokumentumInterface {
                 $kepMime = 'image/png';
             } else {
                 $kepBytes = $raw;
-                $kepMime = 'image/' . ($kiterjesztes === 'jpg' ? 'jpeg' : $kiterjesztes);
+                $kepMime = $this->kepMimeTipusa($kepBytes, $kiterjesztes);
             }
 
             $sajatCegnev = $this->sajatCegnev($ceg_id);
@@ -87,6 +87,33 @@ class BeerkezettDokumentumInterface {
                 unlink($tmpKepPath);
             }
         }
+    }
+
+    // Whole-branch review Minor finding: a kép MIME-típusát korábban
+    // kizárólag a feltöltött fájlnév kiterjesztéséből találtuk ki (pl. egy
+    // ".jpg"-re átnevezett PNG "image/jpeg"-ként ment volna a Gemini
+    // OCR-hívásba). A `finfo` (core PHP kiterjesztés, nincs composer-
+    // függőség, ld. `php8.2 -m | grep fileinfo`) a nyers bájtok tartalma
+    // alapján ismeri fel a valódi MIME-típust — csak akkor esünk vissza a
+    // kiterjesztés-alapú találgatásra, ha a `finfo`-detekció sikertelen
+    // vagy nem `image/`-del kezdődő típust ad (pl. a fájl ténylegesen nem
+    // kép — ez esetben legalább a korábbi viselkedést kapjuk, nem egy
+    // üres/hibás MIME-et).
+    private function kepMimeTipusa($kepBytes, $kiterjesztes) {
+        $tartalekMime = 'image/' . ($kiterjesztes === 'jpg' ? 'jpeg' : $kiterjesztes);
+
+        if (function_exists('finfo_open')) {
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            if ($finfo !== false) {
+                $detektalt = finfo_buffer($finfo, $kepBytes);
+                finfo_close($finfo);
+                if (is_string($detektalt) && strpos($detektalt, 'image/') === 0) {
+                    return $detektalt;
+                }
+            }
+        }
+
+        return $tartalekMime;
     }
 
     // Csak az első oldalt konvertáljuk (a fuvarlevél/szállítólevél
