@@ -136,6 +136,7 @@ class ApiHandler {
         // mindkét munkamenet-típusból hívható akcióknál, amik szintén nem
         // szerepelnek ebben a map-ben.
         'getBeerkezettDokumentumok' => ['fuvarok', 'hozzaferes'],
+        'getBeerkezettDokumentumokSzama' => ['fuvarok', 'hozzaferes'],
         'updateBeerkezettDokumentumTipus' => ['fuvarok', 'szerkesztes'],
         'newFuvar' => ['fuvarok', 'szerkesztes'],
         'updateFuvar' => ['fuvarok', 'szerkesztes'],
@@ -354,6 +355,7 @@ class ApiHandler {
 
             'elemezBeerkezettDokumentum' => ['base64', 'fajlnev', 'ceg_id', 'kerelmezo_id'],
             'getBeerkezettDokumentumok' => ['ceg_id'],
+            'getBeerkezettDokumentumokSzama' => ['ceg_id'],
             'updateBeerkezettDokumentumTipus' => ['id', 'ceg_id', 'tipus'],
 
             'newFuvar' => ['ceg_id', 'kerelmezo_id'],
@@ -1668,6 +1670,10 @@ class ApiHandler {
                 case 'getBeerkezettDokumentumok':
                     $kerelmezo = $this->resolveKerelmezo($request);
                     echo json_encode($beerkezettDokumentumInterface->getDokumentumok($kerelmezo['ceg_id'], $request['ocrAllapot'] ?? null, $request['csakFeldolgozatlan'] ?? true));
+                    return;
+                case 'getBeerkezettDokumentumokSzama':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($beerkezettDokumentumInterface->getSzama($kerelmezo['ceg_id']));
                     return;
                 case 'updateBeerkezettDokumentumTipus':
                     $kerelmezo = $this->resolveKerelmezo($request);

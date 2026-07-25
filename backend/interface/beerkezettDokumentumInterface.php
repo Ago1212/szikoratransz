@@ -205,6 +205,18 @@ class BeerkezettDokumentumInterface {
         return $nevek;
     }
 
+    // Könnyűsúlyú darabszám a sidebar-jelvényhez/Fuvarok fejléc-pillhez —
+    // szándékosan NEM getDokumentumok()-ot hívja (ami minden ocr_adatok
+    // JSON-t áthúzna a hálózaton egy puszta számért).
+    public function getSzama($ceg_id) {
+        $stmt = $this->db->prepare(
+            "SELECT COUNT(*) AS db FROM beerkezett_dokumentumok WHERE admin = :admin AND torolt <> 'I' AND fuvar_id IS NULL"
+        );
+        $stmt->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
+        $stmt->execute();
+        return ['success' => true, 'szam' => (int) $stmt->fetch(PDO::FETCH_ASSOC)['db']];
+    }
+
     public function updateTipus($id, $ceg_id, $tipus) {
         if (!in_array($tipus, ['fuvarlevel', 'szallitolevel', 'ismeretlen'], true)) {
             return ['success' => false, 'message' => 'Érvénytelen dokumentumtípus.'];
