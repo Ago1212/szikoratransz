@@ -122,6 +122,28 @@ class FuvarInterface {
         $stmt->bindValue(':allapot', $data['allapot'] ?? 'rogzitett');
     }
 
+    const ALLAPOT_ERTEKEK = ['rogzitett', 'szamlazasra_var', 'szamlazva', 'fizetesre_var', 'teljesitve'];
+
+    // Dedikált, EGY oszlopot módosító UPDATE — szándékosan nem a teljes
+    // updateFuvar()-t hívja: a Kanban drag&drop és a gyors állapotváltó
+    // popover csak {id, allapot}-ot küld, egy teljes-payload update ezt
+    // NULL-ra írná a többi mezőn (bindFuvarMezok minden mezőt `?? null`-lal
+    // olvas).
+    public function updateAllapot($id, $ceg_id, $allapot) {
+        if (!in_array($allapot, self::ALLAPOT_ERTEKEK, true)) {
+            return ['success' => false, 'message' => 'Érvénytelen állapot.'];
+        }
+        $stmt = $this->db->prepare("UPDATE fuvarok SET allapot = :allapot WHERE id = :id AND admin = :admin AND torolt <> 'I'");
+        $stmt->bindValue(':allapot', $allapot);
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        $stmt->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
+        $stmt->execute();
+        if ($stmt->rowCount() === 0) {
+            return ['success' => false, 'message' => 'A fuvar nem található.'];
+        }
+        return ['success' => true, 'message' => 'Állapot frissítve.', 'fuvar' => $this->getFuvar($id, $ceg_id)['fuvar']];
+    }
+
     public function deleteFuvar($id, $ceg_id) {
         $this->visszaallitForrasDokumentumot($id, $ceg_id);
 
