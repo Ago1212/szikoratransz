@@ -26,6 +26,7 @@ const TABLA_LABEL = {
   listaelemek: "Listaelem",
   egyeb_koltsegek: "Pénzforgalom tétel",
   fuvarok: "Fuvar",
+  beerkezett_dokumentumok: "Beérkezett dokumentum",
   vezetesi_naplo: "Vezetési napló",
   jarmu_valtas_kerelmek: "Jármű-váltási kérelem",
   gpsmart_beallitasok: "GPSmart beállítások",

@@ -138,6 +138,7 @@ class ApiHandler {
         'getBeerkezettDokumentumok' => ['fuvarok', 'hozzaferes'],
         'getBeerkezettDokumentumokSzama' => ['fuvarok', 'hozzaferes'],
         'updateBeerkezettDokumentumTipus' => ['fuvarok', 'szerkesztes'],
+        'torolBeerkezettDokumentum' => ['fuvarok', 'torles'],
         'newFuvar' => ['fuvarok', 'szerkesztes'],
         'updateFuvar' => ['fuvarok', 'szerkesztes'],
         'deleteFuvar' => ['fuvarok', 'torles'],
@@ -357,6 +358,7 @@ class ApiHandler {
             'getBeerkezettDokumentumok' => ['ceg_id'],
             'getBeerkezettDokumentumokSzama' => ['ceg_id'],
             'updateBeerkezettDokumentumTipus' => ['id', 'ceg_id', 'tipus'],
+            'torolBeerkezettDokumentum' => ['id', 'ceg_id'],
 
             'newFuvar' => ['ceg_id', 'kerelmezo_id'],
             'updateFuvar' => ['id', 'ceg_id', 'kerelmezo_id'],
@@ -1678,6 +1680,14 @@ class ApiHandler {
                 case 'updateBeerkezettDokumentumTipus':
                     $kerelmezo = $this->resolveKerelmezo($request);
                     echo json_encode($beerkezettDokumentumInterface->updateTipus($request['id'], $kerelmezo['ceg_id'], $request['tipus']));
+                    return;
+                case 'torolBeerkezettDokumentum':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    $result = $beerkezettDokumentumInterface->torol($request['id'], $kerelmezo['ceg_id']);
+                    if ($result['success']) {
+                        $this->logAudit($kerelmezo['ceg_id'], 'beerkezett_dokumentumok', $request['id'], 'torles');
+                    }
+                    echo json_encode($result);
                     return;
                 case 'newFuvar':
                     $kerelmezo = $this->resolveKerelmezo($request);

@@ -217,6 +217,32 @@ class BeerkezettDokumentumInterface {
         return ['success' => true, 'szam' => (int) $stmt->fetch(PDO::FETCH_ASSOC)['db']];
     }
 
+    // Csak "fuvar_id IS NULL" dokumentum vethető el — egy már fuvarrá
+    // alakított dokumentumot deleteFuvar() (ami visszaallitForrasDokumentumot()-
+    // tal reparentálja) tesz újra elérhetővé, ez a metódus szándékosan nem
+    // nyúl egy már összekapcsolt sorhoz.
+    public function torol($id, $ceg_id) {
+        $stmt = $this->db->prepare(
+            "SELECT fuvar_id FROM beerkezett_dokumentumok WHERE id = :id AND admin = :admin AND torolt <> 'I'"
+        );
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        $stmt->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $sor = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($sor === false) {
+            return ['success' => false, 'message' => 'A dokumentum nem található.'];
+        }
+        if (!empty($sor['fuvar_id'])) {
+            return ['success' => false, 'message' => 'Ehhez a dokumentumhoz már tartozik fuvar, nem vethető el.'];
+        }
+
+        $update = $this->db->prepare("UPDATE beerkezett_dokumentumok SET torolt = 'I' WHERE id = :id AND admin = :admin");
+        $update->bindValue(':id', $id, PDO::PARAM_INT);
+        $update->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
+        $update->execute();
+        return ['success' => true, 'message' => 'Dokumentum elvetve.'];
+    }
+
     public function updateTipus($id, $ceg_id, $tipus) {
         if (!in_array($tipus, ['fuvarlevel', 'szallitolevel', 'ismeretlen'], true)) {
             return ['success' => false, 'message' => 'Érvénytelen dokumentumtípus.'];
