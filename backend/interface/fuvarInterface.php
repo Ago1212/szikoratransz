@@ -65,8 +65,8 @@ class FuvarInterface {
             return ['success' => false, 'message' => $hiba];
         }
         try {
-            $query = "INSERT INTO fuvarok (admin, sofor_id, kamion_id, furgon_id, potkocsi_id, teljesites_datuma, felrako, lerako, tavolsag_km, megbizo_id, aru_megnevezese, megjegyzes, fuvardij, egyeb_koltseg, fuvarlevel_szam, allapot)
-                      VALUES (:admin, :sofor_id, :kamion_id, :furgon_id, :potkocsi_id, :teljesites_datuma, :felrako, :lerako, :tavolsag_km, :megbizo_id, :aru_megnevezese, :megjegyzes, :fuvardij, :egyeb_koltseg, :fuvarlevel_szam, :allapot)";
+            $query = "INSERT INTO fuvarok (admin, sofor_id, kamion_id, furgon_id, potkocsi_id, teljesites_datuma, felrako, lerako, tavolsag_km, megbizo_id, aru_megnevezese, megjegyzes, fuvardij, egyeb_koltseg, fuvarlevel_szam, beerkezett_dokumentum_id, allapot)
+                      VALUES (:admin, :sofor_id, :kamion_id, :furgon_id, :potkocsi_id, :teljesites_datuma, :felrako, :lerako, :tavolsag_km, :megbizo_id, :aru_megnevezese, :megjegyzes, :fuvardij, :egyeb_koltseg, :fuvarlevel_szam, :beerkezett_dokumentum_id, :allapot)";
             $stmt = $this->db->prepare($query);
             $this->bindFuvarMezok($stmt, $data, $ceg_id);
             $stmt->execute();
@@ -88,7 +88,8 @@ class FuvarInterface {
                         sofor_id = :sofor_id, kamion_id = :kamion_id, furgon_id = :furgon_id, potkocsi_id = :potkocsi_id,
                         teljesites_datuma = :teljesites_datuma, felrako = :felrako, lerako = :lerako, tavolsag_km = :tavolsag_km,
                         megbizo_id = :megbizo_id, aru_megnevezese = :aru_megnevezese, megjegyzes = :megjegyzes,
-                        fuvardij = :fuvardij, egyeb_koltseg = :egyeb_koltseg, fuvarlevel_szam = :fuvarlevel_szam, allapot = :allapot
+                        fuvardij = :fuvardij, egyeb_koltseg = :egyeb_koltseg, fuvarlevel_szam = :fuvarlevel_szam,
+                        beerkezett_dokumentum_id = :beerkezett_dokumentum_id, allapot = :allapot
                       WHERE id = :id AND admin = :admin";
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(':id', $data['id'], PDO::PARAM_INT);
@@ -117,6 +118,7 @@ class FuvarInterface {
         $stmt->bindValue(':fuvardij', $data['fuvardij'] === '' || $data['fuvardij'] === null ? null : (float) $data['fuvardij']);
         $stmt->bindValue(':egyeb_koltseg', $data['egyeb_koltseg'] === '' || $data['egyeb_koltseg'] === null ? null : (float) $data['egyeb_koltseg']);
         $stmt->bindValue(':fuvarlevel_szam', $data['fuvarlevel_szam'] ?? null);
+        $stmt->bindValue(':beerkezett_dokumentum_id', empty($data['beerkezett_dokumentum_id']) ? null : (int) $data['beerkezett_dokumentum_id'], empty($data['beerkezett_dokumentum_id']) ? PDO::PARAM_NULL : PDO::PARAM_INT);
         $stmt->bindValue(':allapot', $data['allapot'] ?? 'rogzitett');
     }
 
@@ -364,6 +366,11 @@ class FuvarInterface {
             'megjegyzes' => $ocrAdatok['egyeb_megjegyzes'] ?? null,
             'fuvarlevel_szam' => $ocrAdatok['fuvarlevel_szam'] ?? null,
         ], $felulirasok);
+
+        // A forrás-dokumentum id-je SOSEM felülírható a $felulirasok által —
+        // ez szerver-oldali tény (melyik dokumentumból hívtuk ezt a
+        // metódust), nem admin-szerkeszthető mező.
+        $adatok['beerkezett_dokumentum_id'] = $dokumentumId;
 
         $letrehozas = $this->newFuvar($adatok, $ceg_id);
         if (!$letrehozas['success']) {
