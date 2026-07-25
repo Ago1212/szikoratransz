@@ -145,6 +145,7 @@ class ApiHandler {
         'letrehozFuvarDokumentumbol' => ['fuvarok', 'szerkesztes'],
         'getUgyfelFuvarElozmeny' => ['fuvarok', 'hozzaferes'],
         'updateFuvarAllapot' => ['fuvarok', 'szerkesztes'],
+        'getFuvarAllapotOsszesito' => ['fuvarok', 'hozzaferes'],
 
         'getKarbantartasok' => ['karbantartasok', 'hozzaferes'],
         'updateKarbantartas' => ['karbantartasok', 'szerkesztes'],
@@ -362,6 +363,7 @@ class ApiHandler {
             'getFuvarok' => ['ceg_id'],
             'letrehozFuvarDokumentumbol' => ['dokumentumId', 'ceg_id', 'kerelmezo_id'],
             'updateFuvarAllapot' => ['id', 'ceg_id', 'kerelmezo_id', 'allapot'],
+            'getFuvarAllapotOsszesito' => ['ceg_id'],
 
             'getSzabadsagok' => ['id', 'kerelmezo_id'],
             'newSzabadsag' => ['admin', 'sofor_id', 'datum_tol', 'datum_ig', 'kerelmezo_id'],
@@ -1709,6 +1711,10 @@ class ApiHandler {
                         $this->logAudit($kerelmezo['ceg_id'], 'fuvarok', $result['fuvar']['id'] ?? null, 'letrehozas', 'dokumentumból');
                     }
                     echo json_encode($result);
+                    return;
+                case 'getFuvarAllapotOsszesito':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($fuvarInterface->getAllapotOsszesito($kerelmezo['ceg_id']));
                     return;
                 case 'getUgyfelFuvarElozmeny':
                     echo json_encode($fuvarInterface->getUgyfelElozmeny($request['ugyfelId'], $this->resolveKerelmezo($request)['ceg_id']));

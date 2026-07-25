@@ -144,6 +144,23 @@ class FuvarInterface {
         return ['success' => true, 'message' => 'Állapot frissítve.', 'fuvar' => $this->getFuvar($id, $ceg_id)['fuvar']];
     }
 
+    // Mindig a TELJES állomány állapotonkénti száma, függetlenül a lista
+    // aktuális keresésétől/szűrőjétől — az összesítő-chipek "hol tartunk
+    // összesen" áttekintést adnak, nem a szűrt eredményhalmaz számát.
+    public function getAllapotOsszesito($ceg_id) {
+        $stmt = $this->db->prepare("SELECT allapot, COUNT(*) AS db FROM fuvarok WHERE admin = :admin AND torolt <> 'I' GROUP BY allapot");
+        $stmt->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $osszesito = array_fill_keys(self::ALLAPOT_ERTEKEK, 0);
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            if (isset($osszesito[$row['allapot']])) {
+                $osszesito[$row['allapot']] = (int) $row['db'];
+            }
+        }
+        return ['success' => true, 'osszesito' => $osszesito];
+    }
+
     public function deleteFuvar($id, $ceg_id) {
         $this->visszaallitForrasDokumentumot($id, $ceg_id);
 
