@@ -343,6 +343,49 @@ class KoltsegInterface {
         return $tetelek;
     }
 
+    // A 3 alábbi metódus a `getKoltsegOsszesito()`-ban MÁR meglévő, havi
+    // bontású kiadás-számítási logikát teszi kívülről (más interfészből)
+    // hívhatóvá — a `FuvarInterface::getStatisztikak()` ezeket használja a
+    // fuvarozási profit-riporthoz, a meglévő logika duplikálása nélkül.
+
+    public function getUzemanyagKiadasHavonta($ceg_id, $datumTol, $datumIg) {
+        [$tankSzuresSql, $tankSzuresParams] = $this->datumSzures('datum', $datumTol, $datumIg);
+        $tankStmt = $this->db->prepare(
+            "SELECT DATE_FORMAT(datum, '%Y-%m') AS honap, SUM(osszeg) AS osszeg
+             FROM tankolasok WHERE admin = :ceg_id AND torolt <> 'I' AND osszeg IS NOT NULL$tankSzuresSql
+             GROUP BY honap"
+        );
+        $tankStmt->bindValue(':ceg_id', $ceg_id);
+        foreach ($tankSzuresParams as $k => $v) {
+            $tankStmt->bindValue($k, $v);
+        }
+        $tankStmt->execute();
+        $uzemanyagHavonta = [];
+        foreach ($tankStmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $uzemanyagHavonta[$row['honap']] = (float) $row['osszeg'];
+        }
+        foreach ($this->egyebHavonta('kiado', $datumTol, $datumIg, $ceg_id, 'uzemanyag') as $honap => $osszeg) {
+            $uzemanyagHavonta[$honap] = ($uzemanyagHavonta[$honap] ?? 0) + $osszeg;
+        }
+        return $uzemanyagHavonta;
+    }
+
+    public function getBerKiadasHavonta($ceg_id, $datumTol, $datumIg) {
+        $berTetelek = $this->getBerKiadasok($ceg_id, $datumTol, $datumIg);
+        $berHavonta = [];
+        foreach ($berTetelek as $t) {
+            $berHavonta[$t['honap']] = ($berHavonta[$t['honap']] ?? 0) + $t['osszeg'];
+        }
+        foreach ($this->egyebHavonta('kiado', $datumTol, $datumIg, $ceg_id, 'ber') as $honap => $osszeg) {
+            $berHavonta[$honap] = ($berHavonta[$honap] ?? 0) + $osszeg;
+        }
+        return $berHavonta;
+    }
+
+    public function getUtdijKiadasHavonta($ceg_id, $datumTol, $datumIg) {
+        return $this->egyebHavonta('kiado', $datumTol, $datumIg, $ceg_id, 'utdij');
+    }
+
     // `$isAdmin`: a bér-kategória konkrét összege csak admin szerepkörnek
     // jár (ld. sql/24.sql) — nem-admin kérelmezőnél a `ber` mezőket
     // NULLÁZZUK a válaszban (a chart/chipek egyszerűen nem mutatnak
