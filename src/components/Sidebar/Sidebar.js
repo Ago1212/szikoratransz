@@ -30,11 +30,13 @@ import {
   PiIdentificationCardLight,
   PiFileTextLight,
   PiClipboardTextLight,
+  PiPencilSimpleLight,
 } from "react-icons/pi";
 
 import NotificationDropdown from "components/Dropdowns/NotificationDropdown.js";
 import GlobalSearch from "components/UI/GlobalSearch.js";
 import PiaciArakPanel from "components/Sidebar/PiaciArakPanel.js";
+import NapiZonaEditorModal from "components/Sidebar/NapiZonaEditorModal.js";
 import { fetchAction } from "utils/fetchAction";
 
 const initials = (name) =>
@@ -314,6 +316,7 @@ export default function Sidebar({ isDark, onToggleDark }) {
   const [kerelmek, setKerelmek] = React.useState([]);
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [notifOpen, setNotifOpen] = React.useState(false);
+  const [pinEditorOpen, setPinEditorOpen] = React.useState(false);
   const location = useLocation();
   const history = useHistory();
 
@@ -380,6 +383,30 @@ export default function Sidebar({ isDark, onToggleDark }) {
   }, [openGroups]);
   const toggleGroup = (key) =>
     setOpenGroups((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  // A napi zóna kitűzött elemeinek sorrendje, ugyanazzal a felhasználónkénti
+  // localStorage-perzisztenciával, mint az `openGroups` fentebb. Nincs
+  // mentett érték esetén (új fiók, vagy még nem nyitotta meg a szerkesztőt)
+  // a `DEFAULT_PIN_PATHS` a visszaesés — ld. a fájl tetején lévő komment.
+  const [pinnedPaths, setPinnedPaths] = React.useState(() => {
+    try {
+      const stored = JSON.parse(
+        localStorage.getItem(`sidebar-pins-${user?.id}`) || "null",
+      );
+      if (Array.isArray(stored) && stored.length > 0) return stored;
+    } catch (e) {
+      // ignore corrupt/legacy localStorage érték
+    }
+    return DEFAULT_PIN_PATHS;
+  });
+  React.useEffect(() => {
+    if (!user?.id) return;
+    localStorage.setItem(
+      `sidebar-pins-${user.id}`,
+      JSON.stringify(pinnedPaths),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pinnedPaths]);
 
   // A Sidebar kizárólag az Admin layoutban él (ld. layouts/Admin.js) — ide
   // sofőr (user tábla) fiók sosem jut el, tehát a lábléc korábbi
@@ -610,6 +637,24 @@ export default function Sidebar({ isDark, onToggleDark }) {
     history.push("/");
   };
 
+  // Jelvény-számok a kitűzött elemekhez — csak a két, ma is jelvényezett
+  // menüponthoz (Bejelentések, Beérkezett dokumentumok) van értelmes érték,
+  // minden más kitűzött elemnél `undefined` marad (a `NavItem` `badge > 0`
+  // ellenőrzése ezt már ma is csendben kezeli).
+  const badgeByPath = {
+    "/admin/bejelentesek": nyitottBejelentesek.length,
+    "/admin/beerkezettDokumentumok": beerkezettDokSzam,
+  };
+
+  // A napi zóna ténylegesen renderelt elemei — a `pinnedPaths` sorrendjében,
+  // a `PIN_REGISTRY`-ből feloldva. Védekező szűrés: ha egy mentett `to` már
+  // nem szerepel a registryben (pl. jövőbeli route-törlés), vagy admin-only
+  // elemre mutat egy időközben lefokozott felhasználónál, az adott bejegyzés
+  // csendben kimarad.
+  const pinnedItems = pinnedPaths
+    .map((to) => PIN_REGISTRY.find((item) => item.to === to))
+    .filter((item) => item && (!item.adminOnly || isAdmin));
+
   const NavItem = ({ to, icon: Icon, text, subPath, badge }) => {
     if (!hasAccess(to)) return null;
     const active = isActive(subPath || to);
@@ -721,38 +766,30 @@ export default function Sidebar({ isDark, onToggleDark }) {
             érhető el, nem önálló menüpontként — ld. lentebb. */}
         <div className="flex-1 overflow-y-auto px-3 pb-4">
           <div className="sticky top-0 z-10 mb-1 rounded-2xl bg-brand-50/70 p-2 backdrop-blur-sm dark:bg-brand-950/40">
+            <div className="mb-1 flex items-center justify-between px-1.5 pb-1 pt-0.5">
+              <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-brand-700/70 dark:text-brand-300/70">
+                Napi zóna
+              </span>
+              <button
+                type="button"
+                onClick={() => setPinEditorOpen(true)}
+                title="Napi zóna testreszabása"
+                aria-label="Napi zóna testreszabása"
+                className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg text-brand-700/60 transition-colors duration-200 hover:bg-white/60 hover:text-brand-700 dark:text-brand-300/60 dark:hover:bg-ink-800/60 dark:hover:text-brand-300"
+              >
+                <PiPencilSimpleLight className="h-3.5 w-3.5" />
+              </button>
+            </div>
             <ul className="space-y-0.5">
-              <NavItem
-                to="/admin/dashboard"
-                icon={PiSquaresFourLight}
-                text="Főmenü"
-              />
-              <NavItem
-                to="/admin/karbantartasok"
-                icon={PiWrenchLight}
-                text="Karbantartások"
-              />
-              <NavItem
-                to="/admin/bejelentesek"
-                icon={PiChatCircleTextLight}
-                text="Bejelentések"
-                badge={nyitottBejelentesek.length}
-              />
-              <NavItem
-                to="/admin/koltsegek"
-                icon={PiCoinsLight}
-                text="Pénzforgalom"
-              />
-              <NavItem
-                to="/admin/flottakovetes"
-                icon={PiMapTrifoldLight}
-                text="Flottakövetés"
-              />
-              <NavItem
-                to="/admin/tachograf"
-                icon={PiIdentificationCardLight}
-                text="Tachográf"
-              />
+              {pinnedItems.map((item) => (
+                <NavItem
+                  key={item.to}
+                  to={item.to}
+                  icon={item.icon}
+                  text={item.text}
+                  badge={badgeByPath[item.to]}
+                />
+              ))}
             </ul>
           </div>
 
@@ -1222,6 +1259,16 @@ export default function Sidebar({ isDark, onToggleDark }) {
         onClose={() => setNotifOpen(false)}
         onDismiss={handleDismiss}
         onDismissAll={handleDismiss}
+      />
+      <NapiZonaEditorModal
+        open={pinEditorOpen}
+        onClose={() => setPinEditorOpen(false)}
+        registry={PIN_REGISTRY}
+        pinnedPaths={pinnedPaths}
+        onChange={setPinnedPaths}
+        maxItems={8}
+        isAdmin={isAdmin}
+        defaultPaths={DEFAULT_PIN_PATHS}
       />
     </>
   );
