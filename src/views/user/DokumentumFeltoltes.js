@@ -57,10 +57,19 @@ export default function DokumentumFeltoltes() {
       </p>
 
       <label className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-ink-200 bg-white py-8 text-center shadow-soft">
-        <PiCameraLight className="h-8 w-8 text-brand-600" />
+        {uploading ? (
+          <span className="h-8 w-8 animate-spin rounded-full border-2 border-brand-200 border-t-brand-600" />
+        ) : (
+          <PiCameraLight className="h-8 w-8 text-brand-600" />
+        )}
         <span className="text-sm font-semibold text-ink-700">
-          {uploading ? "Feltöltés…" : "Fotó készítése / kiválasztása"}
+          {uploading ? "Feldolgozás folyamatban…" : "Fotó készítése / kiválasztása"}
         </span>
+        {/* A feltöltés maga gyors, de a szerver ezután egy Gemini OCR-hívást
+            futtat a képen (dokumentáltan ~3-13 másodperc, néha több egy
+            rate-limit-retry miatt) — enélkül a szöveg nélkül a sofőr úgy
+            látná, mintha a feltöltés elakadt volna. */}
+        {uploading && <span className="text-xs text-ink-400">Ez néhány másodpercig eltarthat, ne zárd be az oldalt.</span>}
         <input
           type="file"
           accept="image/*,application/pdf"

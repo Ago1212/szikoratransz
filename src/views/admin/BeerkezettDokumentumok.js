@@ -189,12 +189,29 @@ export default function BeerkezettDokumentumok() {
           <div className="mt-3 space-y-2">
             {feltoltesSor.map((t) => (
               <div key={t.key} className="text-xs text-ink-500 dark:text-ink-400">
-                <div className="mb-0.5 flex justify-between">
+                <div className="mb-0.5 flex items-center justify-between gap-2">
                   <span className="truncate">{t.nev}</span>
-                  <span>{t.progress}%</span>
+                  {/* `t.progress` az XHR feltöltés (upload) haladása — 100%-nál a
+                      kérés bájtjai elhagyták a böngészőt, de a szerver ekkor még
+                      csak most kezdi a Gemini OCR-hívást (dokumentáltan ~3-13
+                      másodperc, esetenként több egy rate-limit-retry miatt) —
+                      enélkül a jelzés nélkül a felhasználó egy teljesen tele,
+                      mégis mozdulatlan sávot látott volna, ami leállt/elakadt
+                      feltöltésnek tűnhet. */}
+                  {t.progress < 100 ? (
+                    <span className="flex-shrink-0">{t.progress}%</span>
+                  ) : (
+                    <span className="flex flex-shrink-0 items-center gap-1.5 text-brand-600 dark:text-brand-400">
+                      <span className="h-3 w-3 animate-spin rounded-full border-2 border-brand-200 border-t-brand-600 dark:border-brand-900 dark:border-t-brand-400" />
+                      OCR feldolgozás...
+                    </span>
+                  )}
                 </div>
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-ink-800">
-                  <div className="h-full rounded-full bg-brand-500 transition-all" style={{ width: `${t.progress}%` }} />
+                  <div
+                    className={`h-full rounded-full bg-brand-500 transition-all ${t.progress >= 100 ? "animate-pulse" : ""}`}
+                    style={{ width: `${t.progress}%` }}
+                  />
                 </div>
               </div>
             ))}
