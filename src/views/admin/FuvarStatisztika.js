@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import Chart from "chart.js";
 import {
   PiChartBarLight,
   PiTruckLight,
@@ -148,6 +149,162 @@ function StatisztikaFilterBar({ filter, onPreset, onFieldChange, soforok }) {
   );
 }
 
+const ALLAPOT_LABEL = {
+  rogzitett: "Rögzítve",
+  szamlazasra_var: "Számlázásra vár",
+  szamlazva: "Számlázva",
+  fizetesre_var: "Fizetésre vár",
+  teljesitve: "Teljesítve",
+};
+const ALLAPOT_SZIN = {
+  rogzitett: "#94A3B8",
+  szamlazasra_var: "#F59E0B",
+  szamlazva: "#2451B5",
+  fizetesre_var: "#F59E0B",
+  teljesitve: "#10B981",
+};
+
+function TrendChart({ trend, granularitas, onGranularitasChange }) {
+  const canvasRef = React.useRef(null);
+  const chartRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!canvasRef.current) return undefined;
+    if (chartRef.current) chartRef.current.destroy();
+    chartRef.current = new Chart(canvasRef.current, {
+      type: "line",
+      data: {
+        labels: trend.map((t) => t.periodus),
+        datasets: [
+          {
+            label: "Fuvarok száma",
+            data: trend.map((t) => t.fuvarokSzama),
+            borderColor: "#2451B5",
+            backgroundColor: "rgba(36,81,181,0.1)",
+            fill: true,
+          },
+        ],
+      },
+      options: {
+        maintainAspectRatio: false,
+        responsive: true,
+        legend: { display: false },
+        scales: {
+          xAxes: [{ gridLines: { display: false }, ticks: { fontColor: "#68708a" } }],
+          yAxes: [{ ticks: { fontColor: "#68708a", beginAtZero: true, precision: 0 } }],
+        },
+      },
+    });
+    return () => chartRef.current?.destroy();
+  }, [trend]);
+
+  return (
+    <div className="rounded-2xl border border-ink-100 bg-white p-4 shadow-soft dark:border-ink-800 dark:bg-ink-900">
+      <div className="mb-2 flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-brand-900 dark:text-ink-50">Trend</h3>
+        <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-0.5 dark:bg-ink-800">
+          {["nap", "het", "honap"].map((g) => (
+            <button
+              key={g}
+              type="button"
+              onClick={() => onGranularitasChange(g)}
+              className={`rounded-md px-2 py-1 text-[11px] font-bold uppercase tracking-wide ${
+                granularitas === g ? "bg-white text-brand-700 shadow-soft dark:bg-ink-700 dark:text-brand-300" : "text-ink-500 dark:text-ink-400"
+              }`}
+            >
+              {g === "nap" ? "Nap" : g === "het" ? "Hét" : "Hónap"}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="h-64">
+        <canvas ref={canvasRef} />
+      </div>
+    </div>
+  );
+}
+
+function AllapotMegoszlasChart({ allapotMegoszlas }) {
+  const canvasRef = React.useRef(null);
+  const chartRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!canvasRef.current || !allapotMegoszlas) return undefined;
+    if (chartRef.current) chartRef.current.destroy();
+    const kulcsok = Object.keys(allapotMegoszlas);
+    chartRef.current = new Chart(canvasRef.current, {
+      type: "doughnut",
+      data: {
+        labels: kulcsok.map((k) => ALLAPOT_LABEL[k] || k),
+        datasets: [
+          {
+            data: kulcsok.map((k) => allapotMegoszlas[k]),
+            backgroundColor: kulcsok.map((k) => ALLAPOT_SZIN[k] || "#94A3B8"),
+          },
+        ],
+      },
+      options: {
+        maintainAspectRatio: false,
+        responsive: true,
+        legend: { position: "bottom", labels: { fontColor: "#68708a", boxWidth: 12 } },
+      },
+    });
+    return () => chartRef.current?.destroy();
+  }, [allapotMegoszlas]);
+
+  return (
+    <div className="rounded-2xl border border-ink-100 bg-white p-4 shadow-soft dark:border-ink-800 dark:bg-ink-900">
+      <h3 className="mb-2 text-sm font-semibold text-brand-900 dark:text-ink-50">Állapot-megoszlás</h3>
+      <div className="h-64">
+        <canvas ref={canvasRef} />
+      </div>
+    </div>
+  );
+}
+
+function TopSoforokChart({ soforonkent }) {
+  const canvasRef = React.useRef(null);
+  const chartRef = React.useRef(null);
+  const top5 = soforonkent.slice(0, 5);
+
+  React.useEffect(() => {
+    if (!canvasRef.current) return undefined;
+    if (chartRef.current) chartRef.current.destroy();
+    chartRef.current = new Chart(canvasRef.current, {
+      type: "horizontalBar",
+      data: {
+        labels: top5.map((s) => s.nev),
+        datasets: [
+          {
+            label: "Fuvarok száma",
+            data: top5.map((s) => s.fuvarokSzama),
+            backgroundColor: "#2451B5",
+          },
+        ],
+      },
+      options: {
+        maintainAspectRatio: false,
+        responsive: true,
+        legend: { display: false },
+        scales: {
+          xAxes: [{ ticks: { fontColor: "#68708a", beginAtZero: true, precision: 0 } }],
+          yAxes: [{ gridLines: { display: false }, ticks: { fontColor: "#68708a" } }],
+        },
+      },
+    });
+    return () => chartRef.current?.destroy();
+  }, [top5]);
+
+  return (
+    <div className="rounded-2xl border border-ink-100 bg-white p-4 shadow-soft dark:border-ink-800 dark:bg-ink-900">
+      <h3 className="mb-2 text-sm font-semibold text-brand-900 dark:text-ink-50">Top sofőrök</h3>
+      <div className="h-64">
+        <canvas ref={canvasRef} />
+      </div>
+    </div>
+  );
+}
+
 const emptyFilter = {
   datumTol: `${todayIso().slice(0, 7)}-01`,
   datumIg: todayIso(),
@@ -192,7 +349,7 @@ export default function FuvarStatisztika() {
   useEffect(() => {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter]);
+  }, [filter, granularitas]);
 
   const handlePreset = (tol, ig) => setFilter((prev) => ({ ...prev, datumTol: tol, datumIg: ig }));
   const handleFieldChange = (e) => {
@@ -200,6 +357,7 @@ export default function FuvarStatisztika() {
     setFilter((prev) => ({ ...prev, [name]: value }));
   };
   const handleRefresh = () => fetchData();
+  const handleGranularitasChange = (g) => setGranularitas(g);
 
   const osszesito = adat?.osszesito || {};
   const soforonkent = adat?.soforonkent || [];
@@ -254,6 +412,12 @@ export default function FuvarStatisztika() {
           layout="row"
         />
         <CardStats statSubtitle="Átlag fuvar/sofőr" statTitle={String(osszesito.atlagFuvarSoforonkent ?? "—")} statIcon={PiChartBarLight} tone="neutral" layout="row" />
+      </div>
+
+      <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <TrendChart trend={adat?.trend || []} granularitas={granularitas} onGranularitasChange={handleGranularitasChange} />
+        <AllapotMegoszlasChart allapotMegoszlas={adat?.allapotMegoszlas} />
+        <TopSoforokChart soforonkent={soforonkent} />
       </div>
 
       <div className="mb-4">
