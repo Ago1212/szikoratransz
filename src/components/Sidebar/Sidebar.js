@@ -767,7 +767,7 @@ export default function Sidebar({ isDark, onToggleDark }) {
         <div className="flex-1 overflow-y-auto px-3 pb-4">
           <div className="sticky top-0 z-10 mb-1 rounded-2xl bg-brand-50/70 p-2 backdrop-blur-sm dark:bg-brand-950/40">
             <div className="mb-1 flex items-center justify-between px-1.5 pb-1 pt-0.5">
-              <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-brand-700/70 dark:text-brand-300/70">
+              <span className="text-xs font-bold uppercase tracking-[0.1em] text-brand-700 dark:text-brand-300">
                 Napi zóna
               </span>
               <button
@@ -775,7 +775,7 @@ export default function Sidebar({ isDark, onToggleDark }) {
                 onClick={() => setPinEditorOpen(true)}
                 title="Napi zóna testreszabása"
                 aria-label="Napi zóna testreszabása"
-                className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg text-brand-700/60 transition-colors duration-200 hover:bg-white/60 hover:text-brand-700 dark:text-brand-300/60 dark:hover:bg-ink-800/60 dark:hover:text-brand-300"
+                className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg text-brand-700 transition-colors duration-200 hover:bg-white/10 hover:text-brand-700 dark:text-brand-300 dark:hover:bg-ink-800 dark:hover:text-brand-300"
               >
                 <PiPencilSimpleLight className="h-3.5 w-3.5" />
               </button>
