@@ -9,6 +9,7 @@ import {
   PiUsersLight,
   PiBuildingsLight,
   PiMapPinLight,
+  PiClipboardTextLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 
@@ -19,6 +20,7 @@ const TIPUS_ICON = {
   sofor: PiUsersLight,
   ugyfel: PiBuildingsLight,
   helyszin: PiMapPinLight,
+  fuvar: PiClipboardTextLight,
 };
 
 // Egyetlen keresőmezőből minden fő modulban keres (ld. backend
