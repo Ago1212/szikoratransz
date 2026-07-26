@@ -201,7 +201,8 @@ class BeerkezettDokumentumInterface {
         $pageSize = null
     ) {
         $query = "SELECT bd.id, bd.fajl_id, bd.tipus, bd.ocr_allapot, bd.ocr_adatok,
-                         bd.feltolto_tipus, bd.feltolto_id, bd.feltolto_nev, bd.fuvar_id, bd.letrehozva
+                         bd.feltolto_tipus, bd.feltolto_id, bd.feltolto_nev, bd.hozzarendelt_sofor_id,
+                         bd.fuvar_id, bd.letrehozva
                   FROM beerkezett_dokumentumok bd
                   WHERE bd.admin = :admin AND bd.torolt <> 'I'";
         $params = [':admin' => $ceg_id];
@@ -252,8 +253,10 @@ class BeerkezettDokumentumInterface {
         }
 
         $fajlnevek = $this->fajlnevekFeloldasa(array_column($sorok, 'fajl_id'));
+        $soforNevek = $this->soforNevekFeloldasa(array_column($sorok, 'hozzarendelt_sofor_id'), $ceg_id);
         foreach ($sorok as &$sor) {
             $sor['filename'] = $fajlnevek[$sor['fajl_id']] ?? null;
+            $sor['hozzarendelt_sofor_nev'] = $sor['hozzarendelt_sofor_id'] ? ($soforNevek[$sor['hozzarendelt_sofor_id']] ?? null) : null;
             $sor['ocr_adatok'] = $sor['ocr_adatok'] !== null ? json_decode($sor['ocr_adatok'], true) : null;
         }
         unset($sor);
@@ -279,6 +282,48 @@ class BeerkezettDokumentumInterface {
         $stmt->bindValue(':search', '%' . $search . '%');
         $stmt->execute();
         return array_map('intval', array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'sorszam'));
+    }
+
+    // Batch-elt sofőr-név feloldás a manuálisan hozzárendelt sofőrhöz —
+    // ugyanaz a minta, mint fajlnevekFeloldasa(), a $ceg_id-vel szűkítve
+    // (nehogy egy más céghez tartozó user.id nevét adja vissza).
+    private function soforNevekFeloldasa($soforIdk, $ceg_id) {
+        $soforIdk = array_values(array_unique(array_filter(array_map('intval', $soforIdk))));
+        if (empty($soforIdk)) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($soforIdk), '?'));
+        $stmt = $this->db->prepare("SELECT id, name FROM user WHERE id IN ($placeholders) AND admin = ?");
+        $stmt->execute([...$soforIdk, $ceg_id]);
+        $nevek = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $nevek[$row['id']] = $row['name'];
+        }
+        return $nevek;
+    }
+
+    // Kézi sofőr-hozzárendelés — $soforId lehet null (visszavonás). A
+    // fuvarInterface.php ervenyesEntitasE()-hez hasonló IDOR-védelem: a
+    // megadott sofőrnek TÉNYLEG a hívó cégéhez kell tartoznia, különben egy
+    // másik cég sofőr-id-ját is be lehetne írni ide.
+    public function updateSofor($id, $ceg_id, $soforId) {
+        if (!empty($soforId)) {
+            $ellenorzo = $this->db->prepare("SELECT id FROM user WHERE id = :id AND admin = :admin AND torolt <> 'I'");
+            $ellenorzo->bindValue(':id', $soforId, PDO::PARAM_INT);
+            $ellenorzo->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
+            $ellenorzo->execute();
+            if ($ellenorzo->fetch() === false) {
+                return ['success' => false, 'message' => 'Érvénytelen sofőr azonosító.'];
+            }
+        }
+        $stmt = $this->db->prepare(
+            "UPDATE beerkezett_dokumentumok SET hozzarendelt_sofor_id = :sofor_id WHERE id = :id AND admin = :admin"
+        );
+        $stmt->bindValue(':sofor_id', empty($soforId) ? null : (int) $soforId, empty($soforId) ? PDO::PARAM_NULL : PDO::PARAM_INT);
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        $stmt->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
+        $stmt->execute();
+        return ['success' => true, 'message' => 'Sofőr hozzárendelve.'];
     }
 
     private function fajlnevekFeloldasa($fajlIdk) {

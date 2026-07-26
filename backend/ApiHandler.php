@@ -138,6 +138,7 @@ class ApiHandler {
         'getBeerkezettDokumentumok' => ['fuvarok', 'hozzaferes'],
         'getBeerkezettDokumentumokSzama' => ['fuvarok', 'hozzaferes'],
         'updateBeerkezettDokumentumTipus' => ['fuvarok', 'szerkesztes'],
+        'updateBeerkezettDokumentumSofor' => ['fuvarok', 'szerkesztes'],
         'torolBeerkezettDokumentum' => ['fuvarok', 'torles'],
         'newFuvar' => ['fuvarok', 'szerkesztes'],
         'updateFuvar' => ['fuvarok', 'szerkesztes'],
@@ -364,6 +365,7 @@ class ApiHandler {
             'getBeerkezettDokumentumok' => ['ceg_id'],
             'getBeerkezettDokumentumokSzama' => ['ceg_id'],
             'updateBeerkezettDokumentumTipus' => ['id', 'ceg_id', 'tipus'],
+            'updateBeerkezettDokumentumSofor' => ['id', 'ceg_id'],
             'torolBeerkezettDokumentum' => ['id', 'ceg_id'],
 
             'newFuvar' => ['ceg_id', 'kerelmezo_id'],
@@ -1700,6 +1702,10 @@ class ApiHandler {
                 case 'updateBeerkezettDokumentumTipus':
                     $kerelmezo = $this->resolveKerelmezo($request);
                     echo json_encode($beerkezettDokumentumInterface->updateTipus($request['id'], $kerelmezo['ceg_id'], $request['tipus']));
+                    return;
+                case 'updateBeerkezettDokumentumSofor':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($beerkezettDokumentumInterface->updateSofor($request['id'], $kerelmezo['ceg_id'], $request['soforId'] ?? null));
                     return;
                 case 'torolBeerkezettDokumentum':
                     $kerelmezo = $this->resolveKerelmezo($request);
