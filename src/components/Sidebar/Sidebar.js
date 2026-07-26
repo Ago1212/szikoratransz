@@ -97,6 +97,7 @@ const mobileGroups = [
         text: "Beérkezett dokumentumok",
       },
       { to: "/admin/fuvarok", icon: PiClipboardTextLight, text: "Fuvarok" },
+      { to: "/admin/fuvarStatisztika", icon: PiChartBarLight, text: "Statisztikák" },
     ],
   },
   // Csapat + Partnerek EGY mobil fülbe összevonva (divider-rel elválasztva) —
@@ -730,6 +731,11 @@ export default function Sidebar({ isDark, onToggleDark }) {
                   to="/admin/fuvarok"
                   icon={PiClipboardTextLight}
                   text="Fuvarok"
+                />
+                <NavItem
+                  to="/admin/fuvarStatisztika"
+                  icon={PiChartBarLight}
+                  text="Statisztikák"
                 />
               </ul>
             )}
