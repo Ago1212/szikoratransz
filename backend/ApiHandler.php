@@ -368,6 +368,8 @@ class ApiHandler {
             'updateBeerkezettDokumentumTipus' => ['id', 'ceg_id', 'tipus'],
             'updateBeerkezettDokumentumSofor' => ['id', 'ceg_id'],
             'torolBeerkezettDokumentum' => ['id', 'ceg_id'],
+            'getSajatBeerkezettDokumentumok' => ['sofor_id'],
+            'torolSajatBeerkezettDokumentum' => ['id', 'sofor_id'],
 
             'newFuvar' => ['ceg_id', 'kerelmezo_id'],
             'updateFuvar' => ['id', 'ceg_id', 'kerelmezo_id'],
@@ -1718,6 +1720,24 @@ class ApiHandler {
                         $this->logAudit($kerelmezo['ceg_id'], 'beerkezett_dokumentumok', $request['id'], 'torles');
                     }
                     echo json_encode($result);
+                    return;
+                case 'getSajatBeerkezettDokumentumok':
+                    // Sofőr-önkiszolgáló akció (ld. getBejelentesekSofor
+                    // mintáját) — nincs MODULE_PERMISSION_MAP-bejegyzése,
+                    // mert nem admin-konfigurálható modul-jogosultság alá
+                    // tartozik, a sofőr mindig látja a SAJÁT feltöltéseit.
+                    echo json_encode($beerkezettDokumentumInterface->getSajatDokumentumok(
+                        $this->resolveSajatSoforId($request),
+                        $this->resolveSajatCegId($request),
+                        $request['limit'] ?? null
+                    ));
+                    return;
+                case 'torolSajatBeerkezettDokumentum':
+                    echo json_encode($beerkezettDokumentumInterface->torolSajat(
+                        $request['id'],
+                        $this->resolveSajatSoforId($request),
+                        $this->resolveSajatCegId($request)
+                    ));
                     return;
                 case 'newFuvar':
                     $kerelmezo = $this->resolveKerelmezo($request);
