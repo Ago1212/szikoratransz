@@ -107,6 +107,13 @@ export default function BeerkezettDokumentumok() {
     setReviewDokumentum(null);
   };
 
+  // Csatolás után a dokumentum már egy meglévő fuvarhoz tartozik — ugyanaz
+  // a lista-eltávolítás/panel-zárás, mint elvetésnél, csak más ok miatt.
+  const handleAttached = (id) => {
+    setDokumentumok((prev) => prev.filter((d) => d.id !== id));
+    setReviewDokumentum(null);
+  };
+
   const handleCreateFuvar = (dokumentum) => {
     history.push("/admin/fuvarForm", {
       dokumentumId: dokumentum.id,
@@ -297,6 +304,7 @@ export default function BeerkezettDokumentumok() {
         onClose={() => setReviewDokumentum(null)}
         onDiscarded={handleDiscarded}
         onCreateFuvar={handleCreateFuvar}
+        onAttached={handleAttached}
         onSoforAssigned={load}
       />
     </>

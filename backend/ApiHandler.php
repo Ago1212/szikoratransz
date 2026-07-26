@@ -146,6 +146,7 @@ class ApiHandler {
         'getFuvarok' => ['fuvarok', 'hozzaferes'],
         'getFuvar' => ['fuvarok', 'hozzaferes'],
         'letrehozFuvarDokumentumbol' => ['fuvarok', 'szerkesztes'],
+        'csatolBeerkezettDokumentumotFuvarhoz' => ['fuvarok', 'szerkesztes'],
         'getUgyfelFuvarElozmeny' => ['fuvarok', 'hozzaferes'],
         'getFuvarStatisztikak' => ['fuvarok', 'hozzaferes'],
         'getFuvarFigyelmeztetesek' => ['fuvarok', 'hozzaferes'],
@@ -374,6 +375,7 @@ class ApiHandler {
             'getFuvar' => ['id', 'ceg_id'],
             'getFuvarok' => ['ceg_id'],
             'letrehozFuvarDokumentumbol' => ['dokumentumId', 'ceg_id', 'kerelmezo_id'],
+            'csatolBeerkezettDokumentumotFuvarhoz' => ['dokumentumId', 'fuvarId', 'ceg_id', 'kerelmezo_id'],
             'updateFuvarAllapot' => ['id', 'ceg_id', 'kerelmezo_id', 'allapot'],
             'getSoforDashboard' => ['ceg_id'],
             'hozzarendelFuvarSzamlaszamot' => ['idk', 'ceg_id', 'kerelmezo_id', 'szamlaszam'],
@@ -1751,6 +1753,14 @@ class ApiHandler {
                     $result = $fuvarInterface->letrehozDokumentumbol($request['dokumentumId'], $kerelmezo['ceg_id'], $request['felulirasok'] ?? []);
                     if ($result['success']) {
                         $this->logAudit($kerelmezo['ceg_id'], 'fuvarok', $result['fuvar']['id'] ?? null, 'letrehozas', 'dokumentumból');
+                    }
+                    echo json_encode($result);
+                    return;
+                case 'csatolBeerkezettDokumentumotFuvarhoz':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    $result = $fuvarInterface->csatolDokumentumot($request['dokumentumId'], $request['fuvarId'], $kerelmezo['ceg_id']);
+                    if ($result['success']) {
+                        $this->logAudit($kerelmezo['ceg_id'], 'fuvarok', $request['fuvarId'], 'dokumentum_csatolva', null);
                     }
                     echo json_encode($result);
                     return;

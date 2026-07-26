@@ -493,6 +493,52 @@ class FuvarInterface {
         }
     }
 
+    // Gyakori, hogy ugyanahhoz a fuvarhoz KÉT beérkezett dokumentum is
+    // tartozik (fuvarlevél ÉS szállítólevél, külön fotózva/feltöltve,
+    // esetleg külön időpontban) — `letrehozDokumentumbol()` csak az ELSŐ,
+    // fuvart LÉTREHOZÓ dokumentumra való, ez a metódus egy MÁR LÉTEZŐ
+    // fuvarhoz csatol egy még feldolgozatlan (fuvar_id IS NULL) dokumentumot,
+    // új fuvar létrehozása nélkül. Ugyanaz a kétlépéses reparent-minta, mint
+    // `letrehozDokumentumbol()`-ban (fuvar_id + fajlok.tabla/rowid), egy
+    // tranzakcióban.
+    public function csatolDokumentumot($dokumentumId, $fuvarId, $ceg_id) {
+        $stmt = $this->db->prepare("SELECT * FROM beerkezett_dokumentumok WHERE id = :id AND admin = :admin AND torolt <> 'I'");
+        $stmt->bindValue(':id', $dokumentumId, PDO::PARAM_INT);
+        $stmt->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $dokumentum = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($dokumentum === false) {
+            return ['success' => false, 'message' => 'A dokumentum nem található.'];
+        }
+        if (!empty($dokumentum['fuvar_id'])) {
+            return ['success' => false, 'message' => 'Ehhez a dokumentumhoz már tartozik fuvar.'];
+        }
+        if (!$this->ervenyesEntitasE('fuvarok', $fuvarId, $ceg_id)) {
+            return ['success' => false, 'message' => 'A fuvar nem található.'];
+        }
+
+        $this->db->beginTransaction();
+        try {
+            $update = $this->db->prepare("UPDATE beerkezett_dokumentumok SET fuvar_id = :fuvar_id WHERE id = :id");
+            $update->bindValue(':fuvar_id', $fuvarId, PDO::PARAM_INT);
+            $update->bindValue(':id', $dokumentumId, PDO::PARAM_INT);
+            $update->execute();
+
+            $reparent = $this->db->prepare("UPDATE fajlok SET tabla = 'fuvar', rowid = :fuvar_id WHERE sorszam = :fajl_id");
+            $reparent->bindValue(':fuvar_id', $fuvarId, PDO::PARAM_INT);
+            $reparent->bindValue(':fajl_id', $dokumentum['fajl_id'], PDO::PARAM_INT);
+            $reparent->execute();
+
+            $this->db->commit();
+            return ['success' => true, 'message' => 'Dokumentum csatolva a fuvarhoz.'];
+        } catch (\Throwable $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
     private function normalizaltRendszam($rendszam) {
         if ($rendszam === null || trim((string) $rendszam) === '') {
             return null;

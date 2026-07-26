@@ -13,6 +13,7 @@ import PageHeader from "components/UI/PageHeader.js";
 import FormField, { FormSection } from "components/UI/FormField.js";
 import AutocompleteSelect from "components/UI/AutocompleteSelect.js";
 import FuvarDokumentumLink from "components/Fuvarok/FuvarDokumentumLink.js";
+import CardFuvarFajlok from "components/Cards/CardFuvarFajlok.js";
 import PageCard from "components/UI/PageCard.js";
 import SaveButton from "components/UI/SaveButton.js";
 import { fetchAction } from "utils/fetchAction";
@@ -414,6 +415,8 @@ export default function FuvarForm() {
           </form>
         </div>
       </PageCard>
+
+      {!isNew && <CardFuvarFajlok fuvar_id={formData.id} />}
     </div>
   );
 }

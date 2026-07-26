@@ -5,6 +5,7 @@ import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
 import { confirmDialog } from "utils/confirm.js";
 import Spinner from "components/UI/Spinner.js";
+import AutocompleteSelect from "components/UI/AutocompleteSelect.js";
 
 const TIPUS_OPTIONS = [
   { value: "fuvarlevel", label: "Fuvarlevél" },
@@ -39,7 +40,7 @@ function ElonezetKep({ dataUrl, mime, loading, filename }) {
   );
 }
 
-export default function DokumentumReviewPanel({ dokumentum, soforok = [], onClose, onDiscarded, onCreateFuvar, onSoforAssigned }) {
+export default function DokumentumReviewPanel({ dokumentum, soforok = [], onClose, onDiscarded, onCreateFuvar, onAttached, onSoforAssigned }) {
   const [loading, setLoading] = useState(true);
   const [dataUrl, setDataUrl] = useState(null);
   const [mime, setMime] = useState(null);
@@ -48,6 +49,18 @@ export default function DokumentumReviewPanel({ dokumentum, soforok = [], onClos
   const [discarding, setDiscarding] = useState(false);
   const isMobile = useMediaQuery({ maxWidth: 1023 });
   const ocr = dokumentum?.ocr_adatok || {};
+
+  // Gyakori, hogy egy fuvarhoz KÉT dokumentum is tartozik (fuvarlevél +
+  // szállítólevél, külön feltöltve) — ez a panel emellett kínálja fel egy
+  // MÁR LÉTEZŐ fuvarhoz való csatolást is (nem csak új fuvar létrehozását).
+  // A fuvarok teljes listája csak a picker MEGNYITÁSAKOR töltődik be (nem a
+  // panel megnyitásakor), hogy a gyakoribb "Fuvar létrehozása" út ne fizessen
+  // rá egy felesleges lekérdezésre.
+  const [csatolasNyitva, setCsatolasNyitva] = useState(false);
+  const [fuvarOptions, setFuvarOptions] = useState([]);
+  const [fuvarOptionsLoading, setFuvarOptionsLoading] = useState(false);
+  const [kivalasztottFuvarId, setKivalasztottFuvarId] = useState("");
+  const [csatolasFolyamatban, setCsatolasFolyamatban] = useState(false);
 
   useEffect(() => {
     if (!dokumentum) return;
@@ -73,7 +86,51 @@ export default function DokumentumReviewPanel({ dokumentum, soforok = [], onClos
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [dokumentum, onClose]);
 
+  useEffect(() => {
+    setCsatolasNyitva(false);
+    setKivalasztottFuvarId("");
+  }, [dokumentum]);
+
   if (!dokumentum) return null;
+
+  const handleCsatolasMegnyitasa = async () => {
+    setCsatolasNyitva(true);
+    if (fuvarOptions.length > 0) return;
+    setFuvarOptionsLoading(true);
+    const user = JSON.parse(localStorage.getItem("user"));
+    const result = await fetchAction("getFuvarok", { ceg_id: user.ceg_id });
+    if (result?.success) {
+      setFuvarOptions(
+        (result.fuvarok || []).map((f) => ({
+          value: f.id,
+          label: `${f.teljesites_datuma || "?"} · ${f.felrako || "?"} → ${f.lerako || "?"}${f.megbizo_nev ? ` (${f.megbizo_nev})` : ""}`,
+          searchText: [f.teljesites_datuma, f.felrako, f.lerako, f.megbizo_nev, f.sofor_nev, f.kamion_rendszam, f.furgon_rendszam]
+            .filter(Boolean)
+            .join(" "),
+        })),
+      );
+    }
+    setFuvarOptionsLoading(false);
+  };
+
+  const handleCsatolas = async () => {
+    if (!kivalasztottFuvarId) return;
+    setCsatolasFolyamatban(true);
+    const user = JSON.parse(localStorage.getItem("user"));
+    const result = await fetchAction("csatolBeerkezettDokumentumotFuvarhoz", {
+      ceg_id: user.ceg_id,
+      kerelmezo_id: user.id,
+      dokumentumId: dokumentum.id,
+      fuvarId: kivalasztottFuvarId,
+    });
+    setCsatolasFolyamatban(false);
+    if (result?.success) {
+      toast.success("Dokumentum csatolva a fuvarhoz.");
+      onAttached?.(dokumentum.id);
+    } else {
+      toast.error(result?.message || "A csatolás sikertelen.");
+    }
+  };
 
   const handleTipusChange = async (ujTipus) => {
     setTipus(ujTipus);
@@ -180,7 +237,39 @@ export default function DokumentumReviewPanel({ dokumentum, soforok = [], onClos
         )}
       </div>
 
-      <div className="mt-5 flex items-center justify-between gap-2 border-t border-ink-100 pt-4 dark:border-ink-800">
+      {csatolasNyitva && (
+        <div className="mt-4 rounded-xl border border-ink-100 bg-sand-50 p-3 dark:border-ink-800 dark:bg-ink-800">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">
+            Csatolás meglévő fuvarhoz
+          </p>
+          <AutocompleteSelect
+            options={fuvarOptions}
+            value={kivalasztottFuvarId}
+            onChange={setKivalasztottFuvarId}
+            placeholder={fuvarOptionsLoading ? "Fuvarok betöltése…" : "Keresés útvonal, megbízó, sofőr szerint…"}
+            disabled={fuvarOptionsLoading}
+          />
+          <div className="mt-2 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setCsatolasNyitva(false)}
+              className="rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-ink-500 hover:bg-slate-100 dark:text-ink-400 dark:hover:bg-ink-700"
+            >
+              Mégse
+            </button>
+            <button
+              type="button"
+              onClick={handleCsatolas}
+              disabled={!kivalasztottFuvarId || csatolasFolyamatban}
+              className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Csatolás
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-ink-100 pt-4 dark:border-ink-800">
         <button
           type="button"
           onClick={handleElvetes}
@@ -189,13 +278,24 @@ export default function DokumentumReviewPanel({ dokumentum, soforok = [], onClos
         >
           Elvetés
         </button>
-        <button
-          type="button"
-          onClick={() => onCreateFuvar(dokumentum)}
-          className="rounded-lg bg-brand-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-brand-700"
-        >
-          Fuvar létrehozása →
-        </button>
+        <div className="flex items-center gap-2">
+          {!csatolasNyitva && (
+            <button
+              type="button"
+              onClick={handleCsatolasMegnyitasa}
+              className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink-600 hover:bg-slate-200 dark:bg-ink-800 dark:text-ink-300 dark:hover:bg-ink-700"
+            >
+              Csatolás meglévő fuvarhoz
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => onCreateFuvar(dokumentum)}
+            className="rounded-lg bg-brand-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-brand-700"
+          >
+            Fuvar létrehozása →
+          </button>
+        </div>
       </div>
     </>
   );
