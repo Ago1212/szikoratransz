@@ -271,3 +271,42 @@ futtatni, nem csak statikus átolvasással:
    ággal) + Fuvarok "Statisztikák" fül vizuális ellenőrzése, világos és
    sötét módban is.
 7. Teszt-adatok törlése/visszaállítása a futtatás után.
+
+## Végrehajtás utáni eltérések a tervtől (Task 9 lezárás, 2026-07-26)
+
+A teljes implementáció (Task 1-8) és a Task 9 regressziós ellenőrzés lefutása
+után az alábbi, a tényleges végállapotot érintő pontosítás szükséges — minden
+más rész (DB-séma, `KATEGORIAK` sorrend, wrapper-metódusok, `getStatisztikak()`
+mezői) **byte-pontosan** a fenti tervnek megfelelően valósult meg, eltérés
+nélkül.
+
+- **A "Statisztikák" nézet-fület a Task 8 implementációja során explicit
+  vissza kellett állítani** `src/views/admin/Fuvarok.js`-ben, mert egy ettől
+  a tervtől és design-dokumentumtól **független, korábbi** commit
+  (`53fc262`, "group Fuvarok and Beérkezett dokumentumok by sofőr")
+  már a terv megírása ELŐTT lecserélte a régi "Statisztikák" fület egy
+  "Sofőr szerint" nézetre, és emiatt `StatisztikaDashboard.js` (amit ez a
+  terv módosít) egy ideig egyetlen route-ból sem volt elérhető (`getActions`
+  szinten a backend helyesen működött, csak a UI nem hivatkozott rá). A
+  végleges állapot: `Fuvarok.js` `nezetMod` állapota 4 értéket vesz fel
+  (`tablazat`/`kanban`/`sofor`/`statisztika`), mind a 4 `localStorage`-ban
+  perzisztálva, egymás mellett, semelyik korábbi nézet nem veszett el. Ha
+  ez a terv-dokumentum vagy egy jövőbeli kapcsolódó terv újra feltételezi,
+  hogy a Statisztikák fül "már ott van" a Fuvarok oldalon — 2026-07-26 óta
+  ez ismét igaz, de a feltételezés önmagában korábban egyszer már tévesnek
+  bizonyult egy közbeékelődő, nem kapcsolódó commit miatt, érdemes élőben
+  (nem csak grep-pel) újra ellenőrizni, mielőtt egy jövőbeli módosítás erre
+  épít.
+- **A `fuvarozasiProfit` magyarázó felirat pontos szövege** a végleges
+  kódban: "Fuvarozási profit ({hónap}) — csak a fuvarokból számított
+  bevétel/kiadás, nem egyezik meg a Pénzforgalom fő Nettó eredményével."
+  (`StatisztikaDashboard.js`) — a tervben vázolt szöveg tartalmilag azonos,
+  csak a pontos tördelés/szórend tér el minimálisan; nincs funkcionális
+  különbség.
+- **Task 9 élő, kézi visszaszámolással (nem csak API-válasz-olvasással)
+  megerősítette** a `munkanapokHonapban()` helyes működését: 2026 július
+  23 munkanapot tartalmaz, egy 200 000 Ft profitú, 45 000 Ft kiadású (csak
+  útdíj, üzemanyag/bér nélkül), 245 000 Ft bevételű (2 teljesített fuvar)
+  ideiglenes teszt-cégen az `atlagNapiProfit` a backend válaszában
+  `8695.65` volt — ez egyezik a `200000/23 = 8695.652...` kézi számítással,
+  kerekítési eltérés nélkül.
