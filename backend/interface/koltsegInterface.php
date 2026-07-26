@@ -84,7 +84,7 @@ class KoltsegInterface {
     // összesítőbe folynak be, ld. getKoltsegOsszesito) — ezt a 4 kézzel is
     // választható kategóriát ugyanaz a KATEGORIAK lista sorolja fel, amit
     // a normalizKategoria() is használ.
-    const KATEGORIAK = ['uzemanyag', 'karbantartas', 'biztositas', 'ber'];
+    const KATEGORIAK = ['uzemanyag', 'karbantartas', 'biztositas', 'ber', 'utdij'];
 
     private function kategoriaWhere($kategoriaSzuro, &$params) {
         if ($kategoriaSzuro === 'egyeb') {
@@ -414,6 +414,10 @@ class KoltsegInterface {
                 $berHavonta[$honap] = ($berHavonta[$honap] ?? 0) + $osszeg;
             }
 
+            // Útdíj — tisztán kézi/manuálisan rögzített egyeb_koltsegek
+            // tétel, nincs másik (on-the-fly) forrása, mint uzemanyag-nak.
+            $utdijHavonta = $this->egyebHavonta('kiado', $datumTol, $datumIg, $ceg_id, 'utdij');
+
             $bevetelHavonta = $egyebBevetelHavonta;
 
             $honapok = array_unique(array_merge(
@@ -421,6 +425,7 @@ class KoltsegInterface {
                 array_keys($uzemanyagHavonta),
                 array_keys($biztositasHavonta),
                 array_keys($berHavonta),
+                array_keys($utdijHavonta),
                 array_keys($egyebKiadasHavonta),
                 array_keys($bevetelHavonta)
             ));
@@ -431,9 +436,10 @@ class KoltsegInterface {
                 $uzemanyag = $uzemanyagHavonta[$honap] ?? 0;
                 $biztositas = $biztositasHavonta[$honap] ?? 0;
                 $ber = $berHavonta[$honap] ?? 0;
+                $utdij = $utdijHavonta[$honap] ?? 0;
                 $egyeb = $egyebKiadasHavonta[$honap] ?? 0;
                 $bevetel = $bevetelHavonta[$honap] ?? 0;
-                $kiadasOsszesen = $karbantartas + $uzemanyag + $biztositas + $ber + $egyeb;
+                $kiadasOsszesen = $karbantartas + $uzemanyag + $biztositas + $ber + $utdij + $egyeb;
                 $havi[] = [
                     'honap' => $honap,
                     'bevetel' => $bevetel,
@@ -441,6 +447,7 @@ class KoltsegInterface {
                     'uzemanyag' => $uzemanyag,
                     'biztositas' => $biztositas,
                     'ber' => $ber,
+                    'utdij' => $utdij,
                     'egyeb' => $egyeb,
                     'kiadasOsszesen' => $kiadasOsszesen,
                     'netto' => $bevetel - $kiadasOsszesen,
@@ -533,6 +540,10 @@ class KoltsegInterface {
                 $biztositasFurgononkent[$id] = ($biztositasFurgononkent[$id] ?? 0) + $osszeg;
             }
 
+            $utdijKamiononkent = $this->egyebJarmuvenkent('kiado', 'kamion_id', $datumTol, $datumIg, $ceg_id, 'utdij');
+            $utdijPotkocsinkent = $this->egyebJarmuvenkent('kiado', 'potkocsi_id', $datumTol, $datumIg, $ceg_id, 'utdij');
+            $utdijFurgononkent = $this->egyebJarmuvenkent('kiado', 'furgon_id', $datumTol, $datumIg, $ceg_id, 'utdij');
+
             $bevetelKamiononkent = $egyebBevetelKamiononkent;
             $bevetelFurgononkent = $egyebBevetelFurgononkent;
 
@@ -545,6 +556,7 @@ class KoltsegInterface {
                 array_keys($karbKamiononkent),
                 array_keys($uzemanyagKamiononkent),
                 array_keys($biztositasKamiononkent),
+                array_keys($utdijKamiononkent),
                 array_keys($egyebKiadasKamiononkent),
                 array_keys($bevetelKamiononkent)
             ));
@@ -555,9 +567,10 @@ class KoltsegInterface {
                 $karbantartas = $karbKamiononkent[$id] ?? 0;
                 $uzemanyag = $uzemanyagKamiononkent[$id] ?? 0;
                 $biztositas = $biztositasKamiononkent[$id] ?? 0;
+                $utdij = $utdijKamiononkent[$id] ?? 0;
                 $egyeb = $egyebKiadasKamiononkent[$id] ?? 0;
                 $bevetel = $bevetelKamiononkent[$id] ?? 0;
-                $kiadasOsszesen = $karbantartas + $uzemanyag + $biztositas + $egyeb;
+                $kiadasOsszesen = $karbantartas + $uzemanyag + $biztositas + $utdij + $egyeb;
                 $km = $this->kmOsszesito($id, $datumTol, $datumIg);
                 $jarmuvenkent[] = [
                     'tipus' => 'kamion',
@@ -567,6 +580,7 @@ class KoltsegInterface {
                     'karbantartas' => $karbantartas,
                     'uzemanyag' => $uzemanyag,
                     'biztositas' => $biztositas,
+                    'utdij' => $utdij,
                     'egyeb' => $egyeb,
                     'kiadasOsszesen' => $kiadasOsszesen,
                     'netto' => $bevetel - $kiadasOsszesen,
@@ -585,6 +599,7 @@ class KoltsegInterface {
                 array_keys($karbPotkocsinkent),
                 array_keys($uzemanyagPotkocsinkent),
                 array_keys($biztositasPotkocsinkent),
+                array_keys($utdijPotkocsinkent),
                 array_keys($egyebKiadasPotkocsinkent),
                 array_keys($egyebBevetelPotkocsinkent)
             ));
@@ -595,9 +610,10 @@ class KoltsegInterface {
                 $karbantartas = $karbPotkocsinkent[$id] ?? 0;
                 $uzemanyag = $uzemanyagPotkocsinkent[$id] ?? 0;
                 $biztositas = $biztositasPotkocsinkent[$id] ?? 0;
+                $utdij = $utdijPotkocsinkent[$id] ?? 0;
                 $egyeb = $egyebKiadasPotkocsinkent[$id] ?? 0;
                 $bevetel = $egyebBevetelPotkocsinkent[$id] ?? 0;
-                $kiadasOsszesen = $karbantartas + $uzemanyag + $biztositas + $egyeb;
+                $kiadasOsszesen = $karbantartas + $uzemanyag + $biztositas + $utdij + $egyeb;
                 $jarmuvenkent[] = [
                     'tipus' => 'potkocsi',
                     'id' => $id,
@@ -606,6 +622,7 @@ class KoltsegInterface {
                     'karbantartas' => $karbantartas,
                     'uzemanyag' => $uzemanyag,
                     'biztositas' => $biztositas,
+                    'utdij' => $utdij,
                     'egyeb' => $egyeb,
                     'kiadasOsszesen' => $kiadasOsszesen,
                     'netto' => $bevetel - $kiadasOsszesen,
@@ -618,6 +635,7 @@ class KoltsegInterface {
                 array_keys($karbFurgononkent),
                 array_keys($uzemanyagFurgononkent),
                 array_keys($biztositasFurgononkent),
+                array_keys($utdijFurgononkent),
                 array_keys($egyebKiadasFurgononkent),
                 array_keys($bevetelFurgononkent)
             ));
@@ -628,9 +646,10 @@ class KoltsegInterface {
                 $karbantartas = $karbFurgononkent[$id] ?? 0;
                 $uzemanyag = $uzemanyagFurgononkent[$id] ?? 0;
                 $biztositas = $biztositasFurgononkent[$id] ?? 0;
+                $utdij = $utdijFurgononkent[$id] ?? 0;
                 $egyeb = $egyebKiadasFurgononkent[$id] ?? 0;
                 $bevetel = $bevetelFurgononkent[$id] ?? 0;
-                $kiadasOsszesen = $karbantartas + $uzemanyag + $biztositas + $egyeb;
+                $kiadasOsszesen = $karbantartas + $uzemanyag + $biztositas + $utdij + $egyeb;
                 $km = $this->kmOsszesito($id, $datumTol, $datumIg, 'furgon');
                 $jarmuvenkent[] = [
                     'tipus' => 'furgon',
@@ -640,6 +659,7 @@ class KoltsegInterface {
                     'karbantartas' => $karbantartas,
                     'uzemanyag' => $uzemanyag,
                     'biztositas' => $biztositas,
+                    'utdij' => $utdij,
                     'egyeb' => $egyeb,
                     'kiadasOsszesen' => $kiadasOsszesen,
                     'netto' => $bevetel - $kiadasOsszesen,
@@ -660,8 +680,9 @@ class KoltsegInterface {
             $osszesenUzemanyag = array_sum($uzemanyagHavonta);
             $osszesenBiztositas = array_sum($biztositasHavonta);
             $osszesenBer = array_sum($berHavonta);
+            $osszesenUtdij = array_sum($utdijHavonta);
             $osszesenEgyeb = array_sum($egyebKiadasHavonta);
-            $osszesenKiadas = $osszesenKarbantartas + $osszesenUzemanyag + $osszesenBiztositas + $osszesenBer + $osszesenEgyeb;
+            $osszesenKiadas = $osszesenKarbantartas + $osszesenUzemanyag + $osszesenBiztositas + $osszesenBer + $osszesenUtdij + $osszesenEgyeb;
 
             // Nem-admin kérelmezőnek a bér-RÉSZLETEZÉST rejtjük (ld. fenti
             // komment) — a havi soronkénti `ber` mezőt is nullázzuk, hogy a
@@ -704,6 +725,7 @@ class KoltsegInterface {
                     'uzemanyag' => $osszesenUzemanyag,
                     'biztositas' => $osszesenBiztositas,
                     'ber' => $osszesenBer,
+                    'utdij' => $osszesenUtdij,
                     'egyeb' => $osszesenEgyeb,
                     'kiadas' => $osszesenKiadas,
                     'netto' => $osszesenBevetel - $osszesenKiadas,
@@ -760,9 +782,10 @@ class KoltsegInterface {
         }
 
         $egyebKiadasOsszeg = array_sum($this->egyebHavonta('kiado', $datumTol, $datumIg, $ceg_id, 'egyeb'));
+        $utdijOsszeg = array_sum($this->egyebHavonta('kiado', $datumTol, $datumIg, $ceg_id, 'utdij'));
         $bevetelOsszeg = array_sum($this->egyebHavonta('bevetel', $datumTol, $datumIg, $ceg_id));
 
-        $kiadas = $karbOsszeg + $uzemanyagOsszeg + $biztositasOsszeg + $berOsszeg + $egyebKiadasOsszeg;
+        $kiadas = $karbOsszeg + $uzemanyagOsszeg + $biztositasOsszeg + $berOsszeg + $utdijOsszeg + $egyebKiadasOsszeg;
         return [
             'bevetel' => $bevetelOsszeg,
             'kiadas' => $kiadas,
@@ -1010,8 +1033,8 @@ class KoltsegInterface {
             $this->ellenorizJarmuMezoKizarolagossag($data);
             $irany = in_array($data['irany'] ?? null, ['bevetel', 'kiado'], true) ? $data['irany'] : 'kiado';
             $deviza = $this->resolveDevizaOsszeg($data);
-            $query = "INSERT INTO egyeb_koltsegek (admin, irany, kategoria, kamion_id, potkocsi_id, furgon_id, datum, megnevezes, szamlaszam, osszeg, deviza, eredeti_osszeg, arfolyam, megjegyzes)
-                      VALUES (:admin, :irany, :kategoria, :kamion_id, :potkocsi_id, :furgon_id, :datum, :megnevezes, :szamlaszam, :osszeg, :deviza, :eredeti_osszeg, :arfolyam, :megjegyzes)";
+            $query = "INSERT INTO egyeb_koltsegek (admin, irany, kategoria, kamion_id, potkocsi_id, furgon_id, datum, megnevezes, szamlaszam, osszeg, deviza, eredeti_osszeg, netto_osszeg, arfolyam, megjegyzes)
+                      VALUES (:admin, :irany, :kategoria, :kamion_id, :potkocsi_id, :furgon_id, :datum, :megnevezes, :szamlaszam, :osszeg, :deviza, :eredeti_osszeg, :netto_osszeg, :arfolyam, :megjegyzes)";
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(':admin', $data['ceg_id']);
             $stmt->bindValue(':irany', $irany);
@@ -1025,6 +1048,7 @@ class KoltsegInterface {
             $stmt->bindValue(':osszeg', $deviza['osszeg']);
             $stmt->bindValue(':deviza', $deviza['deviza']);
             $stmt->bindValue(':eredeti_osszeg', $deviza['eredeti_osszeg']);
+            $stmt->bindValue(':netto_osszeg', empty($data['netto_osszeg']) ? null : (float) $data['netto_osszeg']);
             $stmt->bindValue(':arfolyam', $deviza['arfolyam']);
             $stmt->bindValue(':megjegyzes', $data['megjegyzes'] ?? null);
             $stmt->execute();
@@ -1055,7 +1079,7 @@ class KoltsegInterface {
             $query = "UPDATE egyeb_koltsegek SET
                         irany = :irany, kategoria = :kategoria, kamion_id = :kamion_id, potkocsi_id = :potkocsi_id, furgon_id = :furgon_id,
                         datum = :datum, megnevezes = :megnevezes, szamlaszam = :szamlaszam,
-                        osszeg = :osszeg, deviza = :deviza, eredeti_osszeg = :eredeti_osszeg, arfolyam = :arfolyam, megjegyzes = :megjegyzes
+                        osszeg = :osszeg, deviza = :deviza, eredeti_osszeg = :eredeti_osszeg, netto_osszeg = :netto_osszeg, arfolyam = :arfolyam, megjegyzes = :megjegyzes
                       WHERE id = :id AND admin = :admin";
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(':id', $data['id']);
@@ -1071,6 +1095,7 @@ class KoltsegInterface {
             $stmt->bindValue(':osszeg', $deviza['osszeg']);
             $stmt->bindValue(':deviza', $deviza['deviza']);
             $stmt->bindValue(':eredeti_osszeg', $deviza['eredeti_osszeg']);
+            $stmt->bindValue(':netto_osszeg', empty($data['netto_osszeg']) ? null : (float) $data['netto_osszeg']);
             $stmt->bindValue(':arfolyam', $deviza['arfolyam']);
             $stmt->bindValue(':megjegyzes', $data['megjegyzes'] ?? null);
             $stmt->execute();
