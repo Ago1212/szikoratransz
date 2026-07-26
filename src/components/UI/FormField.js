@@ -18,10 +18,20 @@ export default function FormField({
   children,
   ...inputProps
 }) {
+  // A label eddig sosem kapcsolódott az inputhoz (`htmlFor` hiánya) — egy
+  // screen reader emiatt nem jelentette be a mező címkéjét fókuszáláskor
+  // (WCAG 1.3.1/4.1.2, ld. UX-audit). `id`-t vagy `name`-et a hívók szinte
+  // mindig megadnak; ahol egyiket sem, a label ott is renderelődik, csak
+  // `htmlFor` nélkül marad (nincs mihez kapcsolni).
+  const fieldId = inputProps.id || inputProps.name;
+
   return (
     <div className={className}>
       {label && (
-        <label className="mb-1 flex items-center gap-1.5 text-xs font-medium text-ink-600 dark:text-ink-300">
+        <label
+          htmlFor={fieldId}
+          className="mb-1 flex items-center gap-1.5 text-xs font-medium text-ink-600 dark:text-ink-300"
+        >
           {Icon && <Icon className="h-3.5 w-3.5 text-brand-500" />}
           {label}
           {required && <span className="text-red-500">*</span>}
@@ -32,6 +42,7 @@ export default function FormField({
           className={`${inputClass} ${inputClassName}`}
           required={required}
           {...inputProps}
+          id={fieldId}
         >
           {children}
         </select>
@@ -40,6 +51,7 @@ export default function FormField({
           className={`${inputClass} ${inputClassName}`}
           required={required}
           {...inputProps}
+          id={fieldId}
         />
       ) : as === "info" ? (
         <div className={`${inputClass} cursor-default bg-slate-100 text-ink-500 dark:bg-ink-800 dark:text-ink-400 ${inputClassName}`}>
@@ -50,6 +62,7 @@ export default function FormField({
           required={required}
           className={inputClassName}
           {...inputProps}
+          id={fieldId}
         />
       ) : (
         <input
@@ -57,6 +70,7 @@ export default function FormField({
           className={`${inputClass} ${inputClassName}`}
           required={required}
           {...inputProps}
+          id={fieldId}
         />
       )}
     </div>
@@ -69,6 +83,20 @@ const gridColsClass = {
   3: "md:grid-cols-3",
   4: "md:grid-cols-4",
   5: "md:grid-cols-5",
+};
+
+// Fájlok-redesign UX-audit (2026-07-23): korábban a rács egyetlen ugrással
+// váltott 1-2 oszlopról (mobil) egyenesen `columns` oszlopra `md:`-nél
+// (768px+) — egy ~640-768px széles tablet-nézeten ez feleslegesen
+// zsúfolt (5 oszlop) vagy pazarló (1-2 oszlop) volt. Egy köztes `sm:`
+// lépcső mindig SZŰKEBB oszlopszámot ad, mint a végleges `md:` érték, így
+// ez a változás minden meglévő FormSection-hívónál csak javít, sosem ront.
+const smGridColsClass = {
+  1: "sm:grid-cols-1",
+  2: "sm:grid-cols-2",
+  3: "sm:grid-cols-2",
+  4: "sm:grid-cols-2",
+  5: "sm:grid-cols-3",
 };
 
 const mobileGridColsClass = {
@@ -92,8 +120,8 @@ export function FormSection({ id, title, icon: Icon, columns = 2, mobileColumns 
       )}
       <div
         className={`grid gap-x-4 gap-y-3 ${mobileGridColsClass[mobileColumns] || mobileGridColsClass[1]} ${
-          gridColsClass[columns] || gridColsClass[2]
-        }`}
+          smGridColsClass[columns] || smGridColsClass[2]
+        } ${gridColsClass[columns] || gridColsClass[2]}`}
       >
         {children}
       </div>

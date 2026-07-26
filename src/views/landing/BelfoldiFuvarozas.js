@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { PiTruckLight } from "react-icons/pi";
 import ServicePage from "components/Landing/ServicePage.js";
 import { pickFaq } from "data/landingContent.js";
@@ -47,21 +48,34 @@ export default function BelfoldiFuvarozas() {
         </h2>
         <div className="space-y-4 text-[#23262B]/70 leading-relaxed max-w-2xl">
           <p>
-            A belföldi fuvarok árát több tényező együttesen határozza meg: az
-            útvonal hossza, az áru mérete, súlya és csomagolási igényei,
-            valamint a vállalt határidő. Nincs egységes kilométerdíjunk —
-            minden ajánlatkérést tételesen, az adott fuvar tényleges
-            paraméterei alapján árazunk, hogy a végösszeg pontosan tükrözze a
-            valós költséget, se többet, se kevesebbet.
+            Az ajánlatkérésnél két dolog segít a leggyorsabb, legpontosabb
+            árazásban: a pontos fel- és lerakodási cím (van-e rakodógép a
+            helyszínen, vagy kézi erővel kell megoldani), és hogy
+            részrakományról vagy teljes kamionrakományról van-e szó — ez
+            utóbbi közvetlenül meghatározza, milyen méretű és típusú
+            járművet rendelünk a fuvarhoz.
           </p>
           <p>
             A jármű kiválasztása is ehhez igazodik: kisebb, gyors fuvaroknál
-            könnyebb, nagyobb terhelésnél nehezebb kamiont állítunk munkába,
-            mindig a szállítandó áru jellegéhez mérten. Ha rendszeres,
-            ismétlődő útvonalról van szó (pl. heti több alkalommal ugyanarra
-            a célállomásra), ezt jelezze az ajánlatkérésnél — állandó
-            partnereinknél az ütemezést és az árazást is hosszabb távra
-            egyeztetjük, nem fuvaronként újratárgyalva.
+            könnyebb, nagyobb terhelésnél nehezebb kamiont állítunk munkába.
+            Ha rendszeres, ismétlődő útvonalról van szó (pl. heti több
+            alkalommal ugyanarra a célállomásra), ezt jelezze az
+            ajánlatkérésnél — állandó partnereinknél az ütemezést és az
+            árazást is hosszabb távra egyeztetjük, nem fuvaronként
+            újratárgyalva.
+          </p>
+          <p>
+            Miután elfogadta az árajánlatot, a legtöbb belföldi fuvart már a
+            következő munkanapon ütemezzük. Ennél sürgősebb, akár aznapi
+            vagy pár órás határidőre van szüksége? Nézze meg az{" "}
+            <Link
+              to="/expressz-fuvarozas"
+              className="text-[#1E3AA8] underline hover:text-[#172E86] transition-colors duration-300"
+            >
+              expressz fuvarozás
+            </Link>{" "}
+            feltételeit — ott soron kívül kezeljük a rövid határidejű
+            megbízásokat.
           </p>
         </div>
       </section>

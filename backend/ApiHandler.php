@@ -25,6 +25,12 @@ require 'interface/navSzamlaInterface.php';
 require 'interface/gpsmartInterface.php';
 require 'interface/piaciArakInterface.php';
 require 'interface/pushInterface.php';
+require 'interface/bankImportInterface.php';
+require 'interface/molTankolasInterface.php';
+require 'interface/tachografInterface.php';
+require 'interface/tachografVuInterface.php';
+require 'interface/beerkezettDokumentumInterface.php';
+require 'interface/fuvarInterface.php';
 require_once 'WebAuthnHelper.php';
 class ApiHandler {
     protected string $auth_hash;
@@ -80,7 +86,7 @@ class ApiHandler {
     // jogosultsági kapu nem volt rajta, tehát BÁRMELY cég BÁRMELY (akár
     // sofőr-) munkamenete elérhette/módosíthatta volna más cégek helyett
     // ezt az üzemeltetői adatot.
-    const ADMIN_ONLY_ACTIONS = ['newCsapattag', 'updateCsapattagSzerepkor', 'updateCsapattagBer', 'deleteCsapattag', 'getJogosultsagok', 'saveJogosultsagok', 'newSzerepkor', 'deleteSzerepkor', 'newListaElem', 'updateListaElemNev', 'deleteListaElem', 'getAjanlatkeresek', 'updateAjanlatkeresStatusz'];
+    const ADMIN_ONLY_ACTIONS = ['newCsapattag', 'updateCsapattagSzerepkor', 'updateCsapattagBer', 'deleteCsapattag', 'getJogosultsagok', 'saveJogosultsagok', 'newSzerepkor', 'deleteSzerepkor', 'newListaElem', 'updateListaElemNev', 'getListaElemHasznalat', 'deleteListaElem', 'getAjanlatkeresek', 'updateAjanlatkeresStatusz'];
 
     // Akció → [modul, jogtípus] térkép a konfigurálható modul-jogosultságokhoz
     // (ld. JogosultsagInterface::MODULOK). Csak a moduloknak megfelelő
@@ -119,6 +125,36 @@ class ApiHandler {
         'saveFurgonData' => ['furgonok', 'szerkesztes'],
         'deleteFurgon' => ['furgonok', 'torles'],
 
+        // 'elemezBeerkezettDokumentum' szándékosan NINCS itt (ld. a case-ág
+        // saját kommentjét lentebb) — mind admin, mind sofőr munkamenetből
+        // hívható (sofőr-oldali fuvarlevél-feltöltés), és a
+        // requirePermission() saját maga is resolveKerelmezo()-t hív, ami
+        // admin-only, tehát bármelyik MODULE_PERMISSION_MAP-bejegyzés itt
+        // a sofőr-hívást már a validation()-ben elvérezteti, mielőtt a
+        // case-ág saját resolveSajatCegId()-fixe egyáltalán lefutna —
+        // ugyanaz a minta, mint a `fileUpload`/`getHelyszinek`/stb. egyéb,
+        // mindkét munkamenet-típusból hívható akcióknál, amik szintén nem
+        // szerepelnek ebben a map-ben.
+        'getBeerkezettDokumentumok' => ['fuvarok', 'hozzaferes'],
+        'getBeerkezettDokumentumokSzama' => ['fuvarok', 'hozzaferes'],
+        'updateBeerkezettDokumentumTipus' => ['fuvarok', 'szerkesztes'],
+        'updateBeerkezettDokumentumSofor' => ['fuvarok', 'szerkesztes'],
+        'torolBeerkezettDokumentum' => ['fuvarok', 'torles'],
+        'newFuvar' => ['fuvarok', 'szerkesztes'],
+        'updateFuvar' => ['fuvarok', 'szerkesztes'],
+        'deleteFuvar' => ['fuvarok', 'torles'],
+        'getFuvarok' => ['fuvarok', 'hozzaferes'],
+        'getFuvar' => ['fuvarok', 'hozzaferes'],
+        'letrehozFuvarDokumentumbol' => ['fuvarok', 'szerkesztes'],
+        'csatolBeerkezettDokumentumotFuvarhoz' => ['fuvarok', 'szerkesztes'],
+        'getUgyfelFuvarElozmeny' => ['fuvarok', 'hozzaferes'],
+        'getFuvarStatisztikak' => ['fuvarok', 'hozzaferes'],
+        'getFuvarFigyelmeztetesek' => ['fuvarok', 'hozzaferes'],
+        'updateFuvarAllapot' => ['fuvarok', 'szerkesztes'],
+        'hozzarendelFuvarSzamlaszamot' => ['fuvarok', 'szerkesztes'],
+        'getFuvarAllapotOsszesito' => ['fuvarok', 'hozzaferes'],
+        'getSoforDashboard' => ['fuvarok', 'hozzaferes'],
+
         'getKarbantartasok' => ['karbantartasok', 'hozzaferes'],
         'updateKarbantartas' => ['karbantartasok', 'szerkesztes'],
         'deleteKarbantartas' => ['karbantartasok', 'torles'],
@@ -143,6 +179,7 @@ class ApiHandler {
 
         'getSzabadsagok' => ['szabadsagok', 'hozzaferes'],
         'newSzabadsag' => ['szabadsagok', 'szerkesztes'],
+        'updateSzabadsag' => ['szabadsagok', 'szerkesztes'],
         'deleteSzabadsag' => ['szabadsagok', 'torles'],
 
         'getUgyfelek' => ['ugyfelek', 'hozzaferes'],
@@ -163,6 +200,24 @@ class ApiHandler {
         'getNavSzamlaBeallitasokStatusz' => ['koltsegek', 'hozzaferes'],
         'navSzamlaLekerdezes' => ['koltsegek', 'hozzaferes'],
         'saveNavSzamlaBeallitasok' => ['koltsegek', 'szerkesztes'],
+        'elemezBankImportCsv' => ['koltsegek', 'hozzaferes'],
+        'alkalmazBankImport' => ['koltsegek', 'szerkesztes'],
+        'elemezMolTankolasPdf' => ['koltsegek', 'hozzaferes'],
+        'alkalmazMolTankolas' => ['koltsegek', 'szerkesztes'],
+        'elemezTachografDdd' => ['tachograf', 'hozzaferes'],
+        'alkalmazTachografImport' => ['tachograf', 'szerkesztes'],
+        'getTachografNapiAktivitas' => ['tachograf', 'hozzaferes'],
+        'getTachografEsemenyek' => ['tachograf', 'hozzaferes'],
+        'getTachografMegfeleloseg' => ['tachograf', 'hozzaferes'],
+        'getTachografSoforOsszesito' => ['tachograf', 'hozzaferes'],
+        'getTachografImportNaplo' => ['tachograf', 'hozzaferes'],
+        'atparositTachografNap' => ['tachograf', 'szerkesztes'],
+        'elemezTachografVuDdd' => ['tachograf', 'hozzaferes'],
+        'alkalmazTachografVuImport' => ['tachograf', 'szerkesztes'],
+        'getTachografVuNapiAktivitas' => ['tachograf', 'hozzaferes'],
+        'getTachografVuMegfeleloseg' => ['tachograf', 'hozzaferes'],
+        'getTachografVuJarmuOsszesito' => ['tachograf', 'hozzaferes'],
+        'getTachografVuImportNaplo' => ['tachograf', 'hozzaferes'],
         'getGpsmartBeallitasokStatusz' => ['kamionok', 'hozzaferes'],
         'gpsmartPoziciok' => ['kamionok', 'hozzaferes'],
         'gpsmartMegtettUtMa' => ['kamionok', 'hozzaferes'],
@@ -259,6 +314,9 @@ class ApiHandler {
             'newUgyfel' => ['admin', 'nev', 'kerelmezo_id'],
             'saveUgyfelData' => ['id', 'ceg_id', 'kerelmezo_id'],
             'deleteUgyfel' => ['id', 'ceg_id', 'kerelmezo_id'],
+            'getUgyfelFuvarElozmeny' => ['ugyfelId', 'ceg_id'],
+            'getFuvarStatisztikak' => ['ceg_id'],
+            'getFuvarFigyelmeztetesek' => ['ceg_id'],
 
             'getCsapattagok' => ['id'],
             'newCsapattag' => ['ceg_id', 'name', 'email', 'password', 'kerelmezo_id'],
@@ -278,8 +336,56 @@ class ApiHandler {
             'getAjanlatkeresek' => [],
             'updateAjanlatkeresStatusz' => ['id', 'statusz'],
 
+            'getTeendok' => ['id', 'kerelmezo_id'],
+
+            'getMessages' => ['bejelentes_id'],
+            'sendMessage' => ['bejelentes_id', 'szoveg'],
+
+            'elemezBankImportCsv' => ['csv', 'oszlopok', 'ceg_id', 'kerelmezo_id'],
+            'alkalmazBankImport' => ['sorok', 'ceg_id', 'kerelmezo_id'],
+
+            'elemezMolTankolasPdf' => ['pdf', 'ceg_id', 'kerelmezo_id'],
+            'alkalmazMolTankolas' => ['sorok', 'ceg_id', 'kerelmezo_id'],
+
+            'elemezTachografDdd' => ['ddd', 'ceg_id', 'kerelmezo_id'],
+            'alkalmazTachografImport' => ['napok', 'sofor_id', 'kartyaszam', 'ceg_id', 'kerelmezo_id'],
+            'getTachografNapiAktivitas' => ['ceg_id', 'kerelmezo_id'],
+            'getTachografEsemenyek' => ['ceg_id', 'kerelmezo_id'],
+            'getTachografMegfeleloseg' => ['ceg_id', 'kerelmezo_id'],
+            'getTachografSoforOsszesito' => ['ceg_id', 'kerelmezo_id'],
+            'getTachografImportNaplo' => ['ceg_id', 'kerelmezo_id'],
+            'atparositTachografNap' => ['id', 'ujSoforId', 'ceg_id', 'kerelmezo_id'],
+            'elemezTachografVuDdd' => ['ddd', 'ceg_id', 'kerelmezo_id'],
+            'alkalmazTachografVuImport' => ['napok', 'jarmuTipus', 'jarmuId', 'vin', 'rendszam', 'ceg_id', 'kerelmezo_id'],
+            'getTachografVuNapiAktivitas' => ['ceg_id', 'kerelmezo_id'],
+            'getTachografVuMegfeleloseg' => ['ceg_id', 'kerelmezo_id'],
+            'getTachografVuJarmuOsszesito' => ['ceg_id', 'kerelmezo_id'],
+            'getTachografVuImportNaplo' => ['ceg_id', 'kerelmezo_id'],
+
+            'elemezBeerkezettDokumentum' => ['base64', 'fajlnev', 'ceg_id', 'kerelmezo_id'],
+            'getBeerkezettDokumentumok' => ['ceg_id'],
+            'getBeerkezettDokumentumokSzama' => ['ceg_id'],
+            'updateBeerkezettDokumentumTipus' => ['id', 'ceg_id', 'tipus'],
+            'updateBeerkezettDokumentumSofor' => ['id', 'ceg_id'],
+            'torolBeerkezettDokumentum' => ['id', 'ceg_id'],
+            'getSajatBeerkezettDokumentumok' => ['sofor_id'],
+            'torolSajatBeerkezettDokumentum' => ['id', 'sofor_id'],
+
+            'newFuvar' => ['ceg_id', 'kerelmezo_id'],
+            'updateFuvar' => ['id', 'ceg_id', 'kerelmezo_id'],
+            'deleteFuvar' => ['id', 'ceg_id', 'kerelmezo_id'],
+            'getFuvar' => ['id', 'ceg_id'],
+            'getFuvarok' => ['ceg_id'],
+            'letrehozFuvarDokumentumbol' => ['dokumentumId', 'ceg_id', 'kerelmezo_id'],
+            'csatolBeerkezettDokumentumotFuvarhoz' => ['dokumentumId', 'fuvarId', 'ceg_id', 'kerelmezo_id'],
+            'updateFuvarAllapot' => ['id', 'ceg_id', 'kerelmezo_id', 'allapot'],
+            'getSoforDashboard' => ['ceg_id'],
+            'hozzarendelFuvarSzamlaszamot' => ['idk', 'ceg_id', 'kerelmezo_id', 'szamlaszam'],
+            'getFuvarAllapotOsszesito' => ['ceg_id'],
+
             'getSzabadsagok' => ['id', 'kerelmezo_id'],
             'newSzabadsag' => ['admin', 'sofor_id', 'datum_tol', 'datum_ig', 'kerelmezo_id'],
+            'updateSzabadsag' => ['id', 'sofor_id', 'datum_tol', 'datum_ig', 'kerelmezo_id'],
             'deleteSzabadsag' => ['id', 'kerelmezo_id'],
 
             'getAuditLog' => ['id', 'kerelmezo_id'],
@@ -324,6 +430,7 @@ class ApiHandler {
             'getListaElemek' => ['id', 'tipus'],
             'newListaElem' => ['ceg_id', 'tipus', 'kulcs', 'nev', 'kerelmezo_id'],
             'updateListaElemNev' => ['id', 'ceg_id', 'nev', 'kerelmezo_id'],
+            'getListaElemHasznalat' => ['id', 'ceg_id', 'kerelmezo_id'],
             'deleteListaElem' => ['id', 'ceg_id', 'kerelmezo_id'],
 
             'globalSearch' => ['ceg_id', 'q'],
@@ -335,6 +442,11 @@ class ApiHandler {
             'fileUpload' => ['admin', 'id', 'tabla', 'file', 'name', 'size'],
             'deleteFile' => ['id'],
             'downloadFile' => ['id'],
+            'updateFajlCimkek' => ['id', 'cimkek'],
+            'renameFile' => ['id', 'name'],
+            'downloadFilesZip' => ['ids'],
+            'getFajlStatisztika' => [],
+            'getHasonloFajlok' => ['id'],
 
             'getEgyediHataridok' => ['id'],
             'updateEgyediHatarido' => ['id', 'datum', 'leiras', 'ceg_id'],
@@ -526,6 +638,23 @@ class ApiHandler {
         throw new Exception('Ismeretlen munkamenet-típus.');
     }
 
+    // Fájlfeltöltő (admin vagy sofőr) azonosítása — a `filesInterface.php`
+    // `fajlok.feltolto_*` mezőihez, ugyanazzal az elvvel, mint
+    // `resolveSajatCegId()`: sosem a kliens által küldött mezőből, mindig a
+    // munkamenetből szerver-oldalon feloldva. A nevet denormalizáltan (a
+    // táblák SQL-szintű összekapcsolása nélkül, ld. a projekt egyedi SQL
+    // lintere) tároljuk el a fájl-sorban, ugyanaz a minta, mint
+    // `bejelentes_uzenetek.szerzo_nev`.
+    private function resolveFeltolto(array $request): array {
+        $session = $this->requireValidSession($request);
+        $tabla = $session['felhasznalo_tipus'] === 'sofor' ? 'user' : 'admin';
+        $stmt = $this->db->prepare("SELECT name FROM `$tabla` WHERE id = :id");
+        $stmt->bindValue(':id', $session['felhasznalo_id']);
+        $stmt->execute();
+        $nev = $stmt->fetch(PDO::FETCH_ASSOC)['name'] ?? null;
+        return [$session['felhasznalo_tipus'], $session['felhasznalo_id'], $nev];
+    }
+
     private function requireAdminRole(array $request) {
         $kerelmezo = $this->resolveKerelmezo($request);
         if (!$kerelmezo['is_root'] && $kerelmezo['szerepkor'] !== 'admin') {
@@ -585,7 +714,7 @@ class ApiHandler {
     }
 
     public function process(?array $request) {
-        global $kamionInterface, $potkocsiInterface, $furgonInterface, $soforokInterface, $filesInterface, $emailInterface, $bejelentesekInterface, $karbantartasInterface, $szabadsagInterface, $tankolasInterface, $jarmuValtasInterface, $ugyfelInterface, $csapatInterface, $helyszinInterface, $jogosultsagInterface, $szerepkorInterface, $listaInterface, $keresesInterface, $koltsegInterface, $ertesitesInterface, $navSzamlaInterface, $gpsmartInterface, $piaciArakInterface, $pushInterface;
+        global $kamionInterface, $potkocsiInterface, $furgonInterface, $soforokInterface, $filesInterface, $emailInterface, $bejelentesekInterface, $karbantartasInterface, $szabadsagInterface, $tankolasInterface, $jarmuValtasInterface, $ugyfelInterface, $csapatInterface, $helyszinInterface, $jogosultsagInterface, $szerepkorInterface, $listaInterface, $keresesInterface, $koltsegInterface, $ertesitesInterface, $navSzamlaInterface, $gpsmartInterface, $piaciArakInterface, $pushInterface, $bankImportInterface, $molTankolasInterface, $tachografInterface, $tachografVuInterface, $beerkezettDokumentumInterface, $fuvarInterface;
         try {
             $this->validation($request);
             $action = $request['action'];
@@ -689,7 +818,7 @@ class ApiHandler {
                     return;
                 case 'getKamionok':
                     $kerelmezo = $this->resolveKerelmezo($request);
-                    echo json_encode($kamionInterface->getKamionok($kerelmezo['ceg_id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null));
+                    echo json_encode($kamionInterface->getKamionok($kerelmezo['ceg_id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['sortKey'] ?? null, $request['sortDir'] ?? 'asc'));
                     return;
                 case 'getKamionValaszto':
                     echo json_encode($kamionInterface->getKamionValaszto($this->resolveSajatCegId($request)));
@@ -733,7 +862,7 @@ class ApiHandler {
                     return;
                 case 'getFurgonok':
                     $kerelmezo = $this->resolveKerelmezo($request);
-                    echo json_encode($furgonInterface->getFurgonok($kerelmezo['ceg_id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null));
+                    echo json_encode($furgonInterface->getFurgonok($kerelmezo['ceg_id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['sortKey'] ?? null, $request['sortDir'] ?? 'asc'));
                     return;
                 case 'getFurgonValaszto':
                     echo json_encode($furgonInterface->getFurgonValaszto($this->resolveSajatCegId($request)));
@@ -785,7 +914,7 @@ class ApiHandler {
                     return;
                 case 'getPotkocsik':
                     $kerelmezo = $this->resolveKerelmezo($request);
-                    echo json_encode($potkocsiInterface->getPotkocsik($kerelmezo['ceg_id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null));
+                    echo json_encode($potkocsiInterface->getPotkocsik($kerelmezo['ceg_id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['sortKey'] ?? null, $request['sortDir'] ?? 'asc'));
                     return;
                 case 'getPotkocsiRendszamok':
                     echo json_encode($potkocsiInterface->getPotkocsiRendszamok($this->resolveSajatCegId($request)));
@@ -809,7 +938,7 @@ class ApiHandler {
                     return;
                 case 'getSoforok':
                     $kerelmezo = $this->resolveKerelmezo($request);
-                    echo json_encode($soforokInterface->getSoforok($kerelmezo['ceg_id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $kerelmezo['is_root'] || $kerelmezo['szerepkor'] === 'admin'));
+                    echo json_encode($soforokInterface->getSoforok($kerelmezo['ceg_id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $kerelmezo['is_root'] || $kerelmezo['szerepkor'] === 'admin', $request['sortKey'] ?? null, $request['sortDir'] ?? 'asc'));
                     return;
                 case 'getSoforScorecard':
                     echo json_encode($this->getSoforScorecard($this->resolveKerelmezo($request)['ceg_id']));
@@ -963,7 +1092,7 @@ class ApiHandler {
                     // kellett eddig, tetszőleges cégre állítva, elfogadni
                     // (IDOR, ld. biztonsági audit). Most a szerver-oldalon
                     // feloldott ceg_id-t adjuk át, sosem a kliensét.
-                    echo json_encode($ugyfelInterface->getUgyfelek($this->resolveKerelmezo($request)['ceg_id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null));
+                    echo json_encode($ugyfelInterface->getUgyfelek($this->resolveKerelmezo($request)['ceg_id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['sortKey'] ?? null, $request['sortDir'] ?? 'asc'));
                     return;
                 case 'newUgyfel':
                     // Ugyanez a hiba: `$request['admin']`-t közvetlenül az
@@ -1095,6 +1224,9 @@ class ApiHandler {
                     }
                     echo json_encode($result);
                     return;
+                case 'getListaElemHasznalat':
+                    echo json_encode($listaInterface->getListaElemHasznalat($request['id'], $request['ceg_id']));
+                    return;
                 case 'deleteListaElem':
                     $result = $listaInterface->deleteListaElem($request['id'], $request['ceg_id']);
                     if ($result['success']) {
@@ -1114,7 +1246,7 @@ class ApiHandler {
                     return;
 
                 case 'getHelyszinek':
-                    echo json_encode($helyszinInterface->getHelyszinek($this->resolveSajatCegId($request), $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null));
+                    echo json_encode($helyszinInterface->getHelyszinek($this->resolveSajatCegId($request), $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['sortKey'] ?? null, $request['sortDir'] ?? 'asc'));
                     return;
                 case 'getHelyszin':
                     echo json_encode($helyszinInterface->getHelyszin($request['id'], $this->resolveSajatCegId($request)));
@@ -1183,6 +1315,14 @@ class ApiHandler {
                     }
                     echo json_encode($result);
                     return;
+                case 'updateSzabadsag':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    $result = $szabadsagInterface->updateSzabadsag($request, $kerelmezo['ceg_id']);
+                    if ($result['success']) {
+                        $this->logAudit($kerelmezo['ceg_id'], 'sofor_szabadsag', $request['id'], 'modositas');
+                    }
+                    echo json_encode($result);
+                    return;
                 case 'deleteSzabadsag':
                     $kerelmezo = $this->resolveKerelmezo($request);
                     $result = $szabadsagInterface->deleteSzabadsag($request['id'], $kerelmezo['ceg_id']);
@@ -1208,7 +1348,8 @@ class ApiHandler {
                         $request['ceg_id'],
                         $request['datumTol'] ?? null,
                         $request['datumIg'] ?? null,
-                        $this->hivoSajatSzerepkoreAdmin($request)
+                        $this->hivoSajatSzerepkoreAdmin($request),
+                        $request['datumMezo'] ?? 'datum'
                     ));
                     return;
 
@@ -1229,7 +1370,10 @@ class ApiHandler {
                         $request['page'] ?? null,
                         $request['pageSize'] ?? null,
                         $request['kategoria'] ?? null,
-                        $this->hivoSajatSzerepkoreAdmin($request)
+                        $this->hivoSajatSzerepkoreAdmin($request),
+                        $request['sortKey'] ?? null,
+                        $request['sortDir'] ?? 'desc',
+                        $request['datumMezo'] ?? 'datum'
                     ));
                     return;
 
@@ -1390,6 +1534,313 @@ class ApiHandler {
                     echo json_encode($this->updateAjanlatkeresStatusz($request['id'], $request['statusz']));
                     return;
 
+                case 'getTeendok':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($this->getTeendok($kerelmezo['ceg_id'], $kerelmezo['is_root'] || $kerelmezo['szerepkor'] === 'admin'));
+                    return;
+
+                case 'getMessages':
+                    $session = $this->requireValidSession($request);
+                    $cegId = $this->resolveSajatCegId($request);
+                    $soforId = $session['felhasznalo_tipus'] === 'sofor' ? $this->resolveSajatSoforId($request) : null;
+                    echo json_encode($bejelentesekInterface->getMessages($request['bejelentes_id'], $cegId, $soforId));
+                    return;
+                case 'sendMessage':
+                    // A szerző típusát/id-ját/nevét mindig a hívó munkamenetéből
+                    // oldjuk fel, sosem a kliens `$request` mezőiből — ugyanaz a
+                    // minta, mint `newHelyszinMegjegyzes`-nél.
+                    $session = $this->requireValidSession($request);
+                    $cegId = $this->resolveSajatCegId($request);
+                    if ($session['felhasznalo_tipus'] === 'sofor') {
+                        $szerzoId = $this->resolveSajatSoforId($request);
+                        $nevStmt = $this->db->prepare("SELECT name FROM user WHERE id = :id");
+                        $nevStmt->bindValue(':id', $szerzoId);
+                        $nevStmt->execute();
+                        $szerzoNev = $nevStmt->fetch(PDO::FETCH_ASSOC)['name'] ?? 'Sofőr';
+                        $result = $bejelentesekInterface->sendMessage($request['bejelentes_id'], $request['szoveg'], $cegId, 'sofor', $szerzoId, $szerzoNev, $szerzoId);
+                        if ($result['success']) {
+                            $this->ertesitBejelentesUjUzenetrol($cegId, $request['bejelentes_id'], $szerzoNev);
+                        }
+                    } else {
+                        $szerzoId = $session['felhasznalo_id'];
+                        $nevStmt = $this->db->prepare("SELECT name FROM admin WHERE id = :id");
+                        $nevStmt->bindValue(':id', $szerzoId);
+                        $nevStmt->execute();
+                        $szerzoNev = $nevStmt->fetch(PDO::FETCH_ASSOC)['name'] ?? 'Admin';
+                        $result = $bejelentesekInterface->sendMessage($request['bejelentes_id'], $request['szoveg'], $cegId, 'admin', $szerzoId, $szerzoNev);
+                    }
+                    echo json_encode($result);
+                    return;
+
+                case 'elemezBankImportCsv':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    [$feltoltoTipus, $feltoltoId, $feltoltoNev] = $this->resolveFeltolto($request);
+                    echo json_encode($bankImportInterface->elemezCsv($request['csv'], $request['oszlopok'], $kerelmezo['ceg_id'], $request['fajlnev'] ?? null, $feltoltoTipus, $feltoltoId, $feltoltoNev));
+                    return;
+                case 'alkalmazBankImport':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($bankImportInterface->alkalmaz($request['sorok'], $kerelmezo['ceg_id']));
+                    return;
+
+                case 'elemezMolTankolasPdf':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    [$feltoltoTipus, $feltoltoId, $feltoltoNev] = $this->resolveFeltolto($request);
+                    echo json_encode($molTankolasInterface->elemezPdf($request['pdf'], $kerelmezo['ceg_id'], $request['fajlnev'] ?? null, $feltoltoTipus, $feltoltoId, $feltoltoNev));
+                    return;
+                case 'alkalmazMolTankolas':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($molTankolasInterface->alkalmaz($request['sorok'], $kerelmezo['ceg_id']));
+                    return;
+
+                case 'elemezTachografDdd':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    [$feltoltoTipus, $feltoltoId, $feltoltoNev] = $this->resolveFeltolto($request);
+                    echo json_encode($tachografInterface->elemezDdd($request['ddd'], $kerelmezo['ceg_id'], $request['fajlnev'] ?? null, $feltoltoTipus, $feltoltoId, $feltoltoNev));
+                    return;
+                case 'alkalmazTachografImport':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    [$feltoltoTipus, $feltoltoId, $feltoltoNev] = $this->resolveFeltolto($request);
+                    echo json_encode($tachografInterface->alkalmazImport(
+                        $request['napok'],
+                        $request['sofor_id'],
+                        $request['kartyaszam'],
+                        $request['forrasFajlnev'] ?? null,
+                        $kerelmezo['ceg_id'],
+                        $request['esemenyek'] ?? [],
+                        $feltoltoTipus,
+                        $feltoltoId,
+                        $feltoltoNev
+                    ));
+                    return;
+                case 'getTachografMegfeleloseg':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($tachografInterface->getMegfelelosegiLista($kerelmezo['ceg_id']));
+                    return;
+                case 'getTachografSoforOsszesito':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($tachografInterface->getSoforAttekintes($kerelmezo['ceg_id']));
+                    return;
+                case 'getTachografImportNaplo':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($tachografInterface->getImportNaplo($kerelmezo['ceg_id']));
+                    return;
+                case 'atparositTachografNap':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($tachografInterface->atparositNap($request['id'], $request['ujSoforId'], $kerelmezo['ceg_id']));
+                    return;
+                case 'elemezTachografVuDdd':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    [$feltoltoTipus, $feltoltoId, $feltoltoNev] = $this->resolveFeltolto($request);
+                    echo json_encode($tachografVuInterface->elemezVuDdd($request['ddd'], $kerelmezo['ceg_id'], $request['fajlnev'] ?? null, $feltoltoTipus, $feltoltoId, $feltoltoNev));
+                    return;
+                case 'alkalmazTachografVuImport':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    [$feltoltoTipus, $feltoltoId, $feltoltoNev] = $this->resolveFeltolto($request);
+                    echo json_encode($tachografVuInterface->alkalmazVuImport(
+                        $request['napok'],
+                        $request['jarmuTipus'],
+                        $request['jarmuId'],
+                        $request['vin'],
+                        $request['rendszam'],
+                        $request['forrasFajlnev'] ?? null,
+                        $kerelmezo['ceg_id'],
+                        $request['generacio'] ?? 2,
+                        $feltoltoTipus,
+                        $feltoltoId,
+                        $feltoltoNev
+                    ));
+                    return;
+                case 'getTachografVuNapiAktivitas':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($tachografVuInterface->getVuNapiAktivitas(
+                        $request['jarmuTipus'] ?? null,
+                        $request['jarmuId'] ?? null,
+                        $request['datumTol'] ?? null,
+                        $request['datumIg'] ?? null,
+                        $kerelmezo['ceg_id']
+                    ));
+                    return;
+                case 'getTachografVuMegfeleloseg':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($tachografVuInterface->getVuMegfelelosegiLista($kerelmezo['ceg_id']));
+                    return;
+                case 'getTachografVuJarmuOsszesito':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($tachografVuInterface->getJarmuAttekintes($kerelmezo['ceg_id']));
+                    return;
+                case 'getTachografVuImportNaplo':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($tachografVuInterface->getVuImportNaplo($kerelmezo['ceg_id']));
+                    return;
+                case 'elemezBeerkezettDokumentum':
+                    // Ezt az akciót MIND az admin-oldali beérkezett-dokumentum
+                    // inbox (Task 12), MIND a sofőr-oldali fuvarlevél-feltöltő
+                    // oldal (Task 15) hívja — resolveKerelmezo() admin-only,
+                    // ledobná minden sofőr-munkamenetet, ezért itt (a modul
+                    // többi, sofőr számára is elérhető akciójához hasonlóan,
+                    // ld. fileUpload/getHelyszinek/stb.) resolveSajatCegId()-t
+                    // használunk, ami MINDKÉT munkamenet-típusnál a valódi,
+                    // szerver-oldalon feloldott ceg_id-t adja vissza.
+                    $cegId = $this->resolveSajatCegId($request);
+                    [$feltoltoTipus, $feltoltoId, $feltoltoNev] = $this->resolveFeltolto($request);
+                    echo json_encode($beerkezettDokumentumInterface->elemez($request['base64'], $request['fajlnev'] ?? null, $cegId, $feltoltoTipus, $feltoltoId, $feltoltoNev));
+                    return;
+                case 'getBeerkezettDokumentumok':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($beerkezettDokumentumInterface->getDokumentumok(
+                        $kerelmezo['ceg_id'],
+                        $request['ocrAllapot'] ?? null,
+                        $request['csakFeldolgozatlan'] ?? true,
+                        $request['tipus'] ?? null,
+                        $request['search'] ?? null,
+                        $request['datumTol'] ?? null,
+                        $request['datumIg'] ?? null,
+                        $request['sortKey'] ?? null,
+                        $request['sortDir'] ?? 'asc',
+                        $request['page'] ?? null,
+                        $request['pageSize'] ?? null
+                    ));
+                    return;
+                case 'getBeerkezettDokumentumokSzama':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($beerkezettDokumentumInterface->getSzama($kerelmezo['ceg_id']));
+                    return;
+                case 'updateBeerkezettDokumentumTipus':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($beerkezettDokumentumInterface->updateTipus($request['id'], $kerelmezo['ceg_id'], $request['tipus']));
+                    return;
+                case 'updateBeerkezettDokumentumSofor':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($beerkezettDokumentumInterface->updateSofor($request['id'], $kerelmezo['ceg_id'], $request['soforId'] ?? null));
+                    return;
+                case 'torolBeerkezettDokumentum':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    $result = $beerkezettDokumentumInterface->torol($request['id'], $kerelmezo['ceg_id']);
+                    if ($result['success']) {
+                        $this->logAudit($kerelmezo['ceg_id'], 'beerkezett_dokumentumok', $request['id'], 'torles');
+                    }
+                    echo json_encode($result);
+                    return;
+                case 'getSajatBeerkezettDokumentumok':
+                    // Sofőr-önkiszolgáló akció (ld. getBejelentesekSofor
+                    // mintáját) — nincs MODULE_PERMISSION_MAP-bejegyzése,
+                    // mert nem admin-konfigurálható modul-jogosultság alá
+                    // tartozik, a sofőr mindig látja a SAJÁT feltöltéseit.
+                    echo json_encode($beerkezettDokumentumInterface->getSajatDokumentumok(
+                        $this->resolveSajatSoforId($request),
+                        $this->resolveSajatCegId($request),
+                        $request['limit'] ?? null
+                    ));
+                    return;
+                case 'torolSajatBeerkezettDokumentum':
+                    echo json_encode($beerkezettDokumentumInterface->torolSajat(
+                        $request['id'],
+                        $this->resolveSajatSoforId($request),
+                        $this->resolveSajatCegId($request)
+                    ));
+                    return;
+                case 'newFuvar':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    $result = $fuvarInterface->newFuvar($request, $kerelmezo['ceg_id']);
+                    if ($result['success']) {
+                        $this->logAudit($kerelmezo['ceg_id'], 'fuvarok', $result['fuvar']['id'] ?? null, 'letrehozas', $request['felrako'] ?? null);
+                    }
+                    echo json_encode($result);
+                    return;
+                case 'updateFuvar':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    $result = $fuvarInterface->updateFuvar($request, $kerelmezo['ceg_id']);
+                    if ($result['success']) {
+                        $this->logAudit($kerelmezo['ceg_id'], 'fuvarok', $request['id'], 'modositas', $request['felrako'] ?? null);
+                    }
+                    echo json_encode($result);
+                    return;
+                case 'deleteFuvar':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    $result = $fuvarInterface->deleteFuvar($request['id'], $kerelmezo['ceg_id']);
+                    if ($result['success']) {
+                        $this->logAudit($kerelmezo['ceg_id'], 'fuvarok', $request['id'], 'torles');
+                    }
+                    echo json_encode($result);
+                    return;
+                case 'getFuvar':
+                    echo json_encode($fuvarInterface->getFuvar($request['id'], $this->resolveKerelmezo($request)['ceg_id']));
+                    return;
+                case 'getFuvarok':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($fuvarInterface->getFuvarok($kerelmezo['ceg_id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['sortKey'] ?? null, $request['sortDir'] ?? 'asc', $request['allapot'] ?? null));
+                    return;
+                case 'letrehozFuvarDokumentumbol':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    $result = $fuvarInterface->letrehozDokumentumbol($request['dokumentumId'], $kerelmezo['ceg_id'], $request['felulirasok'] ?? []);
+                    if ($result['success']) {
+                        $this->logAudit($kerelmezo['ceg_id'], 'fuvarok', $result['fuvar']['id'] ?? null, 'letrehozas', 'dokumentumból');
+                    }
+                    echo json_encode($result);
+                    return;
+                case 'csatolBeerkezettDokumentumotFuvarhoz':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    $result = $fuvarInterface->csatolDokumentumot($request['dokumentumId'], $request['fuvarId'], $kerelmezo['ceg_id']);
+                    if ($result['success']) {
+                        $this->logAudit($kerelmezo['ceg_id'], 'fuvarok', $request['fuvarId'], 'dokumentum_csatolva', null);
+                    }
+                    echo json_encode($result);
+                    return;
+                case 'getFuvarAllapotOsszesito':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($fuvarInterface->getAllapotOsszesito($kerelmezo['ceg_id']));
+                    return;
+                case 'getSoforDashboard':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($fuvarInterface->getSoforDashboard(
+                        $kerelmezo['ceg_id'],
+                        $request['datumTol'] ?? null,
+                        $request['datumIg'] ?? null,
+                        $request['soforId'] ?? null,
+                        $request['fuvarAllapot'] ?? null,
+                        $request['dokumentumSzuro'] ?? null,
+                        $request['granularitas'] ?? null
+                    ));
+                    return;
+                case 'getUgyfelFuvarElozmeny':
+                    echo json_encode($fuvarInterface->getUgyfelElozmeny($request['ugyfelId'], $this->resolveKerelmezo($request)['ceg_id']));
+                    return;
+                case 'getFuvarStatisztikak':
+                    echo json_encode($fuvarInterface->getStatisztikak($this->resolveKerelmezo($request)['ceg_id']));
+                    return;
+                case 'getFuvarFigyelmeztetesek':
+                    echo json_encode($fuvarInterface->getFigyelmeztetesek($this->resolveKerelmezo($request)['ceg_id']));
+                    return;
+                case 'updateFuvarAllapot':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    $result = $fuvarInterface->updateAllapot($request['id'], $kerelmezo['ceg_id'], $request['allapot']);
+                    if ($result['success']) {
+                        $this->logAudit($kerelmezo['ceg_id'], 'fuvarok', $request['id'], 'allapotvaltas', $request['allapot']);
+                    }
+                    echo json_encode($result);
+                    return;
+                case 'hozzarendelFuvarSzamlaszamot':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    $result = $fuvarInterface->hozzarendelSzamlaszamot($request['idk'], $kerelmezo['ceg_id'], $request['szamlaszam']);
+                    if ($result['success']) {
+                        $this->logAudit($kerelmezo['ceg_id'], 'fuvarok', null, 'szamlaszam_hozzarendeles', $request['szamlaszam']);
+                    }
+                    echo json_encode($result);
+                    return;
+                case 'getTachografNapiAktivitas':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($tachografInterface->getNapiAktivitas(
+                        $request['sofor_id'] ?? null,
+                        $request['datumTol'] ?? null,
+                        $request['datumIg'] ?? null,
+                        $kerelmezo['ceg_id']
+                    ));
+                    return;
+                case 'getTachografEsemenyek':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($tachografInterface->getEsemenyek($request['sofor_id'] ?? null, $kerelmezo['ceg_id']));
+                    return;
+
                 case 'requestPasswordReset':
                     echo json_encode($this->requestPasswordReset($request['email']));
                     return;
@@ -1398,20 +1849,59 @@ class ApiHandler {
                     return;
 
                 case 'getFiles':
-                    echo json_encode($filesInterface->getFiles($request['tabla'], $request['id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $this->resolveSajatCegId($request)));
+                    $szurok = [
+                        'kategoria' => $request['kategoria'] ?? null,
+                        'modul' => $request['modul'] ?? null,
+                        'feltoltoId' => $request['feltoltoId'] ?? null,
+                        'datumTol' => $request['datumTol'] ?? null,
+                        'datumIg' => $request['datumIg'] ?? null,
+                        'sortKey' => $request['sortKey'] ?? null,
+                        'sortDir' => $request['sortDir'] ?? null,
+                    ];
+                    echo json_encode($filesInterface->getFiles($request['tabla'], $request['id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $this->resolveSajatCegId($request), $szurok));
                     return;
                 case 'fileUpload':
                     // A fájlt a SAJÁT (szerver-oldalon feloldott) ceg_id-vel
                     // taggeljük, nem a kliens által küldött `admin` mezővel —
                     // különben valaki más cég `admin` id-jét beküldve egy
                     // idegen cég fájllistájába "csempészhetne" fel tartalmat.
-                    echo json_encode($filesInterface->fileUpload($this->resolveSajatCegId($request), $request['tabla'], $request['id'], $request['file'], $request['name'], $request['size'], $request['kategoria'] ?? null));
+                    // A feltöltő azonosítója/neve ugyanígy kizárólag a
+                    // munkamenetből (ld. resolveFeltolto()), sosem kliens-mezőből.
+                    [$feltoltoTipus, $feltoltoId, $feltoltoNev] = $this->resolveFeltolto($request);
+                    echo json_encode($filesInterface->fileUpload(
+                        $this->resolveSajatCegId($request),
+                        $request['tabla'],
+                        $request['id'],
+                        $request['file'],
+                        $request['name'],
+                        $request['size'],
+                        $request['kategoria'] ?? null,
+                        $feltoltoTipus,
+                        $feltoltoId,
+                        $feltoltoNev,
+                        $request['cimkek'] ?? null
+                    ));
                     return;
                 case 'downloadFile':
                     echo json_encode($filesInterface->downloadFile($request['id'], $this->resolveSajatCegId($request)));
                     return;
                 case 'deleteFile':
                     echo json_encode($filesInterface->deleteFile($request['id'], $this->resolveSajatCegId($request)));
+                    return;
+                case 'updateFajlCimkek':
+                    echo json_encode($filesInterface->updateFajlCimkek($request['id'], $this->resolveSajatCegId($request), $request['cimkek']));
+                    return;
+                case 'renameFile':
+                    echo json_encode($filesInterface->renameFile($request['id'], $this->resolveSajatCegId($request), $request['name']));
+                    return;
+                case 'downloadFilesZip':
+                    echo json_encode($filesInterface->downloadFilesZip($request['ids'], $this->resolveSajatCegId($request)));
+                    return;
+                case 'getFajlStatisztika':
+                    echo json_encode($filesInterface->getStatisztika($this->resolveSajatCegId($request)));
+                    return;
+                case 'getHasonloFajlok':
+                    echo json_encode($filesInterface->getHasonloFajlok($request['id'], $this->resolveSajatCegId($request)));
                     return;
                 case 'getEgyediHataridok':
                     echo json_encode($this->getEgyediHataridok($this->resolveKerelmezo($request)['ceg_id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null));
@@ -1460,7 +1950,9 @@ class ApiHandler {
                         $request['jogsi_lejarat'],
                         $request['gki_lejarat'],
                         $request['adr_lejarat'],
-                        $kerelmezo['szerepkor']
+                        $kerelmezo['szerepkor'],
+                        $request['cegnev'] ?? null,
+                        $kerelmezo['is_root']
                     ));
 
                     return;
@@ -2154,10 +2646,23 @@ class ApiHandler {
     // admin-fiók is tartozhat (ld. backend/sql/6.sql, CsapatInterface),
     // de közöttük nincs jogosultsági különbségtétel: mindenki, aki egy
     // céghez tartozik, ugyanazt látja/szerkeszti.
-    private function saveAdminData($id, $name, $email, $phone, $szul_datum, $szemelyi, $varos, $irsz, $cim, $szemelyi_lejarat, $jogsi_lejarat, $gki_lejarat, $adr_lejarat, $szerepkor = 'admin') {
+    // `$isRoot` — whole-branch-review Minor finding: a `cegnev` mező a UI-n
+    // (`CardSettings.js`) csak root/tulajdonos adminnak látszik, de a
+    // backend eddig bármelyik csapattag munkamenetéből érkező
+    // `saveAdminData` híváson feltétel nélkül felülírta — egy nem-root
+    // csapattag kérése emiatt csendben átírhatta a cég nevét mindenki
+    // számára. A `cegnev = CASE WHEN :is_root THEN :cegnev ELSE cegnev END`
+    // ág nem-root hívónál változatlanul hagyja a meglévő DB-értéket
+    // (nincs hozzá extra SELECT sem szükséges), root hívónál változatlanul
+    // felülírja — ugyanaz a "resolve server-side, never trust client" elv,
+    // mint a `ceg_id`/`kerelmezo_id`-nél, `$isRoot` is a szerver-oldalon
+    // feloldott `resolveKerelmezo()['is_root']`-ból jön, sosem a kliens
+    // kérésből.
+    private function saveAdminData($id, $name, $email, $phone, $szul_datum, $szemelyi, $varos, $irsz, $cim, $szemelyi_lejarat, $jogsi_lejarat, $gki_lejarat, $adr_lejarat, $szerepkor = 'admin', $cegnev = null, $isRoot = false) {
         try {
             $query = "UPDATE admin
                       SET name = :name,
+                          cegnev = CASE WHEN :is_root THEN :cegnev ELSE cegnev END,
                           email = :email,
                           phone = :phone,
                           szul_datum = :szul_datum,
@@ -2177,6 +2682,8 @@ class ApiHandler {
             // Paraméterek kötése
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             $stmt->bindParam(':name', $name, PDO::PARAM_STR);
+            $stmt->bindValue(':is_root', $isRoot ? 1 : 0, PDO::PARAM_INT);
+            $stmt->bindParam(':cegnev', $cegnev, PDO::PARAM_STR);
             $stmt->bindParam(':email', $email, PDO::PARAM_STR);
             $stmt->bindParam(':phone', $phone, PDO::PARAM_STR);
             $stmt->bindParam(':szul_datum', $szul_datum, PDO::PARAM_STR);
@@ -2402,6 +2909,87 @@ class ApiHandler {
         }
     }
 
+    // "Teendők" akció-központ (fejlesztési javaslat, 2026-07-20) — a
+    // jóváhagyásra váró jármű-váltási kérelem, az új bejelentés és a friss
+    // ajánlatkérés eddig 3 különböző helyen élt (haranG-értesítés, Bejelentések
+    // lista, Ajánlatkérések oldal). Ez a metódus NEM gyűjt új adatot, csak a
+    // meglévő 3 forrást fésüli össze egy Dashboard-kártyához, ugyanazokkal a
+    // metódusokkal, amiket a haranG-értesítés is használ (getFuggoJarmuValtasok/
+    // getNyitottBejelentesek) — a jóváhagyás/elutasítás a kártyáról így
+    // pontosan ugyanazt az `elbiralJarmuValtas` akciót hívja, amit a Sidebar is.
+    // Az ajánlatkérések (globális, nem ceg_id-s adat, ld. ADMIN_ONLY_ACTIONS
+    // komment) szándékosan csak akkor kerülnek bele, ha a hívó valódi
+    // admin/gyökér szerepkörű — egy korlátozott (pl. fuvarszervező) csapattag
+    // ne lásson üzemeltetői marketing-leadeket a saját Dashboardján.
+    private function getTeendok($ceg_id, $isAdmin) {
+        global $jarmuValtasInterface, $bejelentesekInterface, $tachografInterface;
+        try {
+            $jarmuValtas = $jarmuValtasInterface->getFuggoJarmuValtasok($ceg_id);
+            $bejelentesek = $bejelentesekInterface->getNyitottBejelentesek($ceg_id);
+
+            $ajanlatkeresek = [];
+            if ($isAdmin) {
+                $osszesAjanlatkeres = $this->getAjanlatkeresek();
+                if ($osszesAjanlatkeres['success']) {
+                    $ajanlatkeresek = array_values(array_filter(
+                        $osszesAjanlatkeres['ajanlatkeresek'],
+                        fn($a) => $a['statusz'] === 'uj'
+                    ));
+                }
+            }
+
+            // Tachográf modul UX-újratervezés (2026-07-24) — esedékes/lejárt
+            // kártya-letöltés a Teendők közé, ugyanaz az összefésülő minta,
+            // mint a másik 3 forrásnál.
+            $tachografLetoltesek = [];
+            $megfeleloseg = $tachografInterface->getMegfelelosegiLista($ceg_id);
+            if ($megfeleloseg['success']) {
+                $tachografLetoltesek = array_values(array_filter(
+                    $megfeleloseg['sorok'],
+                    fn($s) => in_array($s['statusz'], ['esedekes', 'lejart'], true)
+                ));
+            }
+
+            return [
+                'success' => true,
+                'jarmuValtas' => $jarmuValtas['success'] ? $jarmuValtas['kerelmek'] : [],
+                'bejelentesek' => $bejelentesek['success'] ? $bejelentesek['bejelentesek'] : [],
+                'ajanlatkeresek' => $ajanlatkeresek,
+                'tachografLetoltesek' => $tachografLetoltesek,
+            ];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    // Új bejelentés-üzenetről a cég MINDEN admin-fiókját (gyökér + minden
+    // csapattag) értesíti, akinek van aktív Web Push feliratkozása — a
+    // driver-oldali push-infrastruktúra még nem létezik (ld. CLAUDE.md), ezért
+    // ez csak a sofőr -> admin irányt fedi le. `sendPushAdminnak()` némán nem
+    // csinál semmit egy nem-feliratkozott admin-nál, tehát biztonságos minden
+    // csapattagra meghívni szűrés nélkül.
+    private function ertesitBejelentesUjUzenetrol($ceg_id, $bejelentes_id, $szerzoNev) {
+        global $pushInterface;
+        try {
+            $cimStmt = $this->db->prepare("SELECT cim FROM bejelentesek WHERE id = :id");
+            $cimStmt->bindValue(':id', $bejelentes_id);
+            $cimStmt->execute();
+            $cim = $cimStmt->fetch(PDO::FETCH_ASSOC)['cim'] ?? 'Bejelentés';
+
+            $adminStmt = $this->db->prepare(
+                "SELECT id FROM admin WHERE (id = :ceg_id OR tulajdonos_admin_id = :ceg_id2) AND torolt <> 'I'"
+            );
+            $adminStmt->bindValue(':ceg_id', $ceg_id);
+            $adminStmt->bindValue(':ceg_id2', $ceg_id);
+            $adminStmt->execute();
+            foreach ($adminStmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $pushInterface->sendPushAdminnak($row['id'], 'Új üzenet — ' . $cim, $szerzoNev . ' írt a bejelentéshez.', '/admin/bejelentesek');
+            }
+        } catch (Exception $e) {
+            error_log('Bejelentés-üzenet push értesítés sikertelen: ' . $e->getMessage());
+        }
+    }
+
     // R08 (fejlesztési audit, 2026-07-19): sofőrönkénti összesítő riport —
     // a fogyasztás-anomália (tankolasInterface::getFogyasztasElemzes(),
     // médián-alapú), az elmúlt 30 nap km-je (gpsmart_napi_km cache, ugyanaz
@@ -2431,49 +3019,95 @@ class ApiHandler {
                 $bejelentesSoforSzerint[$sor['sofor_id']] = ['osszes' => (int) $sor['osszes'], 'nyitott' => (int) $sor['nyitott']];
             }
 
-            $kmStmt = $this->db->prepare(
-                "SELECT jarmu_tipus, jarmu_id, SUM(km) km
-                 FROM gpsmart_napi_km WHERE admin = :admin AND datum >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-                 GROUP BY jarmu_tipus, jarmu_id"
+            // Tachográf kártya-import (ld. tachografInterface.php) — sofőrönkénti
+            // összesítő. A korábbi "Km (elmúlt 30 nap)" a sofőr JELENLEGI
+            // jármű-hozzárendelésén át, GPSmart-adatból jött (`gpsmart_napi_km`)
+            // — ez, és a korábbi, kizárólag jármű-szintű (`tankolasInterface::
+            // getFogyasztasElemzes()`, a jármű TELJES tankolás-történetéből
+            // számolt) átlagfogyasztás is megszűnt: mindkettőt a tachográf
+            // kártya közvetlen, sofőrhöz kötött adatára cseréltük (ld. lentebb)
+            // — sofőr-váltás esetén ez pontosabb, mert nem keveri bele egy
+            // másik sofőr km-jét/fogyasztását.
+            // UX-újratervezés (2026-07-24): mostantól TachografInterface::
+            // getSoforOsszesito()-ból — ugyanaz a lekérdezés adja a Tachográf
+            // modul "Sofőrök" fülét is, nem duplikáljuk kétszer ugyanazt az SQL-t.
+            global $tachografInterface;
+            $tachoSoforSzerint = $tachografInterface->getSoforOsszesito($ceg_id);
+
+            // A 30 napos ablakban ténylegesen használt jármű(vek) sofőrönként
+            // (a napi `jarmuvek_json`-ból, ld. TachografInterface::
+            // parositJarmuvekNapra()) — enélkül nem tudnánk, melyik jármű
+            // tankolásait kell ehhez a sofőrhöz számolni.
+            $tachoNapokStmt = $this->db->prepare(
+                "SELECT sofor_id, jarmuvek_json FROM tachograf_napi_aktivitas
+                 WHERE admin = :admin AND datum >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)"
             );
-            $kmStmt->bindValue(':admin', $ceg_id);
-            $kmStmt->execute();
-            $kmJarmuSzerint = [];
-            foreach ($kmStmt->fetchAll(PDO::FETCH_ASSOC) as $sor) {
-                $kmJarmuSzerint[$sor['jarmu_tipus'] . ':' . $sor['jarmu_id']] = round((float) $sor['km'], 1);
+            $tachoNapokStmt->bindValue(':admin', $ceg_id);
+            $tachoNapokStmt->execute();
+            $tachoJarmuvekSoforSzerint = [];
+            foreach ($tachoNapokStmt->fetchAll(PDO::FETCH_ASSOC) as $sor) {
+                $jarmuvek = json_decode($sor['jarmuvek_json'] ?? '[]', true) ?: [];
+                foreach ($jarmuvek as $j) {
+                    if (!empty($j['jarmu_tipus']) && !empty($j['jarmu_id'])) {
+                        $tachoJarmuvekSoforSzerint[$sor['sofor_id']][$j['jarmu_tipus'] . ':' . $j['jarmu_id']] = true;
+                    }
+                }
             }
 
-            global $tankolasInterface;
-            $fogyasztas = $tankolasInterface->getFogyasztasElemzes($ceg_id);
-            $jarmuOsszesito = [];
-            if (!empty($fogyasztas['success'])) {
-                foreach ($fogyasztas['jarmuvek'] as $jarmu) {
-                    $jarmuId = $jarmu['jarmu_tipus'] === 'furgon' ? $jarmu['furgon_id'] : $jarmu['kamion_id'];
-                    $kulcs = $jarmu['jarmu_tipus'] . ':' . $jarmuId;
-                    $jarmuOsszesito[$kulcs] = [
-                        'atlagFogyasztas' => $jarmu['atlagFogyasztas'],
-                        'anomaliaSzam' => count(array_filter($jarmu['szakaszok'], fn($sz) => $sz['anomalia'])),
-                    ];
+            // Ugyanebben a 30 napos ablakban vásárolt üzemanyag, jármű szerint.
+            $tankolasStmt = $this->db->prepare(
+                "SELECT kamion_id, furgon_id, SUM(liter) liter
+                 FROM tankolasok
+                 WHERE admin = :admin AND torolt <> 'I' AND datum >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+                 GROUP BY kamion_id, furgon_id"
+            );
+            $tankolasStmt->bindValue(':admin', $ceg_id);
+            $tankolasStmt->execute();
+            $literJarmuSzerint = [];
+            foreach ($tankolasStmt->fetchAll(PDO::FETCH_ASSOC) as $sor) {
+                if (!empty($sor['kamion_id'])) {
+                    $literJarmuSzerint['kamion:' . $sor['kamion_id']] = (float) $sor['liter'];
+                } elseif (!empty($sor['furgon_id'])) {
+                    $literJarmuSzerint['furgon:' . $sor['furgon_id']] = (float) $sor['liter'];
+                }
+            }
+
+            // Sofőrönként: a nála (a 30 napos ablakban) használt jármű(vek)re
+            // vásárolt liter / az általa (ugyanabban az ablakban, tachográf
+            // szerint) vezetett km * 100 — ha egy jármű megosztott több sofőr
+            // közt, ez a másik sofőr fogyasztását is beleszámítja abba a
+            // járműbe; ez egy tudatos, dokumentált egyszerűsítés, nem hiba.
+            $tachoFogyasztasSoforSzerint = [];
+            foreach ($tachoSoforSzerint as $sid => $adat) {
+                if ($adat['km30Nap'] <= 0) {
+                    continue;
+                }
+                $liter = 0.0;
+                foreach (array_keys($tachoJarmuvekSoforSzerint[$sid] ?? []) as $kulcs) {
+                    $liter += $literJarmuSzerint[$kulcs] ?? 0.0;
+                }
+                if ($liter > 0) {
+                    $tachoFogyasztasSoforSzerint[$sid] = round(($liter / $adat['km30Nap']) * 100, 2);
                 }
             }
 
             $eredmeny = [];
             foreach ($soforok as $sofor) {
                 $jarmuTipus = $sofor['kamion'] ? 'kamion' : ($sofor['furgon'] ? 'furgon' : null);
-                $jarmuId = $sofor['kamion'] ?: $sofor['furgon'];
-                $kulcs = $jarmuTipus ? ($jarmuTipus . ':' . $jarmuId) : null;
                 $bej = $bejelentesSoforSzerint[$sofor['id']] ?? ['osszes' => 0, 'nyitott' => 0];
-                $jarmuAdat = $kulcs ? ($jarmuOsszesito[$kulcs] ?? null) : null;
+                $tacho = $tachoSoforSzerint[$sofor['id']] ?? null;
 
                 $eredmeny[] = [
                     'sofor_id' => (int) $sofor['id'],
                     'nev' => $sofor['name'],
                     'jarmu_tipus' => $jarmuTipus,
-                    'km_30nap' => $kulcs ? ($kmJarmuSzerint[$kulcs] ?? 0.0) : null,
-                    'fogyasztas_atlag' => $jarmuAdat['atlagFogyasztas'] ?? null,
-                    'fogyasztas_anomalia_szam' => $jarmuAdat['anomaliaSzam'] ?? 0,
+                    'fogyasztas_atlag' => $tachoFogyasztasSoforSzerint[$sofor['id']] ?? null,
                     'bejelentes_osszes' => $bej['osszes'],
                     'bejelentes_nyitott' => $bej['nyitott'],
+                    'tachograf_utolso_datum' => $tacho['utolsoDatum'] ?? null,
+                    'tachograf_vezetes_perc_7nap' => $tacho['vezetesPerc7Nap'] ?? null,
+                    'tachograf_km_30nap' => $tacho['km30Nap'] ?? null,
+                    'tachograf_tul_ora_napok' => $tacho['tulOraNapok'] ?? null,
                 ];
             }
 

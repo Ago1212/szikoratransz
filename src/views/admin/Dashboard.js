@@ -11,6 +11,11 @@ import {
   PiCoinsLight,
   PiArrowRightLight,
   PiCalendarCheckLight,
+  PiListChecksLight,
+  PiEnvelopeSimpleLight,
+  PiCheckLight,
+  PiXLight,
+  PiIdentificationCardLight,
 } from "react-icons/pi";
 
 // components
@@ -105,11 +110,18 @@ function PenzugyiAllapotCard({ className, cashflow, varhato, varhatoLoading, isA
 // két adatforrás, mint korábban, csak most egy kártyában.
 function MireFigyeljekMaCard({ className, hatarido, events, limit, onNavigate }) {
   const ma = moment().startOf("day");
-  const tetelek = events
+  const naptolSzamitott = events
     .map((e) => ({ ...e, _napok: moment(e.start).startOf("day").diff(ma, "days") }))
-    .filter((e) => e._napok <= 30)
-    .sort((a, b) => a._napok - b._napok)
-    .slice(0, limit);
+    .filter((e) => e._napok <= 30);
+  // A ma/holnap/e héten esedékes tételek mindig megelőzik a régen lejárt
+  // tételeket — enélkül egy évekkel ezelőtt lejárt tétel kiszoríthatta a
+  // limitált (mobilon 4 elemes) listából a ténylegesen sürgős, holnap
+  // esedékes tételt (növekvő _napok szerinti rendezésnél a legnegatívabb,
+  // azaz legrégebben lejárt tétel került volna elsőnek). A közelgő tételek
+  // dátum szerint növekvő, a lejártak a legfrissebben lejárt elöl sorrendben.
+  const kozelgo = naptolSzamitott.filter((e) => e._napok >= 0).sort((a, b) => a._napok - b._napok);
+  const lejart = naptolSzamitott.filter((e) => e._napok < 0).sort((a, b) => b._napok - a._napok);
+  const tetelek = [...kozelgo, ...lejart].slice(0, limit);
 
   const napCimke = (napok) => {
     if (napok < 0) return "Lejárt";
@@ -168,6 +180,136 @@ function MireFigyeljekMaCard({ className, hatarido, events, limit, onNavigate })
           </ul>
         )}
       </div>
+    </div>
+  );
+}
+
+const JARMU_TIPUS_LABEL = { kamion: "kamiont", potkocsi: "pótkocsit", furgon: "furgont" };
+
+// Fejlesztési javaslat (2026-07-20) — "Teendők" akció-központ: a jóváhagyásra
+// váró jármű-váltási kérelem, az új bejelentés és a friss ajánlatkérés eddig
+// 3 különböző helyen élt (haranG-értesítés, Bejelentések lista, Ajánlatkérések
+// oldal) — ez a kártya mindhármat egy helyen, inline akciókkal mutatja, hogy
+// admin ne kelljen 3 külön felületet bejárnia a napi teendők feltérképezéséhez.
+// Csak akkor jelenik meg, ha ténylegesen van nyitott tétel — üres állapotban
+// (minden rendben) nem foglal helyet a Dashboardon, ugyanaz az elv, mint az
+// "Onboarding checklist"-szerű, csak-ha-releváns kártyáknál.
+function TeendokCard({ className, teendok, onElbiral, onAjanlatkeresFelvette, onNavigate, elbiralasAlatt }) {
+  const osszesen =
+    teendok.jarmuValtas.length + teendok.bejelentesek.length + teendok.ajanlatkeresek.length + teendok.tachografLetoltesek.length;
+  if (osszesen === 0) return null;
+
+  return (
+    <div className={`flex flex-col rounded-3xl border border-ink-100 bg-white shadow-soft dark:border-ink-800 dark:bg-ink-900 ${className}`}>
+      <div className="flex items-center justify-between border-b border-ink-100 px-4 py-3 dark:border-ink-800 md:px-6 md:py-4">
+        <h3 className="flex items-center gap-2 font-display text-base font-semibold text-brand-900 dark:text-ink-50 md:text-lg">
+          <PiListChecksLight className="h-5 w-5 text-brand-600 dark:text-brand-400" />
+          Teendők
+          <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-brand-600 px-1.5 text-xs font-bold text-white">
+            {osszesen}
+          </span>
+        </h3>
+      </div>
+      <ul className="divide-y divide-ink-100 dark:divide-ink-800">
+        {teendok.jarmuValtas.map((k) => (
+          <li key={`jv-${k.id}`} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between md:px-6">
+            <div className="flex items-start gap-2.5 min-w-0">
+              <PiTruckLight className="mt-0.5 h-4 w-4 flex-shrink-0 text-brand-500 dark:text-brand-400" />
+              <p className="text-sm text-ink-700 dark:text-ink-100">
+                <span className="font-semibold">{k.sofor_nev || "Egy sofőr"}</span> másik{" "}
+                {JARMU_TIPUS_LABEL[k.tipus] || "járművet"} kér:{" "}
+                <span className="font-semibold">{k.jarmu_rendszam || "?"}</span>
+                {k.indoklas && <span className="block text-xs text-ink-400 dark:text-ink-500">{k.indoklas}</span>}
+              </p>
+            </div>
+            <div className="flex flex-shrink-0 items-center gap-2 self-end sm:self-auto">
+              <button
+                type="button"
+                disabled={elbiralasAlatt === k.id}
+                onClick={() => onElbiral(k.id, "jovahagyva")}
+                className="flex items-center gap-1 rounded-lg bg-brand-600 px-2.5 py-1.5 text-xs font-bold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <PiCheckLight className="h-3.5 w-3.5" /> Jóváhagyás
+              </button>
+              <button
+                type="button"
+                disabled={elbiralasAlatt === k.id}
+                onClick={() => onElbiral(k.id, "elutasitva")}
+                className="flex items-center gap-1 rounded-lg bg-red-50 px-2.5 py-1.5 text-xs font-bold text-red-600 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-red-950/50 dark:text-red-300"
+              >
+                <PiXLight className="h-3.5 w-3.5" /> Elutasítás
+              </button>
+            </div>
+          </li>
+        ))}
+        {teendok.bejelentesek.map((b) => (
+          <li key={`bej-${b.id}`} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between md:px-6">
+            <div className="flex items-start gap-2.5 min-w-0">
+              <PiWarningCircleLight className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-500" />
+              <p className="min-w-0 text-sm text-ink-700 dark:text-ink-100">
+                <span className="font-semibold">{b.sofor_nev || "Egy sofőr"}</span> bejelentést tett:{" "}
+                <span className="font-semibold">{b.cim || "Bejelentés"}</span>
+                {b.kamion_rendszam && <span className="block text-xs text-ink-400 dark:text-ink-500">{b.kamion_rendszam}</span>}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => onNavigate("/admin/bejelentesForm", { data: b })}
+              className="flex flex-shrink-0 items-center gap-1 self-end rounded-lg bg-brand-50 px-2.5 py-1.5 text-xs font-bold text-brand-700 hover:bg-brand-100 dark:bg-brand-950/40 dark:text-brand-300 sm:self-auto"
+            >
+              Megnyitás <PiArrowRightLight className="h-3.5 w-3.5" />
+            </button>
+          </li>
+        ))}
+        {teendok.ajanlatkeresek.map((a) => (
+          <li key={`ak-${a.id}`} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between md:px-6">
+            <div className="flex items-start gap-2.5 min-w-0">
+              <PiEnvelopeSimpleLight className="mt-0.5 h-4 w-4 flex-shrink-0 text-brand-500 dark:text-brand-400" />
+              <p className="min-w-0 text-sm text-ink-700 dark:text-ink-100">
+                <span className="font-semibold">{a.nev}</span> ajánlatot kért
+                {a.telefon && <span className="block text-xs text-ink-400 dark:text-ink-500">{a.telefon}</span>}
+              </p>
+            </div>
+            <div className="flex flex-shrink-0 items-center gap-2 self-end sm:self-auto">
+              <button
+                type="button"
+                onClick={() => onAjanlatkeresFelvette(a.id)}
+                className="flex items-center gap-1 rounded-lg bg-brand-600 px-2.5 py-1.5 text-xs font-bold text-white hover:bg-brand-700"
+              >
+                <PiCheckLight className="h-3.5 w-3.5" /> Felvettem
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigate("/admin/ajanlatkeresek")}
+                className="rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-bold text-ink-600 hover:bg-slate-200 dark:bg-ink-800 dark:text-ink-300"
+              >
+                Megnyitás
+              </button>
+            </div>
+          </li>
+        ))}
+        {teendok.tachografLetoltesek.map((t) => (
+          <li key={`tacho-${t.sofor_id}`} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between md:px-6">
+            <div className="flex items-start gap-2.5 min-w-0">
+              <PiIdentificationCardLight className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-500" />
+              <p className="min-w-0 text-sm text-ink-700 dark:text-ink-100">
+                <span className="font-semibold">{t.nev}</span>{" "}
+                {t.statusz === "lejart" ? "kártya-letöltése lejárt" : "kártya-letöltése esedékes"}
+                <span className="block text-xs text-ink-400 dark:text-ink-500">
+                  {t.utolsoDatum ? `utolsó letöltés: ${t.utolsoDatum} · ${t.napokOta} napja` : "még nincs adat"}
+                </span>
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => onNavigate(`/admin/tachograf?sofor=${t.sofor_id}`)}
+              className="flex flex-shrink-0 items-center gap-1 self-end rounded-lg bg-brand-50 px-2.5 py-1.5 text-xs font-bold text-brand-700 hover:bg-brand-100 dark:bg-brand-950/40 dark:text-brand-300 sm:self-auto"
+            >
+              Megnyitás <PiArrowRightLight className="h-3.5 w-3.5" />
+            </button>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -231,6 +373,39 @@ export default function Dashboard() {
   // a callback-et adja neki, hogy a "Mire figyeljek ma" kártya ugyanazt a
   // listát használhassa fel, külön backend-hívás nélkül.
   const [calendarEvents, setCalendarEvents] = useState([]);
+
+  // Fuvar-figyelmeztetések (ld. Fuvarok.js FigyelmeztetesSav) is megjelennek
+  // itt, "esemény"-alakra hozva ({title, start}) — NEM a naptárba magába
+  // (a CardCalender/getEsemenyek marad az egyetlen naptár-adatforrás), csak
+  // a "Mire figyeljek ma" listájába fésülve, ugyanazzal a lejárt/e-héten/
+  // távolabbi sürgősségi színkódolással. Csak jelez, ugyanúgy nem ír az
+  // `allapot` mezőbe innen sem — a lista tétele pusztán a Fuvarok oldalra
+  // mutat (nincs önálló mélylink egy konkrét fuvarhoz).
+  const [fuvarFigyelmeztetesek, setFuvarFigyelmeztetesek] = useState({ lejartFizetes: [], szamlazasraVar: [] });
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    fetchAction("getFuvarFigyelmeztetesek", { ceg_id: user.ceg_id }).then((result) => {
+      if (result?.success) {
+        setFuvarFigyelmeztetesek({
+          lejartFizetes: result.lejartFizetes || [],
+          szamlazasraVar: result.szamlazasraVar || [],
+        });
+      }
+    });
+  }, []);
+
+  const fuvarEsemenyek = [
+    ...fuvarFigyelmeztetesek.lejartFizetes.map((f) => ({
+      title: `Lejárt fizetés: ${f.utvonal}${f.megbizoNev ? ` — ${f.megbizoNev}` : ""}`,
+      start: f.hatarido,
+    })),
+    ...fuvarFigyelmeztetesek.szamlazasraVar.map((f) => ({
+      title: `Számlázásra vár: ${f.utvonal}`,
+      start: f.teljesitesDatuma,
+    })),
+  ];
+  const fuvarFigyelmeztetesSzam = fuvarEsemenyek.length;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -300,7 +475,46 @@ export default function Dashboard() {
     });
   }, []);
 
-  const navigateTo = (path) => history.push(path);
+  // "Teendők" akció-központ — ld. TeendokCard komment. Jóváhagyás/elutasítás
+  // vagy ajánlatkérés-felvétel után egyszerűen újratöltjük a teljes listát
+  // (ugyanaz a minta, mint a Sidebar haranG-jának `loadKerelmek()`-je),
+  // nem optimista frontend-only eltávolítás — ez a kártya ritkán frissül,
+  // a plusz kérés elhanyagolható áráért cserébe sosem mutat elavult állapotot.
+  const [teendok, setTeendok] = useState({ jarmuValtas: [], bejelentesek: [], ajanlatkeresek: [], tachografLetoltesek: [] });
+  const [elbiralasAlatt, setElbiralasAlatt] = useState(null);
+
+  const loadTeendok = React.useCallback(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    fetchAction("getTeendok", { id: user.ceg_id, kerelmezo_id: user.id }).then((result) => {
+      if (result?.success) {
+        setTeendok({
+          jarmuValtas: result.jarmuValtas || [],
+          bejelentesek: result.bejelentesek || [],
+          ajanlatkeresek: result.ajanlatkeresek || [],
+          tachografLetoltesek: result.tachografLetoltesek || [],
+        });
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    loadTeendok();
+  }, [loadTeendok]);
+
+  const handleTeendokElbiral = async (id, allapot) => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    setElbiralasAlatt(id);
+    await fetchAction("elbiralJarmuValtas", { id, allapot, admin: user.ceg_id, kerelmezo_id: user.id });
+    setElbiralasAlatt(null);
+    loadTeendok();
+  };
+
+  const handleAjanlatkeresFelvette = async (id) => {
+    await fetchAction("updateAjanlatkeresStatusz", { id, statusz: "felvette" });
+    loadTeendok();
+  };
+
+  const navigateTo = (path, state) => history.push(path, state);
 
   if (loading) {
     return (
@@ -342,6 +556,19 @@ export default function Dashboard() {
         />
       )}
 
+      {/* 1.5 — Teendők: csak akkor jelenik meg, ha ténylegesen van nyitott
+          jármű-váltási kérelem/bejelentés/ajánlatkérés — üres állapotban
+          nem foglal helyet, hogy egy "minden rendben" napon a Dashboard ne
+          legyen zsúfoltabb, mint indokolt. */}
+      <TeendokCard
+        className="mb-4 flex-shrink-0"
+        teendok={teendok}
+        onElbiral={handleTeendokElbiral}
+        onAjanlatkeresFelvette={handleAjanlatkeresFelvette}
+        onNavigate={navigateTo}
+        elbiralasAlatt={elbiralasAlatt}
+      />
+
       {/* 2 — "Mire figyeljek ma" (határidők) + Naptár: a legcselekvés-
           relevánsabb tartalom, ezért mobilon és desktopon egyaránt látható,
           közvetlenül a pénzügyi kártya alatt (nem lent, elrejtve). Desktopon
@@ -351,8 +578,8 @@ export default function Dashboard() {
       <div className="flex flex-1 flex-col gap-4 md:grid md:min-h-0 md:grid-cols-2 md:gap-6">
         <MireFigyeljekMaCard
           className="flex-shrink-0 md:order-1 md:h-full"
-          hatarido={stats.hatarido}
-          events={calendarEvents}
+          hatarido={stats.hatarido + fuvarFigyelmeztetesSzam}
+          events={[...calendarEvents, ...fuvarEsemenyek]}
           limit={4}
           onNavigate={() => navigateTo("/admin/esemenyek")}
         />

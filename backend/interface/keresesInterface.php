@@ -113,6 +113,26 @@ class KeresesInterface {
                 ];
             }
 
+            $stmt = $this->db->prepare(
+                "SELECT id, felrako, lerako, aru_megnevezese, fuvarlevel_szam, szamlaszam FROM fuvarok
+                 WHERE admin = :ceg_id AND torolt <> 'I'
+                   AND (felrako LIKE :q OR lerako LIKE :q OR aru_megnevezese LIKE :q OR fuvarlevel_szam LIKE :q OR szamlaszam LIKE :q)
+                 LIMIT 8"
+            );
+            $stmt->bindValue(':ceg_id', $ceg_id);
+            $stmt->bindValue(':q', $like);
+            $stmt->execute();
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $utvonal = trim(($row['felrako'] ?: '') . ($row['felrako'] && $row['lerako'] ? ' → ' : '') . ($row['lerako'] ?: ''));
+                $talalatok[] = [
+                    'tipus' => 'fuvar',
+                    'id' => $row['id'],
+                    'cim' => $utvonal !== '' ? $utvonal : ($row['aru_megnevezese'] ?: 'Fuvar'),
+                    'alcim' => $row['fuvarlevel_szam'] ?: ($row['szamlaszam'] ?: 'Fuvar'),
+                    'url' => '/admin/fuvarok',
+                ];
+            }
+
             return ['success' => true, 'talalatok' => $talalatok];
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];

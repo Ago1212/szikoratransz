@@ -5,6 +5,7 @@ import { fetchAction } from "utils/fetchAction";
 import PageHeader from "components/UI/PageHeader.js";
 import DataTable from "components/UI/DataTable.js";
 import StatusBadge from "components/UI/StatusBadge.js";
+import Modal from "components/UI/Modal.js";
 
 // R01 (fejlesztési audit, 2026-07-19): a nyilvános Landing oldal ajánlatkérő/
 // jelentkező űrlapjaiból (QuoteForm.js) beérkező leadek eddig kizárólag
@@ -17,13 +18,21 @@ const TIPUS_LABEL = { ajanlatkeres: "Ajánlatkérés", jelentkezes: "Jelentkezé
 const TIPUS_TONE = { ajanlatkeres: "info", jelentkezes: "success" };
 
 const STATUSZ_LABEL = { uj: "Új", felvette: "Felvette", lezart: "Lezárva" };
-const STATUSZ_TONE = { uj: "warning", felvette: "info", lezart: "neutral" };
 const STATUSZ_OPTIONS = ["uj", "felvette", "lezart"];
+const STATUSZ_SELECT_CLASS = {
+  uj: "border-amber-300 text-amber-800 dark:border-amber-700 dark:text-amber-300",
+  felvette: "border-sky-300 text-sky-800 dark:border-sky-700 dark:text-sky-300",
+  lezart: "border-ink-200 text-ink-600 dark:border-ink-700 dark:text-ink-300",
+};
 
 export default function Ajanlatkeresek() {
   const [sorok, setSorok] = useState([]);
   const [loading, setLoading] = useState(true);
   const [frissitesAlatt, setFrissitesAlatt] = useState(null);
+  // UX-audit — a "levágott" (line-clamp-2) üzenet mobilon (nincs hover a
+  // `title` tooltiphez) és asztalon is csak részlegesen olvasható a
+  // listában; ez a részletnézet a teljes szöveget mutatja meg.
+  const [reszletSor, setReszletSor] = useState(null);
 
   const betoltes = useCallback(() => {
     setLoading(true);
@@ -93,31 +102,36 @@ export default function Ajanlatkeresek() {
     {
       key: "statusz",
       label: "Státusz",
+      // UX-audit — korábban a jelvény ÉS a select egyszerre, ugyanazt az
+      // értéket mutatta egy cellában (vizuális zaj) — a select maga is
+      // szemantikusan színezett (a STATUSZ_TONE-nal megegyező szegély/szín),
+      // ez önmagában elég.
       render: (row) => (
-        <div className="flex items-center gap-2">
-          <StatusBadge tone={STATUSZ_TONE[row.statusz] || "neutral"}>
-            {STATUSZ_LABEL[row.statusz] || row.statusz}
-          </StatusBadge>
-          <select
-            value={row.statusz}
-            disabled={frissitesAlatt === row.id}
-            onChange={(e) => handleStatuszValt(row.id, e.target.value)}
-            className="rounded-lg border border-ink-200 bg-white px-2 py-1 text-xs text-ink-600 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300 disabled:opacity-50 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-200"
-          >
-            {STATUSZ_OPTIONS.map((opt) => (
-              <option key={opt} value={opt}>
-                {STATUSZ_LABEL[opt]}
-              </option>
-            ))}
-          </select>
-        </div>
+        <select
+          value={row.statusz}
+          disabled={frissitesAlatt === row.id}
+          onChange={(e) => {
+            e.stopPropagation();
+            handleStatuszValt(row.id, e.target.value);
+          }}
+          onClick={(e) => e.stopPropagation()}
+          className={`rounded-lg border bg-white px-2 py-1 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand-300 disabled:opacity-50 dark:bg-ink-800 ${
+            STATUSZ_SELECT_CLASS[row.statusz] || STATUSZ_SELECT_CLASS.lezart
+          }`}
+        >
+          {STATUSZ_OPTIONS.map((opt) => (
+            <option key={opt} value={opt}>
+              {STATUSZ_LABEL[opt]}
+            </option>
+          ))}
+        </select>
       ),
       exportValue: (row) => STATUSZ_LABEL[row.statusz] || row.statusz,
     },
   ];
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-7xl flex-col">
+    <div className="flex h-full w-full flex-col px-0 md:px-4">
       <div className="flex-shrink-0">
         <PageHeader eyebrow="Rendszer" title="Ajánlatkérések" />
       </div>
@@ -127,6 +141,7 @@ export default function Ajanlatkeresek() {
           title="Beérkezett érdeklődések"
           columns={columns}
           rows={sorok}
+          onRowDoubleClick={setReszletSor}
           loading={loading}
           exportFilename="ajanlatkeresek"
           mobileTitleKey="nev"
@@ -137,6 +152,30 @@ export default function Ajanlatkeresek() {
           pageSize={PAGE_SIZE}
         />
       </div>
+
+      <Modal open={!!reszletSor} onClose={() => setReszletSor(null)} title={reszletSor?.nev || "Ajánlatkérés"}>
+        {reszletSor && (
+          <div className="space-y-4 text-sm">
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusBadge tone={TIPUS_TONE[reszletSor.tipus] || "neutral"}>
+                {TIPUS_LABEL[reszletSor.tipus] || reszletSor.tipus}
+              </StatusBadge>
+              <span className="text-ink-400 dark:text-ink-500">
+                {new Date(reszletSor.beerkezett).toLocaleString("hu-HU")}
+              </span>
+            </div>
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">Elérhetőség</div>
+              <div className="mt-1 text-ink-900 dark:text-ink-50">{reszletSor.email}</div>
+              {reszletSor.telefon && <div className="text-ink-600 dark:text-ink-300">{reszletSor.telefon}</div>}
+            </div>
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">Üzenet</div>
+              <p className="mt-1 whitespace-pre-wrap text-ink-900 dark:text-ink-50">{reszletSor.uzenet || "—"}</p>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

@@ -5,6 +5,9 @@ import {
   PiMagnifyingGlassLight,
   PiCaretLeftLight,
   PiCaretRightLight,
+  PiCaretUpLight,
+  PiCaretDownLight,
+  PiCaretUpDownLight,
 } from "react-icons/pi";
 import { GradientCardHeader } from "components/UI/PageCard.js";
 import TableSkeleton from "components/UI/Skeleton.js";
@@ -120,6 +123,10 @@ export default function DataTable({
   onRowDoubleClick,
   loading = false,
   emptyLabel = "Nincs megjeleníthető adat",
+  // UX-audit — korábban egy keresésre kapott 0 találat pontosan ugyanazt az
+  // üzenetet (és a megtévesztő "+ Új" gombot) mutatta, mint egy ténylegesen
+  // üres lista, ami könnyen véletlen duplikátum-létrehozáshoz vezethetett.
+  noResultsLabel,
   emptyState,
   className = "",
   maxBodyHeight = "min(80vh, 760px)",
@@ -145,6 +152,12 @@ export default function DataTable({
   // ne a `render()` által visszaadott JSX-en.
   searchable = false,
   searchPlaceholder = "Keresés...",
+  // UX-audit (2026-07-20) — a hívó előre kitöltheti a keresőmezőt (pl. egy
+  // másik nézetből ide navigálva, egy adott rendszámra szűkítve). Csak a
+  // kezdeti értéket adja, utána a mező a szokásos módon, szabadon
+  // szerkeszthető — ha a hívó egy ÚJABB előtöltést akar kényszeríteni, a
+  // `DataTable`-t egy megváltozott `key` prop-pal kell újra-mountolnia.
+  initialSearch = "",
   // Ha meg van adva egy szám, a sorok lapozva jelennek meg ennyi soronként
   // — nélküle (alapértelmezetten) nincs lapozás, minden sor egyszerre
   // látszik (a meglévő `maxBodyHeight` szerinti görgetéssel).
@@ -178,12 +191,39 @@ export default function DataTable({
   // újratöltéséért utána; a kijelölés a hívás után automatikusan törlődik.
   selectable = false,
   bulkActions = [],
+  // UX-audit (2026-07-20) — opt-in oszloprendezés: egy oszlop `sortable: true`
+  // jelzővel kattinthatóvá válik a fejléce. Nem-szerver oldali módban a
+  // rendezés teljes egészében itt, helyben történik (`sortValue(row)` opcionális
+  // felbontóval, alapból `row[col.key]`). Szerver oldali módban (`serverSide`)
+  // a komponens csak jelez (`onSortChange(key, dir)`), a tényleges rendezést a
+  // szülő végzi a backend felé — ugyanaz a vezérelt/nem-vezérelt kettősség,
+  // mint a lapozásnál/keresésnél. Alapból egyetlen oszlop sem `sortable`, ezért
+  // ez a bővítés a meglévő táblázatok viselkedését nem érinti.
+  sortKey: sortKeyProp,
+  sortDir: sortDirProp = "asc",
+  onSortChange,
 }) {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
   const [page, setPage] = useState(1);
   const [exporting, setExporting] = useState(false);
   const debounceRef = useRef(null);
   const [selected, setSelected] = useState(() => new Set());
+  const [localSortKey, setLocalSortKey] = useState(null);
+  const [localSortDir, setLocalSortDir] = useState("asc");
+  const sortKey = serverSide ? sortKeyProp : localSortKey;
+  const sortDir = serverSide ? sortDirProp : localSortDir;
+
+  const handleSortClick = (col) => {
+    if (!col.sortable) return;
+    const nextDir = sortKey === col.key && sortDir === "asc" ? "desc" : "asc";
+    if (serverSide) {
+      onSortChange?.(col.key, nextDir);
+    } else {
+      setLocalSortKey(col.key);
+      setLocalSortDir(nextDir);
+      setPage(1);
+    }
+  };
 
   // Új sorhalmaz (szűrés, lapváltás, frissítés) esetén a korábbi kijelölés
   // már más sorokra vonatkozna — inkább töröljük, mint hogy véletlenül egy
@@ -235,14 +275,38 @@ export default function DataTable({
         )
       : rows;
 
-  const effectiveTotal = serverSide ? totalRows : filteredRows.length;
+  // Helyi rendezés — csak nem-szerver oldali módban fut (szerver oldalon a
+  // `rows` már a szülő által lekért, rendezett oldal). A `sortValue(row)`
+  // hiányában a nyers `row[col.key]`-t hasonlítjuk, szám-érzékenyen (ha
+  // mindkét oldal számmá alakítható), egyébként lokalizált string-
+  // összevetéssel, hogy az ékezetes magyar szövegek is helyesen rendeződjenek.
+  const sortedRows = (() => {
+    if (serverSide || !sortKey) return filteredRows;
+    const col = fieldCols.find((c) => c.key === sortKey);
+    if (!col?.sortable) return filteredRows;
+    const resolve = (row) => (col.sortValue ? col.sortValue(row) : row[col.key]);
+    const dir = sortDir === "desc" ? -1 : 1;
+    return [...filteredRows].sort((a, b) => {
+      const va = resolve(a);
+      const vb = resolve(b);
+      if (va == null && vb == null) return 0;
+      if (va == null) return -1 * dir;
+      if (vb == null) return 1 * dir;
+      const na = Number(va);
+      const nb = Number(vb);
+      if (!Number.isNaN(na) && !Number.isNaN(nb)) return (na - nb) * dir;
+      return String(va).localeCompare(String(vb), "hu") * dir;
+    });
+  })();
+
+  const effectiveTotal = serverSide ? totalRows : sortedRows.length;
   const totalPages = pageSize ? Math.max(1, Math.ceil(effectiveTotal / pageSize)) : 1;
   const safePage = serverSide ? Math.min(Math.max(pageProp, 1), totalPages) : Math.min(Math.max(page, 1), totalPages);
   const pagedRows = serverSide
     ? rows
     : pageSize
-      ? filteredRows.slice((safePage - 1) * pageSize, safePage * pageSize)
-      : filteredRows;
+      ? sortedRows.slice((safePage - 1) * pageSize, safePage * pageSize)
+      : sortedRows;
 
   const goToPage = (nextPage) => {
     if (serverSide) {
@@ -395,21 +459,49 @@ export default function DataTable({
   // hozzáadás-akció, egy közvetlen "+ Új" gomb is megjelenik itt, hogy
   // egy üres listánál (pl. friss fiók) ne kelljen felgörgetni a fejléc
   // gombjáig a következő lépéshez.
-  const EmptyContent = () => (
-    <div className="flex flex-col items-center gap-3 py-4">
-      {icon && React.createElement(icon, { className: "h-8 w-8 text-ink-200" })}
-      <span>{emptyLabel}</span>
-      {onAdd && (
+  const clearSearch = () => {
+    setSearch("");
+    if (serverSide) {
+      onSearchChange?.("");
+      onPageChange?.(1);
+    } else {
+      setPage(1);
+    }
+  };
+
+  // Egy aktív keresés mellett kapott 0 találat NEM ugyanaz, mint egy
+  // ténylegesen üres lista — előbbinél nincs értelme a "+ Új" gombnak (ld.
+  // UX-audit), és a szöveg is a keresést, nem az adathiányt kommunikálja.
+  const isSearchEmpty = searchable && search.trim().length > 0;
+
+  const EmptyContent = () =>
+    isSearchEmpty ? (
+      <div className="flex flex-col items-center gap-3 py-4">
+        {icon && React.createElement(icon, { className: "h-8 w-8 text-ink-200" })}
+        <span>{noResultsLabel || `Nincs találat a keresésre: „${search.trim()}”`}</span>
         <button
           type="button"
-          onClick={onAdd}
-          className="mt-1 flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-all duration-300 ease-fluid hover:bg-brand-700 active:scale-95"
+          onClick={clearSearch}
+          className="mt-1 text-xs font-semibold text-brand-600 hover:underline dark:text-brand-400"
         >
-          <PiPlusLight className="h-4 w-4" /> {addLabel}
+          Keresés törlése
         </button>
-      )}
-    </div>
-  );
+      </div>
+    ) : (
+      <div className="flex flex-col items-center gap-3 py-4">
+        {icon && React.createElement(icon, { className: "h-8 w-8 text-ink-200" })}
+        <span>{emptyLabel}</span>
+        {onAdd && (
+          <button
+            type="button"
+            onClick={onAdd}
+            className="mt-1 flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-all duration-300 ease-fluid hover:bg-brand-700 active:scale-95"
+          >
+            <PiPlusLight className="h-4 w-4" /> {addLabel}
+          </button>
+        )}
+      </div>
+    );
 
   return (
     <div
@@ -565,11 +657,41 @@ export default function DataTable({
                   {columns.map((col) => (
                     <th
                       key={col.key}
+                      aria-sort={
+                        col.sortable
+                          ? sortKey === col.key
+                            ? sortDir === "asc"
+                              ? "ascending"
+                              : "descending"
+                            : "none"
+                          : undefined
+                      }
                       className={`sticky top-0 z-10 whitespace-nowrap border-b border-ink-100 bg-white px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-ink-400 dark:border-ink-800 dark:bg-ink-900 dark:text-ink-500 text-${
                         col.headerAlign || col.align || "left"
                       }`}
                     >
-                      {col.label}
+                      {col.sortable ? (
+                        <button
+                          type="button"
+                          onClick={() => handleSortClick(col)}
+                          className={`inline-flex items-center gap-1 hover:text-ink-700 dark:hover:text-ink-200 ${
+                            col.align === "right" ? "flex-row-reverse" : ""
+                          }`}
+                        >
+                          {col.label}
+                          {sortKey === col.key ? (
+                            sortDir === "asc" ? (
+                              <PiCaretUpLight className="h-3 w-3 flex-shrink-0 text-brand-600 dark:text-brand-400" />
+                            ) : (
+                              <PiCaretDownLight className="h-3 w-3 flex-shrink-0 text-brand-600 dark:text-brand-400" />
+                            )
+                          ) : (
+                            <PiCaretUpDownLight className="h-3 w-3 flex-shrink-0 text-ink-300 dark:text-ink-600" />
+                          )}
+                        </button>
+                      ) : (
+                        col.label
+                      )}
                     </th>
                   ))}
                 </tr>
@@ -580,7 +702,12 @@ export default function DataTable({
                     <tr
                       key={rowKey(row, index)}
                       className="border-b border-ink-100 transition-colors duration-200 last:border-0 hover:bg-brand-50/40 dark:border-ink-800 dark:hover:bg-brand-950/30"
-                      onDoubleClick={
+                      // Korábban `onDoubleClick` volt, holott a sor `cursor:pointer`-t
+                      // kapott — az egyszeri kattintást ígérő kurzor a mai webes
+                      // konvenció szerint (ld. UX-audit), a mobil kártyanézet is
+                      // egyszeri koppintásra nyit. A prop neve (`onRowDoubleClick`)
+                      // maradt, hogy a hívóhelyeken ne kelljen semmit átnevezni.
+                      onClick={
                         onRowDoubleClick
                           ? () => onRowDoubleClick(row)
                           : undefined
@@ -606,6 +733,12 @@ export default function DataTable({
                       {columns.map((col) => (
                         <td
                           key={col.key}
+                          // A `col.key === "actions"` cellának (gombok/select-ek) meg kell
+                          // állítania a buborékolást — a sor egyszeri kattintásra nyit
+                          // (ld. a fenti komment), enélkül minden akció-gomb kattintása
+                          // AZ AKCIÓ VÉGREHAJTÁSA MELLETT a sort is megnyitná (a mobil
+                          // kártyanézet ezt már korábban is helyesen kezelte).
+                          onClick={col.key === "actions" ? (e) => e.stopPropagation() : undefined}
                           className={`whitespace-nowrap px-6 py-3.5 text-sm text-ink-600 dark:text-ink-300 text-${
                             col.align || "left"
                           } ${col.className || ""}`}

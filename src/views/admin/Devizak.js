@@ -4,6 +4,7 @@ import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
 import PageHeader from "components/UI/PageHeader.js";
 import Spinner from "components/UI/Spinner.js";
+import { confirmDialog } from "utils/confirm.js";
 
 // A devizák a Listák oldal (Listak.js) generikus, "gépeld be a nevet, mi
 // szlugosítjuk kulccsá" mintájától SZÁNDÉKOSAN eltérő, önálló oldalt kapnak
@@ -73,7 +74,7 @@ export default function Devizak() {
   };
 
   const handleDelete = async (elem) => {
-    if (!window.confirm(`Biztosan törlöd a(z) "${elem.kulcs}" devizát?`)) return;
+    if (!(await confirmDialog(`Biztosan törlöd a(z) "${elem.nev}" (${elem.kulcs}) devizát?`))) return;
     const result = await fetchAction("deleteListaElem", { id: elem.id, ceg_id: user.ceg_id, kerelmezo_id: user.id });
     if (result?.success) {
       toast.success("Deviza törölve.");

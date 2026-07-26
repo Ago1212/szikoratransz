@@ -27,7 +27,9 @@ class FurgonInterface {
 
     // `$search`/`$page`/`$pageSize` NÉLKÜL hívva a teljes listát adja vissza,
     // lapozás nélkül — ugyanaz a mintát, mint a kamionInterface::getKamionok().
-    public function getFurgonok($id, $search = null, $page = null, $pageSize = null) {
+    private const RENDEZHETO_OSZLOPOK = ['rendszam' => 'rendszam', 'tipus' => 'tipus', 'meret' => 'meret', 'allapot' => 'allapot'];
+
+    public function getFurgonok($id, $search = null, $page = null, $pageSize = null, $sortKey = null, $sortDir = 'asc') {
         try {
             $params = [':id' => $id];
             $query = "SELECT * FROM furgon WHERE admin = :id AND torolt <> 'I'";
@@ -35,7 +37,9 @@ class FurgonInterface {
                 $query .= " AND " . PaginationHelper::likeClause(['rendszam', 'tipus', 'meret', 'allapot'], 'search');
                 $params[':search'] = '%' . $search . '%';
             }
-            $query .= " ORDER BY rendszam ASC";
+            $rendezoOszlop = self::RENDEZHETO_OSZLOPOK[$sortKey] ?? 'rendszam';
+            $irany = strtolower((string) $sortDir) === 'desc' ? 'DESC' : 'ASC';
+            $query .= " ORDER BY $rendezoOszlop $irany";
 
             if ($page !== null) {
                 [$furgonok, $total, $page, $pageSize] = PaginationHelper::fetchPage($this->db, $query, $params, $page, $pageSize);
@@ -63,6 +67,7 @@ class FurgonInterface {
             $query = "UPDATE furgon
                       SET rendszam = :rendszam,
                           meret = :meret,
+                          teherbiras = :teherbiras,
                           tipus = :tipus,
                           allapot = :allapot,
                           aktualis_km = :aktualis_km,
@@ -88,6 +93,7 @@ class FurgonInterface {
             $stmt->bindParam(':rendszam', $data['rendszam'], PDO::PARAM_STR);
             $stmt->bindParam(':tipus', $data['tipus'], PDO::PARAM_STR);
             $stmt->bindParam(':meret', $data['meret'], PDO::PARAM_STR);
+            $stmt->bindValue(':teherbiras', empty($data['teherbiras']) ? null : (float) $data['teherbiras']);
             $stmt->bindValue(':allapot', empty($data['allapot']) ? 'szabad' : $data['allapot']);
             $stmt->bindValue(':aktualis_km', empty($data['aktualis_km']) ? null : $data['aktualis_km']);
             $stmt->bindParam(':muszaki_lejarat', $data['muszaki_lejarat'], PDO::PARAM_STR);
@@ -123,8 +129,8 @@ class FurgonInterface {
     public function newFurgon($data, $ceg_id) {
         try {
             $query = "INSERT INTO furgon
-                      (admin, rendszam, meret, tipus, allapot, aktualis_km, muszaki_lejarat, adr_lejarat, taograf_illesztes, emelohatfal_vizsga, porolto_lejarat, porolto_lejarat_2, kot_biztositas, kot_biz_nev, kot_biz_dij, kot_biz_utem, kaszko_biztositas, kaszko_nev, kaszko_dij, kaszko_fizetesi_utem)
-                      VALUES (:admin, :rendszam, :meret, :tipus, :allapot, :aktualis_km, :muszaki_lejarat, :adr_lejarat, :taograf_illesztes, :emelohatfal_vizsga, :porolto_lejarat, :porolto_lejarat_2, :kot_biztositas, :kot_biz_nev, :kot_biz_dij, :kot_biz_utem, :kaszko_biztositas, :kaszko_nev, :kaszko_dij, :kaszko_fizetesi_utem)";
+                      (admin, rendszam, meret, teherbiras, tipus, allapot, aktualis_km, muszaki_lejarat, adr_lejarat, taograf_illesztes, emelohatfal_vizsga, porolto_lejarat, porolto_lejarat_2, kot_biztositas, kot_biz_nev, kot_biz_dij, kot_biz_utem, kaszko_biztositas, kaszko_nev, kaszko_dij, kaszko_fizetesi_utem)
+                      VALUES (:admin, :rendszam, :meret, :teherbiras, :tipus, :allapot, :aktualis_km, :muszaki_lejarat, :adr_lejarat, :taograf_illesztes, :emelohatfal_vizsga, :porolto_lejarat, :porolto_lejarat_2, :kot_biztositas, :kot_biz_nev, :kot_biz_dij, :kot_biz_utem, :kaszko_biztositas, :kaszko_nev, :kaszko_dij, :kaszko_fizetesi_utem)";
 
             $stmt = $this->db->prepare($query);
 
@@ -132,6 +138,7 @@ class FurgonInterface {
             $stmt->bindParam(':rendszam', $data['rendszam'], PDO::PARAM_STR);
             $stmt->bindParam(':tipus', $data['tipus'], PDO::PARAM_STR);
             $stmt->bindParam(':meret', $data['meret'], PDO::PARAM_STR);
+            $stmt->bindValue(':teherbiras', empty($data['teherbiras']) ? null : (float) $data['teherbiras']);
             $stmt->bindValue(':allapot', empty($data['allapot']) ? 'szabad' : $data['allapot']);
             $stmt->bindValue(':aktualis_km', empty($data['aktualis_km']) ? null : $data['aktualis_km']);
             $stmt->bindParam(':muszaki_lejarat', $data['muszaki_lejarat'], PDO::PARAM_STR);

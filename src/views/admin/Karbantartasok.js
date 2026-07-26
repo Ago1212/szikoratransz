@@ -21,6 +21,7 @@ import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import Modal from "components/UI/Modal.js";
 import FormField, { FormSection } from "components/UI/FormField.js";
 import StatusBadge from "components/UI/StatusBadge.js";
+import { confirmDialog } from "utils/confirm.js";
 
 const emptyKarbantartas = (adminId) => ({
   admin: adminId,
@@ -135,7 +136,7 @@ const Karbantartasok = () => {
   };
 
   const handleFileDelete = async (fileId, karbantartasId) => {
-    if (!window.confirm("Biztosan törölni szeretné ezt a fájlt?")) return;
+    if (!(await confirmDialog("Biztosan törölni szeretné ezt a fájlt?"))) return;
 
     try {
       const result = await fetchAction("deleteFile", { id: fileId });
@@ -304,7 +305,7 @@ const Karbantartasok = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Biztosan törölni szeretnéd a karbantartást?")) return;
+    if (!(await confirmDialog("Biztosan törölni szeretnéd a karbantartást?"))) return;
 
     const result = await fetchAction("deleteKarbantartas", { id, kerelmezo_id: user.id });
     if (result?.success) {
@@ -315,7 +316,15 @@ const Karbantartasok = () => {
   const getJarmuRendszam = (id, tipus = "kamion") => {
     const jarmuLista = tipus === "potkocsi" ? potkocsik : tipus === "furgon" ? furgonok : kamionok;
     const jarmu = jarmuLista.find((j) => j.id === id);
-    if (!jarmu) return "Ismeretlen";
+    if (!jarmu) {
+      // UX-audit — egy törölt jármű esetén korábban csak "Ismeretlen"
+      // jelent meg, semmilyen nyomon követhető azonosító nélkül — az admin
+      // nem tudta megállapítani, MELYIK korábbi járműhöz tartozott a
+      // karbantartási rekord. A `title` legalább az adatbázis-id-t megadja.
+      return (
+        <span title={id ? `Törölt jármű, id: ${id}` : undefined}>Ismeretlen</span>
+      );
+    }
     return jarmu.tipus ? `${jarmu.rendszam} (${jarmu.tipus})` : jarmu.rendszam;
   };
 
@@ -385,7 +394,22 @@ const Karbantartasok = () => {
       },
     },
     { key: "datum", label: "Dátum" },
-    { key: "log", label: "Leírás", className: "whitespace-normal break-words max-w-xs" },
+    {
+      key: "log",
+      label: "Leírás",
+      // UX-audit — a korábbi `whitespace-normal break-words max-w-xs` egy
+      // hosszabb leírásnál (a sortördelés ellenére is) kitolta a sort, ami
+      // felesleges vízszintes görgetést okozott a táblázatnak akkor is, ha
+      // bőven elég széles volt a képernyő — a Műveletek oszlop csak
+      // görgetéssel volt elérhető. Csonkolt egysoros cella + teljes szöveg
+      // `title`-ben (a szerkesztő modalban amúgy is a teljes szöveg látszik).
+      className: "max-w-[220px] truncate",
+      render: (row) => (
+        <span className="block max-w-[220px] truncate" title={row.log || ""}>
+          {row.log || "—"}
+        </span>
+      ),
+    },
     { key: "km_oraallas", label: "Km óraállás" },
     { key: "elvegezte", label: "Elvégezte" },
     {
@@ -470,7 +494,7 @@ const Karbantartasok = () => {
   const activeFilterCount = Object.values(filter).filter(Boolean).length;
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-7xl flex-col">
+    <div className="flex h-full w-full flex-col px-0 md:px-4">
       <div className="flex-shrink-0">
         <PageHeader
           eyebrow="Flotta"
@@ -849,7 +873,7 @@ const Karbantartasok = () => {
             </button>
             <button
               type="submit"
-              className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-soft transition-colors duration-200 hover:bg-brand-700"
+              className="rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-colors duration-200 hover:bg-brand-700"
             >
               {editingId ? "Mentés" : "Hozzáadás"}
             </button>

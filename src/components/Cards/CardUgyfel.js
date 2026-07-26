@@ -25,6 +25,7 @@ const emptyUgyfel = {
   kapcsolattarto_nev: "",
   kapcsolattarto_email: "",
   kapcsolattarto_telefon: "",
+  fizetesi_hatarido_nap: "",
   megjegyzes: "",
 };
 
@@ -103,6 +104,13 @@ export default function CardUgyfel({ initialUgyfel }) {
                 label="Adószám"
                 name="adoszam"
                 value={formData.adoszam || ""}
+                onChange={handleChange}
+              />
+              <FormField
+                type="number"
+                label="Fizetési határidő (nap)"
+                name="fizetesi_hatarido_nap"
+                value={formData.fizetesi_hatarido_nap || ""}
                 onChange={handleChange}
               />
             </FormSection>

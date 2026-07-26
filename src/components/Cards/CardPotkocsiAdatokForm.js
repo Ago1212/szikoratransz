@@ -11,12 +11,19 @@ import {
   PiTruckTrailerLight,
   PiGaugeLight,
   PiMapPinLight,
+  PiRulerLight,
+  PiScalesLight,
 } from "react-icons/pi";
 import FormField, { FormSection } from "components/UI/FormField.js";
+import LejaratTag from "components/UI/LejaratTag.js";
 import SaveButton from "components/UI/SaveButton.js";
 import { useListaElemek } from "utils/useListaElemek.js";
 
 const CardPotkocsiAdatokForm = ({ potkocsi, setFormData, handleSave }) => {
+  // UX-audit (2026-07-23): a Kamion/Furgon modul mellett a Pótkocsiból
+  // korábban hiányzott a "Méret" mező — ld. potkocsi_meret a listaInterface
+  // TIPUSOK regiszterében.
+  const { elemek: meretOptions } = useListaElemek("potkocsi_meret");
   const { elemek: allapotOptions } = useListaElemek("jarmu_allapot");
   const { elemek: utemOptions } = useListaElemek("biztositas_utem");
   const [nextKotBizInfo, setNextKotBizInfo] = useState({ date: "", amount: "" });
@@ -208,7 +215,7 @@ const CardPotkocsiAdatokForm = ({ potkocsi, setFormData, handleSave }) => {
           icon={PiIdentificationCardLight}
           label="Rendszám"
           id="rendszam"
-          value={potkocsi.rendszam}
+          value={potkocsi.rendszam || ""}
           onChange={handleFormChange}
           required
         />
@@ -219,6 +226,30 @@ const CardPotkocsiAdatokForm = ({ potkocsi, setFormData, handleSave }) => {
           value={potkocsi.tipus || ""}
           onChange={handleFormChange}
           placeholder="Pótkocsi típusa"
+        />
+        <FormField
+          as="select"
+          icon={PiRulerLight}
+          label="Méret"
+          id="meret"
+          value={potkocsi.meret || ""}
+          onChange={handleFormChange}
+        >
+          <option value="">Válassz...</option>
+          {meretOptions.map((o) => (
+            <option key={o.kulcs} value={o.kulcs}>
+              {o.nev}
+            </option>
+          ))}
+        </FormField>
+        <FormField
+          type="number"
+          step="0.1"
+          icon={PiScalesLight}
+          label="Teherbírás (t)"
+          id="teherbiras"
+          value={potkocsi.teherbiras || ""}
+          onChange={handleFormChange}
         />
         <FormField
           as="select"
@@ -249,7 +280,7 @@ const CardPotkocsiAdatokForm = ({ potkocsi, setFormData, handleSave }) => {
         <FormField
           type="date"
           icon={PiCarLight}
-          label="Műszaki"
+          label={<>Műszaki <LejaratTag date={potkocsi.muszaki_lejarat} /></>}
           id="muszaki_lejarat"
           value={potkocsi.muszaki_lejarat}
           onChange={handleFormChange}
@@ -257,7 +288,7 @@ const CardPotkocsiAdatokForm = ({ potkocsi, setFormData, handleSave }) => {
         <FormField
           type="date"
           icon={PiShieldCheckLight}
-          label="Adr"
+          label={<>Adr <LejaratTag date={potkocsi.adr_lejarat} /></>}
           id="adr_lejarat"
           value={potkocsi.adr_lejarat}
           onChange={handleFormChange}
@@ -265,7 +296,7 @@ const CardPotkocsiAdatokForm = ({ potkocsi, setFormData, handleSave }) => {
         <FormField
           type="date"
           icon={PiIdentificationCardLight}
-          label="Taográf illesztés"
+          label={<>Taográf illesztés <LejaratTag date={potkocsi.taograf_illesztes} /></>}
           id="taograf_illesztes"
           value={potkocsi.taograf_illesztes}
           onChange={handleFormChange}
@@ -273,7 +304,7 @@ const CardPotkocsiAdatokForm = ({ potkocsi, setFormData, handleSave }) => {
         <FormField
           type="date"
           icon={PiTruckTrailerLight}
-          label="Emelő hátfal"
+          label={<>Emelő hátfal <LejaratTag date={potkocsi.emelohatfal_vizsga} /></>}
           id="emelohatfal_vizsga"
           value={potkocsi.emelohatfal_vizsga}
           onChange={handleFormChange}
@@ -281,7 +312,7 @@ const CardPotkocsiAdatokForm = ({ potkocsi, setFormData, handleSave }) => {
         <FormField
           type="date"
           icon={PiFireExtinguisherLight}
-          label="Poroltó #1"
+          label={<>Poroltó #1 <LejaratTag date={potkocsi.porolto_lejarat} /></>}
           id="porolto_lejarat"
           value={potkocsi.porolto_lejarat}
           onChange={handleFormChange}
@@ -289,7 +320,7 @@ const CardPotkocsiAdatokForm = ({ potkocsi, setFormData, handleSave }) => {
         <FormField
           type="date"
           icon={PiFireExtinguisherLight}
-          label="Poroltó #2"
+          label={<>Poroltó #2 <LejaratTag date={potkocsi.porolto_lejarat_2} /></>}
           id="porolto_lejarat_2"
           value={potkocsi.porolto_lejarat_2}
           onChange={handleFormChange}

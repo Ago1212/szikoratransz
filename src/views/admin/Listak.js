@@ -4,6 +4,7 @@ import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
 import PageHeader from "components/UI/PageHeader.js";
 import Spinner from "components/UI/Spinner.js";
+import { confirmDialog } from "utils/confirm.js";
 
 // Az öt lista-típus maga fix (ezek konkrét, kódban is kezelt mezőkhöz
 // tartoznak — kamion.meret, kamion/potkocsi.allapot, stb.), csak az egyes
@@ -11,6 +12,7 @@ import Spinner from "components/UI/Spinner.js";
 const LISTA_TIPUSOK = [
   { tipus: "kamion_meret", nev: "Kamion méret" },
   { tipus: "furgon_meret", nev: "Furgon méret" },
+  { tipus: "potkocsi_meret", nev: "Pótkocsi méret" },
   { tipus: "jarmu_allapot", nev: "Jármű állapota" },
   { tipus: "biztositas_utem", nev: "Biztosítás fizetési ütem" },
   { tipus: "bejelentes_tipus", nev: "Bejelentés típusa" },
@@ -84,7 +86,22 @@ export default function Listak() {
   };
 
   const handleDelete = async (elem) => {
-    if (!window.confirm(`Biztosan törlöd a(z) "${elem.nev}" elemet?`)) return;
+    // UX-audit — korábban csak egy statikus figyelmeztető mondat volt a
+    // leírásban, a tényleges "van-e még hivatkozó adat" ellenőrzés csak a
+    // törlés-kísérlet UTÁN (a backend hard blokkjában) derült ki. Ez a
+    // hatás-előnézet a megerősítő kérdésbe is beleszámolja a találatszámot.
+    let hasznalatSzam = null;
+    try {
+      const hasznalatResult = await fetchAction("getListaElemHasznalat", { id: elem.id, ceg_id: user.ceg_id, kerelmezo_id: user.id });
+      if (hasznalatResult?.success) hasznalatSzam = hasznalatResult.darab;
+    } catch (e) {
+      // a hatás-előnézet csak kiegészítő infó — ha nem sikerül lekérni, a törlés folyamata nem áll meg emiatt
+    }
+    const uzenet =
+      hasznalatSzam !== null && hasznalatSzam > 0
+        ? `Ezt az értéket jelenleg ${hasznalatSzam} rekord használja — a törlés emiatt le lesz tiltva, előbb állítsd át azokat egy másik értékre. Megnyitod mégis a törlési kísérletet?`
+        : `Biztosan törlöd a(z) "${elem.nev}" elemet?`;
+    if (!(await confirmDialog(uzenet))) return;
     const result = await fetchAction("deleteListaElem", { id: elem.id, ceg_id: user.ceg_id, kerelmezo_id: user.id });
     if (result?.success) {
       toast.success("Elem törölve.");
@@ -98,7 +115,7 @@ export default function Listak() {
 
   return (
     <div className="mx-auto w-full max-w-3xl">
-      <PageHeader eyebrow="Saját adatok" title="Listák" />
+      <PageHeader eyebrow="Rendszer" title="Listák" />
 
       <p className="-mt-4 mb-6 max-w-2xl text-sm text-ink-500 dark:text-ink-400">
         Itt bővítheted/nevezheted át a rendszer különböző választható listáit — pl. milyen

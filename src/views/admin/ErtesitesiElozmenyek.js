@@ -32,7 +32,7 @@ export default function ErtesitesiElozmenyek() {
   ];
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-7xl flex-col">
+    <div className="flex h-full w-full flex-col px-0 md:px-4">
       <div className="flex-shrink-0">
         <PageHeader eyebrow="Rendszer" title="Értesítési előzmények" />
       </div>

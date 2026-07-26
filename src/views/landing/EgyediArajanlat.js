@@ -51,20 +51,22 @@ export default function EgyediArajanlat() {
         </h2>
         <div className="space-y-4 text-[#23262B]/70 leading-relaxed max-w-2xl">
           <p>
-            Az "egyedi árajánlat" nem csak egy árazási elv nálunk, hanem azt
-            is jelenti, hogy nyitottak vagyunk olyan szállítási igényekre,
-            amik nem illenek bele egy szabványos kategóriába — legyen szó
-            szokatlan méretű, nehezen rakodható, több részletben szállítandó,
-            vagy csak egyszerűen ritkán előforduló árutípusról. Nem szabunk
-            feltételt arra, milyen iparágból érkezik a megrendelés.
+            A gyakorlatban ez leggyakrabban azt jelenti, hogy vállalunk
+            túlméretes vagy túlsúlyos rakományt, állóhelyzetben szállítandó
+            gépet vagy berendezést, több fordulóban szállítandó, nagy
+            mennyiségű tételt, valamint olyan árut, ami rakodás közben
+            különleges figyelmet igényel (törékeny, nem raklapozható, vagy
+            egyedi rögzítést igénylő). Ha bármelyik ismerősen hangzik az Ön
+            szállítmányára, jó helyen jár.
           </p>
           <p>
-            Az ajánlatkérésnél írja le pontosan, mit kell szállítani, honnan
-            hová, és milyen határidővel — minél részletesebb a leírás, annál
-            pontosabb és gyorsabb ajánlatot tudunk adni. Ha bizonytalan
-            abban, hogy egy adott rakomány "beleillik-e" a szokásos
-            szolgáltatásainkba, ne habozzon megkérdezni: az esetek
-            túlnyomó többségében találunk megoldást.
+            Ha bizonytalan, hogy egy adott rakomány beleillik-e a szokásos
+            szolgáltatásainkba, néhány kérdés segít eldönteni: elfér-e egy
+            szabványos kamionplatón vagy speciális felépítmény kell hozzá,
+            igényel-e emelőhátfalat vagy darus rakodást a fel-/lerakodáshoz,
+            és van-e olyan útvonal-korlátozás (pl. súlykorlátozott híd,
+            keskeny bejárat), amit előre figyelembe kell vennünk. Ezekre a
+            válaszokra épül az ajánlatkérésnél összeállított pontos árajánlat.
           </p>
         </div>
       </section>

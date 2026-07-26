@@ -13,9 +13,11 @@ import {
   PiRulerLight,
   PiGaugeLight,
   PiMapPinLight,
+  PiScalesLight,
 } from "react-icons/pi";
 import FormField, { FormSection } from "components/UI/FormField.js";
 import SaveButton from "components/UI/SaveButton.js";
+import LejaratTag from "components/UI/LejaratTag.js";
 import { useListaElemek } from "utils/useListaElemek.js";
 import { fetchAction } from "utils/fetchAction";
 
@@ -224,7 +226,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
           icon={PiIdentificationCardLight}
           label="Rendszám"
           id="rendszam"
-          value={kamion.rendszam}
+          value={kamion.rendszam || ""}
           onChange={handleFormChange}
           required
         />
@@ -251,6 +253,15 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
             </option>
           ))}
         </FormField>
+        <FormField
+          type="number"
+          step="0.1"
+          icon={PiScalesLight}
+          label="Teherbírás (t)"
+          id="teherbiras"
+          value={kamion.teherbiras || ""}
+          onChange={handleFormChange}
+        />
         <FormField
           as="select"
           icon={PiTruckTrailerLight}
@@ -295,7 +306,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
         <FormField
           type="date"
           icon={PiCarLight}
-          label="Műszaki"
+          label={<>Műszaki <LejaratTag date={kamion.muszaki_lejarat} /></>}
           id="muszaki_lejarat"
           value={kamion.muszaki_lejarat}
           onChange={handleFormChange}
@@ -303,7 +314,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
         <FormField
           type="date"
           icon={PiShieldCheckLight}
-          label="Adr"
+          label={<>Adr <LejaratTag date={kamion.adr_lejarat} /></>}
           id="adr_lejarat"
           value={kamion.adr_lejarat}
           onChange={handleFormChange}
@@ -311,7 +322,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
         <FormField
           type="date"
           icon={PiIdentificationCardLight}
-          label="Taográf illesztés"
+          label={<>Taográf illesztés <LejaratTag date={kamion.taograf_illesztes} /></>}
           id="taograf_illesztes"
           value={kamion.taograf_illesztes}
           onChange={handleFormChange}
@@ -319,7 +330,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
         <FormField
           type="date"
           icon={PiTruckLight}
-          label="Emelő hátfal"
+          label={<>Emelő hátfal <LejaratTag date={kamion.emelohatfal_vizsga} /></>}
           id="emelohatfal_vizsga"
           value={kamion.emelohatfal_vizsga}
           onChange={handleFormChange}
@@ -327,7 +338,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
         <FormField
           type="date"
           icon={PiFireExtinguisherLight}
-          label="Poroltó #1"
+          label={<>Poroltó #1 <LejaratTag date={kamion.porolto_lejarat} /></>}
           id="porolto_lejarat"
           value={kamion.porolto_lejarat}
           onChange={handleFormChange}
@@ -335,7 +346,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
         <FormField
           type="date"
           icon={PiFireExtinguisherLight}
-          label="Poroltó #2"
+          label={<>Poroltó #2 <LejaratTag date={kamion.porolto_lejarat_2} /></>}
           id="porolto_lejarat_2"
           value={kamion.porolto_lejarat_2}
           onChange={handleFormChange}

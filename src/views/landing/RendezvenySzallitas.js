@@ -70,6 +70,12 @@ export default function RendezvenySzallitas() {
             ezt már az ajánlatkérésnél érdemes jeleznie, hogy előre tudjunk
             vele kalkulálni.
           </p>
+          <p>
+            Igény esetén közvetlenül egyeztetünk a helyszín
+            kapcsolattartójával vagy a rendezvényszervezővel is, hogy a be-
+            és kiszállítás időpontja garantáltan illeszkedjen a helyszín
+            saját ütemezéséhez.
+          </p>
         </div>
       </section>
     </ServicePage>

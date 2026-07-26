@@ -8,7 +8,9 @@ class UgyfelInterface {
         $this->db = $database->connect();
     }
 
-    public function getUgyfelek($id, $search = null, $page = null, $pageSize = null) {
+    private const RENDEZHETO_OSZLOPOK = ['nev' => 'nev', 'varos' => 'varos'];
+
+    public function getUgyfelek($id, $search = null, $page = null, $pageSize = null, $sortKey = null, $sortDir = 'asc') {
         try {
             $params = [':id' => $id];
             $query = "SELECT * FROM ugyfelek WHERE admin = :id AND torolt <> 'I'";
@@ -16,7 +18,9 @@ class UgyfelInterface {
                 $query .= " AND " . PaginationHelper::likeClause(['nev', 'varos', 'kapcsolattarto_nev', 'kapcsolattarto_telefon', 'kapcsolattarto_email'], 'search');
                 $params[':search'] = '%' . $search . '%';
             }
-            $query .= " ORDER BY nev ASC";
+            $rendezoOszlop = self::RENDEZHETO_OSZLOPOK[$sortKey] ?? 'nev';
+            $irany = strtolower((string) $sortDir) === 'desc' ? 'DESC' : 'ASC';
+            $query .= " ORDER BY $rendezoOszlop $irany";
 
             if ($page !== null) {
                 [$ugyfelek, $total, $page, $pageSize] = PaginationHelper::fetchPage($this->db, $query, $params, $page, $pageSize);
@@ -36,8 +40,8 @@ class UgyfelInterface {
 
     public function newUgyfel($data) {
         try {
-            $query = "INSERT INTO ugyfelek (admin, nev, adoszam, cim, irsz, varos, kapcsolattarto_nev, kapcsolattarto_email, kapcsolattarto_telefon, megjegyzes)
-                      VALUES (:admin, :nev, :adoszam, :cim, :irsz, :varos, :kapcsolattarto_nev, :kapcsolattarto_email, :kapcsolattarto_telefon, :megjegyzes)";
+            $query = "INSERT INTO ugyfelek (admin, nev, adoszam, cim, irsz, varos, kapcsolattarto_nev, kapcsolattarto_email, kapcsolattarto_telefon, fizetesi_hatarido_nap, megjegyzes)
+                      VALUES (:admin, :nev, :adoszam, :cim, :irsz, :varos, :kapcsolattarto_nev, :kapcsolattarto_email, :kapcsolattarto_telefon, :fizetesi_hatarido_nap, :megjegyzes)";
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(':admin', $data['admin']);
             $stmt->bindValue(':nev', $data['nev']);
@@ -48,6 +52,7 @@ class UgyfelInterface {
             $stmt->bindValue(':kapcsolattarto_nev', $data['kapcsolattarto_nev'] ?? null);
             $stmt->bindValue(':kapcsolattarto_email', $data['kapcsolattarto_email'] ?? null);
             $stmt->bindValue(':kapcsolattarto_telefon', $data['kapcsolattarto_telefon'] ?? null);
+            $stmt->bindValue(':fizetesi_hatarido_nap', empty($data['fizetesi_hatarido_nap']) ? null : (int) $data['fizetesi_hatarido_nap'], empty($data['fizetesi_hatarido_nap']) ? PDO::PARAM_NULL : PDO::PARAM_INT);
             $stmt->bindValue(':megjegyzes', $data['megjegyzes'] ?? null);
             $stmt->execute();
 
@@ -68,7 +73,8 @@ class UgyfelInterface {
                       nev = :nev, adoszam = :adoszam,
                       cim = :cim, irsz = :irsz, varos = :varos,
                       kapcsolattarto_nev = :kapcsolattarto_nev, kapcsolattarto_email = :kapcsolattarto_email,
-                      kapcsolattarto_telefon = :kapcsolattarto_telefon, megjegyzes = :megjegyzes
+                      kapcsolattarto_telefon = :kapcsolattarto_telefon, fizetesi_hatarido_nap = :fizetesi_hatarido_nap,
+                      megjegyzes = :megjegyzes
                       WHERE id = :id AND admin = :ceg_id";
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(':id', $data['id']);
@@ -81,6 +87,7 @@ class UgyfelInterface {
             $stmt->bindValue(':kapcsolattarto_nev', $data['kapcsolattarto_nev'] ?? null);
             $stmt->bindValue(':kapcsolattarto_email', $data['kapcsolattarto_email'] ?? null);
             $stmt->bindValue(':kapcsolattarto_telefon', $data['kapcsolattarto_telefon'] ?? null);
+            $stmt->bindValue(':fizetesi_hatarido_nap', empty($data['fizetesi_hatarido_nap']) ? null : (int) $data['fizetesi_hatarido_nap'], empty($data['fizetesi_hatarido_nap']) ? PDO::PARAM_NULL : PDO::PARAM_INT);
             $stmt->bindValue(':megjegyzes', $data['megjegyzes'] ?? null);
             $stmt->execute();
 

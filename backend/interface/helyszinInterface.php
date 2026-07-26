@@ -17,7 +17,9 @@ class HelyszinInterface {
         $this->db = $database->connect();
     }
 
-    public function getHelyszinek($ceg_id, $search = null, $page = null, $pageSize = null) {
+    private const RENDEZHETO_OSZLOPOK = ['nev' => 'nev'];
+
+    public function getHelyszinek($ceg_id, $search = null, $page = null, $pageSize = null, $sortKey = null, $sortDir = 'asc') {
         try {
             $params = [':id' => $ceg_id];
             $query = "SELECT * FROM helyszinek WHERE admin = :id AND torolt <> 'I'";
@@ -25,10 +27,13 @@ class HelyszinInterface {
                 $query .= " AND " . PaginationHelper::likeClause(['nev'], 'search');
                 $params[':search'] = '%' . $search . '%';
             }
-            $query .= " ORDER BY nev ASC";
+            $rendezoOszlop = self::RENDEZHETO_OSZLOPOK[$sortKey] ?? 'nev';
+            $irany = strtolower((string) $sortDir) === 'desc' ? 'DESC' : 'ASC';
+            $query .= " ORDER BY $rendezoOszlop $irany";
 
             if ($page !== null) {
                 [$helyszinek, $total, $page, $pageSize] = PaginationHelper::fetchPage($this->db, $query, $params, $page, $pageSize);
+                $helyszinek = $this->hozzafuzMegjegyzesekSzama($helyszinek);
                 return ['success' => true, 'helyszinek' => $helyszinek, 'total' => $total, 'page' => $page, 'pageSize' => $pageSize];
             }
 
@@ -37,10 +42,38 @@ class HelyszinInterface {
                 $stmt->bindValue($key, $value);
             }
             $stmt->execute();
-            return ['success' => true, 'helyszinek' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
+            $helyszinek = $this->hozzafuzMegjegyzesekSzama($stmt->fetchAll(PDO::FETCH_ASSOC));
+            return ['success' => true, 'helyszinek' => $helyszinek];
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
+    }
+
+    // UX-audit — a lista korábban ténylegesen egyetlen adatoszlopot (Név)
+    // mutatott, a `helyszinek` tábla más érdemi mezőt nem is tárol. Ez a
+    // metódus a jegyzetek darabszámát fűzi hozzá az oldalanként lekérdezett
+    // sorokhoz — PHP-oldali, két különálló SELECT-tel (a projekt saját
+    // SQL-lintere sem az összekapcsolt, sem a beágyazott lekérdezést nem
+    // engedi), ugyanaz a minta, mint a `bejelentesekInterface::getUzenetInfok()`-nál.
+    private function hozzafuzMegjegyzesekSzama($helyszinek) {
+        if (empty($helyszinek)) {
+            return $helyszinek;
+        }
+        $ids = array_column($helyszinek, 'id');
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = $this->db->prepare(
+            "SELECT helyszin_id, COUNT(*) AS db FROM helyszin_megjegyzesek
+             WHERE torolt <> 'I' AND helyszin_id IN ($placeholders) GROUP BY helyszin_id"
+        );
+        $stmt->execute($ids);
+        $szamok = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $szamok[$row['helyszin_id']] = (int) $row['db'];
+        }
+        foreach ($helyszinek as &$h) {
+            $h['megjegyzesek_szama'] = $szamok[$h['id']] ?? 0;
+        }
+        return $helyszinek;
     }
 
     public function getHelyszin($id, $ceg_id) {

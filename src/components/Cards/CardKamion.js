@@ -24,6 +24,7 @@ export default function CardKamion({ initialKamion }) {
     rendszam: kamion.rendszam || null,
     potkocsi: kamion.potkocsi || null,
     meret: kamion.meret || null,
+    teherbiras: kamion.teherbiras || null,
     tipus: kamion.tipus || null,
     allapot: kamion.allapot || "szabad",
     aktualis_km: kamion.aktualis_km || null,

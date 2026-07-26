@@ -21,8 +21,15 @@ backend/files/*
 .env.test.local
 .env.production.local
 
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
 commit.sh
+
+# Playwright MCP tool scratch output (screenshots/traces from browser-driven verification)
+.playwright-mcp/
+
+# Subagent-driven-development scratch workspace (ledgers, briefs, review packages)
+.superpowers/

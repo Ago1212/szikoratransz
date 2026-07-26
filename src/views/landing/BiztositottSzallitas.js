@@ -46,23 +46,44 @@ export default function BiztositottSzallitas() {
         <h2 className="font-[Overpass] font-extrabold text-2xl text-[#23262B] mb-6">
           Hogyan zajlik a kárrendezés lépésről lépésre?
         </h2>
+        <ol className="space-y-4 mb-5">
+          {[
+            {
+              step: "Kárbejelentés",
+              desc: "Jelezze felénk telefonon vagy e-mailben, lehetőleg fotókkal dokumentálva az észlelt sérülést vagy hiányt.",
+            },
+            {
+              step: "Kapcsolatfelvétel a biztosítóval",
+              desc: "Csapatunk felveszi a kapcsolatot a biztosítóval, és összeállítja a szükséges dokumentációt — a fuvarlevelet, valamint a fel- és lerakodáskori állapotot rögzítő adatokat.",
+            },
+            {
+              step: "Ügyintézés",
+              desc: "A biztosítóval való egyeztetést és a kárrendezés teljes ügymenetét csapatunk viszi — Önnek nem kell közvetlenül kapcsolatba lépnie velük.",
+            },
+            {
+              step: "Visszajelzés",
+              desc: "Ön a folyamat végén kap tájékoztatást az eredményről.",
+            },
+          ].map((item, i) => (
+            <li key={item.step} className="flex items-start gap-4">
+              <span
+                className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-[Overpass_Mono] font-bold"
+                style={{ backgroundColor: "#6D28D91A", color: "#6D28D9" }}
+              >
+                {i + 1}
+              </span>
+              <div>
+                <p className="font-[Overpass] font-semibold text-[#23262B]">{item.step}</p>
+                <p className="text-[#23262B]/70 text-sm mt-1">{item.desc}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
         <div className="space-y-4 text-[#23262B]/70 leading-relaxed max-w-2xl">
           <p>
-            Kár esetén a folyamat egyszerű és gyors: jelezze felénk telefonon
-            vagy e-mailben, lehetőleg fotókkal dokumentálva az észlelt
-            sérülést vagy hiányt. Csapatunk ezután felveszi a kapcsolatot a
-            biztosítóval, és összeállítja a kárrendezéshez szükséges
-            dokumentációt — a fuvarlevelet, a felrakodáskori és
-            kiszállításkori állapotot rögzítő adatokat, valamint az Ön által
-            küldött dokumentációt.
-          </p>
-          <p>
-            Önnek ezt követően nem kell közvetlenül egyeztetnie a
-            biztosítóval — az ügyintézést végig csapatunk viszi, Ön csak a
-            végeredményről kap visszajelzést. Ez a fedezet minden fuvarunkra
-            automatikusan érvényes, külön kérés vagy felár nélkül,
-            függetlenül attól, hogy belföldi vagy nemzetközi szállításról
-            van szó.
+            Ez a fedezet minden fuvarunkra automatikusan érvényes, külön
+            kérés vagy felár nélkül, függetlenül attól, hogy belföldi vagy
+            nemzetközi szállításról van szó.
           </p>
           <p className="text-sm text-[#23262B]/60">
             A fuvarozói felelősségbiztosításról és a kárrendezés általános

@@ -6,7 +6,7 @@ import { PiPencilSimpleLight, PiTrashLight, PiBuildingsLight } from "react-icons
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
 
-const CardTable = ({ ugyfelek = [], loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll }) => {
+const CardTable = ({ ugyfelek = [], loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll, sortKey, sortDir, onSortChange }) => {
   const history = useHistory();
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -27,8 +27,8 @@ const CardTable = ({ ugyfelek = [], loading, total, page, pageSize, onPageChange
   });
 
   const columns = [
-    { key: "nev", label: "Név", className: "font-semibold text-brand-900 dark:text-ink-50" },
-    { key: "varos", label: "Város" },
+    { key: "nev", label: "Név", sortable: true, className: "font-semibold text-brand-900 dark:text-ink-50" },
+    { key: "varos", label: "Város", sortable: true },
     { key: "kapcsolattarto_nev", label: "Kapcsolattartó" },
     { key: "kapcsolattarto_telefon", label: "Telefon" },
     {
@@ -88,6 +88,9 @@ const CardTable = ({ ugyfelek = [], loading, total, page, pageSize, onPageChange
       onPageChange={onPageChange}
       onSearchChange={onSearchChange}
       onExportAll={onExportAll}
+      sortKey={sortKey}
+      sortDir={sortDir}
+      onSortChange={onSortChange}
     />
   );
 };

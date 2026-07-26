@@ -5,11 +5,13 @@ import { toast } from "utils/toast";
 import PageHeader from "components/UI/PageHeader.js";
 import SaveButton from "components/UI/SaveButton.js";
 import Spinner from "components/UI/Spinner.js";
+import { confirmDialog } from "utils/confirm.js";
 
 const MODUL_LABEL = {
   kamionok: "Kamionok",
   potkocsik: "Pótkocsik",
   furgonok: "Furgonok",
+  fuvarok: "Fuvarok",
   karbantartasok: "Karbantartások",
   soforok: "Sofőrök",
   bejelentesek: "Bejelentések",
@@ -17,6 +19,7 @@ const MODUL_LABEL = {
   ugyfelek: "Ügyfelek",
   naplo: "Napló",
   koltsegek: "Pénzforgalom",
+  tachograf: "Tachográf kártya",
 };
 
 // "Diszpécser" -> "diszpecser", "Raktáros / Logisztikus" -> "raktaros_logisztikus"
@@ -40,10 +43,10 @@ const slugify = (str) =>
 // labelben (a beágyazott `<label>` érvénytelen HTML lenne), így a felirat
 // koppintása is a checkbox-ot váltja, nem csak a 44×44-es ikon-zóna. Az
 // asztali táblázat-nézet (`text` nélkül) az eredeti, ikon-only alakot kapja.
-function Jelolo({ checked, onChange, disabled, text }) {
+function Jelolo({ checked, onChange, disabled, text, ariaLabel }) {
   return (
     <label
-      className={`inline-flex cursor-pointer items-center ${
+      className={`inline-flex items-center ${disabled ? "cursor-not-allowed" : "cursor-pointer"} ${
         text ? "gap-2 py-1" : "h-11 w-11 justify-center"
       }`}
     >
@@ -53,6 +56,7 @@ function Jelolo({ checked, onChange, disabled, text }) {
           checked={checked}
           onChange={onChange}
           disabled={disabled}
+          aria-label={!text ? ariaLabel : undefined}
           className="h-5 w-5 rounded border-ink-300 accent-brand-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-ink-600"
         />
       </span>
@@ -66,6 +70,10 @@ export default function Jogosultsagok() {
   const [szerepkorok, setSzerepkorok] = useState([]);
   const [selected, setSelected] = useState("admin");
   const [jogosultsagok, setJogosultsagok] = useState([]);
+  // A legutóbb betöltött/mentett állapot pillanatképe — ebből számítjuk az
+  // `isDirty`-t, hogy szerepkör-váltáskor (vagy törléskor) ne veszhessen el
+  // csendben egy még nem mentett checkbox-módosítás (ld. UX-audit P0).
+  const [initialJogosultsagok, setInitialJogosultsagok] = useState([]);
   const [loadingSzerepkorok, setLoadingSzerepkorok] = useState(true);
   const [loadingJogosultsagok, setLoadingJogosultsagok] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -90,11 +98,16 @@ export default function Jogosultsagok() {
   }, []);
 
   const loadJogosultsagok = async (kulcs) => {
-    if (kulcs === "admin") return;
+    if (kulcs === "admin") {
+      setJogosultsagok([]);
+      setInitialJogosultsagok([]);
+      return;
+    }
     setLoadingJogosultsagok(true);
     const result = await fetchAction("getJogosultsagok", { ceg_id: user.ceg_id, szerepkor: kulcs, kerelmezo_id: user.id });
     if (result?.success) {
       setJogosultsagok(result.jogosultsagok || []);
+      setInitialJogosultsagok(result.jogosultsagok || []);
     } else {
       toast.error(result?.message || "Jogosultságok betöltése sikertelen.");
     }
@@ -106,9 +119,40 @@ export default function Jogosultsagok() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected]);
 
+  const isDirty = JSON.stringify(jogosultsagok) !== JSON.stringify(initialJogosultsagok);
+
+  // Szerepkör-pillre kattintáskor — ha van nem mentett módosítás, megkérdezzük,
+  // mielőtt a `useEffect([selected])` csendben felülírná a `jogosultsagok`
+  // state-et a szerveren tárolt állapottal (ld. UX-audit P0: korábban ez
+  // figyelmeztetés nélkül eldobta a checkbox-változtatásokat).
+  const selectSzerepkor = async (kulcs) => {
+    if (kulcs === selected) return;
+    if (
+      isDirty &&
+      !(await confirmDialog(
+        "Nem mentett módosításaid vannak ezen a szerepkörön — ha most váltasz, elvesznek. Biztosan folytatod mentés nélkül?",
+        { danger: false, confirmLabel: "Váltás mentés nélkül" }
+      ))
+    ) {
+      return;
+    }
+    setSelected(kulcs);
+  };
+
+  // A 3 jogszint kaszkádoltan függ egymástól: Szerkesztés/Törlés önmagában
+  // értelmetlen, ha a modulhoz nincs Hozzáférés — a Hozzáférés kikapcsolása
+  // ezért automatikusan levonja a másik kettőt is (ld. UX-audit P1).
   const toggle = (modul, tipus) => {
     setJogosultsagok((prev) =>
-      prev.map((row) => (row.modul === modul ? { ...row, [tipus]: row[tipus] === "I" ? "N" : "I" } : row))
+      prev.map((row) => {
+        if (row.modul !== modul) return row;
+        const uj = { ...row, [tipus]: row[tipus] === "I" ? "N" : "I" };
+        if (tipus === "hozzaferes" && uj.hozzaferes === "N") {
+          if (uj.szerkesztes !== null) uj.szerkesztes = "N";
+          if (uj.torles !== null) uj.torles = "N";
+        }
+        return uj;
+      })
     );
   };
 
@@ -123,6 +167,7 @@ export default function Jogosultsagok() {
       });
       if (result?.success) {
         toast.success("Jogosultságok mentve.");
+        setInitialJogosultsagok(jogosultsagok);
       } else {
         toast.error(result?.message || "Mentés sikertelen.");
       }
@@ -162,7 +207,27 @@ export default function Jogosultsagok() {
 
   const handleDeleteSzerepkor = async () => {
     const szerepkor = szerepkorok.find((s) => s.kulcs === selected);
-    if (!szerepkor || !window.confirm(`Biztosan törlöd a(z) "${szerepkor.nev}" szerepkört?`)) return;
+    if (!szerepkor) return;
+
+    // Hatás-előnézet törlés előtt: hány csapattag van jelenleg ezen a
+    // szerepkörön — enélkül a felhasználó csak egy generikus szöveget
+    // látott, a tényleges érintettséget csak a szerver-oldali blokkolásból
+    // (vagy egyáltalán nem) tudta meg (ld. UX-audit P1).
+    let erintettSzam = null;
+    try {
+      const csapatResult = await fetchAction("getCsapattagok", { id: user.id });
+      if (csapatResult?.success) {
+        erintettSzam = (csapatResult.csapattagok || []).filter((tag) => tag.szerepkor === selected).length;
+      }
+    } catch (e) {
+      // a hatás-előnézet csak kiegészítő infó — ha nem sikerül lekérni, a törlés folyamata nem áll meg emiatt
+    }
+
+    const uzenet =
+      erintettSzam !== null && erintettSzam > 0
+        ? `Ezt a szerepkört jelenleg ${erintettSzam} csapattag használja — törlés után az ő szerepkörüket máshova kell átállítanod. Biztosan törlöd a(z) "${szerepkor.nev}" szerepkört?`
+        : `Biztosan törlöd a(z) "${szerepkor.nev}" szerepkört?`;
+    if (!(await confirmDialog(uzenet))) return;
     setIsDeleting(true);
     try {
       const result = await fetchAction("deleteSzerepkor", { id: szerepkor.id, ceg_id: user.ceg_id, kerelmezo_id: user.id });
@@ -182,7 +247,7 @@ export default function Jogosultsagok() {
 
   return (
     <div className="mx-auto w-full max-w-4xl">
-      <PageHeader eyebrow="Saját adatok" title="Jogosultságok" />
+      <PageHeader eyebrow="Rendszer" title="Jogosultságok" />
 
       <p className="-mt-4 mb-6 max-w-2xl text-sm text-ink-500 dark:text-ink-400">
         Itt hozhatsz létre saját szerepköröket (pl. Diszpécser, Könyvelő), és állíthatod be
@@ -200,7 +265,7 @@ export default function Jogosultsagok() {
               <button
                 key={sz.kulcs}
                 type="button"
-                onClick={() => setSelected(sz.kulcs)}
+                onClick={() => selectSzerepkor(sz.kulcs)}
                 className={`flex-shrink-0 rounded-full px-4 py-2 text-xs font-bold transition-colors duration-150 ${
                   selected === sz.kulcs ? "bg-brand-600 text-white" : "border border-ink-100 bg-white text-ink-500 hover:bg-slate-100 dark:border-ink-800 dark:bg-ink-900 dark:text-ink-400 dark:hover:bg-ink-800"
                 }`}
@@ -210,9 +275,10 @@ export default function Jogosultsagok() {
             ))}
 
             {adding ? (
-              <div className="flex items-center gap-2 rounded-full border border-ink-100 bg-white px-2 py-1.5 dark:border-ink-800 dark:bg-ink-900">
+              <div className="flex items-center gap-2 rounded-full border border-ink-100 bg-white px-2 py-1.5 focus-within:ring-2 focus-within:ring-brand-300 dark:border-ink-800 dark:bg-ink-900">
                 <input
                   autoFocus
+                  id="uj-szerepkor-nev"
                   value={ujNev}
                   onChange={(e) => setUjNev(e.target.value)}
                   placeholder="Új szerepkör neve"
@@ -284,13 +350,15 @@ export default function Jogosultsagok() {
 
                 {/* Mobil nézet — kártyák modulonként */}
                 <div className="divide-y divide-ink-100 dark:divide-ink-800 md:hidden">
-                  {jogosultsagok.map((row) => (
+                  {jogosultsagok.map((row) => {
+                    const vanHozzaferes = row.hozzaferes === "I";
+                    return (
                     <div key={row.modul} className="px-5 py-4">
                       <p className="mb-2.5 text-sm font-bold text-ink-900 dark:text-ink-50">{MODUL_LABEL[row.modul] || row.modul}</p>
                       <div className="flex flex-wrap gap-x-4 gap-y-0.5">
                         <Jelolo
                           text="Hozzáférés"
-                          checked={row.hozzaferes === "I"}
+                          checked={vanHozzaferes}
                           onChange={() => toggle(row.modul, "hozzaferes")}
                         />
                         {row.szerkesztes !== null && (
@@ -298,6 +366,7 @@ export default function Jogosultsagok() {
                             text="Szerkesztés"
                             checked={row.szerkesztes === "I"}
                             onChange={() => toggle(row.modul, "szerkesztes")}
+                            disabled={!vanHozzaferes}
                           />
                         )}
                         {row.torles !== null && (
@@ -305,11 +374,13 @@ export default function Jogosultsagok() {
                             text="Törlés"
                             checked={row.torles === "I"}
                             onChange={() => toggle(row.modul, "torles")}
+                            disabled={!vanHozzaferes}
                           />
                         )}
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Asztali nézet — táblázat */}
@@ -317,51 +388,72 @@ export default function Jogosultsagok() {
                   <table className="w-full border-collapse">
                     <thead>
                       <tr>
-                        <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-ink-400 dark:text-ink-500">
+                        <th scope="col" className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-ink-400 dark:text-ink-500">
                           Modul
                         </th>
-                        <th className="px-5 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-ink-400 dark:text-ink-500">
+                        <th scope="col" className="px-5 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-ink-400 dark:text-ink-500">
                           Hozzáférés
                         </th>
-                        <th className="px-5 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-ink-400 dark:text-ink-500">
+                        <th scope="col" className="px-5 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-ink-400 dark:text-ink-500">
                           Szerkesztés
                         </th>
-                        <th className="px-5 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-ink-400 dark:text-ink-500">
+                        <th scope="col" className="px-5 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-ink-400 dark:text-ink-500">
                           Törlés
                         </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {jogosultsagok.map((row) => (
+                      {jogosultsagok.map((row) => {
+                        const modulNev = MODUL_LABEL[row.modul] || row.modul;
+                        const vanHozzaferes = row.hozzaferes === "I";
+                        return (
                         <tr key={row.modul} className="border-t border-ink-100 dark:border-ink-800">
                           <td className="px-5 py-2.5 text-sm font-semibold text-ink-900 dark:text-ink-50">
-                            {MODUL_LABEL[row.modul] || row.modul}
+                            {modulNev}
                           </td>
                           <td className="px-5 py-2.5 text-center">
-                            <Jelolo checked={row.hozzaferes === "I"} onChange={() => toggle(row.modul, "hozzaferes")} />
+                            <Jelolo
+                              checked={vanHozzaferes}
+                              onChange={() => toggle(row.modul, "hozzaferes")}
+                              ariaLabel={`${modulNev} – Hozzáférés`}
+                            />
                           </td>
                           <td className="px-5 py-2.5 text-center">
                             {row.szerkesztes !== null ? (
-                              <Jelolo checked={row.szerkesztes === "I"} onChange={() => toggle(row.modul, "szerkesztes")} />
+                              <Jelolo
+                                checked={row.szerkesztes === "I"}
+                                onChange={() => toggle(row.modul, "szerkesztes")}
+                                disabled={!vanHozzaferes}
+                                ariaLabel={`${modulNev} – Szerkesztés${!vanHozzaferes ? " (Hozzáférés nélkül nem elérhető)" : ""}`}
+                              />
                             ) : (
                               <span className="text-ink-200 dark:text-ink-700">—</span>
                             )}
                           </td>
                           <td className="px-5 py-2.5 text-center">
                             {row.torles !== null ? (
-                              <Jelolo checked={row.torles === "I"} onChange={() => toggle(row.modul, "torles")} />
+                              <Jelolo
+                                checked={row.torles === "I"}
+                                onChange={() => toggle(row.modul, "torles")}
+                                disabled={!vanHozzaferes}
+                                ariaLabel={`${modulNev} – Törlés${!vanHozzaferes ? " (Hozzáférés nélkül nem elérhető)" : ""}`}
+                              />
                             ) : (
                               <span className="text-ink-200 dark:text-ink-700">—</span>
                             )}
                           </td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
               </div>
 
-              <div className="mt-4 flex justify-end">
+              <div className="mt-4 flex items-center justify-end gap-3">
+                {isDirty && (
+                  <p className="text-xs font-semibold text-amber-600 dark:text-amber-400">Nem mentett módosítások vannak</p>
+                )}
                 <SaveButton onClick={handleSave} isSaving={isSaving} label="Jogosultságok mentése" />
               </div>
             </>

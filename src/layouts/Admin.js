@@ -42,6 +42,13 @@ const Devizak = lazy(() => import("views/admin/Devizak.js"));
 const Ajanlatkeresek = lazy(() => import("views/admin/Ajanlatkeresek.js"));
 const SoforScorecard = lazy(() => import("views/admin/SoforScorecard.js"));
 const ErtesitesiElozmenyek = lazy(() => import("views/admin/ErtesitesiElozmenyek.js"));
+const Tachograf = lazy(() => import("views/admin/Tachograf.js"));
+const BeerkezettDokumentumok = lazy(() =>
+  import("views/admin/BeerkezettDokumentumok.js"),
+);
+const Fuvarok = lazy(() => import("views/admin/Fuvarok.js"));
+const FuvarForm = lazy(() => import("views/admin/FuvarForm.js"));
+const FuvarStatisztika = lazy(() => import("views/admin/FuvarStatisztika.js"));
 
 // A backend a session-típus alapján (admin vs sofőr) elutasítja a nem
 // megfelelő akciókat, de a frontend guard korábban csak bejelentkezettséget
@@ -89,6 +96,17 @@ export default function Admin() {
     // helyes sötét színt adta vissza, mégis fehéren festődött ki — ez a
     // dokumentált Chromium-viselkedés az oka, nem CSS-specificitási hiba).
     <div className={isDark ? "dark" : ""} style={{ colorScheme: isDark ? "dark" : "light" }}>
+      {/* UX-audit — nincs skip-link a teljes admin felületen, a desktop
+          sidebar 15-20+ fókuszálható eleme miatt egy billentyűzettel
+          navigáló felhasználó minden oldalbetöltésnél végig kénytelen
+          Tab-elni ezen, mielőtt a tartalomhoz érne (WCAG 2.4.1). Vizuálisan
+          rejtett, csak fókuszra jelenik meg. */}
+      <a
+        href="#admin-tartalom"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
+      >
+        Ugrás a tartalomra
+      </a>
       <Sidebar isDark={isDark} onToggleDark={toggleDark} />
 
       {/* Háttér — fix réteg, nem görgethető, a Sidebar-hoz igazítva */}
@@ -104,7 +122,7 @@ export default function Admin() {
       </div>
 
       {/* Tartalom — fix magasságú, csak ez görgethető, a böngészőoldal maga nem */}
-      <div className="fixed inset-y-0 right-0 left-0 overflow-y-auto md:left-64">
+      <div id="admin-tartalom" className="fixed inset-y-0 right-0 left-0 overflow-y-auto md:left-64">
         <div className="mx-auto h-full w-full px-4 pt-8 pb-16 md:px-10 md:pb-8">
           <Suspense fallback={<Spinner />}>
           <Switch>
@@ -192,6 +210,7 @@ export default function Admin() {
               exact
               component={SoforScorecard}
             />
+            <PrivateRoute path="/admin/tachograf" exact component={Tachograf} />
             <PrivateRoute
               path="/admin/ertesitesi-elozmenyek"
               exact
@@ -206,6 +225,22 @@ export default function Admin() {
               path="/admin/helyszinForm"
               exact
               component={HelyszinForm}
+            />
+            <PrivateRoute
+              path="/admin/beerkezettDokumentumok"
+              exact
+              component={BeerkezettDokumentumok}
+            />
+            <PrivateRoute path="/admin/fuvarok" exact component={Fuvarok} />
+            <PrivateRoute
+              path="/admin/fuvarForm"
+              exact
+              component={FuvarForm}
+            />
+            <PrivateRoute
+              path="/admin/fuvarStatisztika"
+              exact
+              component={FuvarStatisztika}
             />
             <Route path="/auth/login" exact component={LoginPage} />
             <Redirect from="/admin" to="/admin/dashboard" />

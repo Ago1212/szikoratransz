@@ -6,7 +6,7 @@ import { PiPencilSimpleLight, PiTrashLight, PiUsersLight } from "react-icons/pi"
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
 
-const CardTable = ({ soforok = [], loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll }) => {
+const CardTable = ({ soforok = [], loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll, sortKey, sortDir, onSortChange }) => {
   const history = useHistory();
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -27,10 +27,10 @@ const CardTable = ({ soforok = [], loading, total, page, pageSize, onPageChange,
   });
 
   const columns = [
-    { key: "name", label: "Név", className: "font-semibold text-brand-900 dark:text-ink-50" },
-    { key: "email", label: "Email" },
-    { key: "phone", label: "Telefon" },
-    { key: "lakcim", label: "Lakcím" },
+    { key: "name", label: "Név", sortable: true, className: "font-semibold text-brand-900 dark:text-ink-50" },
+    { key: "email", label: "Email", sortable: true, render: (row) => row.email || "—" },
+    { key: "phone", label: "Telefon", sortable: true, render: (row) => row.phone || "—" },
+    { key: "lakcim", label: "Lakcím", render: (row) => row.lakcim || "—" },
     {
       key: "actions",
       label: "Műveletek",
@@ -94,18 +94,24 @@ const CardTable = ({ soforok = [], loading, total, page, pageSize, onPageChange,
       onPageChange={onPageChange}
       onSearchChange={onSearchChange}
       onExportAll={onExportAll}
+      sortKey={sortKey}
+      sortDir={sortDir}
+      onSortChange={onSortChange}
     />
   );
 };
 
 CardTable.propTypes = {
+  // UX-audit — a form (`CardSoforAdatokForm.js`) csak a Nevet teszi kötelezővé,
+  // email/telefon/lakcím ténylegesen opcionális — ez a deklaráció korábban
+  // ennek ellentmondott (`isRequired`), ami hamis biztonságérzetet adott.
   soforok: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
       name: PropTypes.string.isRequired,
-      email: PropTypes.string.isRequired,
-      phone: PropTypes.string.isRequired,
-      lakcim: PropTypes.string.isRequired,
+      email: PropTypes.string,
+      phone: PropTypes.string,
+      lakcim: PropTypes.string,
     })
   ),
 };

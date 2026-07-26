@@ -9,6 +9,7 @@ import {
   PiUsersLight,
   PiBuildingsLight,
   PiMapPinLight,
+  PiClipboardTextLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 
@@ -19,6 +20,7 @@ const TIPUS_ICON = {
   sofor: PiUsersLight,
   ugyfel: PiBuildingsLight,
   helyszin: PiMapPinLight,
+  fuvar: PiClipboardTextLight,
 };
 
 // Egyetlen keresőmezőből minden fő modulban keres (ld. backend
@@ -100,7 +102,7 @@ export default function GlobalSearch({ open, onClose }) {
         className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-soft-lg ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-2.5 border-b border-ink-100 px-4 py-3.5 dark:border-ink-800">
+        <div className="flex items-center gap-2.5 border-b border-ink-100 px-4 py-3.5 focus-within:ring-2 focus-within:ring-inset focus-within:ring-brand-300 dark:border-ink-800">
           <PiMagnifyingGlassLight className="h-5 w-5 flex-shrink-0 text-ink-400 dark:text-ink-500" />
           <input
             ref={inputRef}

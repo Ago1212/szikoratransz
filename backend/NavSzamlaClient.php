@@ -159,6 +159,14 @@ class NavSzamlaClient {
         return [
             'szamlaszam' => (string) $tetel->invoiceNumber,
             'datum' => (string) $tetel->invoiceIssueDate,
+            // A NAV InvoiceDigestType a kiállítás dátuma (invoiceIssueDate,
+            // ld. fent) mellett a teljesítés dátumát (invoiceDeliveryDate)
+            // és a fizetési határidőt (paymentDate) is tartalmazza — mindkettő
+            // opcionális mezőnek számít a sémában (pl. készpénzes/azonnali
+            // fizetésnél a NAV maga sem mindig tölti ki), ezért `isset()`-tel
+            // védve, sosem kitalálva, ha hiányzik.
+            'teljesites_datum' => isset($tetel->invoiceDeliveryDate) ? (string) $tetel->invoiceDeliveryDate : null,
+            'fizetesi_hatarido' => isset($tetel->paymentDate) ? (string) $tetel->paymentDate : null,
             'partner_nev' => $partnerNev !== '' ? $partnerNev : null,
             'osszeg_huf' => $bruttoHuf,
             'osszeg_eredeti' => $bruttoEredeti,

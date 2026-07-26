@@ -7,7 +7,7 @@ import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
 import AllapotBadge from "components/UI/AllapotBadge.js";
 
-const CardTable = ({ kamionok = [], loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll }) => {
+const CardTable = ({ kamionok = [], loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll, sortKey, sortDir, onSortChange }) => {
   const history = useHistory();
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -28,13 +28,14 @@ const CardTable = ({ kamionok = [], loading, total, page, pageSize, onPageChange
   });
 
   const columns = [
-    { key: "rendszam", label: "Rendszám", className: "font-semibold text-brand-900 dark:text-ink-50" },
-    { key: "tipus", label: "Típus", render: (row) => row.tipus || "Nincs" },
-    { key: "meret", label: "Méret", render: (row) => row.meret || "Nincs" },
+    { key: "rendszam", label: "Rendszám", sortable: true, className: "font-semibold text-brand-900 dark:text-ink-50" },
+    { key: "tipus", label: "Típus", sortable: true, render: (row) => row.tipus || "Nincs" },
+    { key: "meret", label: "Méret", sortable: true, render: (row) => row.meret || "Nincs" },
     { key: "potkocsi", label: "Pótkocsi", render: (row) => row.potkocsi_rendszam || "Nincs" },
     {
       key: "allapot",
       label: "Állapot",
+      sortable: true,
       render: (row) => <AllapotBadge allapot={row.allapot} />,
     },
     {
@@ -68,6 +69,7 @@ const CardTable = ({ kamionok = [], loading, total, page, pageSize, onPageChange
     { key: "tipus", label: "Típus" },
     { key: "meret", label: "Méret" },
     { key: "potkocsi_rendszam", label: "Pótkocsi" },
+    { key: "teherbiras", label: "Teherbírás (t)" },
     { key: "allapot", label: "Állapot" },
     { key: "aktualis_km", label: "Km óraállás" },
     { key: "muszaki_lejarat", label: "Műszaki vizsga lejárata" },
@@ -107,6 +109,9 @@ const CardTable = ({ kamionok = [], loading, total, page, pageSize, onPageChange
       onPageChange={onPageChange}
       onSearchChange={onSearchChange}
       onExportAll={onExportAll}
+      sortKey={sortKey}
+      sortDir={sortDir}
+      onSortChange={onSortChange}
     />
   );
 };

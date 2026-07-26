@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { fetchAction } from "utils/fetchAction";
 
 import CardTable from "components/Table/CardTableForHelyszinek.js";
+import PageHeader from "components/UI/PageHeader.js";
 
 const PAGE_SIZE = 10;
 
@@ -12,6 +13,8 @@ export default function Helyszinek() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [sortKey, setSortKey] = useState(null);
+  const [sortDir, setSortDir] = useState("asc");
 
   useEffect(() => {
     let cancelled = false;
@@ -23,6 +26,8 @@ export default function Helyszinek() {
         search: search || undefined,
         page,
         pageSize: PAGE_SIZE,
+        sortKey: sortKey || undefined,
+        sortDir,
       });
       if (cancelled) return;
       if (result.success) {
@@ -40,7 +45,13 @@ export default function Helyszinek() {
     return () => {
       cancelled = true;
     };
-  }, [page, search]);
+  }, [page, search, sortKey, sortDir]);
+
+  const handleSortChange = (key, dir) => {
+    setSortKey(key);
+    setSortDir(dir);
+    setPage(1);
+  };
 
   const handleExportAll = useCallback(async () => {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -53,6 +64,7 @@ export default function Helyszinek() {
 
   return (
     <>
+      <PageHeader eyebrow="Partnerek" title="Helyszínek" />
       <div className="flex flex-wrap mt-0">
         <div className="w-full mb-12 px-0 md:px-4">
           <CardTable
@@ -64,6 +76,9 @@ export default function Helyszinek() {
             onPageChange={setPage}
             onSearchChange={setSearch}
             onExportAll={handleExportAll}
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSortChange={handleSortChange}
           />
         </div>
       </div>

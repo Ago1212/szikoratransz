@@ -13,7 +13,9 @@ class SoforokInterface {
     // mezőt itt, szerver oldalon vágjuk ki a válaszból, nem a frontendre
     // bízzuk, hogy egyszerűen nem jeleníti meg (a nyers API-válasz
     // böngésző dev toolsból amúgy is látszódna).
-    public function getSoforok($id, $search = null, $page = null, $pageSize = null, $isAdmin = false) {
+    private const RENDEZHETO_OSZLOPOK = ['name' => 'name', 'email' => 'email', 'phone' => 'phone'];
+
+    public function getSoforok($id, $search = null, $page = null, $pageSize = null, $isAdmin = false, $sortKey = null, $sortDir = 'asc') {
 
         try {
             $params = [':id' => $id];
@@ -22,7 +24,9 @@ class SoforokInterface {
                 $query .= " AND " . PaginationHelper::likeClause(['name', 'email', 'phone', 'lakcim'], 'search');
                 $params[':search'] = '%' . $search . '%';
             }
-            $query .= " ORDER BY name ASC";
+            $rendezoOszlop = self::RENDEZHETO_OSZLOPOK[$sortKey] ?? 'name';
+            $irany = strtolower((string) $sortDir) === 'desc' ? 'DESC' : 'ASC';
+            $query .= " ORDER BY $rendezoOszlop $irany";
 
             $szur = function ($sorok) use ($isAdmin) {
                 if ($isAdmin) {
@@ -89,7 +93,13 @@ class SoforokInterface {
             $stmt->bindParam(':id', $data['id'], PDO::PARAM_INT);
             $stmt->bindValue(':ceg_id', $ceg_id);
             $stmt->bindParam(':name', $data['name'], PDO::PARAM_STR);
-            $stmt->bindParam(':email', $data['email'], PDO::PARAM_STR);
+            // Üres email esetén NULL-t írunk, nem ''-t — a `user.email`
+            // oszlop UNIQUE, és két ''-os sofőr rekord összeütközne rajta
+            // (ld. sql/30.sql komment). MySQL/InnoDB több NULL-t nem tekint
+            // egyezőnek a UNIQUE indexben, tehát ez tetszőleges számú email
+            // nélküli sofőrt megenged.
+            $email = !empty($data['email']) ? $data['email'] : null;
+            $stmt->bindValue(':email', $email, $email !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
             $stmt->bindParam(':phone', $data['phone'], PDO::PARAM_STR);
             $stmt->bindParam(':szul_datum', $data['szul_datum'], PDO::PARAM_STR);
             $stmt->bindParam(':szemelyi', $data['szemelyi'], PDO::PARAM_STR);
@@ -141,7 +151,11 @@ class SoforokInterface {
             // Paraméterek kötése
             $stmt->bindValue(':admin', $ceg_id);
             $stmt->bindParam(':name', $data['name'], PDO::PARAM_STR);
-            $stmt->bindParam(':email', $data['email'], PDO::PARAM_STR);
+            // Ld. saveSoforData() fenti kommentje — üres email NULL-ként
+            // kerül be, nem ''-ként, hogy a UNIQUE KEY ne ütközzön össze
+            // több email nélküli sofőrnél.
+            $email = !empty($data['email']) ? $data['email'] : null;
+            $stmt->bindValue(':email', $email, $email !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
             $stmt->bindParam(':phone', $data['phone'], PDO::PARAM_STR);
             $stmt->bindParam(':szul_datum', $data['szul_datum'], PDO::PARAM_STR);
             $stmt->bindParam(':szemelyi', $data['szemelyi'], PDO::PARAM_STR);

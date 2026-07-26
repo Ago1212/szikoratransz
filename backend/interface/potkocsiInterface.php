@@ -8,16 +8,20 @@ class PotkocsiInterface {
         $this->db = $database->connect();
     }
 
-    public function getPotkocsik($id, $search = null, $page = null, $pageSize = null) {
+    private const RENDEZHETO_OSZLOPOK = ['rendszam' => 'rendszam', 'tipus' => 'tipus', 'meret' => 'meret', 'allapot' => 'allapot'];
+
+    public function getPotkocsik($id, $search = null, $page = null, $pageSize = null, $sortKey = null, $sortDir = 'asc') {
 
         try {
             $params = [':id' => $id];
             $query = "SELECT * FROM potkocsi WHERE admin = :id  AND torolt <> 'I'";
             if (!empty($search)) {
-                $query .= " AND " . PaginationHelper::likeClause(['rendszam', 'tipus', 'allapot'], 'search');
+                $query .= " AND " . PaginationHelper::likeClause(['rendszam', 'tipus', 'meret', 'allapot'], 'search');
                 $params[':search'] = '%' . $search . '%';
             }
-            $query .= " ORDER BY rendszam ASC";
+            $rendezoOszlop = self::RENDEZHETO_OSZLOPOK[$sortKey] ?? 'rendszam';
+            $irany = strtolower((string) $sortDir) === 'desc' ? 'DESC' : 'ASC';
+            $query .= " ORDER BY $rendezoOszlop $irany";
 
             if ($page !== null) {
                 [$potkocsik, $total, $page, $pageSize] = PaginationHelper::fetchPage($this->db, $query, $params, $page, $pageSize);
@@ -47,6 +51,8 @@ class PotkocsiInterface {
                       SET rendszam = :rendszam,
                           muszaki_lejarat = :muszaki_lejarat,
                           tipus = :tipus,
+                          meret = :meret,
+                          teherbiras = :teherbiras,
                           allapot = :allapot,
                           aktualis_km = :aktualis_km,
                           adr_lejarat = :adr_lejarat,
@@ -70,6 +76,8 @@ class PotkocsiInterface {
             $stmt->bindValue(':ceg_id', $ceg_id);
             $stmt->bindParam(':rendszam', $data['rendszam'], PDO::PARAM_STR);
             $stmt->bindParam(':tipus', $data['tipus'], PDO::PARAM_STR);
+            $stmt->bindValue(':meret', empty($data['meret']) ? null : $data['meret']);
+            $stmt->bindValue(':teherbiras', empty($data['teherbiras']) ? null : (float) $data['teherbiras']);
             $stmt->bindValue(':allapot', empty($data['allapot']) ? 'szabad' : $data['allapot']);
             $stmt->bindValue(':aktualis_km', empty($data['aktualis_km']) ? null : $data['aktualis_km']);
             $stmt->bindParam(':muszaki_lejarat', $data['muszaki_lejarat'], PDO::PARAM_STR);
@@ -105,14 +113,16 @@ class PotkocsiInterface {
         try {
             // SQL lekérdezés előkészítése az adatok beszúrásához
             $query = "INSERT INTO potkocsi
-                      (admin, rendszam, tipus, allapot, aktualis_km, muszaki_lejarat, adr_lejarat, taograf_illesztes, emelohatfal_vizsga, porolto_lejarat, porolto_lejarat_2, kot_biztositas, kot_biz_nev, kot_biz_dij, kot_biz_utem, kaszko_biztositas, kaszko_nev, kaszko_dij, kaszko_fizetesi_utem)
-                      VALUES (:admin, :rendszam, :tipus, :allapot, :aktualis_km, :muszaki_lejarat, :adr_lejarat, :taograf_illesztes, :emelohatfal_vizsga, :porolto_lejarat, :porolto_lejarat_2, :kot_biztositas, :kot_biz_nev, :kot_biz_dij, :kot_biz_utem, :kaszko_biztositas, :kaszko_nev, :kaszko_dij, :kaszko_fizetesi_utem)";
+                      (admin, rendszam, tipus, meret, teherbiras, allapot, aktualis_km, muszaki_lejarat, adr_lejarat, taograf_illesztes, emelohatfal_vizsga, porolto_lejarat, porolto_lejarat_2, kot_biztositas, kot_biz_nev, kot_biz_dij, kot_biz_utem, kaszko_biztositas, kaszko_nev, kaszko_dij, kaszko_fizetesi_utem)
+                      VALUES (:admin, :rendszam, :tipus, :meret, :teherbiras, :allapot, :aktualis_km, :muszaki_lejarat, :adr_lejarat, :taograf_illesztes, :emelohatfal_vizsga, :porolto_lejarat, :porolto_lejarat_2, :kot_biztositas, :kot_biz_nev, :kot_biz_dij, :kot_biz_utem, :kaszko_biztositas, :kaszko_nev, :kaszko_dij, :kaszko_fizetesi_utem)";
 
             $stmt = $this->db->prepare($query);
 
             // Paraméterek kötése
             $stmt->bindValue(':admin', $ceg_id);
             $stmt->bindParam(':tipus', $data['tipus'], PDO::PARAM_STR);
+            $stmt->bindValue(':meret', empty($data['meret']) ? null : $data['meret']);
+            $stmt->bindValue(':teherbiras', empty($data['teherbiras']) ? null : (float) $data['teherbiras']);
             $stmt->bindParam(':rendszam', $data['rendszam'], PDO::PARAM_STR);
             $stmt->bindValue(':allapot', empty($data['allapot']) ? 'szabad' : $data['allapot']);
             $stmt->bindValue(':aktualis_km', empty($data['aktualis_km']) ? null : $data['aktualis_km']);

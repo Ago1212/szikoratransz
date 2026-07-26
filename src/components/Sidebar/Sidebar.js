@@ -27,11 +27,16 @@ import {
   PiChartBarLight,
   PiSunLight,
   PiMoonLight,
+  PiIdentificationCardLight,
+  PiFileTextLight,
+  PiClipboardTextLight,
+  PiPencilSimpleLight,
 } from "react-icons/pi";
 
 import NotificationDropdown from "components/Dropdowns/NotificationDropdown.js";
 import GlobalSearch from "components/UI/GlobalSearch.js";
 import PiaciArakPanel from "components/Sidebar/PiaciArakPanel.js";
+import NapiZonaEditorModal from "components/Sidebar/NapiZonaEditorModal.js";
 import { fetchAction } from "utils/fetchAction";
 
 const initials = (name) =>
@@ -83,6 +88,20 @@ const mobileGroups = [
       { to: "/admin/koltsegek", icon: PiCoinsLight, text: "Pénzforgalom" },
     ],
   },
+  {
+    key: "fuvarok",
+    label: "Fuvarok",
+    icon: PiClipboardTextLight,
+    items: [
+      {
+        to: "/admin/beerkezettDokumentumok",
+        icon: PiFileTextLight,
+        text: "Beérkezett dokumentumok",
+      },
+      { to: "/admin/fuvarok", icon: PiClipboardTextLight, text: "Fuvarok" },
+      { to: "/admin/fuvarStatisztika", icon: PiChartBarLight, text: "Statisztikák" },
+    ],
+  },
   // Csapat + Partnerek EGY mobil fülbe összevonva (divider-rel elválasztva) —
   // a deszktop sidebaron ez a két csoport külön marad (ott bőven van hely,
   // és tartalmilag a Partnerek külső fél, nem a cég saját csapata, ld. a
@@ -96,7 +115,16 @@ const mobileGroups = [
     icon: PiUsersLight,
     items: [
       { to: "/admin/soforok", icon: PiUsersLight, text: "Sofőrök" },
-      { to: "/admin/sofor-riport", icon: PiChartBarLight, text: "Sofőr-riport" },
+      {
+        to: "/admin/sofor-riport",
+        icon: PiChartBarLight,
+        text: "Sofőr-riport",
+      },
+      {
+        to: "/admin/tachograf",
+        icon: PiIdentificationCardLight,
+        text: "Tachográf",
+      },
       {
         to: "/admin/bejelentesek",
         icon: PiChatCircleTextLight,
@@ -117,6 +145,25 @@ const mobileGroups = [
     label: "Rendszer",
     icon: PiFilesLight,
     items: [
+      // UX-audit — a Ctrl+K globális keresésnek és a sötét mód kapcsolónak
+      // korábban NEM volt mobil belépési pontja (mindkettő kizárólag a
+      // desktop-only sidebar-sávban élt). `type: "action"` — nem navigáló,
+      // hanem egy komponens-szintű handlert hívó elem (ld. a render-ágat
+      // lentebb); a `mobileGroups` tömb modul-szinten, a komponensen kívül
+      // van deklarálva, ezért az ikon/felirat a sötét módnál dinamikusan,
+      // render közben dől el, nem itt van "beégetve".
+      {
+        type: "action",
+        action: "search",
+        icon: PiMagnifyingGlassLight,
+        text: "Keresés",
+      },
+      {
+        type: "action",
+        action: "darkmode",
+        icon: PiMoonLight,
+        text: "Sötét mód",
+      },
       { to: "/admin/fajlok", icon: PiFilesLight, text: "Fájlok" },
       { to: "/admin/naplo", icon: PiListMagnifyingGlassLight, text: "Napló" },
       {
@@ -172,17 +219,109 @@ const mobileGroups = [
   },
 ];
 
-const TIPUS_LABEL = { kamion: "kamiont", potkocsi: "pótkocsit", furgon: "furgont" };
+// A desktop sidebar "napi zóna" (a görgethető nav-lista fölötti, mindig
+// látható gyorselérési sáv) testreszabható: a felhasználó eldöntheti, mely
+// menüpontok kerüljenek bele és milyen sorrendben (ld. docs/superpowers/specs/
+// 2026-07-26-sidebar-napi-zona-testreszabas-design.md). A `PIN_REGISTRY` a
+// meglévő `mobileGroups`-ból származik (minden valódi link-elemét átveszi,
+// dividerek/action-ök nélkül), plusz 1 jelenleg csak desktopon élő elem
+// (Főmenü) kézzel hozzáfűzve — tudatosan egy harmadik, kézzel
+// karbantartott nav-forrás, ugyanaz az elfogadott drift-kockázat, mint a
+// mobil/desktop nav-taxonómia meglévő kettőssége (ld. a fájl korábbi
+// megjegyzéseit). A Devizák már létezik a mobileGroups-ban (Rendszer
+// csoport), az ő desktop kategória-besorolása (Pénzügyek) a GROUP_LABEL_OVERRIDES
+// kezeli, nem egy duplikált EXTRA_PINNABLE_ITEMS bejegyzés.
+const EXTRA_PINNABLE_ITEMS = [
+  {
+    to: "/admin/dashboard",
+    icon: PiSquaresFourLight,
+    text: "Főmenü",
+    group: "Áttekintés",
+  },
+];
+
+// A mobil "Csapat" fül a Partnereket (Ügyfelek/Helyszínek) egy divider mögé
+// rejti a saját fülébe, és a Pénzforgalom a mobil "Flotta" fülben él — a
+// desktop taxonómia viszont ezeket külön ("Partnerek", "Pénzügyek")
+// csoportba sorolja. Ez a felülírások igazítják a napi zóna szerkesztő
+// kategória-címkéit a desktop hierarchiához, hogy ne egy mobil-only
+// csoportosítás látszódjon a picker-ben. A Devizák a mobileGroups-ban
+// a Rendszer csoportban él, de desktop kontextusban a Pénzügyek csoportba
+// tartozik (ahol a Pénzforgalom is él).
+const GROUP_LABEL_OVERRIDES = {
+  "/admin/koltsegek": "Pénzügyek",
+  "/admin/devizak": "Pénzügyek",
+};
+
+function buildPinRegistry() {
+  const fromGroups = mobileGroups.flatMap((group) => {
+    let currentLabel = group.label;
+    return group.items
+      .map((item) => {
+        if (item.type === "divider") {
+          currentLabel = item.label;
+          return null;
+        }
+        if (!item.to) return null;
+        return {
+          ...item,
+          group: GROUP_LABEL_OVERRIDES[item.to] || currentLabel,
+        };
+      })
+      .filter(Boolean);
+  });
+  return [...EXTRA_PINNABLE_ITEMS, ...fromGroups];
+}
+const PIN_REGISTRY = buildPinRegistry();
+
+// Alapértelmezett napi zóna — a jelenlegi, korábban kódban rögzített 6 elem,
+// jelenlegi sorrendben. Ez biztosítja, hogy a testreszabás bevezetése
+// meglévő felhasználóknak ne változtasson semmit, amíg meg nem nyitják a
+// szerkesztőt.
+const DEFAULT_PIN_PATHS = [
+  "/admin/dashboard",
+  "/admin/karbantartasok",
+  "/admin/bejelentesek",
+  "/admin/koltsegek",
+  "/admin/flottakovetes",
+  "/admin/tachograf",
+];
+
+const TIPUS_LABEL = {
+  kamion: "kamiont",
+  potkocsi: "pótkocsit",
+  furgon: "furgont",
+};
+
+// A lista- és a hozzá tartozó "form" (létrehozás/szerkesztés) route neve nem
+// áll substring-relációban (pl. `/admin/kamionok` vs. `/admin/kamionForm`) —
+// a nyers `.includes()`-es `isActive` emiatt egyik nav-itemet sem jelölte
+// aktívnak pont a form-oldalakon, ahol a leginkább kellene tudni, hol
+// vagyunk (ld. UX-audit). Ez a leképezés adja vissza az adott form-route-hoz
+// tartozó lista-route-ot.
+const FORM_ROUTE_TO_LIST_ROUTE = {
+  "/admin/kamionForm": "/admin/kamionok",
+  "/admin/potkocsiForm": "/admin/potkocsi",
+  "/admin/furgonForm": "/admin/furgonok",
+  "/admin/soforForm": "/admin/soforok",
+  "/admin/bejelentesForm": "/admin/bejelentesek",
+  "/admin/ugyfelForm": "/admin/ugyfelek",
+  "/admin/helyszinForm": "/admin/helyszinek",
+};
 
 export default function Sidebar({ isDark, onToggleDark }) {
   const [openGroup, setOpenGroup] = React.useState(null);
   const [kerelmek, setKerelmek] = React.useState([]);
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [notifOpen, setNotifOpen] = React.useState(false);
+  const [pinEditorOpen, setPinEditorOpen] = React.useState(false);
   const location = useLocation();
   const history = useHistory();
 
-  const isActive = (path) => location.pathname.includes(path);
+  const isActive = (path) => {
+    if (location.pathname.includes(path)) return true;
+    return FORM_ROUTE_TO_LIST_ROUTE[location.pathname] === path;
+  };
 
   // Ctrl+K / Cmd+K globális gyorsbillentyű a kereséshez — a lenti, a lábléc
   // fölötti keresősáv "Ctrl+K" jelvénye csak ígéret lenne funkció nélkül.
@@ -223,7 +362,14 @@ export default function Sidebar({ isDark, onToggleDark }) {
     } catch (e) {
       // ignore corrupt/legacy localStorage érték
     }
-    return { flotta: true, csapat: false, partnerek: false, penzugyek: false, rendszer: false };
+    return {
+      flotta: true,
+      fuvarok: false,
+      csapat: false,
+      partnerek: false,
+      penzugyek: false,
+      rendszer: false,
+    };
   });
   React.useEffect(() => {
     if (!user?.id) return;
@@ -235,6 +381,30 @@ export default function Sidebar({ isDark, onToggleDark }) {
   }, [openGroups]);
   const toggleGroup = (key) =>
     setOpenGroups((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  // A napi zóna kitűzött elemeinek sorrendje, ugyanazzal a felhasználónkénti
+  // localStorage-perzisztenciával, mint az `openGroups` fentebb. Nincs
+  // mentett érték esetén (új fiók, vagy még nem nyitotta meg a szerkesztőt)
+  // a `DEFAULT_PIN_PATHS` a visszaesés — ld. a fájl tetején lévő komment.
+  const [pinnedPaths, setPinnedPaths] = React.useState(() => {
+    try {
+      const stored = JSON.parse(
+        localStorage.getItem(`sidebar-pins-${user?.id}`) || "null",
+      );
+      if (Array.isArray(stored) && stored.length > 0) return stored;
+    } catch (e) {
+      // ignore corrupt/legacy localStorage érték
+    }
+    return DEFAULT_PIN_PATHS;
+  });
+  React.useEffect(() => {
+    if (!user?.id) return;
+    localStorage.setItem(
+      `sidebar-pins-${user.id}`,
+      JSON.stringify(pinnedPaths),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pinnedPaths]);
 
   // A Sidebar kizárólag az Admin layoutban él (ld. layouts/Admin.js) — ide
   // sofőr (user tábla) fiók sosem jut el, tehát a lábléc korábbi
@@ -308,6 +478,29 @@ export default function Sidebar({ isDark, onToggleDark }) {
     const intervalId = setInterval(loadNyitottBejelentesek, 60000);
     return () => clearInterval(intervalId);
   }, [loadNyitottBejelentesek]);
+
+  // Feldolgozásra váró Beérkezett dokumentumok darabszáma — ugyanaz a
+  // route-change + 60s poll minta, mint a Bejelentések unread-badge-nél
+  // fentebb, hogy az admin ne felejtse el megnézni az inboxot.
+  const [beerkezettDokSzam, setBeerkezettDokSzam] = React.useState(0);
+  const loadBeerkezettDokSzam = React.useCallback(() => {
+    if (!user?.ceg_id) return;
+    fetchAction("getBeerkezettDokumentumokSzama", { ceg_id: user.ceg_id }).then(
+      (result) => {
+        if (result?.success) setBeerkezettDokSzam(result.szam);
+      },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.ceg_id]);
+
+  React.useEffect(() => {
+    loadBeerkezettDokSzam();
+  }, [loadBeerkezettDokSzam, location.pathname]);
+
+  React.useEffect(() => {
+    const intervalId = setInterval(loadBeerkezettDokSzam, 60000);
+    return () => clearInterval(intervalId);
+  }, [loadBeerkezettDokSzam]);
 
   // A menüpontok elrejtéséhez a fuvarszervező a SAJÁT jogosultságait kéri le
   // (nem a admin-only `getJogosultsagok`-ot) — ld. ApiHandler `getSajatJogosultsagok`
@@ -442,6 +635,24 @@ export default function Sidebar({ isDark, onToggleDark }) {
     history.push("/");
   };
 
+  // Jelvény-számok a kitűzött elemekhez — csak a két, ma is jelvényezett
+  // menüponthoz (Bejelentések, Beérkezett dokumentumok) van értelmes érték,
+  // minden más kitűzött elemnél `undefined` marad (a `NavItem` `badge > 0`
+  // ellenőrzése ezt már ma is csendben kezeli).
+  const badgeByPath = {
+    "/admin/bejelentesek": nyitottBejelentesek.length,
+    "/admin/beerkezettDokumentumok": beerkezettDokSzam,
+  };
+
+  // A napi zóna ténylegesen renderelt elemei — a `pinnedPaths` sorrendjében,
+  // a `PIN_REGISTRY`-ből feloldva. Védekező szűrés: ha egy mentett `to` már
+  // nem szerepel a registryben (pl. jövőbeli route-törlés), vagy admin-only
+  // elemre mutat egy időközben lefokozott felhasználónál, az adott bejegyzés
+  // csendben kimarad.
+  const pinnedItems = pinnedPaths
+    .map((to) => PIN_REGISTRY.find((item) => item.to === to))
+    .filter((item) => item && (!item.adminOnly || isAdmin));
+
   const NavItem = ({ to, icon: Icon, text, subPath, badge }) => {
     if (!hasAccess(to)) return null;
     const active = isActive(subPath || to);
@@ -518,7 +729,9 @@ export default function Sidebar({ isDark, onToggleDark }) {
               onClick={onToggleDark}
               className="relative flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-ink-400 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-700 dark:text-ink-400 dark:hover:bg-ink-800 dark:hover:text-ink-50"
               title={isDark ? "Világos mód" : "Sötét mód"}
-              aria-label={isDark ? "Világos mód bekapcsolása" : "Sötét mód bekapcsolása"}
+              aria-label={
+                isDark ? "Világos mód bekapcsolása" : "Sötét mód bekapcsolása"
+              }
             >
               {isDark ? (
                 <PiSunLight className="h-[18px] w-[18px]" />
@@ -551,33 +764,30 @@ export default function Sidebar({ isDark, onToggleDark }) {
             érhető el, nem önálló menüpontként — ld. lentebb. */}
         <div className="flex-1 overflow-y-auto px-3 pb-4">
           <div className="sticky top-0 z-10 mb-1 rounded-2xl bg-brand-50/70 p-2 backdrop-blur-sm dark:bg-brand-950/40">
+            <div className="mb-1 flex items-center justify-between px-1.5 pb-1 pt-0.5">
+              <span className="text-xs font-bold uppercase tracking-[0.1em] text-brand-700 dark:text-brand-300">
+                Napi zóna
+              </span>
+              <button
+                type="button"
+                onClick={() => setPinEditorOpen(true)}
+                title="Napi zóna testreszabása"
+                aria-label="Napi zóna testreszabása"
+                className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg text-brand-700 transition-colors duration-200 hover:bg-white/10 hover:text-brand-700 dark:text-brand-300 dark:hover:bg-ink-800 dark:hover:text-brand-300"
+              >
+                <PiPencilSimpleLight className="h-3.5 w-3.5" />
+              </button>
+            </div>
             <ul className="space-y-0.5">
-              <NavItem
-                to="/admin/dashboard"
-                icon={PiSquaresFourLight}
-                text="Főmenü"
-              />
-              <NavItem
-                to="/admin/karbantartasok"
-                icon={PiWrenchLight}
-                text="Karbantartások"
-              />
-              <NavItem
-                to="/admin/bejelentesek"
-                icon={PiChatCircleTextLight}
-                text="Bejelentések"
-                badge={nyitottBejelentesek.length}
-              />
-              <NavItem
-                to="/admin/koltsegek"
-                icon={PiCoinsLight}
-                text="Pénzforgalom"
-              />
-              <NavItem
-                to="/admin/flottakovetes"
-                icon={PiMapTrifoldLight}
-                text="Flottakövetés"
-              />
+              {pinnedItems.map((item) => (
+                <NavItem
+                  key={item.to}
+                  to={item.to}
+                  icon={item.icon}
+                  text={item.text}
+                  badge={badgeByPath[item.to]}
+                />
+              ))}
             </ul>
           </div>
 
@@ -610,6 +820,34 @@ export default function Sidebar({ isDark, onToggleDark }) {
 
           <div>
             <GroupHeader
+              label="Fuvarok"
+              open={openGroups.fuvarok}
+              onToggle={() => toggleGroup("fuvarok")}
+            />
+            {openGroups.fuvarok && (
+              <ul className="space-y-0.5">
+                <NavItem
+                  to="/admin/beerkezettDokumentumok"
+                  icon={PiFileTextLight}
+                  text="Beérkezett dokumentumok"
+                  badge={beerkezettDokSzam}
+                />
+                <NavItem
+                  to="/admin/fuvarok"
+                  icon={PiClipboardTextLight}
+                  text="Fuvarok"
+                />
+                <NavItem
+                  to="/admin/fuvarStatisztika"
+                  icon={PiChartBarLight}
+                  text="Statisztikák"
+                />
+              </ul>
+            )}
+          </div>
+
+          <div>
+            <GroupHeader
               label="Csapat"
               open={openGroups.csapat}
               onToggle={() => toggleGroup("csapat")}
@@ -625,6 +863,11 @@ export default function Sidebar({ isDark, onToggleDark }) {
                   to="/admin/sofor-riport"
                   icon={PiChartBarLight}
                   text="Sofőr-riport"
+                />
+                <NavItem
+                  to="/admin/tachograf"
+                  icon={PiIdentificationCardLight}
+                  text="Tachográf"
                 />
                 <NavItem
                   to="/admin/szabadsagok"
@@ -844,6 +1087,7 @@ export default function Sidebar({ isDark, onToggleDark }) {
                   .filter(
                     (item) =>
                       item.type === "divider" ||
+                      item.type === "action" ||
                       ((!item.adminOnly || isAdmin) && hasAccess(item.to)),
                   )
                   .map((item, i) => {
@@ -856,6 +1100,35 @@ export default function Sidebar({ isDark, onToggleDark }) {
                           }`}
                         >
                           {item.label}
+                        </li>
+                      );
+                    }
+                    if (item.type === "action") {
+                      const isDarkmode = item.action === "darkmode";
+                      const ActionIcon = isDarkmode
+                        ? isDark
+                          ? PiSunLight
+                          : PiMoonLight
+                        : item.icon;
+                      const actionLabel = isDarkmode
+                        ? isDark
+                          ? "Világos mód"
+                          : "Sötét mód"
+                        : item.text;
+                      return (
+                        <li key={`action-${item.action}`}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOpenGroup(null);
+                              if (item.action === "search") setSearchOpen(true);
+                              if (item.action === "darkmode") onToggleDark();
+                            }}
+                            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-[15px] font-medium text-ink-600 hover:bg-slate-100 dark:text-ink-300 dark:hover:bg-ink-800"
+                          >
+                            <ActionIcon className="h-[18px] w-[18px] flex-shrink-0" />
+                            {actionLabel}
+                          </button>
                         </li>
                       );
                     }
@@ -913,7 +1186,9 @@ export default function Sidebar({ isDark, onToggleDark }) {
                 to={item.to}
                 aria-current={active ? "page" : undefined}
                 className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[11px] font-medium leading-none transition-colors duration-150 ${
-                  active ? "bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300" : "text-ink-400 dark:text-ink-500"
+                  active
+                    ? "bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300"
+                    : "text-ink-400 dark:text-ink-500"
                 }`}
                 onClick={() => setOpenGroup(null)}
               >
@@ -935,7 +1210,9 @@ export default function Sidebar({ isDark, onToggleDark }) {
                 aria-expanded={openGroup === group.key}
                 aria-controls={`mobile-group-panel-${group.key}`}
                 className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[11px] font-medium leading-none transition-colors duration-150 ${
-                  active ? "bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300" : "text-ink-400 dark:text-ink-500"
+                  active
+                    ? "bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300"
+                    : "text-ink-400 dark:text-ink-500"
                 }`}
                 onClick={() =>
                   setOpenGroup(openGroup === group.key ? null : group.key)
@@ -956,7 +1233,9 @@ export default function Sidebar({ isDark, onToggleDark }) {
           <button
             type="button"
             className={`relative flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[11px] font-medium leading-none transition-colors duration-150 ${
-              notifOpen ? "bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300" : "text-ink-400 dark:text-ink-500"
+              notifOpen
+                ? "bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300"
+                : "text-ink-400 dark:text-ink-500"
             }`}
             onClick={() => setNotifOpen(true)}
           >
@@ -978,6 +1257,16 @@ export default function Sidebar({ isDark, onToggleDark }) {
         onClose={() => setNotifOpen(false)}
         onDismiss={handleDismiss}
         onDismissAll={handleDismiss}
+      />
+      <NapiZonaEditorModal
+        open={pinEditorOpen}
+        onClose={() => setPinEditorOpen(false)}
+        registry={PIN_REGISTRY}
+        pinnedPaths={pinnedPaths}
+        onChange={setPinnedPaths}
+        maxItems={8}
+        isAdmin={isAdmin}
+        defaultPaths={DEFAULT_PIN_PATHS}
       />
     </>
   );
