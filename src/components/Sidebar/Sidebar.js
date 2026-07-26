@@ -222,11 +222,13 @@ const mobileGroups = [
 // menüpontok kerüljenek bele és milyen sorrendben (ld. docs/superpowers/specs/
 // 2026-07-26-sidebar-napi-zona-testreszabas-design.md). A `PIN_REGISTRY` a
 // meglévő `mobileGroups`-ból származik (minden valódi link-elemét átveszi,
-// dividerek/action-ök nélkül), plusz 2, jelenleg csak desktopon élő elem
-// (Főmenü, Devizák) kézzel hozzáfűzve — tudatosan egy harmadik, kézzel
+// dividerek/action-ök nélkül), plusz 1 jelenleg csak desktopon élő elem
+// (Főmenü) kézzel hozzáfűzve — tudatosan egy harmadik, kézzel
 // karbantartott nav-forrás, ugyanaz az elfogadott drift-kockázat, mint a
 // mobil/desktop nav-taxonómia meglévő kettőssége (ld. a fájl korábbi
-// megjegyzéseit).
+// megjegyzéseit). A Devizák már létezik a mobileGroups-ban (Rendszer
+// csoport), az ő desktop kategória-besorolása (Pénzügyek) a GROUP_LABEL_OVERRIDES
+// kezeli, nem egy duplikált EXTRA_PINNABLE_ITEMS bejegyzés.
 const EXTRA_PINNABLE_ITEMS = [
   {
     to: "/admin/dashboard",
@@ -234,23 +236,19 @@ const EXTRA_PINNABLE_ITEMS = [
     text: "Főmenü",
     group: "Áttekintés",
   },
-  {
-    to: "/admin/devizak",
-    icon: PiCoinsLight,
-    text: "Devizák",
-    group: "Pénzügyek",
-    adminOnly: true,
-  },
 ];
 
 // A mobil "Csapat" fül a Partnereket (Ügyfelek/Helyszínek) egy divider mögé
 // rejti a saját fülébe, és a Pénzforgalom a mobil "Flotta" fülben él — a
 // desktop taxonómia viszont ezeket külön ("Partnerek", "Pénzügyek")
-// csoportba sorolja. Ez a két felülírás igazítja a napi zóna szerkesztő
+// csoportba sorolja. Ez a felülírások igazítják a napi zóna szerkesztő
 // kategória-címkéit a desktop hierarchiához, hogy ne egy mobil-only
-// csoportosítás látszódjon a picker-ben.
+// csoportosítás látszódjon a picker-ben. A Devizák a mobileGroups-ban
+// a Rendszer csoportban él, de desktop kontextusban a Pénzügyek csoportba
+// tartozik (ahol a Pénzforgalom is él).
 const GROUP_LABEL_OVERRIDES = {
   "/admin/koltsegek": "Pénzügyek",
+  "/admin/devizak": "Pénzügyek",
 };
 
 function buildPinRegistry() {
