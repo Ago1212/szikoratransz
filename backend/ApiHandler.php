@@ -151,6 +151,7 @@ class ApiHandler {
         'updateFuvarAllapot' => ['fuvarok', 'szerkesztes'],
         'hozzarendelFuvarSzamlaszamot' => ['fuvarok', 'szerkesztes'],
         'getFuvarAllapotOsszesito' => ['fuvarok', 'hozzaferes'],
+        'getSoforDashboard' => ['fuvarok', 'hozzaferes'],
 
         'getKarbantartasok' => ['karbantartasok', 'hozzaferes'],
         'updateKarbantartas' => ['karbantartasok', 'szerkesztes'],
@@ -372,6 +373,7 @@ class ApiHandler {
             'getFuvarok' => ['ceg_id'],
             'letrehozFuvarDokumentumbol' => ['dokumentumId', 'ceg_id', 'kerelmezo_id'],
             'updateFuvarAllapot' => ['id', 'ceg_id', 'kerelmezo_id', 'allapot'],
+            'getSoforDashboard' => ['ceg_id'],
             'hozzarendelFuvarSzamlaszamot' => ['idk', 'ceg_id', 'kerelmezo_id', 'szamlaszam'],
             'getFuvarAllapotOsszesito' => ['ceg_id'],
 
@@ -1749,6 +1751,18 @@ class ApiHandler {
                 case 'getFuvarAllapotOsszesito':
                     $kerelmezo = $this->resolveKerelmezo($request);
                     echo json_encode($fuvarInterface->getAllapotOsszesito($kerelmezo['ceg_id']));
+                    return;
+                case 'getSoforDashboard':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($fuvarInterface->getSoforDashboard(
+                        $kerelmezo['ceg_id'],
+                        $request['datumTol'] ?? null,
+                        $request['datumIg'] ?? null,
+                        $request['soforId'] ?? null,
+                        $request['fuvarAllapot'] ?? null,
+                        $request['dokumentumSzuro'] ?? null,
+                        $request['granularitas'] ?? null
+                    ));
                     return;
                 case 'getUgyfelFuvarElozmeny':
                     echo json_encode($fuvarInterface->getUgyfelElozmeny($request['ugyfelId'], $this->resolveKerelmezo($request)['ceg_id']));
