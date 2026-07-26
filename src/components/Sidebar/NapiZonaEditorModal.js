@@ -104,7 +104,11 @@ export default function NapiZonaEditorModal({
                     onClick={() => move(index, -1)}
                     disabled={index === 0}
                     aria-label={`${item.text} feljebb`}
-                    className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-400 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent dark:text-ink-500 dark:hover:bg-ink-800"
+                    className={`flex h-7 w-7 items-center justify-center rounded-lg text-ink-400 dark:text-ink-500 ${
+                      index === 0
+                        ? "opacity-40"
+                        : "hover:bg-slate-100 dark:hover:bg-ink-800"
+                    }`}
                   >
                     <PiArrowUpLight className="h-3.5 w-3.5" />
                   </button>
@@ -113,7 +117,11 @@ export default function NapiZonaEditorModal({
                     onClick={() => move(index, 1)}
                     disabled={index === pinnedItems.length - 1}
                     aria-label={`${item.text} lejjebb`}
-                    className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-400 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent dark:text-ink-500 dark:hover:bg-ink-800"
+                    className={`flex h-7 w-7 items-center justify-center rounded-lg text-ink-400 dark:text-ink-500 ${
+                      index === pinnedItems.length - 1
+                        ? "opacity-40"
+                        : "hover:bg-slate-100 dark:hover:bg-ink-800"
+                    }`}
                   >
                     <PiArrowDownLight className="h-3.5 w-3.5" />
                   </button>
@@ -151,7 +159,7 @@ export default function NapiZonaEditorModal({
                   {group.items.map((item) => (
                     <li
                       key={item.to}
-                      className="flex items-center gap-2 rounded-xl px-3 py-2 hover:bg-slate-50 dark:hover:bg-ink-800/60"
+                      className="flex items-center gap-2 rounded-xl px-3 py-2 hover:bg-slate-50 dark:hover:bg-ink-800"
                     >
                       <item.icon className="h-4 w-4 flex-shrink-0 text-ink-400 dark:text-ink-500" />
                       <span className="flex-1 truncate text-sm text-ink-700 dark:text-ink-100">
@@ -167,7 +175,11 @@ export default function NapiZonaEditorModal({
                             : undefined
                         }
                         aria-label={`${item.text} kitűzése`}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg text-brand-600 hover:bg-brand-50 disabled:opacity-30 disabled:hover:bg-transparent dark:text-brand-300 dark:hover:bg-brand-950/40"
+                        className={`flex h-7 w-7 items-center justify-center rounded-lg text-brand-600 dark:text-brand-300 ${
+                          atLimit
+                            ? "opacity-40"
+                            : "hover:bg-brand-50 dark:hover:bg-brand-950/40"
+                        }`}
                       >
                         <PiPlusLight className="h-3.5 w-3.5" />
                       </button>
