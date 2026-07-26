@@ -4938,6 +4938,10 @@ h1,
   border-color: rgb(120 53 15 / var(--tw-border-opacity, 1));
 }
 
+.dark\:border-amber-900\/40:is(.dark *) {
+  border-color: rgb(120 53 15 / 0.4);
+}
+
 .dark\:border-brand-400:is(.dark *) {
   --tw-border-opacity: 1;
   border-color: rgb(95 118 230 / var(--tw-border-opacity, 1));
@@ -4988,6 +4992,10 @@ h1,
   border-color: rgb(127 29 29 / var(--tw-border-opacity, 1));
 }
 
+.dark\:border-red-900\/40:is(.dark *) {
+  border-color: rgb(127 29 29 / 0.4);
+}
+
 .dark\:border-sky-700:is(.dark *) {
   --tw-border-opacity: 1;
   border-color: rgb(3 105 161 / var(--tw-border-opacity, 1));
@@ -5010,6 +5018,10 @@ h1,
 .dark\:bg-amber-400:is(.dark *) {
   --tw-bg-opacity: 1;
   background-color: rgb(251 191 36 / var(--tw-bg-opacity, 1));
+}
+
+.dark\:bg-amber-950\/20:is(.dark *) {
+  background-color: rgb(69 26 3 / 0.2);
 }
 
 .dark\:bg-amber-950\/40:is(.dark *) {
@@ -5123,6 +5135,10 @@ h1,
 
 .dark\:bg-purple-950\/50:is(.dark *) {
   background-color: rgb(59 7 100 / 0.5);
+}
+
+.dark\:bg-red-950\/20:is(.dark *) {
+  background-color: rgb(69 10 10 / 0.2);
 }
 
 .dark\:bg-red-950\/40:is(.dark *) {
