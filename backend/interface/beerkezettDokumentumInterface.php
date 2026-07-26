@@ -155,9 +155,21 @@ class BeerkezettDokumentumInterface {
             $tipus = 'ismeretlen';
         }
 
+        // Ha az OCR felismert egy sofőr-nevet, próbáljuk automatikusan
+        // hozzárendelni a dokumentumot a felismert sofőrhöz — FÜGGETLENÜL
+        // attól, ki töltötte fel (feltoltoTipus lehet 'admin' is, ha pl. az
+        // admin szkenneli be a fuvarlevelet a sofőr helyett). Ez csak egy
+        // automatikus, felülbírálható javaslat: egyértelmű (egyetlen
+        // találatos) laza névegyezés esetén ténylegesen kitöltjük az oszlopot,
+        // admin bármikor módosíthatja/törölheti a review-panelen.
+        $hozzarendeltSoforId = null;
+        if ($ocrAllapot === 'kesz' && !empty($adatok['sofor_neve'])) {
+            $hozzarendeltSoforId = $this->keresSoforNevAlapjan($ceg_id, $adatok['sofor_neve']);
+        }
+
         $stmt = $this->db->prepare(
-            "INSERT INTO beerkezett_dokumentumok (admin, fajl_id, tipus, ocr_allapot, ocr_adatok, feltolto_tipus, feltolto_id, feltolto_nev)
-             VALUES (:admin, :fajl_id, :tipus, :ocr_allapot, :ocr_adatok, :feltolto_tipus, :feltolto_id, :feltolto_nev)"
+            "INSERT INTO beerkezett_dokumentumok (admin, fajl_id, tipus, ocr_allapot, ocr_adatok, feltolto_tipus, feltolto_id, feltolto_nev, hozzarendelt_sofor_id)
+             VALUES (:admin, :fajl_id, :tipus, :ocr_allapot, :ocr_adatok, :feltolto_tipus, :feltolto_id, :feltolto_nev, :hozzarendelt_sofor_id)"
         );
         $stmt->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
         $stmt->bindValue(':fajl_id', $fajlId, PDO::PARAM_INT);
@@ -167,6 +179,7 @@ class BeerkezettDokumentumInterface {
         $stmt->bindValue(':feltolto_tipus', $feltoltoTipus);
         $stmt->bindValue(':feltolto_id', $feltoltoId);
         $stmt->bindValue(':feltolto_nev', $feltoltoNev);
+        $stmt->bindValue(':hozzarendelt_sofor_id', $hozzarendeltSoforId, $hozzarendeltSoforId === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
         $stmt->execute();
 
         $dokumentumId = $this->db->lastInsertId();
@@ -176,7 +189,38 @@ class BeerkezettDokumentumInterface {
             'tipus' => $tipus,
             'ocr_allapot' => $ocrAllapot,
             'ocr_adatok' => $adatok,
+            'hozzarendelt_sofor_id' => $hozzarendeltSoforId,
         ]];
+    }
+
+    // Csak javaslat — a dekódolt sofőr-név és a `user.name` közti laza
+    // (nagybetűs, ékezet-érzéketlen tartalmazás) egyezés alapján, ugyanaz a
+    // minta, mint `TachografInterface::keresSoforNevAlapjan()`-nál. Csak
+    // EGYÉRTELMŰ (pontosan egy találatos) egyezésnél térünk vissza egy
+    // id-vel — ha több sofőr neve is illeszkedne, inkább nem találgatunk,
+    // az admin a review-panelen kézzel választ.
+    private function keresSoforNevAlapjan($ceg_id, $nev) {
+        $stmt = $this->db->prepare("SELECT id, name FROM user WHERE admin = :ceg_id AND torolt <> 'I'");
+        $stmt->bindValue(':ceg_id', $ceg_id);
+        $stmt->execute();
+        $keresett = $this->normalizalNev($nev);
+        if ($keresett === '') {
+            return null;
+        }
+        $talalatok = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $jelolt = $this->normalizalNev($row['name']);
+            if ($jelolt !== '' && (strpos($keresett, $jelolt) !== false || strpos($jelolt, $keresett) !== false)) {
+                $talalatok[] = (int) $row['id'];
+            }
+        }
+        return count($talalatok) === 1 ? $talalatok[0] : null;
+    }
+
+    private function normalizalNev($nev) {
+        $nev = mb_strtoupper(trim((string) $nev));
+        $atirasok = ['Á'=>'A','É'=>'E','Í'=>'I','Ó'=>'O','Ö'=>'O','Ő'=>'O','Ú'=>'U','Ü'=>'U','Ű'=>'U'];
+        return strtr($nev, $atirasok);
     }
 
     // `$csakFeldolgozatlan` — true esetén csak azok a sorok, amikből MÉG
