@@ -966,7 +966,13 @@ export default function Koltsegek() {
         // felhasználó ezt a review-listán bármikor "Új tétel"-re vagy
         // "Kihagyás"-ra válthatja, mielőtt alkalmazná.
         setBankSorok(
-          (result.sorok || []).map((s) => ({ ...s, akcio: s.javasoltTetel ? "parosit" : "uj" })),
+          (result.sorok || []).map((s) => ({
+            ...s,
+            // A fuvar-számla egyezés megbízhatóbb jel (kifejezett számlaszám a
+            // közleményben), mint az összeg/dátum-alapú egyeb_koltsegek-javaslat,
+            // ezért elsőbbséget élvez, ha mindkettő megvan.
+            akcio: s.javasoltFuvarSzamlaszam ? "parositFuvar" : s.javasoltTetel ? "parosit" : "uj",
+          })),
         );
         setBankKihagyottSorSzam(result.kihagyottSorSzam || 0);
         setBankMarFeldolgozottSorSzam(result.marFeldolgozottSorSzam || 0);
@@ -994,7 +1000,7 @@ export default function Koltsegek() {
       if (result?.success) {
         const e = result.eredmeny;
         toast.success(
-          `Kész: ${e.parositva} párosítva, ${e.ujTetel} új tétel, ${e.kihagyva} kihagyva${e.hiba ? `, ${e.hiba} hiba` : ""}.`,
+          `Kész: ${e.parositva} párosítva, ${e.ujTetel} új tétel, ${e.fuvarTeljesitve || 0} fuvar teljesítve, ${e.kihagyva} kihagyva${e.hiba ? `, ${e.hiba} hiba` : ""}.`,
         );
         setBankModalOpen(false);
         loadOsszesito();
@@ -2287,6 +2293,19 @@ export default function Koltsegek() {
                           </td>
                           <td className="px-3 py-2">
                             <div className="flex flex-col gap-1">
+                              {s.javasoltFuvarSzamlaszam && (
+                                <label className="flex items-center gap-1.5 text-xs">
+                                  <input
+                                    type="radio"
+                                    name={`bank-akcio-${s.hash}`}
+                                    checked={s.akcio === "parositFuvar"}
+                                    onChange={() => changeBankSorAkcio(s.hash, "parositFuvar")}
+                                    className="accent-brand-600"
+                                  />
+                                  <PiLinkSimpleLight className="h-3.5 w-3.5 flex-shrink-0 text-emerald-500" />
+                                  Fuvar-számla teljesítve: {s.javasoltFuvarSzamlaszam}
+                                </label>
+                              )}
                               {s.javasoltTetel && (
                                 <label className="flex items-center gap-1.5 text-xs">
                                   <input

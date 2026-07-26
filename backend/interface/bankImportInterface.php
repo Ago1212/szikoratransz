@@ -74,6 +74,15 @@ class BankImportInterface {
                     'kozlemeny' => $kozlemeny,
                     'hash' => $hash,
                     'javasoltTetel' => $this->keresJavasoltPart($ceg_id, $datum, $osszeg),
+                    // Fuvar-számla párosítás (2026-07-26): nincs Számlázz.hu/NAV
+                    // API-integráció, a fuvarok.szamlaszam-ot az admin kézzel
+                    // rögzíti (ld. hozzarendelFuvarSzamlaszamot) — az egyetlen
+                    // megbízható jel egy beérkező utalás párosításához az, ha a
+                    // bank "közlemény" mezője tartalmazza ezt a számlaszámot
+                    // (magyar banki gyakorlat szerint ez szokásos). Összeg/dátum
+                    // alapú egyeztetés N:1 (egy számlaszám több fuvaron) esetén
+                    // nem megbízható, ezért csak informatív, nem szűrőfeltétel.
+                    'javasoltFuvarSzamlaszam' => $this->keresFuvarSzamlaszamAlapjan($ceg_id, $kozlemeny),
                 ];
             }
 
@@ -125,6 +134,31 @@ class BankImportInterface {
         return $talalat ?: null;
     }
 
+    // Az admin cégéhez tartozó, még nem teljesített ('szamlazva' vagy
+    // 'fizetesre_var' állapotú) fuvarok számlaszámai közül visszaadja azt,
+    // amelyik szó szerint szerepel a bank "közlemény" szövegében — vagy
+    // `null`-t, ha egyik sem egyezik. Csak akkor fut le értelmesen, ha a
+    // közlemény nem üres.
+    private function keresFuvarSzamlaszamAlapjan($ceg_id, $kozlemeny) {
+        $kozlemeny = trim((string) $kozlemeny);
+        if ($kozlemeny === '') {
+            return null;
+        }
+        $stmt = $this->db->prepare(
+            "SELECT DISTINCT szamlaszam FROM fuvarok
+             WHERE admin = :admin AND torolt <> 'I' AND szamlaszam IS NOT NULL
+               AND allapot IN ('szamlazva', 'fizetesre_var')"
+        );
+        $stmt->bindValue(':admin', $ceg_id);
+        $stmt->execute();
+        foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $szamlaszam) {
+            if ($szamlaszam !== '' && mb_stripos($kozlemeny, $szamlaszam) !== false) {
+                return $szamlaszam;
+            }
+        }
+        return null;
+    }
+
     private function marFeldolgozva($ceg_id, $hash) {
         $stmt = $this->db->prepare("SELECT id FROM bank_import_tetelek WHERE admin = :admin AND tetel_hash = :hash");
         $stmt->bindValue(':admin', $ceg_id);
@@ -139,13 +173,33 @@ class BankImportInterface {
     // sort, hogy egy jövőbeli, átfedő időszakú újra-feltöltés ne ajánlja fel
     // újra ugyanazt a bank-sort (ld. marFeldolgozva()).
     public function alkalmaz($sorok, $ceg_id) {
-        $eredmeny = ['parositva' => 0, 'ujTetel' => 0, 'kihagyva' => 0, 'hiba' => 0];
+        $eredmeny = ['parositva' => 0, 'ujTetel' => 0, 'kihagyva' => 0, 'fuvarTeljesitve' => 0, 'hiba' => 0];
         foreach ($sorok as $sor) {
             try {
                 $akcio = $sor['akcio'] ?? 'skip';
                 $egyebKoltsegId = null;
 
-                if ($akcio === 'parosit') {
+                if ($akcio === 'parositFuvar') {
+                    $szamlaszam = trim((string) ($sor['javasoltFuvarSzamlaszam'] ?? ''));
+                    if ($szamlaszam === '') {
+                        $eredmeny['hiba']++;
+                        continue;
+                    }
+                    // Minden, ugyanezt a számlaszámot viselő fuvar egyszerre vált
+                    // Teljesítve-re — N:1 kapcsolat (ld. hozzarendelFuvarSzamlaszamot).
+                    $upd = $this->db->prepare(
+                        "UPDATE fuvarok SET allapot = 'teljesitve' WHERE admin = :admin AND torolt <> 'I' AND szamlaszam = :szamlaszam"
+                    );
+                    $upd->bindValue(':admin', $ceg_id);
+                    $upd->bindValue(':szamlaszam', $szamlaszam);
+                    $upd->execute();
+                    if ($upd->rowCount() === 0) {
+                        $eredmeny['hiba']++;
+                        continue;
+                    }
+                    $eredmeny['fuvarTeljesitve']++;
+                    $naploAkcio = 'fuvar_teljesitve';
+                } elseif ($akcio === 'parosit') {
                     if (empty($sor['tetelId'])) {
                         $eredmeny['hiba']++;
                         continue;
