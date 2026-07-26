@@ -8,15 +8,34 @@
 // hívással lett leellenőrizve a tervezési fázisban a két mintadokumentumon
 // (kézzel írott fuvarlevél + nyomtatott szállítólevél) mielőtt
 // implementációra került volna.
+//
+// Több API-kulcs + kulcs-rotáció (2026-07-25, élesben megfigyelt kvóta-
+// probléma után bevezetve): a Gemini ingyenes szintjének napi kvótája
+// (`GenerateRequestsPerDayPerProjectPerModel-FreeTier`, modellenként 20
+// hívás/nap) **Google Cloud PROJEKTENKÉNT** van korlátozva, nem
+// kulcsonként — ugyanabban a projektben generált több kulcs mind
+// ugyanazt a kvótát osztaná. Ezért a `$apiKeys` lista minden eleme egy
+// KÜLÖN Google Cloud projektben generált kulcs kell legyen, hogy valódi,
+// egymástól független kvótát adjanak. `extractFuvarAdatok()` sorban
+// próbálja a kulcsokat, és csak akkor lép a következőre, ha a hívás
+// kifejezetten HTTP 429 (kvóta-túllépés) hibát adott — egy más jellegű
+// hiba (hálózati hiba, érvénytelen kérés) nem kulcs-specifikus, azt nem
+// próbáljuk újra másik kulccsal.
 class GeminiOcrClient {
     const MODEL = 'gemini-3.5-flash';
     const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/';
     const TIMEOUT_MASODPERC = 60;
+    const HTTP_KVOTA_TULLEPVE = 429;
 
-    private $apiKey;
+    private $apiKeys;
 
-    public function __construct($apiKey) {
-        $this->apiKey = $apiKey;
+    // `$apiKeys` — tömb vagy egyetlen string (visszafelé kompatibilitás
+    // miatt); üres bejegyzések kiszűrve.
+    public function __construct($apiKeys) {
+        $lista = is_array($apiKeys) ? $apiKeys : [$apiKeys];
+        $this->apiKeys = array_values(array_filter($lista, function ($kulcs) {
+            return !empty($kulcs);
+        }));
     }
 
     // `$sajatCegnev` — a hívó cég neve (admin.cegnev), hogy a modell meg
@@ -25,10 +44,27 @@ class GeminiOcrClient {
     // működik, csak kevésbé megbízhatóan tudja majd ezt a megkülönböztetést
     // megtenni.
     public function extractFuvarAdatok($imageBytes, $mimeType, $sajatCegnev = null) {
-        if (empty($this->apiKey)) {
+        if (empty($this->apiKeys)) {
             return null;
         }
 
+        foreach ($this->apiKeys as $apiKey) {
+            [$adatok, $kvotaTullepve] = $this->hivasEgyKulccsal($apiKey, $imageBytes, $mimeType, $sajatCegnev);
+            if ($adatok !== null) {
+                return $adatok;
+            }
+            if (!$kvotaTullepve) {
+                return null;
+            }
+            // Kvóta-túllépés esetén megyünk a listában a következő kulcsra.
+        }
+
+        return null;
+    }
+
+    // Visszaad egy [adatok|null, kvotaTullepve] párost — a hívó ez alapján
+    // dönti el, hogy próbálkozzon-e a következő kulccsal.
+    private function hivasEgyKulccsal($apiKey, $imageBytes, $mimeType, $sajatCegnev) {
         $payload = [
             'contents' => [[
                 'parts' => [
@@ -54,7 +90,7 @@ class GeminiOcrClient {
             'generationConfig' => ['responseMimeType' => 'application/json', 'maxOutputTokens' => 8192],
         ];
 
-        $url = self::ENDPOINT . self::MODEL . ':generateContent?key=' . urlencode($this->apiKey);
+        $url = self::ENDPOINT . self::MODEL . ':generateContent?key=' . urlencode($apiKey);
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_POST => true,
@@ -69,17 +105,17 @@ class GeminiOcrClient {
         curl_close($ch);
 
         if ($body === false || $curlHiba !== '' || $status !== 200) {
-            return null;
+            return [null, $status === self::HTTP_KVOTA_TULLEPVE];
         }
 
         $valasz = json_decode($body, true);
         $szoveg = $valasz['candidates'][0]['content']['parts'][0]['text'] ?? null;
         if ($szoveg === null) {
-            return null;
+            return [null, false];
         }
 
         $adatok = json_decode($szoveg, true);
-        return is_array($adatok) ? $adatok : null;
+        return [is_array($adatok) ? $adatok : null, false];
     }
 
     private function buildPrompt($sajatCegnev) {

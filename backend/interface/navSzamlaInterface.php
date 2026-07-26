@@ -221,8 +221,8 @@ class NavSzamlaInterface {
             // itt is kihagyjuk, ugyanúgy, mint a már `egyeb_koltsegek`-be
             // importált tételeket.
             $mol_fedve = $this->molTankolasSzamlaszamok($ceg_id);
-            $query = "INSERT INTO egyeb_koltsegek (admin, irany, kategoria, kamion_id, potkocsi_id, datum, megnevezes, szamlaszam, osszeg, deviza, eredeti_osszeg, arfolyam, megjegyzes)
-                      VALUES (:admin, :irany, :kategoria, NULL, NULL, :datum, :megnevezes, :szamlaszam, :osszeg, :deviza, :eredeti_osszeg, :arfolyam, :megjegyzes)";
+            $query = "INSERT INTO egyeb_koltsegek (admin, irany, kategoria, kamion_id, potkocsi_id, datum, teljesites_datum, fizetesi_hatarido, megnevezes, szamlaszam, osszeg, deviza, eredeti_osszeg, arfolyam, megjegyzes)
+                      VALUES (:admin, :irany, :kategoria, NULL, NULL, :datum, :teljesites_datum, :fizetesi_hatarido, :megnevezes, :szamlaszam, :osszeg, :deviza, :eredeti_osszeg, :arfolyam, :megjegyzes)";
             $stmt = $this->db->prepare($query);
 
             $importalva = 0;
@@ -255,6 +255,12 @@ class NavSzamlaInterface {
                 $stmt->bindValue(':irany', $irany);
                 $stmt->bindValue(':kategoria', $kategoria);
                 $stmt->bindValue(':datum', $t['datum'] ?? date('Y-m-d'));
+                // A NAV digest teljesítés/fizetési-határidő mezője (ld.
+                // NavSzamlaClient::digestSorFeldolgozas) opcionális — ha a NAV
+                // nem adta meg, `null`-ként mentjük, sosem a kiállítás
+                // dátumával pótolva.
+                $stmt->bindValue(':teljesites_datum', $t['teljesites_datum'] ?: null);
+                $stmt->bindValue(':fizetesi_hatarido', $t['fizetesi_hatarido'] ?: null);
                 $stmt->bindValue(':megnevezes', $t['partner_nev'] ?: 'NAV számla');
                 $stmt->bindValue(':szamlaszam', $szamlaszam);
                 $stmt->bindValue(':osszeg', $osszeg);

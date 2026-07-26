@@ -36,6 +36,7 @@ import Modal from "components/UI/Modal.js";
 import FormField, { FormSection } from "components/UI/FormField.js";
 import Spinner from "components/UI/Spinner.js";
 import CardStats from "components/Cards/CardStats.js";
+import LejaratTag from "components/UI/LejaratTag.js";
 import { confirmDialog } from "utils/confirm.js";
 // A CardUzemanyagElemzes (üzemanyag-fogyasztás anomália-elemzés) import és
 // megjelenítés egyenlőre szándékosan ki van véve (felhasználói kérésre) — a
@@ -137,6 +138,8 @@ const emptyEgyebTetel = (irany = "kiado") => ({
   irany,
   kategoria: "",
   datum: new Date().toISOString().slice(0, 10),
+  teljesites_datum: "",
+  fizetesi_hatarido: "",
   megnevezes: "",
   szamlaszam: "",
   osszeg: "",
@@ -409,7 +412,13 @@ function PerKmErtek({ ertek, lefedettseg }) {
 // beállításának). Most egy helyen: gyors preset gombok a leggyakoribb
 // esetekre, a pontos dátummezők mindig látszanak a finomhangoláshoz, az
 // év-léptető pedig ugyanide, a dátummezők mellé költözött.
-function PeriodControl({ filter, onPreset, onFieldChange, displayedYear, onChangeYear }) {
+const DATUM_ALAP_OPCIOK = [
+  { key: "datum", label: "Kiadás dátuma" },
+  { key: "teljesites_datum", label: "Teljesítés dátuma" },
+  { key: "fizetesi_hatarido", label: "Fizetési határidő" },
+];
+
+function PeriodControl({ filter, onPreset, onFieldChange, displayedYear, onChangeYear, datumAlap, onChangeDatumAlap }) {
   const today = new Date().toISOString().slice(0, 10);
   const honapEleje = `${today.slice(0, 7)}-01`;
   const napja30Elott = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
@@ -496,6 +505,21 @@ function PeriodControl({ filter, onPreset, onFieldChange, displayedYear, onChang
           <PiCaretRightLight className="h-3.5 w-3.5" />
         </button>
       </div>
+      <FormField
+        as="select"
+        label="Dátum alapja"
+        name="datumAlap"
+        value={datumAlap}
+        onChange={(e) => onChangeDatumAlap(e.target.value)}
+        className="w-44"
+        title="Karbantartás, üzemanyag (tankolás), biztosítás és fizetés mindig a saját dátuma szerint szűrődik — a váltás csak a kézzel rögzített/importált tételekre (bevétel, egyéb kiadás, útdíj, NAV-számla) hat."
+      >
+        {DATUM_ALAP_OPCIOK.map((o) => (
+          <option key={o.key} value={o.key}>
+            {o.label}
+          </option>
+        ))}
+      </FormField>
     </div>
   );
 }
@@ -546,6 +570,14 @@ export default function Koltsegek() {
     setFilter({ datumTol: tol, datumIg: ig });
     setTetelekPage(1);
   };
+  // A dátumszűrő alapból a `datum` (kiadás/felvétel dátuma) oszlopra szűr —
+  // erre válthat a felhasználó, hogy a Dátumtól/Dátumig helyette a
+  // teljesítés dátuma vagy a fizetési határidő alapján szűrjön. Csak a
+  // kézzel rögzített/importált `egyeb_koltsegek` tételekre hat (ld.
+  // koltsegInterface.php komment a getKoltsegOsszesito elején) — a
+  // karbantartás/tankolás/biztosítás/bér mindig a saját dátuma szerint
+  // szűrődik, mert azoknak nincs teljesítés/fizetési-határidő fogalmuk.
+  const [datumAlap, setDatumAlap] = useState("datum"); // "datum" | "teljesites_datum" | "fizetesi_hatarido"
   const [adat, setAdat] = useState({
     havi: [],
     jarmuvenkent: [],
@@ -687,6 +719,7 @@ export default function Koltsegek() {
       ceg_id: user.ceg_id,
       kerelmezo_id: user.id,
       ...filter,
+      datumMezo: datumAlap,
     }).then((result) => {
       if (reqId !== osszesitoReqId.current) return;
       if (result?.success) {
@@ -710,6 +743,7 @@ export default function Koltsegek() {
       ceg_id: user.ceg_id,
       kerelmezo_id: user.id,
       ...filter,
+      datumMezo: datumAlap,
       irany: iranySzuro === "mind" ? undefined : iranySzuro,
       kategoria: kategoriaSzuro || undefined,
       search: tetelekSearch || undefined,
@@ -734,23 +768,24 @@ export default function Koltsegek() {
       ceg_id: user.ceg_id,
       kerelmezo_id: user.id,
       ...filter,
+      datumMezo: datumAlap,
       irany: iranySzuro === "mind" ? undefined : iranySzuro,
       kategoria: kategoriaSzuro || undefined,
       search: tetelekSearch || undefined,
     });
     return result?.success ? result.tetelek || [] : [];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter, iranySzuro, kategoriaSzuro, tetelekSearch]);
+  }, [filter, datumAlap, iranySzuro, kategoriaSzuro, tetelekSearch]);
 
   useEffect(() => {
     loadOsszesito();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter]);
+  }, [filter, datumAlap]);
 
   useEffect(() => {
     loadTetelek();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter, tetelekPage, tetelekSearch, iranySzuro, kategoriaSzuro, tetelSortKey, tetelSortDir]);
+  }, [filter, datumAlap, tetelekPage, tetelekSearch, iranySzuro, kategoriaSzuro, tetelSortKey, tetelSortDir]);
 
   const handleTetelSortChange = (key, dir) => {
     setTetelSortKey(key);
@@ -1109,7 +1144,12 @@ export default function Koltsegek() {
   };
 
   const handleUjTetelChange = (e) => {
-    e.target.setCustomValidity("");
+    // A DatePicker.js `onChange`-e egy szintetikus `{ target: { name, id,
+    // value } }` objektumot ad át (nem valódi DOM-eseményt, ld. DatePicker.js
+    // emitChange), aminek nincs `setCustomValidity` metódusa — enélkül az
+    // opcionális láncolás nélkül ez a hívás minden dátummező-választásnál
+    // (a meglévő "Dátum" mezőnél is) elhasalt, és a state sosem frissült.
+    e.target.setCustomValidity?.("");
     const { name, value } = e.target;
     setUjTetel((prev) => ({
       ...prev,
@@ -1147,6 +1187,8 @@ export default function Koltsegek() {
         irany: ujTetel.irany,
         kategoria: ujTetel.kategoria || null,
         datum: ujTetel.datum,
+        teljesites_datum: ujTetel.teljesites_datum || null,
+        fizetesi_hatarido: ujTetel.fizetesi_hatarido || null,
         megnevezes: ujTetel.megnevezes.trim(),
         szamlaszam: ujTetel.szamlaszam.trim() || null,
         // Devizás tételnél az `osszeg`-et a backend maga számítja ki
@@ -1192,6 +1234,8 @@ export default function Koltsegek() {
       irany: row.irany,
       kategoria: row.kategoria || "",
       datum: row.datum,
+      teljesites_datum: row.teljesites_datum || "",
+      fizetesi_hatarido: row.fizetesi_hatarido || "",
       megnevezes: row.megnevezes,
       szamlaszam: row.szamlaszam || "",
       osszeg: row.osszeg,
@@ -1341,6 +1385,28 @@ export default function Koltsegek() {
   const egyebTetelColumns = [
     { key: "datum", label: "Dátum", sortable: true },
     {
+      key: "teljesites_datum",
+      label: "Teljesítés",
+      mobileHidden: true,
+      sortable: true,
+      render: (row) => row.teljesites_datum || "—",
+    },
+    {
+      key: "fizetesi_hatarido",
+      label: "Fiz. határidő",
+      mobileHidden: true,
+      sortable: true,
+      render: (row) =>
+        row.fizetesi_hatarido ? (
+          <span className="inline-flex items-center">
+            {row.fizetesi_hatarido}
+            <LejaratTag date={row.fizetesi_hatarido} />
+          </span>
+        ) : (
+          "—"
+        ),
+    },
+    {
       key: "irany",
       label: "Irány",
       render: (row) => (
@@ -1470,6 +1536,8 @@ export default function Koltsegek() {
   ];
   const egyebTetelExportColumns = [
     { key: "datum", label: "Dátum" },
+    { key: "teljesites_datum", label: "Teljesítés dátuma", exportValue: (row) => row.teljesites_datum || "" },
+    { key: "fizetesi_hatarido", label: "Fizetési határidő", exportValue: (row) => row.fizetesi_hatarido || "" },
     { key: "irany", label: "Irány", exportValue: (row) => (row.irany === "bevetel" ? "Bevétel" : "Kiadás") },
     { key: "megnevezes", label: "Megnevezés" },
     { key: "osszeg", label: "Összeg (Ft)" },
@@ -1578,6 +1646,8 @@ export default function Koltsegek() {
             onFieldChange={handleFilterChange}
             displayedYear={displayedYear}
             onChangeYear={changeYear}
+            datumAlap={datumAlap}
+            onChangeDatumAlap={setDatumAlap}
           />
         }
       />
@@ -1976,6 +2046,22 @@ export default function Koltsegek() {
             onChange={handleUjTetelChange}
             placeholder="pl. a NAV Online Számla azonosítója"
           />
+          <FormSection columns={2}>
+            <FormField
+              type="date"
+              label="Teljesítés dátuma (opcionális)"
+              name="teljesites_datum"
+              value={ujTetel.teljesites_datum}
+              onChange={handleUjTetelChange}
+            />
+            <FormField
+              type="date"
+              label="Fizetési határidő (opcionális)"
+              name="fizetesi_hatarido"
+              value={ujTetel.fizetesi_hatarido}
+              onChange={handleUjTetelChange}
+            />
+          </FormSection>
           <FormSection columns={3}>
             <FormField
               as="select"
@@ -2097,14 +2183,16 @@ export default function Koltsegek() {
                     Nincs számla a NAV-nál ebben az időszakban.
                   </p>
                 ) : (
-                  <div className="max-h-96 overflow-y-auto rounded-xl border border-ink-100 dark:border-ink-800">
-                    <table className="w-full text-sm">
+                  <div className="max-h-96 overflow-auto rounded-xl border border-ink-100 dark:border-ink-800">
+                    <table className="w-full min-w-[900px] text-sm">
                       <thead className="sticky top-0 bg-slate-50 text-xs uppercase text-ink-400 dark:bg-ink-800 dark:text-ink-500">
                         <tr>
                           <th className="px-3 py-2 text-left"> </th>
                           <th className="px-3 py-2 text-left">Számlaszám</th>
                           <th className="px-3 py-2 text-left">Irány</th>
-                          <th className="px-3 py-2 text-left">Dátum</th>
+                          <th className="px-3 py-2 text-left" title="A számla kiállításának dátuma">Kiállítás</th>
+                          <th className="px-3 py-2 text-left" title="A számla szerinti teljesítés dátuma (ha a NAV megadta)">Teljesítés</th>
+                          <th className="px-3 py-2 text-left" title="Fizetési határidő (ha a NAV megadta)">Fiz. határidő</th>
                           <th className="px-3 py-2 text-left">Partner</th>
                           <th className="px-3 py-2 text-right">Összeg</th>
                           <th className="px-3 py-2 text-left">Kategória</th>
@@ -2136,6 +2224,8 @@ export default function Koltsegek() {
                               </span>
                             </td>
                             <td className="px-3 py-2 text-ink-500 dark:text-ink-400">{t.datum}</td>
+                            <td className="px-3 py-2 text-ink-500 dark:text-ink-400">{t.teljesites_datum || "—"}</td>
+                            <td className="px-3 py-2 text-ink-500 dark:text-ink-400">{t.fizetesi_hatarido || "—"}</td>
                             <td className="px-3 py-2 text-ink-500 dark:text-ink-400">{t.partner_nev || "—"}</td>
                             <td className="px-3 py-2 text-right tabular-nums text-ink-700 dark:text-ink-200">
                               {t.osszeg_huf !== null ? formatHuf(t.osszeg_huf) : "—"}

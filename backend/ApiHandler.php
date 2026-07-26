@@ -1346,7 +1346,8 @@ class ApiHandler {
                         $request['ceg_id'],
                         $request['datumTol'] ?? null,
                         $request['datumIg'] ?? null,
-                        $this->hivoSajatSzerepkoreAdmin($request)
+                        $this->hivoSajatSzerepkoreAdmin($request),
+                        $request['datumMezo'] ?? 'datum'
                     ));
                     return;
 
@@ -1369,7 +1370,8 @@ class ApiHandler {
                         $request['kategoria'] ?? null,
                         $this->hivoSajatSzerepkoreAdmin($request),
                         $request['sortKey'] ?? null,
-                        $request['sortDir'] ?? 'desc'
+                        $request['sortDir'] ?? 'desc',
+                        $request['datumMezo'] ?? 'datum'
                     ));
                     return;
 

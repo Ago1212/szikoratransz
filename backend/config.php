@@ -10,6 +10,16 @@ require_once __DIR__ . '/env.php';
 $apiConfig = [
     "authHash"=> envOrDefault('API_AUTH_HASH', "nIrINP&o!PU|+pM*Q8'j1R07U57W,qD"),
     "geminiApiKey" => envOrDefault('GEMINI_API_KEY', null),
+    // Több, KÜLÖN Google Cloud projektben generált kulcs vesszővel
+    // elválasztva (`GEMINI_API_KEYS`) — a Gemini ingyenes napi kvótája
+    // projektenkénti, nem kulcsonkénti, ezért csak külön projektben
+    // generált kulcsok adnak ténylegesen független kvótát (ld.
+    // GeminiOcrClient.php fejléc-komment). Ha `GEMINI_API_KEYS` nincs
+    // beállítva, visszaesik az egyetlen `GEMINI_API_KEY`-re.
+    "geminiApiKeys" => array_values(array_filter(array_map('trim', explode(
+        ',',
+        envOrDefault('GEMINI_API_KEYS', envOrDefault('GEMINI_API_KEY', ''))
+    )))),
     // Külső rendszerek (NAV Online Számla, GPSmart flottakövetés) valódi
     // jelszavát/kulcsait ez titkosítja (openssl_encrypt, AES-256-CBC) —
     // ezek valódi külső fiókokhoz adnak hozzáférést, ezért nem nyílt

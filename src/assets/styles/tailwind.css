@@ -1680,6 +1680,10 @@ h1,
   width: 10rem;
 }
 
+.w-44 {
+  width: 11rem;
+}
+
 .w-48 {
   width: 12rem;
 }
@@ -1798,6 +1802,10 @@ h1,
 
 .min-w-\[80px\] {
   min-width: 80px;
+}
+
+.min-w-\[900px\] {
+  min-width: 900px;
 }
 
 .max-w-150-px {
