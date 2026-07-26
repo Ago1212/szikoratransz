@@ -217,6 +217,78 @@ const mobileGroups = [
   },
 ];
 
+// A desktop sidebar "napi zóna" (a görgethető nav-lista fölötti, mindig
+// látható gyorselérési sáv) testreszabható: a felhasználó eldöntheti, mely
+// menüpontok kerüljenek bele és milyen sorrendben (ld. docs/superpowers/specs/
+// 2026-07-26-sidebar-napi-zona-testreszabas-design.md). A `PIN_REGISTRY` a
+// meglévő `mobileGroups`-ból származik (minden valódi link-elemét átveszi,
+// dividerek/action-ök nélkül), plusz 2, jelenleg csak desktopon élő elem
+// (Főmenü, Devizák) kézzel hozzáfűzve — tudatosan egy harmadik, kézzel
+// karbantartott nav-forrás, ugyanaz az elfogadott drift-kockázat, mint a
+// mobil/desktop nav-taxonómia meglévő kettőssége (ld. a fájl korábbi
+// megjegyzéseit).
+const EXTRA_PINNABLE_ITEMS = [
+  {
+    to: "/admin/dashboard",
+    icon: PiSquaresFourLight,
+    text: "Főmenü",
+    group: "Áttekintés",
+  },
+  {
+    to: "/admin/devizak",
+    icon: PiCoinsLight,
+    text: "Devizák",
+    group: "Pénzügyek",
+    adminOnly: true,
+  },
+];
+
+// A mobil "Csapat" fül a Partnereket (Ügyfelek/Helyszínek) egy divider mögé
+// rejti a saját fülébe, és a Pénzforgalom a mobil "Flotta" fülben él — a
+// desktop taxonómia viszont ezeket külön ("Partnerek", "Pénzügyek")
+// csoportba sorolja. Ez a két felülírás igazítja a napi zóna szerkesztő
+// kategória-címkéit a desktop hierarchiához, hogy ne egy mobil-only
+// csoportosítás látszódjon a picker-ben.
+const GROUP_LABEL_OVERRIDES = {
+  "/admin/koltsegek": "Pénzügyek",
+};
+
+function buildPinRegistry() {
+  const fromGroups = mobileGroups.flatMap((group) => {
+    let currentLabel = group.label;
+    return group.items
+      .map((item) => {
+        if (item.type === "divider") {
+          currentLabel = item.label;
+          return null;
+        }
+        if (!item.to) return null;
+        return {
+          ...item,
+          group: GROUP_LABEL_OVERRIDES[item.to] || currentLabel,
+        };
+      })
+      .filter(Boolean);
+  });
+  return [...EXTRA_PINNABLE_ITEMS, ...fromGroups];
+}
+// eslint-disable-next-line no-unused-vars
+const PIN_REGISTRY = buildPinRegistry();
+
+// Alapértelmezett napi zóna — a jelenlegi, korábban kódban rögzített 6 elem,
+// jelenlegi sorrendben. Ez biztosítja, hogy a testreszabás bevezetése
+// meglévő felhasználóknak ne változtasson semmit, amíg meg nem nyitják a
+// szerkesztőt.
+// eslint-disable-next-line no-unused-vars
+const DEFAULT_PIN_PATHS = [
+  "/admin/dashboard",
+  "/admin/karbantartasok",
+  "/admin/bejelentesek",
+  "/admin/koltsegek",
+  "/admin/flottakovetes",
+  "/admin/tachograf",
+];
+
 const TIPUS_LABEL = {
   kamion: "kamiont",
   potkocsi: "pótkocsit",
