@@ -30,3 +30,6 @@ commit.sh
 
 # Playwright MCP tool scratch output (screenshots/traces from browser-driven verification)
 .playwright-mcp/
+
+# Subagent-driven-development scratch workspace (ledgers, briefs, review packages)
+.superpowers/
