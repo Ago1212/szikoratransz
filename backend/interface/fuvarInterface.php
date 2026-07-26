@@ -822,6 +822,167 @@ class FuvarInterface {
             'szamlazasraVar' => $szamlazasraVar,
         ];
     }
+
+    const TREND_GRANULARITAS = ['nap', 'het', 'honap'];
+
+    // Sofőrönkénti fuvar/dokumentum-linkeltség + trend, egyetlen szűrt
+    // SELECT-ből, PHP-oldali aggregációval (ld. getStatisztikak() ugyanezen
+    // mintája) — a "dokumentált"/"hiányzó" a fuvarok.beerkezett_dokumentum_id
+    // oszlopra épül (a Fuvarok/Beérkezett dokumentumok UX-redesign vezette
+    // be), NEM a beerkezett_dokumentumok.feltolto_id-ra (ami a feltöltőt,
+    // nem a fuvart végző sofőrt jelentené — ld. a design spec 2. pontja).
+    public function getSoforDashboard(
+        $ceg_id,
+        $datumTol = null,
+        $datumIg = null,
+        $soforId = null,
+        $fuvarAllapot = null,
+        $dokumentumSzuro = null,
+        $granularitas = null
+    ) {
+        $params = [':admin' => $ceg_id];
+        $query = "SELECT id, sofor_id, teljesites_datuma, allapot, beerkezett_dokumentum_id,
+                         fuvardij, egyeb_koltseg
+                  FROM fuvarok WHERE admin = :admin AND torolt <> 'I'";
+
+        if (!empty($datumTol)) {
+            $query .= " AND teljesites_datuma >= :datum_tol";
+            $params[':datum_tol'] = $datumTol;
+        }
+        if (!empty($datumIg)) {
+            $query .= " AND teljesites_datuma <= :datum_ig";
+            $params[':datum_ig'] = $datumIg;
+        }
+        if (!empty($soforId)) {
+            $query .= " AND sofor_id = :sofor_id";
+            $params[':sofor_id'] = $soforId;
+        }
+        if (!empty($fuvarAllapot)) {
+            $query .= " AND allapot = :allapot";
+            $params[':allapot'] = $fuvarAllapot;
+        }
+        if ($dokumentumSzuro === 'van') {
+            $query .= " AND beerkezett_dokumentum_id IS NOT NULL";
+        } elseif ($dokumentumSzuro === 'nincs') {
+            $query .= " AND beerkezett_dokumentum_id IS NULL";
+        }
+
+        $stmt = $this->db->prepare($query);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        $stmt->execute();
+        $fuvarok = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($fuvarok as &$f) {
+            $f['osszesen'] = (float) $f['fuvardij'] + (float) ($f['egyeb_koltseg'] ?? 0);
+        }
+        unset($f);
+
+        $soforNevek = $this->batchLekerdezes('user', 'name', array_column($fuvarok, 'sofor_id'), $ceg_id);
+
+        // 1. Sofőrönkénti bontás
+        $soforStat = [];
+        $nemHozzarendeltSzama = 0;
+        foreach ($fuvarok as $f) {
+            if (empty($f['sofor_id'])) {
+                $nemHozzarendeltSzama++;
+                continue;
+            }
+            $sid = $f['sofor_id'];
+            if (!isset($soforStat[$sid])) {
+                $soforStat[$sid] = [
+                    'sofor_id' => (int) $sid,
+                    'nev' => $soforNevek[$sid] ?? 'Ismeretlen',
+                    'fuvarokSzama' => 0,
+                    'dokumentaltSzama' => 0,
+                    'bevetelOsszesen' => 0.0,
+                    'utolsoFuvarDatuma' => null,
+                ];
+            }
+            $soforStat[$sid]['fuvarokSzama']++;
+            if (!empty($f['beerkezett_dokumentum_id'])) {
+                $soforStat[$sid]['dokumentaltSzama']++;
+            }
+            $soforStat[$sid]['bevetelOsszesen'] += $f['osszesen'];
+            if (
+                !empty($f['teljesites_datuma'])
+                && ($soforStat[$sid]['utolsoFuvarDatuma'] === null || $f['teljesites_datuma'] > $soforStat[$sid]['utolsoFuvarDatuma'])
+            ) {
+                $soforStat[$sid]['utolsoFuvarDatuma'] = $f['teljesites_datuma'];
+            }
+        }
+        foreach ($soforStat as &$s) {
+            $s['hianyzoSzama'] = $s['fuvarokSzama'] - $s['dokumentaltSzama'];
+            $s['bevetelOsszesen'] = round($s['bevetelOsszesen'], 2);
+        }
+        unset($s);
+        $soforStat = array_values($soforStat);
+        usort($soforStat, fn($a, $b) => $b['fuvarokSzama'] <=> $a['fuvarokSzama']);
+
+        // 2. Összesítő
+        $aktivSoforokSzama = count($soforStat);
+        $hozzarendeltFuvarSzama = count($fuvarok) - $nemHozzarendeltSzama;
+        $hianyzoDokumentumSzama = 0;
+        foreach ($fuvarok as $f) {
+            if (empty($f['beerkezett_dokumentum_id'])) {
+                $hianyzoDokumentumSzama++;
+            }
+        }
+        $osszesito = [
+            'osszesFuvar' => count($fuvarok),
+            'aktivSoforokSzama' => $aktivSoforokSzama,
+            'hianyzoDokumentumSzama' => $hianyzoDokumentumSzama,
+            'atlagFuvarSoforonkent' => $aktivSoforokSzama > 0 ? round($hozzarendeltFuvarSzama / $aktivSoforokSzama, 1) : 0,
+            'nemHozzarendeltFuvarSzama' => $nemHozzarendeltSzama,
+        ];
+
+        // 3. Állapot-megoszlás
+        $allapotMegoszlas = ['rogzitett' => 0, 'szamlazasra_var' => 0, 'szamlazva' => 0, 'fizetesre_var' => 0, 'teljesitve' => 0];
+        foreach ($fuvarok as $f) {
+            if (isset($allapotMegoszlas[$f['allapot']])) {
+                $allapotMegoszlas[$f['allapot']]++;
+            }
+        }
+
+        // 4. Trend — granularitás: explicit paraméter, vagy a dátumtartomány
+        // hossza alapján automatikus választás (≤31 nap: nap, ≤180 nap: hét,
+        // egyébként hónap) — ugyanazt a küszöböt a frontend is használja az
+        // alapértelmezett gomb-kiválasztáshoz.
+        if (!in_array($granularitas, self::TREND_GRANULARITAS, true)) {
+            $napokSzama = (!empty($datumTol) && !empty($datumIg))
+                ? (strtotime($datumIg) - strtotime($datumTol)) / 86400
+                : 9999;
+            $granularitas = $napokSzama <= 31 ? 'nap' : ($napokSzama <= 180 ? 'het' : 'honap');
+        }
+        $trendBucket = [];
+        foreach ($fuvarok as $f) {
+            if (empty($f['teljesites_datuma'])) {
+                continue;
+            }
+            if ($granularitas === 'nap') {
+                $kulcs = $f['teljesites_datuma'];
+            } elseif ($granularitas === 'het') {
+                $kulcs = date('o-\WW', strtotime($f['teljesites_datuma']));
+            } else {
+                $kulcs = substr($f['teljesites_datuma'], 0, 7);
+            }
+            $trendBucket[$kulcs] = ($trendBucket[$kulcs] ?? 0) + 1;
+        }
+        ksort($trendBucket);
+        $trend = [];
+        foreach ($trendBucket as $periodus => $szam) {
+            $trend[] = ['periodus' => $periodus, 'fuvarokSzama' => $szam];
+        }
+
+        return [
+            'success' => true,
+            'osszesito' => $osszesito,
+            'soforonkent' => $soforStat,
+            'allapotMegoszlas' => $allapotMegoszlas,
+            'trend' => $trend,
+            'granularitas' => $granularitas,
+        ];
+    }
 }
 
 $fuvarInterface = new FuvarInterface();
