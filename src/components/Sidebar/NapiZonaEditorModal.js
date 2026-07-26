@@ -45,11 +45,15 @@ export default function NapiZonaEditorModal({
 
   const atLimit = pinnedItems.length >= maxItems;
 
-  const move = (index, direction) => {
-    const target = index + direction;
-    if (target < 0 || target >= pinnedPaths.length) return;
+  const move = (visibleIndex, direction) => {
+    const targetVisibleIndex = visibleIndex + direction;
+    if (targetVisibleIndex < 0 || targetVisibleIndex >= pinnedItems.length) return;
+    const fromTo = pinnedItems[visibleIndex].to;
+    const toTo = pinnedItems[targetVisibleIndex].to;
+    const fromIndex = pinnedPaths.indexOf(fromTo);
+    const toIndex = pinnedPaths.indexOf(toTo);
     const next = [...pinnedPaths];
-    [next[index], next[target]] = [next[target], next[index]];
+    [next[fromIndex], next[toIndex]] = [next[toIndex], next[fromIndex]];
     onChange(next);
   };
 

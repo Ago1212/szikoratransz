@@ -272,14 +272,12 @@ function buildPinRegistry() {
   });
   return [...EXTRA_PINNABLE_ITEMS, ...fromGroups];
 }
-// eslint-disable-next-line no-unused-vars
 const PIN_REGISTRY = buildPinRegistry();
 
 // Alapértelmezett napi zóna — a jelenlegi, korábban kódban rögzített 6 elem,
 // jelenlegi sorrendben. Ez biztosítja, hogy a testreszabás bevezetése
 // meglévő felhasználóknak ne változtasson semmit, amíg meg nem nyitják a
 // szerkesztőt.
-// eslint-disable-next-line no-unused-vars
 const DEFAULT_PIN_PATHS = [
   "/admin/dashboard",
   "/admin/karbantartasok",
