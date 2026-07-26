@@ -67,6 +67,7 @@ const CardTable = ({ furgonok = [], loading, total, page, pageSize, onPageChange
     { key: "rendszam", label: "Rendszám" },
     { key: "tipus", label: "Típus" },
     { key: "meret", label: "Méret" },
+    { key: "teherbiras", label: "Teherbírás (t)" },
     { key: "allapot", label: "Állapot" },
     { key: "aktualis_km", label: "Km óraállás" },
     { key: "muszaki_lejarat", label: "Műszaki vizsga lejárata" },

@@ -12,6 +12,7 @@ import {
   PiGaugeLight,
   PiMapPinLight,
   PiRulerLight,
+  PiScalesLight,
 } from "react-icons/pi";
 import FormField, { FormSection } from "components/UI/FormField.js";
 import LejaratTag from "components/UI/LejaratTag.js";
@@ -241,6 +242,15 @@ const CardPotkocsiAdatokForm = ({ potkocsi, setFormData, handleSave }) => {
             </option>
           ))}
         </FormField>
+        <FormField
+          type="number"
+          step="0.1"
+          icon={PiScalesLight}
+          label="Teherbírás (t)"
+          id="teherbiras"
+          value={potkocsi.teherbiras || ""}
+          onChange={handleFormChange}
+        />
         <FormField
           as="select"
           icon={PiMapPinLight}

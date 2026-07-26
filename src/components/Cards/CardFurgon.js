@@ -23,6 +23,7 @@ export default function CardFurgon({ initialFurgon }) {
     id: furgon.id || null,
     rendszam: furgon.rendszam || null,
     meret: furgon.meret || null,
+    teherbiras: furgon.teherbiras || null,
     tipus: furgon.tipus || null,
     allapot: furgon.allapot || "szabad",
     aktualis_km: furgon.aktualis_km || null,

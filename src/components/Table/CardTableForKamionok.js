@@ -69,6 +69,7 @@ const CardTable = ({ kamionok = [], loading, total, page, pageSize, onPageChange
     { key: "tipus", label: "Típus" },
     { key: "meret", label: "Méret" },
     { key: "potkocsi_rendszam", label: "Pótkocsi" },
+    { key: "teherbiras", label: "Teherbírás (t)" },
     { key: "allapot", label: "Állapot" },
     { key: "aktualis_km", label: "Km óraállás" },
     { key: "muszaki_lejarat", label: "Műszaki vizsga lejárata" },
