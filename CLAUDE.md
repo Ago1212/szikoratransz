@@ -614,13 +614,16 @@ Két, egymásra épülő kiegészítés a NAV Online Számla importhoz és a Pé
 A desktop sidebar (`src/components/Sidebar/Sidebar.js`) tetején élő, mindig
 látható "napi zóna" mostantól felhasználónként testreszabható — korábban 6,
 kódban rögzített menüpontot mutatott. `PIN_REGISTRY` (a fájl teteje, a
-meglévő `mobileGroups`-ból származtatva, plusz 2 kézzel hozzáfűzött elem —
-Főmenü, Devizák) katalogizálja az összes kitűzhető menüpontot; a kitűzött
+meglévő `mobileGroups`-ból származtatva, plusz 1 kézzel hozzáfűzött elem —
+Főmenü) katalogizálja az összes kitűzhető menüpontot; a kitűzött
 elemek sorrendje `localStorage`-ban, `sidebar-pins-${user.id}` kulcs alatt
 perzisztál, ugyanúgy mint a meglévő `openGroups` csoport-nyitottság. Max 8
 elem tűzhető ki. Az `src/components/Sidebar/NapiZonaEditorModal.js` adja a
 pip/nyíl-alapú szerkesztő felületet (`Modal.js`-re épülve), a napi zóna doboz
-jobb felső sarkában lévő ceruza-ikonról nyitva. Kitűzés nem távolítja el az
+jobb felső sarkában lévő ceruza-ikonról nyitva. A Devizák a `mobileGroups`-ban
+már létező bejegyzésként a `GROUP_LABEL_OVERRIDES` segítségével kerül át a
+"Rendszer" csoportból a "Pénzügyek" kategória alá, nem egy duplikált
+EXTRA_PINNABLE_ITEMS bejegyzésként. Kitűzés nem távolítja el az
 elemet az eredeti csoportjából — másodpéldány, nem áthelyezés, ugyanaz az elv,
 mint a Pénzforgalom napi zóna + Pénzügyek csoport kettősségénél. Csak a
 desktop sidebart érinti, a mobil alsó navigáció változatlan.
