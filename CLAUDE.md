@@ -657,6 +657,29 @@ alacsonyabb vizuális súlyú, egysoros összegzésre zsugorodott (darabszám +
 egykezes-elérés indoka továbbra is érvényes, ez a változtatás kizárólag a
 Kezdőlap belső elrendezésére korlátozódik.
 
+## Fuvar OCR-bővítés: távolság (km) + tömeg (kg) (2026-07-26)
+
+A `GeminiOcrClient::buildPrompt()` JSON-sémája két numerikus mezővel bővült:
+`tavolsag_km` és `tomeg_kg` (a fuvarlevél/szállítólevél alján gyakran
+szereplő adatok) — a modell explicit utasítást kap, hogy mértékegység
+nélküli, tiszta számot adjon vissza, és tonnában megadott tömeget kg-ra
+váltson (1 t = 1000 kg). `fuvarok` kapott egy `tomeg_kg DECIMAL(8,2) NULL`
+oszlopot (`backend/sql/41.sql`, `tavolsag_km` mellé) — a távolság oszlop már
+korábban is létezett kézi mezőként, csak az OCR nem töltötte ki soha.
+`FuvarInterface::letrehozDokumentumbol()` mostantól mindkét mezőt átveszi az
+`ocr_adatok`-ból az új fuvar létrehozásakor; `FuvarForm.js` "Útvonal"
+szekciója kapott egy "Tömeg (kg)" mezőt a "Távolság (km)" mellé, és mindkettő
+előtöltődik az OCR-előnézetből (`ocrAdatokToForm()`). A `suly` OCR-mező
+(korábban a sémában szerepelt, de sosem volt hozzá tábla-oszlop/mapping)
+ezzel a menettel lett ténylegesen kiváltva a `tomeg_kg`-vel — maga a `suly`
+mező a sémában maradt, de továbbra sincs hozzá felhasználás, nem lett
+eltávolítva (alacsony kockázatú holt mező, nem ez volt a kör tárgya).
+Élőben tesztelve: `FuvarInterface::letrehozDokumentumbol()` közvetlen PHP
+CLI-hívással (kézzel beszúrt `ocr_adatok` JSON-nal, valódi Gemini-hívás
+nélkül, a kvóta-kockázat elkerülésére), majd a teljes UI-útvonalon
+Playwright-tal (`/admin/fuvarForm` → mentés → `fuvarok` tábla ellenőrzése) —
+mindkét mező helyesen mentődött, a teszt-sor/session utána törölve.
+
 ## Workflow notes for Claude Code
 
 - For any UI/frontend change, verify it by actually running it (`npm start` and/or `php8.2 -S localhost:8001` as needed, opening it in a browser, screenshotting/clicking through the changed flow) before reporting the task done — don't rely on code review or lint alone.

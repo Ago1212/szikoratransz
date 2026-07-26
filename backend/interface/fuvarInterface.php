@@ -65,8 +65,8 @@ class FuvarInterface {
             return ['success' => false, 'message' => $hiba];
         }
         try {
-            $query = "INSERT INTO fuvarok (admin, sofor_id, kamion_id, furgon_id, potkocsi_id, teljesites_datuma, felrako, lerako, tavolsag_km, megbizo_id, aru_megnevezese, megjegyzes, fuvardij, egyeb_koltseg, fuvarlevel_szam, beerkezett_dokumentum_id, allapot)
-                      VALUES (:admin, :sofor_id, :kamion_id, :furgon_id, :potkocsi_id, :teljesites_datuma, :felrako, :lerako, :tavolsag_km, :megbizo_id, :aru_megnevezese, :megjegyzes, :fuvardij, :egyeb_koltseg, :fuvarlevel_szam, :beerkezett_dokumentum_id, :allapot)";
+            $query = "INSERT INTO fuvarok (admin, sofor_id, kamion_id, furgon_id, potkocsi_id, teljesites_datuma, felrako, lerako, tavolsag_km, tomeg_kg, megbizo_id, aru_megnevezese, megjegyzes, fuvardij, egyeb_koltseg, fuvarlevel_szam, beerkezett_dokumentum_id, allapot)
+                      VALUES (:admin, :sofor_id, :kamion_id, :furgon_id, :potkocsi_id, :teljesites_datuma, :felrako, :lerako, :tavolsag_km, :tomeg_kg, :megbizo_id, :aru_megnevezese, :megjegyzes, :fuvardij, :egyeb_koltseg, :fuvarlevel_szam, :beerkezett_dokumentum_id, :allapot)";
             $stmt = $this->db->prepare($query);
             $this->bindFuvarMezok($stmt, $data, $ceg_id);
             $stmt->execute();
@@ -87,6 +87,7 @@ class FuvarInterface {
             $query = "UPDATE fuvarok SET
                         sofor_id = :sofor_id, kamion_id = :kamion_id, furgon_id = :furgon_id, potkocsi_id = :potkocsi_id,
                         teljesites_datuma = :teljesites_datuma, felrako = :felrako, lerako = :lerako, tavolsag_km = :tavolsag_km,
+                        tomeg_kg = :tomeg_kg,
                         megbizo_id = :megbizo_id, aru_megnevezese = :aru_megnevezese, megjegyzes = :megjegyzes,
                         fuvardij = :fuvardij, egyeb_koltseg = :egyeb_koltseg, fuvarlevel_szam = :fuvarlevel_szam,
                         beerkezett_dokumentum_id = :beerkezett_dokumentum_id, allapot = :allapot
@@ -112,6 +113,7 @@ class FuvarInterface {
         $stmt->bindValue(':felrako', $data['felrako'] ?? null);
         $stmt->bindValue(':lerako', $data['lerako'] ?? null);
         $stmt->bindValue(':tavolsag_km', empty($data['tavolsag_km']) ? null : (int) $data['tavolsag_km'], empty($data['tavolsag_km']) ? PDO::PARAM_NULL : PDO::PARAM_INT);
+        $stmt->bindValue(':tomeg_kg', empty($data['tomeg_kg']) ? null : (float) $data['tomeg_kg']);
         $stmt->bindValue(':megbizo_id', $data['megbizo_id'] ?? null);
         $stmt->bindValue(':aru_megnevezese', $data['aru_megnevezese'] ?? null);
         $stmt->bindValue(':megjegyzes', $data['megjegyzes'] ?? null);
@@ -440,6 +442,8 @@ class FuvarInterface {
             'teljesites_datuma' => $ocrAdatok['datum'] ?? null,
             'felrako' => $ocrAdatok['felrako'] ?? null,
             'lerako' => $ocrAdatok['lerako'] ?? null,
+            'tavolsag_km' => $ocrAdatok['tavolsag_km'] ?? null,
+            'tomeg_kg' => $ocrAdatok['tomeg_kg'] ?? null,
             'megbizo_id' => $megbizoId,
             'aru_megnevezese' => $ocrAdatok['aru_megnevezese'] ?? null,
             'megjegyzes' => $ocrAdatok['egyeb_megjegyzes'] ?? null,

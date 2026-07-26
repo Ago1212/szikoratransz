@@ -135,6 +135,8 @@ pontosan ezzel a sémával:
   "megbizo": string | null,
   "aru_megnevezese": string | null,
   "suly": string | null,
+  "tavolsag_km": number | null,
+  "tomeg_kg": number | null,
   "fuvarlevel_szam": string | null,
   "egyeb_megjegyzes": string | null
 }
@@ -156,6 +158,12 @@ Szabályok:
   jellemzően egy "Fuvaroztató neve, címe" vagy hasonló feliratú mezőben található
   (ez NEM a fuvarozó, hanem az ügyfél, aki a fuvart megrendelte), szállítólevélen
   a "Vevő" mező.
+- A dokumentum alján gyakran szerepel a fuvar távolsága (km) és a szállítmány
+  tömege - mindkettő TISZTÁN NUMERIKUS értékként adandó vissza, mértékegység
+  nélkül (pl. "tavolsag_km": 450, ne "450 km"). Ha a tömeg tonnában (t) van
+  megadva, számítsd át kg-ra (1 t = 1000 kg) - a "tomeg_kg" mező mindig
+  kilogrammban értendő. Ha bármelyik nem olvasható vagy nem szerepel a
+  dokumentumon, írj null-t.
 PROMPT;
     }
 }
