@@ -14,20 +14,12 @@ import {
   PiFilePdfLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
-import StatusBadge from "components/UI/StatusBadge.js";
 import Spinner from "components/UI/Spinner.js";
 import {
   DOCUMENT_FIELDS,
   getDocumentStatus,
   daysUntil,
 } from "utils/documentStatus.js";
-
-const STATUSZ_TONE = { uj: "warning", folyamatban: "info", lezart: "success" };
-const STATUSZ_LABEL = {
-  uj: "Új",
-  folyamatban: "Folyamatban",
-  lezart: "Lezárva",
-};
 
 // A "Bejelentés" csempe szándékosan NINCS itt — a BottomNav középső,
 // mindig piros FAB-ja már ugyanoda vezet, egy második, azonos célú
