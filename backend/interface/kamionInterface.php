@@ -103,6 +103,7 @@ class KamionInterface {
                       SET rendszam = :rendszam,
                           potkocsi = :potkocsi,
                           meret = :meret,
+                          teherbiras = :teherbiras,
                           tipus = :tipus,
                           allapot = :allapot,
                           aktualis_km = :aktualis_km,
@@ -130,6 +131,7 @@ class KamionInterface {
             $stmt->bindValue(':potkocsi', empty($data['potkocsi']) ? null : $data['potkocsi']);
             $stmt->bindParam(':tipus', $data['tipus'], PDO::PARAM_STR);
             $stmt->bindParam(':meret', $data['meret'], PDO::PARAM_STR);
+            $stmt->bindValue(':teherbiras', empty($data['teherbiras']) ? null : (float) $data['teherbiras']);
             $stmt->bindValue(':allapot', empty($data['allapot']) ? 'szabad' : $data['allapot']);
             $stmt->bindValue(':aktualis_km', empty($data['aktualis_km']) ? null : $data['aktualis_km']);
             $stmt->bindParam(':muszaki_lejarat', $data['muszaki_lejarat'], PDO::PARAM_STR);
@@ -171,8 +173,8 @@ class KamionInterface {
             // értékek egymás oszlopába kerültek volna beszúráskor. Most a
             // két lista sorrendje megegyezik.)
             $query = "INSERT INTO kamion
-                      (admin, rendszam, potkocsi, meret, tipus, allapot, aktualis_km, muszaki_lejarat, adr_lejarat, taograf_illesztes, emelohatfal_vizsga, porolto_lejarat, porolto_lejarat_2, kot_biztositas, kot_biz_nev, kot_biz_dij, kot_biz_utem, kaszko_biztositas, kaszko_nev, kaszko_dij, kaszko_fizetesi_utem)
-                      VALUES (:admin, :rendszam, :potkocsi, :meret, :tipus, :allapot, :aktualis_km, :muszaki_lejarat, :adr_lejarat, :taograf_illesztes, :emelohatfal_vizsga, :porolto_lejarat, :porolto_lejarat_2, :kot_biztositas, :kot_biz_nev, :kot_biz_dij, :kot_biz_utem, :kaszko_biztositas, :kaszko_nev, :kaszko_dij, :kaszko_fizetesi_utem)";
+                      (admin, rendszam, potkocsi, meret, teherbiras, tipus, allapot, aktualis_km, muszaki_lejarat, adr_lejarat, taograf_illesztes, emelohatfal_vizsga, porolto_lejarat, porolto_lejarat_2, kot_biztositas, kot_biz_nev, kot_biz_dij, kot_biz_utem, kaszko_biztositas, kaszko_nev, kaszko_dij, kaszko_fizetesi_utem)
+                      VALUES (:admin, :rendszam, :potkocsi, :meret, :teherbiras, :tipus, :allapot, :aktualis_km, :muszaki_lejarat, :adr_lejarat, :taograf_illesztes, :emelohatfal_vizsga, :porolto_lejarat, :porolto_lejarat_2, :kot_biztositas, :kot_biz_nev, :kot_biz_dij, :kot_biz_utem, :kaszko_biztositas, :kaszko_nev, :kaszko_dij, :kaszko_fizetesi_utem)";
 
             $stmt = $this->db->prepare($query);
 
@@ -182,6 +184,7 @@ class KamionInterface {
             $stmt->bindValue(':potkocsi', empty($data['potkocsi']) ? null : $data['potkocsi']);
             $stmt->bindParam(':tipus', $data['tipus'], PDO::PARAM_STR);
             $stmt->bindParam(':meret', $data['meret'], PDO::PARAM_STR);
+            $stmt->bindValue(':teherbiras', empty($data['teherbiras']) ? null : (float) $data['teherbiras']);
             $stmt->bindValue(':allapot', empty($data['allapot']) ? 'szabad' : $data['allapot']);
             $stmt->bindValue(':aktualis_km', empty($data['aktualis_km']) ? null : $data['aktualis_km']);
             $stmt->bindParam(':muszaki_lejarat', $data['muszaki_lejarat'], PDO::PARAM_STR);
