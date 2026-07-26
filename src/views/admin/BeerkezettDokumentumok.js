@@ -25,6 +25,14 @@ export default function BeerkezettDokumentumok() {
   const [tipusSzuro, setTipusSzuro] = useState("");
   const [archivumOldal, setArchivumOldal] = useState(1);
   const [archivumTotal, setArchivumTotal] = useState(0);
+  const [soforok, setSoforok] = useState([]);
+
+  useEffect(() => {
+    fetchAction("getSoforok", { id: user.ceg_id, kerelmezo_id: user.id }).then((result) => {
+      if (result?.success) setSoforok(result.soforok || []);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -116,10 +124,18 @@ export default function BeerkezettDokumentumok() {
   // a fő rendezési szempont, hanem a sofőr.
   const csoportok = {};
   dokumentumok.forEach((d) => {
-    const kulcs = d.feltolto_tipus === "sofor" && d.feltolto_id ? `sofor:${d.feltolto_id}` : "nincs";
+    const kulcs = d.hozzarendelt_sofor_id
+      ? `sofor:${d.hozzarendelt_sofor_id}`
+      : d.feltolto_tipus === "sofor" && d.feltolto_id
+        ? `sofor:${d.feltolto_id}`
+        : "nincs";
     if (!csoportok[kulcs]) {
       csoportok[kulcs] = {
-        nev: d.feltolto_tipus === "sofor" && d.feltolto_id ? d.feltolto_nev || "Ismeretlen sofőr" : "Nincs sofőrhöz rendelve",
+        nev: d.hozzarendelt_sofor_id
+          ? d.hozzarendelt_sofor_nev || "Ismeretlen sofőr"
+          : d.feltolto_tipus === "sofor" && d.feltolto_id
+            ? d.feltolto_nev || "Ismeretlen sofőr"
+            : "Nincs sofőrhöz rendelve",
         dokumentumok: [],
       };
     }
@@ -260,9 +276,11 @@ export default function BeerkezettDokumentumok() {
 
       <DokumentumReviewPanel
         dokumentum={reviewDokumentum}
+        soforok={soforok}
         onClose={() => setReviewDokumentum(null)}
         onDiscarded={handleDiscarded}
         onCreateFuvar={handleCreateFuvar}
+        onSoforAssigned={load}
       />
     </>
   );

@@ -39,11 +39,12 @@ function ElonezetKep({ dataUrl, mime, loading, filename }) {
   );
 }
 
-export default function DokumentumReviewPanel({ dokumentum, onClose, onDiscarded, onCreateFuvar }) {
+export default function DokumentumReviewPanel({ dokumentum, soforok = [], onClose, onDiscarded, onCreateFuvar, onSoforAssigned }) {
   const [loading, setLoading] = useState(true);
   const [dataUrl, setDataUrl] = useState(null);
   const [mime, setMime] = useState(null);
   const [tipus, setTipus] = useState(dokumentum?.tipus || "ismeretlen");
+  const [soforId, setSoforId] = useState(dokumentum?.hozzarendelt_sofor_id || "");
   const [discarding, setDiscarding] = useState(false);
   const isMobile = useMediaQuery({ maxWidth: 1023 });
   const ocr = dokumentum?.ocr_adatok || {};
@@ -51,6 +52,7 @@ export default function DokumentumReviewPanel({ dokumentum, onClose, onDiscarded
   useEffect(() => {
     if (!dokumentum) return;
     setTipus(dokumentum.tipus);
+    setSoforId(dokumentum.hozzarendelt_sofor_id || "");
     setLoading(true);
     setDataUrl(null);
     fetchAction("downloadFile", { id: dokumentum.fajl_id }).then((result) => {
@@ -84,6 +86,22 @@ export default function DokumentumReviewPanel({ dokumentum, onClose, onDiscarded
     if (!result?.success) {
       toast.error(result?.message || "A típus módosítása sikertelen.");
       setTipus(dokumentum.tipus);
+    }
+  };
+
+  const handleSoforChange = async (ujSoforId) => {
+    setSoforId(ujSoforId);
+    const user = JSON.parse(localStorage.getItem("user"));
+    const result = await fetchAction("updateBeerkezettDokumentumSofor", {
+      ceg_id: user.ceg_id,
+      id: dokumentum.id,
+      soforId: ujSoforId || undefined,
+    });
+    if (result?.success) {
+      onSoforAssigned?.();
+    } else {
+      toast.error(result?.message || "A sofőr hozzárendelése sikertelen.");
+      setSoforId(dokumentum.hozzarendelt_sofor_id || "");
     }
   };
 
@@ -123,6 +141,27 @@ export default function DokumentumReviewPanel({ dokumentum, onClose, onDiscarded
               </option>
             ))}
           </select>
+        </label>
+
+        <label className="block text-xs font-semibold uppercase tracking-wide text-ink-400">
+          Sofőr
+          <select
+            value={soforId}
+            onChange={(e) => handleSoforChange(e.target.value)}
+            className="mt-1 block w-full rounded-lg border border-ink-200 bg-white px-2 py-1.5 text-sm normal-case tracking-normal text-ink-700 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-200"
+          >
+            <option value="">Nincs hozzárendelve</option>
+            {soforok.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+          {ocr.sofor_neve && (
+            <span className="mt-1 block text-[11px] font-normal normal-case text-ink-400">
+              OCR szerint: {ocr.sofor_neve}
+            </span>
+          )}
         </label>
 
         <dl className="space-y-1 text-sm text-ink-700 dark:text-ink-200">
