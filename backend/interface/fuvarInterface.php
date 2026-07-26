@@ -392,6 +392,23 @@ class FuvarInterface {
         return $terkep;
     }
 
+    // Egy adott naptári hónap munkanapjainak száma (hétvégék levonva,
+    // ünnepnap-lista nélkül — ugyanaz az egyszerűsítés, mint a bér-
+    // arányosítási döntésnél). Kizárólag az `atlagNapiProfit` osztójaként
+    // használt — a kiadás-számítás maga nem prorat, ld. getStatisztikak()
+    // komment.
+    private function munkanapokHonapban($honapKulcs) {
+        $napokSzama = (int) (new DateTime("$honapKulcs-01"))->format('t');
+        $munkanapok = 0;
+        for ($nap = 1; $nap <= $napokSzama; $nap++) {
+            $datum = new DateTime($honapKulcs . '-' . str_pad($nap, 2, '0', STR_PAD_LEFT));
+            if ((int) $datum->format('N') < 6) {
+                $munkanapok++;
+            }
+        }
+        return $munkanapok;
+    }
+
     // A `$felulirasok` a review-formon az admin által esetlegesen módosított
     // mezőket tartalmazza (ugyanolyan alakban, mint `newFuvar()` `$data`
     // paramétere) — ahol egy kulcs szerepel benne, az felülírja az OCR-ből
@@ -720,6 +737,46 @@ class FuvarInterface {
         ksort($havi);
         $havi = array_values(array_slice($havi, -12, 12, true));
 
+        // Fuvarozási profit — a Fuvarok saját bevétele (fuvardij+egyeb_
+        // koltseg) mínusz a flotta-szintű üzemanyag+útdíj+bér kiadás,
+        // havi bontásban. Ez EGY ÖNÁLLÓ, csak-a-fuvarozásból nézet — a
+        // Fuvar-bevétel sosem folyik be a Pénzforgalom fő `egyeb_koltsegek`
+        // bevétel-táblájába, tehát ez a szám NEM egyezik a Pénzforgalom
+        // fő "Nettó eredmény"-ével (ld. design spec "Nem célok").
+        global $koltsegInterface;
+        $elsoHonap = $havi[0]['honap'] ?? null;
+        $utolsoHonapKulcs = $havi[count($havi) - 1]['honap'] ?? null;
+        if ($elsoHonap && $utolsoHonapKulcs) {
+            $koltsegDatumTol = $elsoHonap . '-01';
+            $koltsegDatumIg = date('Y-m-t', strtotime($utolsoHonapKulcs . '-01'));
+            $uzemanyagKiadasHavonta = $koltsegInterface->getUzemanyagKiadasHavonta($ceg_id, $koltsegDatumTol, $koltsegDatumIg);
+            $utdijKiadasHavonta = $koltsegInterface->getUtdijKiadasHavonta($ceg_id, $koltsegDatumTol, $koltsegDatumIg);
+            $berKiadasHavonta = $koltsegInterface->getBerKiadasHavonta($ceg_id, $koltsegDatumTol, $koltsegDatumIg);
+        } else {
+            $uzemanyagKiadasHavonta = [];
+            $utdijKiadasHavonta = [];
+            $berKiadasHavonta = [];
+        }
+        foreach ($havi as &$h) {
+            $uzemanyagKiadas = $uzemanyagKiadasHavonta[$h['honap']] ?? 0;
+            $utdijKiadas = $utdijKiadasHavonta[$h['honap']] ?? 0;
+            $berKiadas = $berKiadasHavonta[$h['honap']] ?? 0;
+            $h['kiadasOsszesen'] = round($uzemanyagKiadas + $utdijKiadas + $berKiadas, 2);
+            $h['profit'] = round($h['bevetelOsszesen'] - $h['kiadasOsszesen'], 2);
+            $munkanapok = $this->munkanapokHonapban($h['honap']);
+            $h['atlagNapiProfit'] = $munkanapok > 0 ? round($h['profit'] / $munkanapok, 2) : 0;
+        }
+        unset($h);
+
+        $utolsoHonapSor = end($havi);
+        reset($havi);
+        $fuvarozasiProfit = [
+            'honap' => $utolsoHonapSor['honap'] ?? null,
+            'bevetel' => $utolsoHonapSor['bevetelOsszesen'] ?? 0,
+            'kiadas' => $utolsoHonapSor['kiadasOsszesen'] ?? 0,
+            'profit' => $utolsoHonapSor['profit'] ?? 0,
+        ];
+
         // 5. Pénzügyi dashboard
         $kintlevoseg = 0.0;
         $lejartSzamlak = 0;
@@ -750,6 +807,7 @@ class FuvarInterface {
                 'fizetesreVarokSzama' => $fizetesreVarokSzama,
                 'varhatoBevetel' => round($varhatoBevetel, 2),
             ],
+            'fuvarozasiProfit' => $fuvarozasiProfit,
         ];
     }
 
