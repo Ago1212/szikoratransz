@@ -26,6 +26,7 @@ import {
   PiCaretDownLight,
   PiCaretUpFill,
   PiCaretDownFill,
+  PiRoadHorizonLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
@@ -129,6 +130,7 @@ const KATEGORIA_BADGE = {
   karbantartas: { label: "Karbantartás", className: "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300" },
   biztositas: { label: "Biztosítás", className: "bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300" },
   ber: { label: "Fizetés", className: "bg-orange-50 text-orange-700 dark:bg-orange-950/50 dark:text-orange-300" },
+  utdij: { label: "Útdíj", className: "bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300" },
 };
 
 const emptyEgyebTetel = (irany = "kiado") => ({
@@ -140,6 +142,7 @@ const emptyEgyebTetel = (irany = "kiado") => ({
   osszeg: "",
   deviza: "HUF",
   eredeti_osszeg: "",
+  netto_osszeg: "",
   kamion_id: "",
   potkocsi_id: "",
   furgon_id: "",
@@ -1152,6 +1155,7 @@ export default function Koltsegek() {
         osszeg: devizas ? 0 : ujTetel.osszeg,
         deviza: ujTetel.deviza || "HUF",
         eredeti_osszeg: devizas ? ujTetel.eredeti_osszeg : null,
+        netto_osszeg: ujTetel.netto_osszeg || null,
         kamion_id: ujTetel.kamion_id || null,
         potkocsi_id: ujTetel.potkocsi_id || null,
         furgon_id: ujTetel.furgon_id || null,
@@ -1193,6 +1197,7 @@ export default function Koltsegek() {
       osszeg: row.osszeg,
       deviza: row.deviza || "HUF",
       eredeti_osszeg: row.eredeti_osszeg || "",
+      netto_osszeg: row.netto_osszeg || "",
       kamion_id: row.kamion_id || "",
       potkocsi_id: row.potkocsi_id || "",
       furgon_id: row.furgon_id || "",
@@ -1318,6 +1323,7 @@ export default function Koltsegek() {
     { key: "karbantartas", label: "Karbantartás (Ft)" },
     { key: "uzemanyag", label: "Üzemanyag (Ft)" },
     { key: "biztositas", label: "Biztosítás (Ft)" },
+    { key: "utdij", label: "Útdíj (Ft)" },
     { key: "egyeb", label: "Egyéb (Ft)" },
     { key: "kiadasOsszesen", label: "Kiadás összesen (Ft)" },
     { key: "netto", label: "Nettó (Ft)" },
@@ -1387,6 +1393,11 @@ export default function Koltsegek() {
           {row.deviza && row.deviza !== "HUF" && row.eredeti_osszeg && (
             <span className="block text-xs font-normal text-ink-400 dark:text-ink-500">
               {formatDeviza(row.eredeti_osszeg, row.deviza)}
+            </span>
+          )}
+          {row.netto_osszeg && (
+            <span className="block text-xs font-normal text-ink-400 dark:text-ink-500">
+              nettó: {formatHuf(row.netto_osszeg)}
             </span>
           )}
         </span>
@@ -1493,6 +1504,14 @@ export default function Koltsegek() {
       dotClass: "bg-purple-500",
       barClass: "bg-purple-500",
       value: adat.osszesen.biztositas,
+    },
+    {
+      key: "utdij",
+      label: "Útdíj",
+      icon: PiRoadHorizonLight,
+      dotClass: "bg-sky-500",
+      barClass: "bg-sky-500",
+      value: adat.osszesen.utdij,
     },
     {
       key: "egyeb",
@@ -1734,6 +1753,7 @@ export default function Koltsegek() {
                 >
                   <option value="">Minden kategória</option>
                   <option value="uzemanyag">Üzemanyag</option>
+                  <option value="utdij">Útdíj</option>
                   <option value="egyeb">Egyéb kiadás</option>
                   {/* UX-audit (2026-07-20): a fenti kategória-összetétel rács
                       Karbantartás/Biztosítás/Fizetés kategóriát is mutat, de
@@ -1933,10 +1953,21 @@ export default function Koltsegek() {
             >
               <option value="">Kiadás</option>
               <option value="uzemanyag">Üzemanyag</option>
+              <option value="utdij">Útdíj</option>
               <option value="karbantartas">Karbantartás</option>
               <option value="biztositas">Biztosítás</option>
               {isOwnerAdmin && <option value="ber">Fizetés</option>}
             </FormField>
+          )}
+          {ujTetel.kategoria === "utdij" && (
+            <FormField
+              type="number"
+              label="Nettó összeg (opcionális)"
+              name="netto_osszeg"
+              value={ujTetel.netto_osszeg}
+              onChange={handleUjTetelChange}
+              placeholder="Ha az összeg bruttó, itt add meg a nettó (ÁFA nélküli) értéket"
+            />
           )}
           <FormField
             label="Számlaszám (opcionális)"

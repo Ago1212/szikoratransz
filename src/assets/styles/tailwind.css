@@ -3931,6 +3931,11 @@ h1,
   color: rgb(2 132 199 / var(--tw-text-opacity, 1));
 }
 
+.text-sky-700 {
+  --tw-text-opacity: 1;
+  color: rgb(3 105 161 / var(--tw-text-opacity, 1));
+}
+
 .text-sky-800 {
   --tw-text-opacity: 1;
   color: rgb(7 89 133 / var(--tw-text-opacity, 1));
@@ -5155,6 +5160,10 @@ h1,
 
 .dark\:bg-sky-950\/40:is(.dark *) {
   background-color: rgb(8 47 73 / 0.4);
+}
+
+.dark\:bg-sky-950\/50:is(.dark *) {
+  background-color: rgb(8 47 73 / 0.5);
 }
 
 .dark\:bg-violet-900:is(.dark *) {
