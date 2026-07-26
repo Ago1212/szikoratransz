@@ -374,6 +374,39 @@ export default function Dashboard() {
   // listát használhassa fel, külön backend-hívás nélkül.
   const [calendarEvents, setCalendarEvents] = useState([]);
 
+  // Fuvar-figyelmeztetések (ld. Fuvarok.js FigyelmeztetesSav) is megjelennek
+  // itt, "esemény"-alakra hozva ({title, start}) — NEM a naptárba magába
+  // (a CardCalender/getEsemenyek marad az egyetlen naptár-adatforrás), csak
+  // a "Mire figyeljek ma" listájába fésülve, ugyanazzal a lejárt/e-héten/
+  // távolabbi sürgősségi színkódolással. Csak jelez, ugyanúgy nem ír az
+  // `allapot` mezőbe innen sem — a lista tétele pusztán a Fuvarok oldalra
+  // mutat (nincs önálló mélylink egy konkrét fuvarhoz).
+  const [fuvarFigyelmeztetesek, setFuvarFigyelmeztetesek] = useState({ lejartFizetes: [], szamlazasraVar: [] });
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    fetchAction("getFuvarFigyelmeztetesek", { ceg_id: user.ceg_id }).then((result) => {
+      if (result?.success) {
+        setFuvarFigyelmeztetesek({
+          lejartFizetes: result.lejartFizetes || [],
+          szamlazasraVar: result.szamlazasraVar || [],
+        });
+      }
+    });
+  }, []);
+
+  const fuvarEsemenyek = [
+    ...fuvarFigyelmeztetesek.lejartFizetes.map((f) => ({
+      title: `Lejárt fizetés: ${f.utvonal}${f.megbizoNev ? ` — ${f.megbizoNev}` : ""}`,
+      start: f.hatarido,
+    })),
+    ...fuvarFigyelmeztetesek.szamlazasraVar.map((f) => ({
+      title: `Számlázásra vár: ${f.utvonal}`,
+      start: f.teljesitesDatuma,
+    })),
+  ];
+  const fuvarFigyelmeztetesSzam = fuvarEsemenyek.length;
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -545,8 +578,8 @@ export default function Dashboard() {
       <div className="flex flex-1 flex-col gap-4 md:grid md:min-h-0 md:grid-cols-2 md:gap-6">
         <MireFigyeljekMaCard
           className="flex-shrink-0 md:order-1 md:h-full"
-          hatarido={stats.hatarido}
-          events={calendarEvents}
+          hatarido={stats.hatarido + fuvarFigyelmeztetesSzam}
+          events={[...calendarEvents, ...fuvarEsemenyek]}
           limit={4}
           onNavigate={() => navigateTo("/admin/esemenyek")}
         />
