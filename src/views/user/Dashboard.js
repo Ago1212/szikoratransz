@@ -11,6 +11,7 @@ import {
   PiCaretRightLight,
   PiMapPinLight,
   PiCameraLight,
+  PiFilePdfLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import StatusBadge from "components/UI/StatusBadge.js";
@@ -31,6 +32,10 @@ const STATUSZ_LABEL = {
 // A "Bejelentés" csempe szándékosan NINCS itt — a BottomNav középső,
 // mindig piros FAB-ja már ugyanoda vezet, egy második, azonos célú
 // csempe a Gyors műveletek rácsban felesleges duplikáció lenne.
+// A "Dokumentum" csempe SEM itt van — saját, kiemelt kártyát kapott
+// feljebb (ld. a "Dokumentum feltöltése" szekciót), mert ez lett a
+// leggyakrabban használt napi művelet; egy második, azonos célú tile itt
+// ugyanolyan felesleges duplikáció lenne, mint a Bejelentésé.
 const quickActions = [
   {
     to: "/user/jarmu-valaszto",
@@ -62,18 +67,31 @@ const quickActions = [
     label: "Tankolás",
     tone: "brand",
   },
-  {
-    to: "/user/dokumentum-feltoltes",
-    icon: PiCameraLight,
-    label: "Dokumentum",
-    tone: "brand",
-  },
 ];
 
 const TILE_TONE = {
   brand: "bg-brand-50 text-brand-600",
   danger: "bg-red-50 text-red-600",
 };
+
+function DokumentumMiniElonezet({ fajlId, filename }) {
+  const [src, setSrc] = useState(null);
+
+  useEffect(() => {
+    let elve = false;
+    fetchAction("downloadFile", { id: fajlId }).then((result) => {
+      if (!elve && result?.success && result.mime?.startsWith("image/")) {
+        setSrc(`data:${result.mime};base64,${result.file}`);
+      }
+    });
+    return () => {
+      elve = true;
+    };
+  }, [fajlId]);
+
+  if (!src) return <PiFilePdfLight className="h-5 w-5 text-ink-400" />;
+  return <img src={src} alt={filename || "dokumentum előnézet"} className="h-full w-full object-cover" />;
+}
 
 export default function UserDashboard() {
   const history = useHistory();
@@ -87,6 +105,7 @@ export default function UserDashboard() {
   const [kerelmek, setKerelmek] = useState([]);
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [legutobbiDokumentumok, setLegutobbiDokumentumok] = useState([]);
 
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem("user"));
@@ -110,6 +129,7 @@ export default function UserDashboard() {
         adminRes,
         kerelemRes,
         elbiraltRes,
+        dokumentumRes,
       ] = await Promise.all([
         fetchAction("getSajatSofor", { id: userData.id }),
         fetchAction("getKamionok", { id: userData.admin }),
@@ -119,6 +139,7 @@ export default function UserDashboard() {
         fetchAction("getAdminElerhetoseg", { id: userData.admin }),
         fetchAction("getSajatJarmuValtasKerelmek", { sofor_id: userData.id }),
         fetchAction("getElbiraltJarmuValtasok", { sofor_id: userData.id }),
+        fetchAction("getSajatBeerkezettDokumentumok", { sofor_id: userData.id, limit: 3 }),
       ]);
       if (freshRes?.success && freshRes.user) {
         const merged = { ...userData, ...freshRes.user };
@@ -139,6 +160,7 @@ export default function UserDashboard() {
       if (kerelemRes?.success) setKerelmek(kerelemRes.kerelmek || []);
       if (elbiraltRes?.success)
         setElbiraltJarmuValtasok(elbiraltRes.kerelmek || []);
+      if (dokumentumRes?.success) setLegutobbiDokumentumok(dokumentumRes.dokumentumok || []);
       setLoading(false);
     };
     load();
@@ -289,6 +311,48 @@ export default function UserDashboard() {
         </Link>
       </div>
 
+      {/* Dokumentum feltöltése — kiemelt, mert ez a leggyakrabban használt
+          napi művelet lesz (minden lezárt fuvarnál). Csak a fájl típusát/
+          feldolgozási státuszát mutatja, az OCR-eredményt nem — ld.
+          DokumentumFeltoltes.js fejléc-kommentje. */}
+      <Link
+        to="/user/dokumentum-feltoltes"
+        className="rounded-2xl border border-brand-200 bg-brand-50 p-4 shadow-soft"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-white text-brand-600">
+              <PiCameraLight className="h-6 w-6" />
+            </span>
+            <div>
+              <p className="font-display text-base font-bold text-brand-900">
+                Dokumentum feltöltése
+              </p>
+              <p className="text-xs text-brand-700">
+                Fuvarlevél vagy szállítólevél lefotózása
+              </p>
+            </div>
+          </div>
+          <PiCaretRightLight className="h-5 w-5 flex-shrink-0 text-brand-500" />
+        </div>
+        {legutobbiDokumentumok.length > 0 && (
+          <div className="mt-3 flex gap-2 border-t border-brand-100 pt-3">
+            {legutobbiDokumentumok.map((d) => (
+              <span
+                key={d.id}
+                className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white"
+              >
+                {d.fajl_kategoria === "kep" ? (
+                  <DokumentumMiniElonezet fajlId={d.fajl_id} filename={d.filename} />
+                ) : (
+                  <PiFilePdfLight className="h-5 w-5 text-ink-400" />
+                )}
+              </span>
+            ))}
+          </div>
+        )}
+      </Link>
+
       {/* Fontos értesítések */}
       {lejaroDokumentumok.length > 0 && (
         <Link
@@ -346,48 +410,24 @@ export default function UserDashboard() {
         </div>
       </div>
 
-      {/* Legutóbbi bejelentéseim */}
-      <div>
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-400">
-            Legutóbbi bejelentéseim
-          </h2>
-          <Link
-            to="/user/bejelentesek"
-            className="text-xs font-semibold text-brand-600"
-          >
-            Összes
-          </Link>
-        </div>
-        {sajatBejelentesek.length === 0 ? (
-          <div className="rounded-2xl border border-ink-100 bg-white p-4 text-center text-sm text-ink-400 shadow-soft">
-            Még nincs bejelentésed.
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {sajatBejelentesek.map((b) => (
-              <div
-                key={b.id}
-                className="rounded-2xl border border-ink-100 bg-white p-3 shadow-soft"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <p className="truncate text-sm font-semibold text-ink-900">
-                    {b.cim}
-                  </p>
-                  <StatusBadge tone={STATUSZ_TONE[b.statusz] || "neutral"}>
-                    {STATUSZ_LABEL[b.statusz] || b.statusz}
-                  </StatusBadge>
-                </div>
-                <div className="mt-1">
-                  <span className="text-xs text-ink-400">
-                    {(b.bejelentve || "").slice(0, 16).replace("T", " ")}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Legutóbbi bejelentéseim — a Dokumentum-kártya feljebb kapta a fő
+          hangsúlyt (ld. a terv indoklását), a Bejelentés-funkció maga
+          változatlanul elérhető a BottomNav piros FAB-ján és itt, csak
+          kevesebb vizuális súllyal, egyetlen összegző sorként. */}
+      <Link
+        to="/user/bejelentesek"
+        className="flex items-center justify-between rounded-2xl border border-ink-100 bg-white px-4 py-3 shadow-soft"
+      >
+        <span className="text-sm text-ink-500">
+          {sajatBejelentesek.length === 0
+            ? "Nincs bejelentésed"
+            : `${sajatBejelentesek.length} legutóbbi bejelentésed`}
+        </span>
+        <span className="flex items-center gap-1 text-xs font-semibold text-brand-600">
+          Megnyitás
+          <PiCaretRightLight className="h-4 w-4" />
+        </span>
+      </Link>
     </div>
   );
 }
