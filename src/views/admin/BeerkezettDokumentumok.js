@@ -106,8 +106,33 @@ export default function BeerkezettDokumentumok() {
     });
   };
 
-  const hibasak = dokumentumok.filter((d) => d.ocr_allapot === "hiba");
-  const keszek = dokumentumok.filter((d) => d.ocr_allapot !== "hiba");
+  // Sofőr szerinti csoportosítás — a "Feldolgozásra vár" tabban a dokumentum
+  // ILYENKOR (fuvar_id IS NULL) még nincs megbízható sofőr-kapcsolata (ld.
+  // a design döntés a felhasználóval): csak a FELTÖLTŐ sofőrt tudjuk
+  // biztosan használni (feltolto_tipus === "sofor"), az admin által
+  // feltöltött (vagy még fel nem oldott) dokumentumok egy közös "Nincs
+  // sofőrhöz rendelve" csoportba kerülnek. Az OCR-hiba jelzés (piros
+  // szegély a kártyán, ld. DokumentumKartya.js) megmarad — csak már nem ez
+  // a fő rendezési szempont, hanem a sofőr.
+  const csoportok = {};
+  dokumentumok.forEach((d) => {
+    const kulcs = d.feltolto_tipus === "sofor" && d.feltolto_id ? `sofor:${d.feltolto_id}` : "nincs";
+    if (!csoportok[kulcs]) {
+      csoportok[kulcs] = {
+        nev: d.feltolto_tipus === "sofor" && d.feltolto_id ? d.feltolto_nev || "Ismeretlen sofőr" : "Nincs sofőrhöz rendelve",
+        dokumentumok: [],
+      };
+    }
+    csoportok[kulcs].dokumentumok.push(d);
+  });
+  Object.values(csoportok).forEach((cs) => {
+    cs.dokumentumok.sort((a, b) => (a.ocr_allapot === "hiba" ? -1 : 1) - (b.ocr_allapot === "hiba" ? -1 : 1));
+  });
+  const rendezettCsoportok = Object.entries(csoportok).sort(([kulcsA, a], [kulcsB, b]) => {
+    if (kulcsA === "nincs") return 1;
+    if (kulcsB === "nincs") return -1;
+    return b.dokumentumok.length - a.dokumentumok.length;
+  });
 
   return (
     <>
@@ -190,41 +215,24 @@ export default function BeerkezettDokumentumok() {
         <p className="text-sm text-ink-400">
           {nezet === "varakozik" ? "Nincs feldolgozásra váró dokumentum." : "Nincs a szűrésnek megfelelő dokumentum."}
         </p>
-      ) : nezet === "varakozik" ? (
-        <div className="space-y-6">
-          {hibasak.length > 0 && (
-            <div>
-              <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-amber-600 dark:text-amber-400">
-                Kézi kitöltés szükséges ({hibasak.length})
-              </h3>
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-                {hibasak.map((dok) => (
-                  <DokumentumKartya key={dok.id} dokumentum={dok} onOpen={setReviewDokumentum} />
-                ))}
-              </div>
-            </div>
-          )}
-          {keszek.length > 0 && (
-            <div>
-              <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-ink-400">
-                Ellenőrzésre vár ({keszek.length})
-              </h3>
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-                {keszek.map((dok) => (
-                  <DokumentumKartya key={dok.id} dokumentum={dok} onOpen={setReviewDokumentum} />
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
       ) : (
-        <>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {dokumentumok.map((dok) => (
-              <DokumentumKartya key={dok.id} dokumentum={dok} onOpen={setReviewDokumentum} />
-            ))}
-          </div>
-          {archivumTotal > ARCHIVUM_OLDALMERET && (
+        <div className="space-y-6">
+          {rendezettCsoportok.map(([kulcs, csoport]) => (
+            <div key={kulcs}>
+              <h3 className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-ink-500 dark:text-ink-400">
+                {csoport.nev}
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-ink-500 dark:bg-ink-800 dark:text-ink-400">
+                  {csoport.dokumentumok.length}
+                </span>
+              </h3>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                {csoport.dokumentumok.map((dok) => (
+                  <DokumentumKartya key={dok.id} dokumentum={dok} onOpen={setReviewDokumentum} />
+                ))}
+              </div>
+            </div>
+          ))}
+          {nezet === "archivum" && archivumTotal > ARCHIVUM_OLDALMERET && (
             <div className="mt-4 flex items-center justify-between text-xs text-ink-500 dark:text-ink-400">
               <button
                 type="button"
@@ -247,7 +255,7 @@ export default function BeerkezettDokumentumok() {
               </button>
             </div>
           )}
-        </>
+        </div>
       )}
 
       <DokumentumReviewPanel
