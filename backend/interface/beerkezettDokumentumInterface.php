@@ -438,6 +438,88 @@ class BeerkezettDokumentumInterface {
         $stmt->execute();
         return ['success' => true, 'message' => 'Dokumentumtípus frissítve.'];
     }
+
+    // Ugyanaz a minta, mint `fajlnevekFeloldasa()`, de a fájlnév mellett a
+    // `fajl_kategoria`-t is visszaadja — a sofőr-oldali lista ez alapján dönti
+    // el, mutasson-e kép-előnézetet vagy egy egyszerű dokumentum-ikont.
+    private function fajlMetaFeloldasa($fajlIdk) {
+        $fajlIdk = array_values(array_unique(array_filter($fajlIdk)));
+        if (empty($fajlIdk)) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($fajlIdk), '?'));
+        $stmt = $this->db->prepare("SELECT sorszam, filename, fajl_kategoria FROM fajlok WHERE sorszam IN ($placeholders)");
+        $stmt->execute($fajlIdk);
+        $meta = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $meta[$row['sorszam']] = ['filename' => $row['filename'], 'fajl_kategoria' => $row['fajl_kategoria']];
+        }
+        return $meta;
+    }
+
+    // Sofőr-oldali, SZŰKÍTETT mezőkészletű lekérdezés — a sofőr csak saját
+    // feltöltéseit látja (feltolto_tipus='sofor' AND feltolto_id=:sofor_id),
+    // és SOSEM kapja meg az `ocr_adatok`/`fuvar_id`/`hozzarendelt_sofor_id`
+    // mezőket — csak egy szerver-oldalon számolt `torolheto` boolean-t
+    // (fuvar_id IS NULL), hogy a frontend eldönthesse, mutasson-e törlés
+    // gombot, anélkül hogy magát a fuvar-összekapcsolást ismerné.
+    public function getSajatDokumentumok($soforId, $cegId, $limit = null) {
+        $query = "SELECT bd.id, bd.fajl_id, bd.tipus, bd.ocr_allapot, bd.letrehozva,
+                         (bd.fuvar_id IS NULL) AS torolheto
+                  FROM beerkezett_dokumentumok bd
+                  WHERE bd.admin = :admin AND bd.feltolto_tipus = 'sofor' AND bd.feltolto_id = :sofor_id
+                        AND bd.torolt <> 'I'
+                  ORDER BY bd.letrehozva DESC";
+        if ($limit !== null) {
+            $query .= " LIMIT " . (int) $limit;
+        }
+        $stmt = $this->db->prepare($query);
+        $stmt->bindValue(':admin', $cegId, PDO::PARAM_INT);
+        $stmt->bindValue(':sofor_id', $soforId, PDO::PARAM_INT);
+        $stmt->execute();
+        $sorok = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $fajlMeta = $this->fajlMetaFeloldasa(array_column($sorok, 'fajl_id'));
+        foreach ($sorok as &$sor) {
+            $sor['torolheto'] = (bool) $sor['torolheto'];
+            $meta = $fajlMeta[$sor['fajl_id']] ?? null;
+            $sor['filename'] = $meta['filename'] ?? null;
+            $sor['fajl_kategoria'] = $meta['fajl_kategoria'] ?? null;
+        }
+        unset($sor);
+
+        return ['success' => true, 'dokumentumok' => $sorok];
+    }
+
+    // Sofőr-oldali törlés — a `torol()`-tól (admin-oldali) elkülönítve: itt a
+    // tulajdonjogot (feltolto_tipus='sofor' AND feltolto_id=$soforId) IS
+    // ellenőrizzük, nem csak a `fuvar_id IS NULL` állapotot — egy sofőr csak
+    // a SAJÁT feltöltését törölheti, nem a cég bármelyik dokumentumát.
+    public function torolSajat($id, $soforId, $cegId) {
+        $stmt = $this->db->prepare(
+            "SELECT fuvar_id FROM beerkezett_dokumentumok
+             WHERE id = :id AND admin = :admin AND feltolto_tipus = 'sofor' AND feltolto_id = :sofor_id AND torolt <> 'I'"
+        );
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        $stmt->bindValue(':admin', $cegId, PDO::PARAM_INT);
+        $stmt->bindValue(':sofor_id', $soforId, PDO::PARAM_INT);
+        $stmt->execute();
+        $sor = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($sor === false) {
+            return ['success' => false, 'message' => 'A dokumentum nem található.'];
+        }
+        if (!empty($sor['fuvar_id'])) {
+            return ['success' => false, 'message' => 'Ez a dokumentum már fuvarrá lett alakítva, nem törölhető.'];
+        }
+
+        $update = $this->db->prepare(
+            "UPDATE beerkezett_dokumentumok SET torolt = 'I' WHERE id = :id AND admin = :admin"
+        );
+        $update->bindValue(':id', $id, PDO::PARAM_INT);
+        $update->bindValue(':admin', $cegId, PDO::PARAM_INT);
+        $update->execute();
+        return ['success' => true, 'message' => 'Dokumentum törölve.'];
+    }
 }
 
 $beerkezettDokumentumInterface = new BeerkezettDokumentumInterface();
