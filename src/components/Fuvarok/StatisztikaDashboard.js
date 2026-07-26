@@ -4,6 +4,8 @@ import {
   PiWarningCircleLight,
   PiClockCountdownLight,
   PiChartLineUpLight,
+  PiTrendDownLight,
+  PiGasPumpLight,
   PiUsersLight,
   PiTruckLight,
   PiBuildingsLight,
@@ -126,6 +128,39 @@ export default function StatisztikaDashboard() {
         />
       </div>
 
+      {adatok.fuvarozasiProfit.honap && (
+        <div>
+          <p className="mb-2 text-xs text-ink-400 dark:text-ink-500">
+            Fuvarozási profit ({haviCimke(adatok.fuvarozasiProfit.honap)}) — csak a
+            fuvarokból számított bevétel/kiadás, nem egyezik meg a Pénzforgalom fő Nettó
+            eredményével.
+          </p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <CardStats
+              layout="row"
+              tone="neutral"
+              statIcon={PiCoinsLight}
+              statTitle={forint(adatok.fuvarozasiProfit.bevetel)}
+              statSubtitle="Bevétel (fuvarokból)"
+            />
+            <CardStats
+              layout="row"
+              tone="neutral"
+              statIcon={PiGasPumpLight}
+              statTitle={forint(adatok.fuvarozasiProfit.kiadas)}
+              statSubtitle="Kiadás (üzemanyag+útdíj+bér)"
+            />
+            <CardStats
+              layout="row"
+              tone={adatok.fuvarozasiProfit.profit >= 0 ? "positive" : "danger"}
+              statIcon={adatok.fuvarozasiProfit.profit >= 0 ? PiChartLineUpLight : PiTrendDownLight}
+              statTitle={forint(adatok.fuvarozasiProfit.profit)}
+              statSubtitle="Profit"
+            />
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Szekcio
           cim="Sofőr statisztika"
@@ -178,6 +213,18 @@ export default function StatisztikaDashboard() {
             { key: "honap", label: "Hónap", render: (s) => haviCimke(s.honap) },
             { key: "fuvarokSzama", label: "Fuvarok", align: "right" },
             { key: "bevetelOsszesen", label: "Bevétel", align: "right", render: (s) => forint(s.bevetelOsszesen) },
+            { key: "kiadasOsszesen", label: "Kiadás", align: "right", render: (s) => forint(s.kiadasOsszesen) },
+            {
+              key: "profit",
+              label: "Profit",
+              align: "right",
+              render: (s) => (
+                <span className={s.profit < 0 ? "font-semibold text-red-600 dark:text-red-400" : ""}>
+                  {forint(s.profit)}
+                </span>
+              ),
+            },
+            { key: "atlagNapiProfit", label: "Átlag napi profit", align: "right", render: (s) => forint(s.atlagNapiProfit) },
             { key: "atlagFuvardij", label: "Átlag díj", align: "right", render: (s) => forint(s.atlagFuvardij) },
             { key: "atlagKmPerFuvar", label: "Átlag km/fuvar", align: "right" },
           ]}
