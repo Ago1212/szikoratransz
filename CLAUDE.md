@@ -633,6 +633,30 @@ kézzel karbantartott nav-forrás a mobil `mobileGroups` és a hardcoded
 desktop csoport-JSX mellett — ha egy jövőbeli route átnevezésre/törlésre
 kerül, mindhárom helyet frissíteni kell.
 
+## Sofőr dokumentum-feltöltési előzmény + Dashboard átrendezés (2026-07-26)
+
+A sofőr eddig csak feltölteni tudott egy fuvarlevelet/szállítólevelet
+(`DokumentumFeltoltes.js`), semmilyen betekintése nem volt a saját korábbi
+feltöltéseibe. Két új, sofőr-önkiszolgáló backend action
+(`getSajatBeerkezettDokumentumok`/`torolSajatBeerkezettDokumentum`,
+`beerkezettDokumentumInterface.php::getSajatDokumentumok()`/`torolSajat()`)
+egy szigorúan szűkített mezőkészletet ad vissza — a sofőr továbbra sem lát
+bele az OCR-eredménybe (`ocr_adatok`) vagy a fuvar-összekapcsolásba
+(`fuvar_id`), csak egy szerver-oldalon számolt `torolheto` boolean-t kap,
+ami azt jelzi, a dokumentum még nem lett fuvarrá alakítva. Egy sofőr csak a
+SAJÁT (`feltolto_tipus='sofor' AND feltolto_id=<saját id>`) feltöltéseit
+törölheti, és csak addig, amíg `fuvar_id IS NULL`.
+
+A Dashboardon (`Dashboard.js`) a "Dokumentum" csempe kikerült a Gyors
+műveletek rácsból, helyette egy kiemelt, brand-színű kártyát kapott (a
+legutóbbi 3 feltöltés mini-előnézetével) — mert ez lett a leggyakrabban
+használt napi művelet. A "Legutóbbi bejelentéseim" szekció cserébe egy
+alacsonyabb vizuális súlyú, egysoros összegzésre zsugorodott (darabszám +
+"Megnyitás" link, 3 teljes kártya helyett). **A BottomNav piros
+"Bejelentés" FAB-ja szándékosan változatlan maradt** — annak vészhelyzeti
+egykezes-elérés indoka továbbra is érvényes, ez a változtatás kizárólag a
+Kezdőlap belső elrendezésére korlátozódik.
+
 ## Workflow notes for Claude Code
 
 - For any UI/frontend change, verify it by actually running it (`npm start` and/or `php8.2 -S localhost:8001` as needed, opening it in a browser, screenshotting/clicking through the changed flow) before reporting the task done — don't rely on code review or lint alone.
