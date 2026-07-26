@@ -752,6 +752,76 @@ class FuvarInterface {
             ],
         ];
     }
+
+    // Státusz-workflow — NEM automatizál allapot-váltást (felhasználói döntés:
+    // csak jelezzünk, ne írjunk automatikusan az adatba), csak összegyűjti,
+    // mire érdemes az adminnak ránéznie. Két, egymástól független, minden
+    // előfeltevés nélküli jelzés: (1) már számlázott, de a megbízó fizetési
+    // határideje lejárt (ugyanaz a számítás, mint a getStatisztikak()-ban,
+    // itt egyedi rekord-szinten); (2) a teljesítés dátuma már elmúlt, de a
+    // fuvar még mindig a kezdeti 'rogzitett' állapotban van — nincs
+    // "hány nap késés számít soknak" jellegű, meg nem erősített küszöb,
+    // pusztán a tény, hogy a leszállítás megtörtént, de semmi nincs számlázva.
+    public function getFigyelmeztetesek($ceg_id) {
+        $stmt = $this->db->prepare(
+            "SELECT id, felrako, lerako, teljesites_datuma, megbizo_id, fuvardij, egyeb_koltseg, allapot, szamlaszam
+             FROM fuvarok
+             WHERE admin = :admin AND torolt <> 'I' AND allapot IN ('rogzitett', 'szamlazva', 'fizetesre_var')"
+        );
+        $stmt->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $fuvarok = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $megbizoNevek = $this->batchLekerdezes('ugyfelek', 'nev', array_column($fuvarok, 'megbizo_id'), $ceg_id);
+        $megbizoHataridok = $this->batchLekerdezes('ugyfelek', 'fizetesi_hatarido_nap', array_column($fuvarok, 'megbizo_id'), $ceg_id);
+
+        $ma = date('Y-m-d');
+        $lejartFizetes = [];
+        $szamlazasraVar = [];
+        foreach ($fuvarok as $f) {
+            $osszesen = round((float) $f['fuvardij'] + (float) ($f['egyeb_koltseg'] ?? 0), 2);
+            $utvonal = trim(($f['felrako'] ?: '') . ($f['felrako'] && $f['lerako'] ? ' → ' : '') . ($f['lerako'] ?: ''));
+            $utvonal = $utvonal !== '' ? $utvonal : 'Fuvar';
+            $megbizoNev = !empty($f['megbizo_id']) ? ($megbizoNevek[$f['megbizo_id']] ?? 'Ismeretlen') : null;
+
+            if (in_array($f['allapot'], ['szamlazva', 'fizetesre_var'], true) && !empty($f['teljesites_datuma']) && !empty($f['megbizo_id'])) {
+                $napok = $megbizoHataridok[$f['megbizo_id']] ?? null;
+                if ($napok !== null && $napok !== '') {
+                    $hatarido = date('Y-m-d', strtotime($f['teljesites_datuma'] . " +{$napok} days"));
+                    if ($hatarido < $ma) {
+                        $lejartFizetes[] = [
+                            'id' => (int) $f['id'],
+                            'utvonal' => $utvonal,
+                            'felrako' => $f['felrako'],
+                            'megbizoNev' => $megbizoNev,
+                            'osszesen' => $osszesen,
+                            'hatarido' => $hatarido,
+                            'szamlaszam' => $f['szamlaszam'],
+                        ];
+                    }
+                }
+            }
+
+            if ($f['allapot'] === 'rogzitett' && !empty($f['teljesites_datuma']) && $f['teljesites_datuma'] < $ma) {
+                $szamlazasraVar[] = [
+                    'id' => (int) $f['id'],
+                    'utvonal' => $utvonal,
+                    'felrako' => $f['felrako'],
+                    'megbizoNev' => $megbizoNev,
+                    'osszesen' => $osszesen,
+                    'teljesitesDatuma' => $f['teljesites_datuma'],
+                ];
+            }
+        }
+        usort($lejartFizetes, fn($a, $b) => $a['hatarido'] <=> $b['hatarido']);
+        usort($szamlazasraVar, fn($a, $b) => $a['teljesitesDatuma'] <=> $b['teljesitesDatuma']);
+
+        return [
+            'success' => true,
+            'lejartFizetes' => $lejartFizetes,
+            'szamlazasraVar' => $szamlazasraVar,
+        ];
+    }
 }
 
 $fuvarInterface = new FuvarInterface();

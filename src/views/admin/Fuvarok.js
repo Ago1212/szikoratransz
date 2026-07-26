@@ -7,6 +7,7 @@ import PageHeader from "components/UI/PageHeader.js";
 import AllapotOsszesitoChips from "components/Fuvarok/AllapotOsszesitoChips.js";
 import KanbanBoard from "components/Fuvarok/KanbanBoard.js";
 import StatisztikaDashboard from "components/Fuvarok/StatisztikaDashboard.js";
+import FigyelmeztetesSav from "components/Fuvarok/FigyelmeztetesSav.js";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
 
@@ -25,6 +26,8 @@ export default function Fuvarok() {
   const [allapotSzuro, setAllapotSzuro] = useState("");
   const [osszesito, setOsszesito] = useState(null);
   const [nezetMod, setNezetMod] = useState(() => localStorage.getItem("fuvarok-nezet-mod") || "tablazat");
+  const [figyelmeztetesek, setFigyelmeztetesek] = useState(null);
+  const [keresPreset, setKeresPreset] = useState("");
 
   useEffect(() => {
     localStorage.setItem("fuvarok-nezet-mod", nezetMod);
@@ -46,6 +49,18 @@ export default function Fuvarok() {
   useEffect(() => {
     loadOsszesito();
   }, [loadOsszesito]);
+
+  const loadFigyelmeztetesek = useCallback(async () => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    const result = await fetchAction("getFuvarFigyelmeztetesek", { ceg_id: user.ceg_id });
+    if (result?.success) {
+      setFigyelmeztetesek({ lejartFizetes: result.lejartFizetes, szamlazasraVar: result.szamlazasraVar });
+    }
+  }, []);
+
+  useEffect(() => {
+    loadFigyelmeztetesek();
+  }, [loadFigyelmeztetesek]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -91,9 +106,16 @@ export default function Fuvarok() {
     if (result?.success) {
       fetchData();
       loadOsszesito();
+      loadFigyelmeztetesek();
     } else {
       toast.error(result?.message || "Az állapot módosítása sikertelen.");
     }
+  };
+
+  const handleFigyelmeztetesMegnyitas = (utvonal) => {
+    setAllapotSzuro("");
+    setNezetMod("tablazat");
+    setKeresPreset(utvonal);
   };
 
   const handleExportAll = useCallback(async () => {
@@ -122,6 +144,7 @@ export default function Fuvarok() {
           )
         }
       />
+      <FigyelmeztetesSav figyelmeztetesek={figyelmeztetesek} onMegnyitas={handleFigyelmeztetesMegnyitas} />
       {nezetMod !== "statisztikak" && (
         <AllapotOsszesitoChips
           osszesito={osszesito}
@@ -170,6 +193,7 @@ export default function Fuvarok() {
         <div className="flex flex-wrap mt-0">
           <div className="w-full mb-12 px-0 md:px-4">
             <CardTable
+              key={keresPreset}
               fuvarok={fuvarok}
               loading={loading}
               total={total}
@@ -177,6 +201,7 @@ export default function Fuvarok() {
               pageSize={PAGE_SIZE}
               onPageChange={setPage}
               onSearchChange={setSearch}
+              initialSearch={keresPreset}
               onExportAll={handleExportAll}
               sortKey={sortKey}
               sortDir={sortDir}
@@ -184,6 +209,7 @@ export default function Fuvarok() {
               onAllapotValtozott={() => {
                 fetchData();
                 loadOsszesito();
+                loadFigyelmeztetesek();
               }}
             />
           </div>

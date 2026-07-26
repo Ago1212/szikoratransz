@@ -147,6 +147,7 @@ class ApiHandler {
         'letrehozFuvarDokumentumbol' => ['fuvarok', 'szerkesztes'],
         'getUgyfelFuvarElozmeny' => ['fuvarok', 'hozzaferes'],
         'getFuvarStatisztikak' => ['fuvarok', 'hozzaferes'],
+        'getFuvarFigyelmeztetesek' => ['fuvarok', 'hozzaferes'],
         'updateFuvarAllapot' => ['fuvarok', 'szerkesztes'],
         'hozzarendelFuvarSzamlaszamot' => ['fuvarok', 'szerkesztes'],
         'getFuvarAllapotOsszesito' => ['fuvarok', 'hozzaferes'],
@@ -312,6 +313,7 @@ class ApiHandler {
             'deleteUgyfel' => ['id', 'ceg_id', 'kerelmezo_id'],
             'getUgyfelFuvarElozmeny' => ['ugyfelId', 'ceg_id'],
             'getFuvarStatisztikak' => ['ceg_id'],
+            'getFuvarFigyelmeztetesek' => ['ceg_id'],
 
             'getCsapattagok' => ['id'],
             'newCsapattag' => ['ceg_id', 'name', 'email', 'password', 'kerelmezo_id'],
@@ -1753,6 +1755,9 @@ class ApiHandler {
                     return;
                 case 'getFuvarStatisztikak':
                     echo json_encode($fuvarInterface->getStatisztikak($this->resolveKerelmezo($request)['ceg_id']));
+                    return;
+                case 'getFuvarFigyelmeztetesek':
+                    echo json_encode($fuvarInterface->getFigyelmeztetesek($this->resolveKerelmezo($request)['ceg_id']));
                     return;
                 case 'updateFuvarAllapot':
                     $kerelmezo = $this->resolveKerelmezo($request);

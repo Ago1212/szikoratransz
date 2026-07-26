@@ -29,6 +29,7 @@ const CardTable = ({
   sortDir,
   onSortChange,
   onAllapotValtozott,
+  initialSearch,
 }) => {
   const history = useHistory();
   const user = JSON.parse(localStorage.getItem("user"));
@@ -178,6 +179,7 @@ const CardTable = ({
       loading={loading}
       searchable
       searchPlaceholder="Keresés felrakó, lerakó, sofőr, rendszám, megbízó szerint..."
+      initialSearch={initialSearch}
       serverSide
       totalRows={total}
       page={page}
