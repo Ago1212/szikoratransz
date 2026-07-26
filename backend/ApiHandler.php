@@ -146,6 +146,7 @@ class ApiHandler {
         'getFuvar' => ['fuvarok', 'hozzaferes'],
         'letrehozFuvarDokumentumbol' => ['fuvarok', 'szerkesztes'],
         'getUgyfelFuvarElozmeny' => ['fuvarok', 'hozzaferes'],
+        'getFuvarStatisztikak' => ['fuvarok', 'hozzaferes'],
         'updateFuvarAllapot' => ['fuvarok', 'szerkesztes'],
         'hozzarendelFuvarSzamlaszamot' => ['fuvarok', 'szerkesztes'],
         'getFuvarAllapotOsszesito' => ['fuvarok', 'hozzaferes'],
@@ -310,6 +311,7 @@ class ApiHandler {
             'saveUgyfelData' => ['id', 'ceg_id', 'kerelmezo_id'],
             'deleteUgyfel' => ['id', 'ceg_id', 'kerelmezo_id'],
             'getUgyfelFuvarElozmeny' => ['ugyfelId', 'ceg_id'],
+            'getFuvarStatisztikak' => ['ceg_id'],
 
             'getCsapattagok' => ['id'],
             'newCsapattag' => ['ceg_id', 'name', 'email', 'password', 'kerelmezo_id'],
@@ -1748,6 +1750,9 @@ class ApiHandler {
                     return;
                 case 'getUgyfelFuvarElozmeny':
                     echo json_encode($fuvarInterface->getUgyfelElozmeny($request['ugyfelId'], $this->resolveKerelmezo($request)['ceg_id']));
+                    return;
+                case 'getFuvarStatisztikak':
+                    echo json_encode($fuvarInterface->getStatisztikak($this->resolveKerelmezo($request)['ceg_id']));
                     return;
                 case 'updateFuvarAllapot':
                     $kerelmezo = $this->resolveKerelmezo($request);

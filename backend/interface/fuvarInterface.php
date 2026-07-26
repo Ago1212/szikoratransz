@@ -575,6 +575,183 @@ class FuvarInterface {
         }
         return null;
     }
+
+    // Statisztikai dashboardok (2026-07-26): sofőr/jármű/megbízó/havi bontás
+    // + pénzügyi összesítő, MIND egyetlen lekérdezésből, PHP-oldali
+    // csoportosítással (nincs GROUP BY-onkénti külön SELECT, nincs JOIN).
+    // "Lejárt számla" / "kintlévőség" NEM NAV-adatból, hanem helyben
+    // számolt határidőből jön: teljesítés dátuma + ugyfelek.fizetesi_hatarido_nap
+    // — tudatos döntés, a NAV Online Számla-integráció explicit kihagyása
+    // miatt (nincs itt hitelesítő adat, és a NAV amúgy sem ad megbízható
+    // "kifizetve" jelzést, csak a számlán deklarált határidőt, amit mi is
+    // ugyanígy ki tudunk számolni a már meglévő adatokból).
+    public function getStatisztikak($ceg_id) {
+        $stmt = $this->db->prepare(
+            "SELECT id, sofor_id, kamion_id, furgon_id, teljesites_datuma, tavolsag_km,
+                    megbizo_id, fuvardij, egyeb_koltseg, allapot
+             FROM fuvarok WHERE admin = :admin AND torolt <> 'I'"
+        );
+        $stmt->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $fuvarok = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($fuvarok as &$f) {
+            $f['osszesen'] = (float) $f['fuvardij'] + (float) ($f['egyeb_koltseg'] ?? 0);
+        }
+        unset($f);
+
+        $soforNevek = $this->batchLekerdezes('user', 'name', array_column($fuvarok, 'sofor_id'), $ceg_id);
+        $kamionRendszamok = $this->batchLekerdezes('kamion', 'rendszam', array_column($fuvarok, 'kamion_id'), $ceg_id);
+        $furgonRendszamok = $this->batchLekerdezes('furgon', 'rendszam', array_column($fuvarok, 'furgon_id'), $ceg_id);
+        $megbizoNevek = $this->batchLekerdezes('ugyfelek', 'nev', array_column($fuvarok, 'megbizo_id'), $ceg_id);
+        $megbizoHataridok = $this->batchLekerdezes('ugyfelek', 'fizetesi_hatarido_nap', array_column($fuvarok, 'megbizo_id'), $ceg_id);
+
+        $ma = date('Y-m-d');
+        $lejartE = function ($f) use ($megbizoHataridok, $ma) {
+            if (empty($f['teljesites_datuma']) || empty($f['megbizo_id'])) {
+                return false;
+            }
+            $napok = $megbizoHataridok[$f['megbizo_id']] ?? null;
+            if ($napok === null || $napok === '') {
+                return false;
+            }
+            $hatarido = date('Y-m-d', strtotime($f['teljesites_datuma'] . " +{$napok} days"));
+            return $hatarido < $ma;
+        };
+
+        // 1. Sofőr statisztika
+        $soforStat = [];
+        foreach ($fuvarok as $f) {
+            if (empty($f['sofor_id'])) {
+                continue;
+            }
+            $sid = $f['sofor_id'];
+            if (!isset($soforStat[$sid])) {
+                $soforStat[$sid] = ['sofor_id' => (int) $sid, 'nev' => $soforNevek[$sid] ?? 'Ismeretlen', 'fuvarokSzama' => 0, 'kmOsszesen' => 0, 'bevetelOsszesen' => 0.0];
+            }
+            $soforStat[$sid]['fuvarokSzama']++;
+            $soforStat[$sid]['kmOsszesen'] += (int) ($f['tavolsag_km'] ?? 0);
+            $soforStat[$sid]['bevetelOsszesen'] += $f['osszesen'];
+        }
+        foreach ($soforStat as &$s) {
+            $s['atlagFuvardij'] = $s['fuvarokSzama'] > 0 ? round($s['bevetelOsszesen'] / $s['fuvarokSzama'], 2) : 0;
+            $s['bevetelOsszesen'] = round($s['bevetelOsszesen'], 2);
+        }
+        unset($s);
+        $soforStat = array_values($soforStat);
+        usort($soforStat, fn($a, $b) => $b['bevetelOsszesen'] <=> $a['bevetelOsszesen']);
+
+        // 2. Jármű (kamion+furgon) statisztika
+        $jarmuStat = [];
+        foreach ($fuvarok as $f) {
+            $tipus = null;
+            $jid = null;
+            $rendszam = null;
+            if (!empty($f['kamion_id'])) {
+                $tipus = 'kamion';
+                $jid = $f['kamion_id'];
+                $rendszam = $kamionRendszamok[$jid] ?? 'Ismeretlen';
+            } elseif (!empty($f['furgon_id'])) {
+                $tipus = 'furgon';
+                $jid = $f['furgon_id'];
+                $rendszam = $furgonRendszamok[$jid] ?? 'Ismeretlen';
+            }
+            if ($tipus === null) {
+                continue;
+            }
+            $kulcs = "$tipus:$jid";
+            if (!isset($jarmuStat[$kulcs])) {
+                $jarmuStat[$kulcs] = ['tipus' => $tipus, 'jarmu_id' => (int) $jid, 'rendszam' => $rendszam, 'fuvarokSzama' => 0, 'kmOsszesen' => 0, 'bevetelOsszesen' => 0.0];
+            }
+            $jarmuStat[$kulcs]['fuvarokSzama']++;
+            $jarmuStat[$kulcs]['kmOsszesen'] += (int) ($f['tavolsag_km'] ?? 0);
+            $jarmuStat[$kulcs]['bevetelOsszesen'] += $f['osszesen'];
+        }
+        foreach ($jarmuStat as &$j) {
+            $j['bevetelPerKm'] = $j['kmOsszesen'] > 0 ? round($j['bevetelOsszesen'] / $j['kmOsszesen'], 2) : null;
+            $j['bevetelOsszesen'] = round($j['bevetelOsszesen'], 2);
+        }
+        unset($j);
+        $jarmuStat = array_values($jarmuStat);
+        usort($jarmuStat, fn($a, $b) => $b['bevetelOsszesen'] <=> $a['bevetelOsszesen']);
+
+        // 3. Megbízó statisztika
+        $megbizoStat = [];
+        foreach ($fuvarok as $f) {
+            if (empty($f['megbizo_id'])) {
+                continue;
+            }
+            $mid = $f['megbizo_id'];
+            if (!isset($megbizoStat[$mid])) {
+                $megbizoStat[$mid] = ['megbizo_id' => (int) $mid, 'nev' => $megbizoNevek[$mid] ?? 'Ismeretlen', 'fuvarokSzama' => 0, 'arbevetel' => 0.0, 'lejartSzamlakSzama' => 0];
+            }
+            $megbizoStat[$mid]['fuvarokSzama']++;
+            $megbizoStat[$mid]['arbevetel'] += $f['osszesen'];
+            if (in_array($f['allapot'], ['szamlazva', 'fizetesre_var'], true) && $lejartE($f)) {
+                $megbizoStat[$mid]['lejartSzamlakSzama']++;
+            }
+        }
+        foreach ($megbizoStat as &$m) {
+            $m['arbevetel'] = round($m['arbevetel'], 2);
+        }
+        unset($m);
+        $megbizoStat = array_values($megbizoStat);
+        usort($megbizoStat, fn($a, $b) => $b['arbevetel'] <=> $a['arbevetel']);
+
+        // 4. Havi statisztika (utolsó 12, teljesítés dátuma szerinti hónap)
+        $havi = [];
+        foreach ($fuvarok as $f) {
+            if (empty($f['teljesites_datuma'])) {
+                continue;
+            }
+            $ho = substr($f['teljesites_datuma'], 0, 7);
+            if (!isset($havi[$ho])) {
+                $havi[$ho] = ['honap' => $ho, 'fuvarokSzama' => 0, 'bevetelOsszesen' => 0.0, 'kmOsszesen' => 0];
+            }
+            $havi[$ho]['fuvarokSzama']++;
+            $havi[$ho]['bevetelOsszesen'] += $f['osszesen'];
+            $havi[$ho]['kmOsszesen'] += (int) ($f['tavolsag_km'] ?? 0);
+        }
+        foreach ($havi as &$h) {
+            $h['atlagFuvardij'] = $h['fuvarokSzama'] > 0 ? round($h['bevetelOsszesen'] / $h['fuvarokSzama'], 2) : 0;
+            $h['atlagKmPerFuvar'] = $h['fuvarokSzama'] > 0 ? round($h['kmOsszesen'] / $h['fuvarokSzama'], 1) : 0;
+            $h['bevetelOsszesen'] = round($h['bevetelOsszesen'], 2);
+        }
+        unset($h);
+        ksort($havi);
+        $havi = array_values(array_slice($havi, -12, 12, true));
+
+        // 5. Pénzügyi dashboard
+        $kintlevoseg = 0.0;
+        $lejartSzamlak = 0;
+        $fizetesreVarokSzama = 0;
+        $varhatoBevetel = 0.0;
+        foreach ($fuvarok as $f) {
+            if (in_array($f['allapot'], ['szamlazva', 'fizetesre_var'], true)) {
+                $kintlevoseg += $f['osszesen'];
+                $fizetesreVarokSzama++;
+                if ($lejartE($f)) {
+                    $lejartSzamlak++;
+                }
+            }
+            if (in_array($f['allapot'], ['rogzitett', 'szamlazasra_var', 'szamlazva', 'fizetesre_var'], true)) {
+                $varhatoBevetel += $f['osszesen'];
+            }
+        }
+
+        return [
+            'success' => true,
+            'soforStatisztika' => $soforStat,
+            'jarmuStatisztika' => $jarmuStat,
+            'megbizoStatisztika' => $megbizoStat,
+            'haviStatisztika' => $havi,
+            'penzugyiDashboard' => [
+                'kintlevoseg' => round($kintlevoseg, 2),
+                'lejartSzamlakSzama' => $lejartSzamlak,
+                'fizetesreVarokSzama' => $fizetesreVarokSzama,
+                'varhatoBevetel' => round($varhatoBevetel, 2),
+            ],
+        ];
+    }
 }
 
 $fuvarInterface = new FuvarInterface();

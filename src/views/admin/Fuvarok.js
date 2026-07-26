@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useHistory } from "react-router-dom";
-import { PiListLight, PiKanbanLight } from "react-icons/pi";
+import { PiListLight, PiKanbanLight, PiChartBarLight } from "react-icons/pi";
 
 import CardTable from "components/Table/CardTableForFuvarok.js";
 import PageHeader from "components/UI/PageHeader.js";
 import AllapotOsszesitoChips from "components/Fuvarok/AllapotOsszesitoChips.js";
 import KanbanBoard from "components/Fuvarok/KanbanBoard.js";
+import StatisztikaDashboard from "components/Fuvarok/StatisztikaDashboard.js";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
 
@@ -121,14 +122,16 @@ export default function Fuvarok() {
           )
         }
       />
-      <AllapotOsszesitoChips
-        osszesito={osszesito}
-        active={allapotSzuro}
-        onSelect={(v) => {
-          setAllapotSzuro(v);
-          setPage(1);
-        }}
-      />
+      {nezetMod !== "statisztikak" && (
+        <AllapotOsszesitoChips
+          osszesito={osszesito}
+          active={allapotSzuro}
+          onSelect={(v) => {
+            setAllapotSzuro(v);
+            setPage(1);
+          }}
+        />
+      )}
       <div className="mb-3 flex justify-end gap-1">
         <button
           type="button"
@@ -148,10 +151,21 @@ export default function Fuvarok() {
         >
           <PiKanbanLight className="h-4 w-4" /> Kanban
         </button>
+        <button
+          type="button"
+          onClick={() => setNezetMod("statisztikak")}
+          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${
+            nezetMod === "statisztikak" ? "bg-brand-600 text-white" : "bg-slate-100 text-ink-600 dark:bg-ink-800 dark:text-ink-300"
+          }`}
+        >
+          <PiChartBarLight className="h-4 w-4" /> Statisztikák
+        </button>
       </div>
 
       {nezetMod === "kanban" ? (
         <KanbanBoard fuvarok={fuvarok} onAllapotChange={handleKanbanAllapotChange} />
+      ) : nezetMod === "statisztikak" ? (
+        <StatisztikaDashboard />
       ) : (
         <div className="flex flex-wrap mt-0">
           <div className="w-full mb-12 px-0 md:px-4">
