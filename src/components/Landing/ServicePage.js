@@ -115,21 +115,24 @@ export default function ServicePage({
             >
               {t("servicePage.backLink")}
             </Link>
-            <span className="inline-flex items-center gap-1.5 text-xs font-[Overpass_Mono] uppercase tracking-wide">
+            <div className="inline-flex items-center rounded-full border border-[#23262B]/15 bg-white p-0.5 text-xs font-[Overpass] font-bold uppercase tracking-wide shadow-sm">
               <Link
                 to={localizePath(path, "hu")}
-                className={locale === "hu" ? "text-[#1E3AA8] font-bold" : "text-[#23262B]/50 hover:text-[#23262B]"}
+                className={`px-3 py-1.5 rounded-full transition-colors duration-300 ${
+                  locale === "hu" ? "bg-[#1E3AA8] text-white" : "text-[#23262B]/50 hover:text-[#23262B]"
+                }`}
               >
                 HU
               </Link>
-              <span className="text-[#23262B]/30">|</span>
               <Link
                 to={localizePath(path, "en")}
-                className={locale === "en" ? "text-[#1E3AA8] font-bold" : "text-[#23262B]/50 hover:text-[#23262B]"}
+                className={`px-3 py-1.5 rounded-full transition-colors duration-300 ${
+                  locale === "en" ? "bg-[#1E3AA8] text-white" : "text-[#23262B]/50 hover:text-[#23262B]"
+                }`}
               >
                 EN
               </Link>
-            </span>
+            </div>
           </div>
         </div>
       </nav>
