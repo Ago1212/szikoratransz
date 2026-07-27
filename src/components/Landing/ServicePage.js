@@ -6,6 +6,7 @@ import QuoteForm from "components/Landing/QuoteForm.js";
 import Breadcrumb from "components/Landing/Breadcrumb.js";
 import { TESTIMONIALS, SERVICE_PAGES } from "data/landingContent.js";
 import { useSeo } from "utils/useSeo.js";
+import { useTranslation, localizePath } from "i18n/index.js";
 
 // Közös sablon a szolgáltatás-specifikus long-tail SEO oldalakhoz (belföldi/
 // nemzetközi/expressz/rendezvény/egyedi árajánlat — ld. src/views/landing/).
@@ -28,18 +29,23 @@ export default function ServicePage({
   areaServed,
   children,
 }) {
+  const { t, locale } = useTranslation();
   const currentService = SERVICE_PAGES.find((s) => s.path === path);
+  const currentServiceLabel = currentService ? t(`landing.servicePages.${currentService.id}`) : null;
+  const localizedPath = localizePath(path, locale);
   const breadcrumbItems = currentService
-    ? [{ name: currentService.label, path: currentService.path }]
+    ? [{ name: currentServiceLabel, path: localizedPath }]
     : [];
   useSeo({
     title: metaTitle,
     description: metaDescription,
-    path,
+    path: localizedPath,
+    lang: locale,
+    alternates: { hu: path, en: `/en${path}` },
     faqItems,
     breadcrumb: breadcrumbItems.length > 0 ? breadcrumbItems : undefined,
     service: currentService
-      ? { name: currentService.label, description: metaDescription, areaServed }
+      ? { name: currentServiceLabel, description: metaDescription, areaServed }
       : undefined,
   });
 
@@ -51,10 +57,16 @@ export default function ServicePage({
   // `testimonialNames` prop oldalanként más 3-as kombinációt választ ki a
   // TESTIMONIALS közös pooljából; ha egy oldal nem ad meg saját listát, a
   // pool első 3 eleme a visszaeső alapértelmezés.
-  const shownTestimonials =
+  const shownTestimonials = (
     testimonialNames && testimonialNames.length > 0
-      ? testimonialNames.map((n) => TESTIMONIALS.find((t) => t.name === n)).filter(Boolean)
-      : TESTIMONIALS.slice(0, 3);
+      ? testimonialNames.map((n) => TESTIMONIALS.find((item) => item.name === n)).filter(Boolean)
+      : TESTIMONIALS.slice(0, 3)
+  ).map((item) => ({
+    name: item.name,
+    quote: t(`landing.testimonialItems.${item.id}.quote`),
+    role: t(`landing.testimonialItems.${item.id}.role`),
+    company: t(`landing.testimonialItems.${item.id}.company`),
+  }));
 
   // Minimális belépő animáció a hero-nak — nem a görgetési pozíciót
   // animáljuk (ld. ScrollToTop.js: az korábban épp azért volt zavaró, mert
@@ -76,7 +88,7 @@ export default function ServicePage({
     <div className="font-sans min-h-screen bg-[#F2F3F5]">
       <nav className="border-b border-[#23262B]/8 bg-[#F2F3F5]/90 backdrop-blur-sm">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link to="/">
+          <Link to={localizePath("/", locale)}>
             <img
               src="/logo2.svg"
               alt="Szikora Transz Kft"
@@ -86,17 +98,40 @@ export default function ServicePage({
               fetchpriority="high"
             />
           </Link>
-          <Link
-            to="/"
-            className="text-sm font-[Overpass] font-semibold text-[#23262B]/70 hover:text-[#1E3AA8] transition-colors duration-300"
-          >
-            ← Vissza a főoldalra
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              to={localizePath("/", locale)}
+              className="text-sm font-[Overpass] font-semibold text-[#23262B]/70 hover:text-[#1E3AA8] transition-colors duration-300"
+            >
+              {t("servicePage.backLink")}
+            </Link>
+            <span className="inline-flex items-center gap-1.5 text-xs font-[Overpass_Mono] uppercase tracking-wide">
+              <Link
+                to={path}
+                className={locale === "hu" ? "text-[#1E3AA8] font-bold" : "text-[#23262B]/50 hover:text-[#23262B]"}
+              >
+                HU
+              </Link>
+              <span className="text-[#23262B]/30">|</span>
+              <Link
+                to={`/en${path}`}
+                className={locale === "en" ? "text-[#1E3AA8] font-bold" : "text-[#23262B]/50 hover:text-[#23262B]"}
+              >
+                EN
+              </Link>
+            </span>
+          </div>
         </div>
       </nav>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        {breadcrumbItems.length > 0 && <Breadcrumb items={breadcrumbItems} />}
+        {breadcrumbItems.length > 0 && (
+          <Breadcrumb
+            items={breadcrumbItems}
+            homeLabel={t("landing.breadcrumbHome")}
+            homePath={localizePath("/", locale)}
+          />
+        )}
 
         {/* HERO — a `Icon`/`accent` adja a szolgáltatásra jellemző vizuális
             identitást: halványított, nagyméretű háttér-ikon + színezett
@@ -139,7 +174,7 @@ export default function ServicePage({
             href="#ajanlatkeres"
             className="relative mt-7 inline-flex items-center gap-2 px-6 py-3 bg-[#1E3AA8] hover:bg-[#172E86] text-white font-[Overpass] font-bold rounded-xl transition-colors duration-300"
           >
-            Ingyenes ajánlatot kérek
+            {t("servicePage.ctaButton")}
             <PiArrowRightLight />
           </a>
         </section>
@@ -171,33 +206,33 @@ export default function ServicePage({
         {/* REFERENCIÁK */}
         <section className="py-10 border-t border-[#23262B]/10">
           <h2 className="font-[Overpass] font-extrabold text-2xl text-[#23262B] mb-6">
-            Amit partnereink mondanak rólunk
+            {t("servicePage.testimonialsTitle")}
           </h2>
           <div className="grid md:grid-cols-3 gap-6">
-            {shownTestimonials.map((t) => (
-              <div key={t.name} className="bg-white border border-[#23262B]/10 rounded-xl p-6 flex flex-col h-full">
+            {shownTestimonials.map((testimonial) => (
+              <div
+                key={testimonial.name}
+                className="bg-white border border-[#23262B]/10 rounded-xl p-6 flex flex-col h-full"
+              >
                 <PiQuotesLight className="text-[#1E3AA8]/30 text-2xl mb-3" />
-                <p className="text-[#23262B]/75 text-sm leading-relaxed mb-5 flex-grow">{t.quote}</p>
+                <p className="text-[#23262B]/75 text-sm leading-relaxed mb-5 flex-grow">{testimonial.quote}</p>
                 <div className="text-sm pt-3 border-t border-[#23262B]/10">
-                  <div className="font-[Overpass] font-semibold text-[#23262B]">{t.name}</div>
+                  <div className="font-[Overpass] font-semibold text-[#23262B]">{testimonial.name}</div>
                   <div className="text-[#23262B]/50 text-xs">
-                    {t.role}, {t.company}
+                    {testimonial.role}, {testimonial.company}
                   </div>
                 </div>
               </div>
             ))}
           </div>
-          <p className="text-xs text-[#23262B]/35 mt-6 max-w-2xl">
-            * A fenti referenciák minta-szövegek — érdemes őket valós ügyfelek
-            visszajelzéseire cserélni a publikálás előtt.
-          </p>
+          <p className="text-xs text-[#23262B]/35 mt-6 max-w-2xl">{t("servicePage.testimonialsDisclaimer")}</p>
         </section>
 
         {/* GYIK */}
         {faqItems.length > 0 && (
           <section className="py-10 border-t border-[#23262B]/10">
             <h2 className="font-[Overpass] font-extrabold text-2xl text-[#23262B] mb-6">
-              Gyakran ismételt kérdések
+              {t("servicePage.faqTitle")}
             </h2>
             <div className="divide-y divide-[#23262B]/10 border-t border-b border-[#23262B]/10">
               {faqItems.map((item) => (
@@ -223,16 +258,16 @@ export default function ServicePage({
         {/* EGYÉB SZOLGÁLTATÁSOK */}
         <section className="py-10 border-t border-[#23262B]/10">
           <h2 className="font-[Overpass_Mono] text-xs uppercase tracking-[0.2em] text-[#23262B]/50 mb-4">
-            Egyéb szolgáltatásaink
+            {t("servicePage.otherServicesTitle")}
           </h2>
           <div className="flex flex-wrap gap-3">
             {otherServices.map((s) => (
               <Link
                 key={s.path}
-                to={s.path}
+                to={localizePath(s.path, locale)}
                 className="px-4 py-2 rounded-full border border-[#23262B]/15 text-sm font-[Overpass] font-medium text-[#23262B]/70 hover:border-[#1E3AA8]/50 hover:text-[#1E3AA8] transition-colors duration-300"
               >
-                {s.label}
+                {t(`landing.servicePages.${s.id}`)}
               </Link>
             ))}
           </div>

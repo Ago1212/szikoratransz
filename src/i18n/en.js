@@ -255,7 +255,15 @@ export const landing = {
     custom: "Custom Quote",
   },
 };
-export const servicePage = {};
+export const servicePage = {
+  backLink: "← Back to homepage",
+  ctaButton: "Request a Free Quote",
+  testimonialsTitle: "What our partners say about us",
+  testimonialsDisclaimer:
+    "* The testimonials above are placeholder text — they should be replaced with real client feedback before publishing.",
+  faqTitle: "Frequently Asked Questions",
+  otherServicesTitle: "Other Services",
+};
 export const quoteForm = {};
 export const footer = {};
 export const adatvedelem = {};

@@ -256,7 +256,15 @@ export const landing = {
     custom: "Egyedi árajánlat",
   },
 };
-export const servicePage = {};
+export const servicePage = {
+  backLink: "← Vissza a főoldalra",
+  ctaButton: "Ingyenes ajánlatot kérek",
+  testimonialsTitle: "Amit partnereink mondanak rólunk",
+  testimonialsDisclaimer:
+    "* A fenti referenciák minta-szövegek — érdemes őket valós ügyfelek visszajelzéseire cserélni a publikálás előtt.",
+  faqTitle: "Gyakran ismételt kérdések",
+  otherServicesTitle: "Egyéb szolgáltatásaink",
+};
 export const quoteForm = {};
 export const footer = {};
 export const adatvedelem = {};
