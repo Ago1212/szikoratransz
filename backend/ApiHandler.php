@@ -140,6 +140,7 @@ class ApiHandler {
         'updateBeerkezettDokumentumTipus' => ['fuvarok', 'szerkesztes'],
         'updateBeerkezettDokumentumSofor' => ['fuvarok', 'szerkesztes'],
         'torolBeerkezettDokumentum' => ['fuvarok', 'torles'],
+        'ujraprobalBeerkezettDokumentumOcr' => ['fuvarok', 'szerkesztes'],
         'newFuvar' => ['fuvarok', 'szerkesztes'],
         'updateFuvar' => ['fuvarok', 'szerkesztes'],
         'deleteFuvar' => ['fuvarok', 'torles'],
@@ -368,6 +369,7 @@ class ApiHandler {
             'updateBeerkezettDokumentumTipus' => ['id', 'ceg_id', 'tipus'],
             'updateBeerkezettDokumentumSofor' => ['id', 'ceg_id'],
             'torolBeerkezettDokumentum' => ['id', 'ceg_id'],
+            'ujraprobalBeerkezettDokumentumOcr' => ['id', 'ceg_id'],
             'getSajatBeerkezettDokumentumok' => ['sofor_id'],
             'torolSajatBeerkezettDokumentum' => ['id', 'sofor_id'],
 
@@ -653,6 +655,21 @@ class ApiHandler {
         $stmt->execute();
         $nev = $stmt->fetch(PDO::FETCH_ASSOC)['name'] ?? null;
         return [$session['felhasznalo_tipus'], $session['felhasznalo_id'], $nev];
+    }
+
+    // Fire-and-forget: egy külön, elszakított PHP-processzt indít, ami a
+    // háttérben elvégzi az adott beérkezett dokumentum OCR-feldolgozását
+    // (BeerkezettDokumentumInterface::dolgozzFel()) — ld.
+    // docs/superpowers/specs/2026-07-27-fuvar-ocr-aszinkron-design.md. A
+    // `nohup ... &` mintázat miatt az exec() azonnal visszatér, nem várja
+    // meg a gyerekfolyamat befejezését — ez a helyi, egyszálas
+    // `php8.2 -S` dev szerveren is kritikus, különben egy OCR-hívás
+    // blokkolna minden más egyidejű kérést.
+    private function inditsBackgroundOcr($dokumentumId) {
+        $php = PHP_BINARY ?: 'php8.2';
+        $script = escapeshellarg(__DIR__ . '/cli/ocr_feldolgozas.php');
+        $id = (int) $dokumentumId;
+        exec("nohup $php $script $id > /dev/null 2>&1 &");
     }
 
     private function requireAdminRole(array $request) {
@@ -1674,16 +1691,26 @@ class ApiHandler {
                     return;
                 case 'elemezBeerkezettDokumentum':
                     // Ezt az akciót MIND az admin-oldali beérkezett-dokumentum
-                    // inbox (Task 12), MIND a sofőr-oldali fuvarlevél-feltöltő
-                    // oldal (Task 15) hívja — resolveKerelmezo() admin-only,
-                    // ledobná minden sofőr-munkamenetet, ezért itt (a modul
-                    // többi, sofőr számára is elérhető akciójához hasonlóan,
-                    // ld. fileUpload/getHelyszinek/stb.) resolveSajatCegId()-t
+                    // inbox, MIND a sofőr-oldali fuvarlevél-feltöltő oldal
+                    // hívja — resolveKerelmezo() admin-only, ledobná minden
+                    // sofőr-munkamenetet, ezért itt (a modul többi, sofőr
+                    // számára is elérhető akciójához hasonlóan, ld.
+                    // fileUpload/getHelyszinek/stb.) resolveSajatCegId()-t
                     // használunk, ami MINDKÉT munkamenet-típusnál a valódi,
                     // szerver-oldalon feloldott ceg_id-t adja vissza.
+                    //
+                    // A válasz MINDIG gyors — csak a feltöltés+sor létrehozás
+                    // történik itt (letrehozFeldolgozatlan()), a tényleges OCR
+                    // egy külön, elszakított processzben fut (ld.
+                    // inditsBackgroundOcr() lentebb és
+                    // docs/superpowers/specs/2026-07-27-fuvar-ocr-aszinkron-design.md).
                     $cegId = $this->resolveSajatCegId($request);
                     [$feltoltoTipus, $feltoltoId, $feltoltoNev] = $this->resolveFeltolto($request);
-                    echo json_encode($beerkezettDokumentumInterface->elemez($request['base64'], $request['fajlnev'] ?? null, $cegId, $feltoltoTipus, $feltoltoId, $feltoltoNev));
+                    $eredmeny = $beerkezettDokumentumInterface->letrehozFeldolgozatlan($request['base64'], $request['fajlnev'] ?? null, $cegId, $feltoltoTipus, $feltoltoId, $feltoltoNev);
+                    if (!empty($eredmeny['success'])) {
+                        $this->inditsBackgroundOcr($eredmeny['dokumentum']['id']);
+                    }
+                    echo json_encode($eredmeny);
                     return;
                 case 'getBeerkezettDokumentumok':
                     $kerelmezo = $this->resolveKerelmezo($request);
@@ -1720,6 +1747,14 @@ class ApiHandler {
                         $this->logAudit($kerelmezo['ceg_id'], 'beerkezett_dokumentumok', $request['id'], 'torles');
                     }
                     echo json_encode($result);
+                    return;
+                case 'ujraprobalBeerkezettDokumentumOcr':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    $eredmeny = $beerkezettDokumentumInterface->ujraprobal($request['id'], $kerelmezo['ceg_id']);
+                    if (!empty($eredmeny['success'])) {
+                        $this->inditsBackgroundOcr($request['id']);
+                    }
+                    echo json_encode($eredmeny);
                     return;
                 case 'getSajatBeerkezettDokumentumok':
                     // Sofőr-önkiszolgáló akció (ld. getBejelentesekSofor
