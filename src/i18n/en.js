@@ -92,6 +92,7 @@ export const landing = {
     title: "Have a question? We have answers.",
   },
   breadcrumbHome: "Home",
+  breadcrumbNavLabel: "Breadcrumb",
   contact: {
     eyebrow: "Contact",
     title: "Get in Touch",
