@@ -22,6 +22,7 @@ export default function DokumentumKartya({ dokumentum, onOpen }) {
   const [thumbHiba, setThumbHiba] = useState(false);
   const thumbRef = useRef(null);
   const hibas = dokumentum.ocr_allapot === "hiba";
+  const feldolgozatlan = dokumentum.ocr_allapot === "feldolgozatlan";
 
   useEffect(() => {
     if (!isKep || thumbSrc || thumbHiba) return undefined;
@@ -54,7 +55,11 @@ export default function DokumentumKartya({ dokumentum, onOpen }) {
       ref={thumbRef}
       onClick={() => onOpen(dokumentum)}
       className={`flex w-full flex-col rounded-2xl border bg-white p-3 text-left shadow-soft transition-all duration-200 ease-fluid hover:-translate-y-0.5 hover:shadow-soft-lg dark:bg-ink-900 ${
-        hibas ? "border-amber-300 dark:border-amber-700" : "border-ink-100 dark:border-ink-800"
+        hibas
+          ? "border-amber-300 dark:border-amber-700"
+          : feldolgozatlan
+            ? "border-sky-200 dark:border-sky-800"
+            : "border-ink-100 dark:border-ink-800"
       }`}
     >
       <div className="mb-2 flex h-24 w-full items-center justify-center overflow-hidden rounded-xl bg-slate-100 dark:bg-ink-800">
@@ -75,10 +80,20 @@ export default function DokumentumKartya({ dokumentum, onOpen }) {
         </span>
         <span
           className={`flex flex-shrink-0 items-center gap-1 text-[10px] font-semibold uppercase tracking-wide ${
-            hibas ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"
+            hibas
+              ? "text-amber-600 dark:text-amber-400"
+              : feldolgozatlan
+                ? "text-sky-600 dark:text-sky-400"
+                : "text-emerald-600 dark:text-emerald-400"
           }`}
         >
-          {hibas ? <PiWarningCircleLight className="h-3.5 w-3.5" /> : <PiCheckCircleLight className="h-3.5 w-3.5" />}
+          {hibas ? (
+            <PiWarningCircleLight className="h-3.5 w-3.5" />
+          ) : feldolgozatlan ? (
+            <span className="h-3 w-3 animate-spin rounded-full border-2 border-sky-200 border-t-sky-600 dark:border-sky-900 dark:border-t-sky-400" />
+          ) : (
+            <PiCheckCircleLight className="h-3.5 w-3.5" />
+          )}
           {OCR_ALLAPOT_LABEL[dokumentum.ocr_allapot]}
         </span>
       </div>
