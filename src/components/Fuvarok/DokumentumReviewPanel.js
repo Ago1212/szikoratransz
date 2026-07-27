@@ -47,6 +47,7 @@ export default function DokumentumReviewPanel({ dokumentum, soforok = [], onClos
   const [tipus, setTipus] = useState(dokumentum?.tipus || "ismeretlen");
   const [soforId, setSoforId] = useState(dokumentum?.hozzarendelt_sofor_id || "");
   const [discarding, setDiscarding] = useState(false);
+  const [ujraprobalasFolyamatban, setUjraprobalasFolyamatban] = useState(false);
   const isMobile = useMediaQuery({ maxWidth: 1023 });
   const ocr = dokumentum?.ocr_adatok || {};
 
@@ -178,11 +179,46 @@ export default function DokumentumReviewPanel({ dokumentum, soforok = [], onClos
     }
   };
 
+  const handleUjraprobalas = async () => {
+    setUjraprobalasFolyamatban(true);
+    const user = JSON.parse(localStorage.getItem("user"));
+    const result = await fetchAction("ujraprobalBeerkezettDokumentumOcr", {
+      ceg_id: user.ceg_id,
+      kerelmezo_id: user.id,
+      id: dokumentum.id,
+    });
+    setUjraprobalasFolyamatban(false);
+    if (result?.success) {
+      toast.success("Újrafeldolgozás elindítva — frissítsd a listát néhány másodperc múlva.");
+    } else {
+      toast.error(result?.message || "Az újrapróbálás sikertelen.");
+    }
+  };
+
   const bizonytalan = ocr.egyeb_megjegyzes && /bizonytalan/i.test(ocr.egyeb_megjegyzes);
 
   const tartalom = (
     <>
       <ElonezetKep dataUrl={dataUrl} mime={mime} loading={loading} filename={dokumentum.filename} />
+
+      {dokumentum.ocr_allapot !== "kesz" && (
+        <div className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-amber-50 p-3 text-xs text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+          <span className="flex items-center gap-1.5">
+            <PiWarningCircleLight className="h-4 w-4 flex-shrink-0" />
+            {dokumentum.ocr_allapot === "feldolgozatlan"
+              ? "Az OCR feldolgozás még nem fejeződött be."
+              : "Az automatikus feldolgozás sikertelen volt."}
+          </span>
+          <button
+            type="button"
+            onClick={handleUjraprobalas}
+            disabled={ujraprobalasFolyamatban}
+            className="flex-shrink-0 rounded-lg bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-amber-700 shadow-soft hover:bg-amber-100 disabled:opacity-50 dark:bg-ink-900 dark:text-amber-300 dark:hover:bg-ink-800"
+          >
+            Újrapróbálás
+          </button>
+        </div>
+      )}
 
       <div className="mt-4 space-y-3">
         <label className="block text-xs font-semibold uppercase tracking-wide text-ink-400">
