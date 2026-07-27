@@ -746,6 +746,24 @@ visszaállt `feldolgozatlan`-ra, majd egy valódi, újrafutó Gemini-hívás
 helyesen `kesz`-re oldotta fel. A teszt közben létrehozott DB-sorok, fizikai
 fájlok és munkamenetek a teszt végén törölve lettek.
 
+**Gotcha, amit a whole-branch review talált meg (a helyi teszt sosem futott
+le rajta)**: `ApiHandler::inditsBackgroundOcr()` a háttér-processz
+indításához használt PHP-binárist `PHP_BINARY`-ból olvassa ki — ez a
+JELENLEG FUTÓ SAPI binárisa, nem feltétlenül a CLI php. A helyi
+`php8.2 -S` (SAPI: `cli-server`) alatt ez történetesen maga a CLI bináris,
+ezért minden itteni élő teszt sikeresnek tűnt — de éles Apache/mod_php
+vagy php-fpm alatt `PHP_BINARY` az apache2/php-fpm binárist adná vissza,
+amivel az `exec()`-hívás csendben SOHA nem futtatná le a scriptet (a HTTP-
+válasz eközben rendben, gyorsan visszatérne, mert a gyors beszúrás
+önmagában attól még lefut). Fix: csak `cli`/`cli-server` SAPI alatt bízunk
+`PHP_BINARY`-ban, egyébként egy env-változóval felülírható,
+portábilis (`PHP_BINDIR . '/php'`) alapértelmezésre esünk vissza — de ezt
+az ágat ebben a fejlesztői környezetben (nincs itt Apache/php-fpm) nem
+lehetett élesben kipróbálni, csak kód-olvasással ellenőrizve. **Ha ez a
+mechanizmus valaha éles környezetben nem indítaná el az OCR-t, ez legyen
+az első gyanú** — egy feltöltés után nézd meg, hogy a sor ténylegesen
+elhagyja-e a `feldolgozatlan` állapotot 30-60 másodpercen belül.
+
 ## Workflow notes for Claude Code
 
 - For any UI/frontend change, verify it by actually running it (`npm start` and/or `php8.2 -S localhost:8001` as needed, opening it in a browser, screenshotting/clicking through the changed flow) before reporting the task done — don't rely on code review or lint alone.
