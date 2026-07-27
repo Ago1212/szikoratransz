@@ -312,7 +312,25 @@ export const quoteForm = {
     description: "pl. 2 raklap gépalkatrész, kb. 800 kg",
   },
 };
-export const footer = {};
+export const footer = {
+  description:
+    "Szikora Transz Kft. — belföldi és nemzetközi fuvarozás 2010 óta, modern flottával és teljes körű biztosítással.",
+  bullets: ["10+ év tapasztalat", "Teljes körű biztosítás", "Válasz 24 órán belül"],
+  servicesHeading: "Szolgáltatásaink",
+  companyHeading: "Cég",
+  companyLinks: {
+    home: "Kezdőlap",
+    about: "Rólunk",
+    faq: "GYIK",
+    driverApplication: "Sofőr jelentkezés",
+    login: "Bejelentkezés",
+    privacy: "Adatvédelmi tájékoztató",
+  },
+  contactHeading: "Kapcsolat",
+  taxIdLabel: "Adószám:",
+  privacyLink: "Adatvédelem",
+  allRightsReserved: "Minden jog fenntartva.",
+};
 export const adatvedelem = {};
 export const pagesBelfoldi = {
   metaTitle: "Belföldi fuvarozás árajánlat | Szikora Transz Kft.",

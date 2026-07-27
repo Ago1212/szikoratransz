@@ -74,18 +74,11 @@ export function pickFaq(t, ...selectors) {
     .filter(Boolean);
 }
 
-// `label` egyelőre marad (Hungarian, literal) — ServicePage.js (Task 3) és
-// Footer.js (Task 12) fokozatosan állnak át a `t("landing.servicePages.<id>")`
-// lookupra; Task 12 távolítja el ezt a mezőt végleg, mint utolsó fogyasztó.
 export const SERVICE_PAGES = [
-  { id: "domestic", path: "/belfoldi-fuvarozas-arajanlat", label: "Belföldi fuvarozás" },
-  {
-    id: "international",
-    path: "/nemzetkozi-fuvarozas-vamugyintezessel",
-    label: "Nemzetközi fuvarozás",
-  },
-  { id: "insured", path: "/biztositott-szallitas", label: "Biztosított szállítás" },
-  { id: "express", path: "/expressz-fuvarozas", label: "Expressz fuvarozás" },
-  { id: "event", path: "/rendezveny-szallitas", label: "Rendezvényszállítás" },
-  { id: "custom", path: "/egyedi-arajanlat-fuvarozas", label: "Egyedi árajánlat" },
+  { id: "domestic", path: "/belfoldi-fuvarozas-arajanlat" },
+  { id: "international", path: "/nemzetkozi-fuvarozas-vamugyintezessel" },
+  { id: "insured", path: "/biztositott-szallitas" },
+  { id: "express", path: "/expressz-fuvarozas" },
+  { id: "event", path: "/rendezveny-szallitas" },
+  { id: "custom", path: "/egyedi-arajanlat-fuvarozas" },
 ];

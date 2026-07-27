@@ -311,7 +311,25 @@ export const quoteForm = {
     description: "e.g. 2 pallets of machine parts, approx. 800 kg",
   },
 };
-export const footer = {};
+export const footer = {
+  description:
+    "Szikora Transz Kft. — domestic and international freight transport since 2010, with a modern fleet and full insurance coverage.",
+  bullets: ["10+ years of experience", "Full insurance coverage", "Response within 24 hours"],
+  servicesHeading: "Our Services",
+  companyHeading: "Company",
+  companyLinks: {
+    home: "Home",
+    about: "About Us",
+    faq: "FAQ",
+    driverApplication: "Driver Application",
+    login: "Log In",
+    privacy: "Privacy Policy",
+  },
+  contactHeading: "Contact",
+  taxIdLabel: "Tax ID:",
+  privacyLink: "Privacy Policy",
+  allRightsReserved: "All rights reserved.",
+};
 export const adatvedelem = {};
 export const pagesBelfoldi = {
   metaTitle: "Domestic Freight Transport Quote | Szikora Transz Kft.",
