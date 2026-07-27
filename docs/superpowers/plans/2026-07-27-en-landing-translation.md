@@ -13,7 +13,7 @@
 - This repo has **no test framework** (`npm test` has no test files, no PHP test suite) — every task's "verify" step is **manual browser verification** (`npm start`, navigate, read the rendered text / devtools), per this project's own CLAUDE.md convention ("verify by actually running it... before reporting done"), not automated tests. Do this for real in each task, don't skip it.
 - No new npm dependency is needed anywhere in this plan — do not add `react-i18next` or similar.
 - Every internal `<Link>`/`href` that must vary by locale goes through `localizePath(path, locale)` from `src/i18n/index.js` (Task 1) — never hand-build an `/en...` string inline.
-- `landingContent.js`'s shared arrays (FEATURES/PROCESS_STEPS/TESTIMONIALS/FAQ_ITEMS) hold **only ids/icons/hrefs**, never literal text, after Task 2. `SERVICE_PAGES` keeps its literal `label` field until Task 12 removes it (last consumer).
+- `landingContent.js`'s shared arrays (FEATURES/PROCESS_STEPS/TESTIMONIALS/FAQ_ITEMS) hold **only ids/icons/hrefs**, never literal text, after Task 2. `SERVICE_PAGES` keeps its literal `label` field until Task 11 removes it (last consumer, `Footer.js`).
 - The admin/driver app (anything under `/admin`, `/user`, `/auth`) is **out of scope** — never touched by any task in this plan.
 - `QuoteForm.js`'s `composeMessage()` output (the free-text block sent to the admin inbox) stays **Hungarian always**, regardless of UI locale — see Task 4.
 - Company identifiers (address, tax id, phone, email, domain) are **never translated** — copied verbatim into English content.

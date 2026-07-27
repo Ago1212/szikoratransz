@@ -5,14 +5,21 @@ import { Link } from "react-router-dom";
 // `[{name, path}, ...]` listát várja, és a Főoldalt ugyanúgy automatikusan
 // elé fűzi. A két helyen (JSON-LD + látható DOM) megjelenő tartalomnak
 // egyeznie kell — a Google strukturáltadat-irányelvei ezt várják el egy
-// BreadcrumbList sémától.
-export default function Breadcrumb({ items = [] }) {
+// BreadcrumbList sémától. `homeLabel`/`homePath`/`navLabel` lokalizálva jön
+// a hívótól (ServicePage.js/Adatvedelem.js), hogy ez a komponens maga ne
+// függjön az i18n-rétegtől.
+export default function Breadcrumb({
+  items = [],
+  homeLabel = "Főoldal",
+  homePath = "/",
+  navLabel = "Morzsamenü",
+}) {
   return (
-    <nav aria-label="Morzsamenü" className="text-xs font-[Overpass_Mono] text-[#23262B]/50 mb-4">
+    <nav aria-label={navLabel} className="text-xs font-[Overpass_Mono] text-[#23262B]/50 mb-4">
       <ol className="flex items-center flex-wrap gap-x-2 gap-y-1">
         <li>
-          <Link to="/" className="hover:text-[#1E3AA8] transition-colors duration-300">
-            Főoldal
+          <Link to={homePath} className="hover:text-[#1E3AA8] transition-colors duration-300">
+            {homeLabel}
           </Link>
         </li>
         {items.map((item, index) => {
