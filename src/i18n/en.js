@@ -330,7 +330,56 @@ export const footer = {
   privacyLink: "Privacy Policy",
   allRightsReserved: "All rights reserved.",
 };
-export const adatvedelem = {};
+export const adatvedelem = {
+  metaTitle: "Privacy Policy | Szikora Transz Kft.",
+  metaDescription:
+    "Information on what personal data Szikora Transz Kft. processes when you fill out the quote-request and driver-application forms, and what rights you have.",
+  eyebrow: "Legal Notice",
+  h1: "Privacy Policy",
+  breadcrumbLabel: "Privacy Policy",
+  backLink: "← Back to homepage",
+  section1: { heading: "1. Data Controller" },
+  section2: {
+    heading: "2. What Data We Process",
+    intro: "When you fill out our forms, you provide the following data:",
+    items: [
+      "full name",
+      "phone number",
+      "email address",
+      "additional information you provide related to the freight job/application (e.g. the direction of the shipment, the pickup/delivery locations, the desired timing, a description of the goods to be transported, or, in the case of a driver application, information about your qualifications/experience)",
+    ],
+  },
+  section3: {
+    heading: "3. Purpose and Legal Basis of Data Processing",
+    body: "The purpose of the data processing is to respond to your quote request or driver application, and to contact you at the details you have provided. The legal basis for the data processing is your voluntary consent, given by submitting the form.",
+  },
+  section4: {
+    heading: "4. Duration of Data Processing",
+    body: "We process the data provided in the form for as long as needed to respond to your inquiry, and — if a business relationship results from it — for the duration of that cooperation. If the inquiry does not result in a business relationship, we delete the data within a reasonable time after the inquiry is closed, at the latest.",
+  },
+  section5: {
+    heading: "5. Who Has Access to the Data",
+    body: "The data you provide is accessible to Szikora Transz Kft.'s staff responsible for quoting/recruitment. We do not share your data with third parties, except where required by law.",
+  },
+  section6: {
+    heading: "6. Your Rights",
+    intro: "With respect to your data, you are entitled to:",
+    items: [
+      "the right of access (you may request information about what data of yours we process),",
+      "the right to rectification,",
+      "the right to erasure,",
+      "the right to restriction of processing,",
+      "the right to withdraw your consent at any time,",
+      "and the right to lodge a complaint with the supervisory authority (NAIH).",
+    ],
+  },
+  section7: {
+    heading: "7. Legal Remedy",
+    body: "If you believe that the processing of your data does not comply with legal requirements, you may file a complaint with the National Authority for Data Protection and Freedom of Information (NAIH), or you may turn to the courts.",
+  },
+  footerDisclaimer:
+    "* This notice describes the data processing of the forms currently actually in operation on the website (quote request, driver application). It is advisable to have this reviewed by a legal expert before considering it fully final for any and all future data processing.",
+};
 export const pagesBelfoldi = {
   metaTitle: "Domestic Freight Transport Quote | Szikora Transz Kft.",
   metaDescription:

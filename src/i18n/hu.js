@@ -331,7 +331,56 @@ export const footer = {
   privacyLink: "Adatvédelem",
   allRightsReserved: "Minden jog fenntartva.",
 };
-export const adatvedelem = {};
+export const adatvedelem = {
+  metaTitle: "Adatvédelmi tájékoztató | Szikora Transz Kft.",
+  metaDescription:
+    "Tájékoztató, milyen személyes adatokat kezel a Szikora Transz Kft. az ajánlatkérő és jelentkezési űrlapok kitöltésekor, milyen jogok illetik meg Önt.",
+  eyebrow: "Jogi tájékoztató",
+  h1: "Adatvédelmi tájékoztató",
+  breadcrumbLabel: "Adatvédelmi tájékoztató",
+  backLink: "← Vissza a főoldalra",
+  section1: { heading: "1. Az adatkezelő" },
+  section2: {
+    heading: "2. Milyen adatokat kezelünk",
+    intro: "Az űrlapok kitöltésekor az alábbi adatokat adja meg:",
+    items: [
+      "teljes név",
+      "telefonszám",
+      "email cím",
+      "a fuvarral/jelentkezéssel kapcsolatos, Ön által megadott további adatok (pl. a fuvar iránya, honnan/hová szállítanánk, kívánt időzítés, a szállítandó áru leírása, illetve sofőr-jelentkezés esetén a végzettségre/tapasztalatra vonatkozó információk)",
+    ],
+  },
+  section3: {
+    heading: "3. Az adatkezelés célja és jogalapja",
+    body: "Az adatkezelés célja az Ön ajánlatkérésének vagy sofőr-jelentkezésének megválaszolása, és a kapcsolatfelvétel az Ön által megadott elérhetőségeken. Az adatkezelés jogalapja az Ön önkéntes hozzájárulása, amelyet az űrlap elküldésével ad meg.",
+  },
+  section4: {
+    heading: "4. Az adatkezelés időtartama",
+    body: "Az űrlapon megadott adatokat a megkeresés megválaszolásához, és — amennyiben ebből üzleti kapcsolat jön létre — az együttműködés időtartama alatt kezeljük. Amennyiben a megkeresésből nem lesz üzleti kapcsolat, az adatokat legkésőbb a megkeresés lezárását követő ésszerű időn belül töröljük.",
+  },
+  section5: {
+    heading: "5. Ki fér hozzá az adatokhoz",
+    body: "A megadott adatokhoz a Szikora Transz Kft. az ajánlatadásért/toborzásért felelős munkatársai férnek hozzá. Adatait harmadik félnek nem adjuk át, kivéve, ha ezt jogszabály írja elő.",
+  },
+  section6: {
+    heading: "6. Az Ön jogai",
+    intro: "Adatai vonatkozásában Önt megilleti:",
+    items: [
+      "a hozzáférés joga (tájékoztatást kérhet arról, milyen adatait kezeljük),",
+      "a helyesbítés joga,",
+      "a törlés joga,",
+      "az adatkezelés korlátozásának joga,",
+      "a hozzájárulás bármikori visszavonásának joga,",
+      "és a felügyeleti hatósághoz (NAIH) fordulás joga.",
+    ],
+  },
+  section7: {
+    heading: "7. Jogorvoslat",
+    body: "Amennyiben úgy ítéli meg, hogy adatai kezelése nem felel meg a jogszabályi előírásoknak, panasszal fordulhat a Nemzeti Adatvédelmi és Információszabadság Hatósághoz (NAIH), vagy bírósághoz fordulhat.",
+  },
+  footerDisclaimer:
+    "* Ez a tájékoztató a weboldalon jelenleg ténylegesen működő űrlapok (ajánlatkérés, sofőr-jelentkezés) adatkezelését mutatja be. Érdemes jogi szakértővel felülvizsgáltatni, mielőtt teljes körűen, minden jövőbeli adatkezelésre nézve is véglegesnek tekintenék.",
+};
 export const pagesBelfoldi = {
   metaTitle: "Belföldi fuvarozás árajánlat | Szikora Transz Kft.",
   metaDescription:
