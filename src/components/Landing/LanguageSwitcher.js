@@ -3,16 +3,42 @@ import { Link } from "react-router-dom";
 import { PiCaretDownLight } from "react-icons/pi";
 import { localizePath } from "i18n/index.js";
 
+// Unicode zászló-emoji (🇭🇺/🇬🇧) sok rendszeren (jellemzően Linuxon, emoji-
+// betűkészlet nélkül) nem zászlóként, hanem két nyers betűként vagy egy
+// törött glyph-ként jelenik meg — ezért helyette kézzel rajzolt, inline SVG
+// zászlók, amik minden platformon egyformán, megbízhatóan jelennek meg.
+function FlagHU({ className }) {
+  return (
+    <svg viewBox="0 0 20 14" className={className} aria-hidden="true">
+      <rect width="20" height="14" fill="#fff" />
+      <rect width="20" height="4.67" y="0" fill="#CE2939" />
+      <rect width="20" height="4.67" y="9.33" fill="#477050" />
+    </svg>
+  );
+}
+
+function FlagGB({ className }) {
+  return (
+    <svg viewBox="0 0 20 14" className={className} aria-hidden="true">
+      <rect width="20" height="14" fill="#00247D" />
+      <path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" strokeWidth="2.8" />
+      <path d="M0,0 L8.5,6 M20,0 L11.5,6 M0,14 L8.5,8 M20,14 L11.5,8" stroke="#CF142B" strokeWidth="1" />
+      <path d="M10,0 V14 M0,7 H20" stroke="#fff" strokeWidth="4.6" />
+      <path d="M10,0 V14 M0,7 H20" stroke="#CF142B" strokeWidth="2.4" />
+    </svg>
+  );
+}
+
 // Csak HU/EN — a `LOCALES` bővíthető később, ha jön egy harmadik nyelv, a
 // lenyíló lista automatikusan felsorolná a jelenlegitől eltérő összes elemet.
 const LOCALES = {
-  hu: { flag: "🇭🇺", label: "Magyar" },
-  en: { flag: "🇬🇧", label: "English" },
+  hu: { Flag: FlagHU, label: "Magyar" },
+  en: { Flag: FlagGB, label: "English" },
 };
 
-// Sötét, lekerekített "chip" gomb + lenyíló lista — ugyanaz a vizuális nyelv,
-// mint a hero ajánlatkérő kártya (#23262B/#2E3239 sötét panel), hogy a
-// nyelvváltó ne süllyedjen el a világos navigációs sávban.
+// Világos, a navigáció többi eleméhez illő "chip" gomb (fehér háttér,
+// halvány szegély) + lenyíló lista — szándékosan NEM sötét/kontrasztos
+// kiemelés, hogy ne törje meg a navigációs sáv visszafogott megjelenését.
 export default function LanguageSwitcher({ locale, path }) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef(null);
@@ -38,36 +64,35 @@ export default function LanguageSwitcher({ locale, path }) {
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="inline-flex items-center gap-2 pl-3 pr-2.5 py-2 rounded-xl bg-[#23262B] hover:bg-[#2E3239] text-white text-sm font-[Overpass] font-semibold transition-colors duration-300"
+        className="inline-flex items-center gap-2 pl-2.5 pr-2 py-1.5 rounded-xl border border-[#23262B]/15 bg-white hover:border-[#23262B]/30 text-[#23262B]/80 text-sm font-[Overpass] font-semibold transition-colors duration-300"
       >
-        <span className="text-base leading-none" aria-hidden="true">
-          {current.flag}
-        </span>
+        <current.Flag className="w-5 h-3.5 rounded-sm flex-shrink-0 ring-1 ring-black/10" />
         {current.label}
         <PiCaretDownLight
-          className={`text-xs text-white/60 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+          className={`text-xs text-[#23262B]/40 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
         />
       </button>
 
       {open && (
         <div
           role="listbox"
-          className="absolute right-0 mt-2 w-40 rounded-xl bg-[#23262B] shadow-xl overflow-hidden z-50 py-1"
+          className="absolute right-0 mt-2 w-40 rounded-xl border border-[#23262B]/10 bg-white shadow-xl overflow-hidden z-50 py-1"
         >
-          {otherLocales.map((loc) => (
-            <Link
-              key={loc}
-              to={localizePath(path, loc)}
-              onClick={() => setOpen(false)}
-              role="option"
-              className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-white/90 hover:bg-white hover:text-[#23262B] transition-colors duration-200"
-            >
-              <span className="text-base leading-none" aria-hidden="true">
-                {LOCALES[loc].flag}
-              </span>
-              {LOCALES[loc].label}
-            </Link>
-          ))}
+          {otherLocales.map((loc) => {
+            const { Flag, label } = LOCALES[loc];
+            return (
+              <Link
+                key={loc}
+                to={localizePath(path, loc)}
+                onClick={() => setOpen(false)}
+                role="option"
+                className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-[#23262B]/70 hover:bg-[#1E3AA8]/5 hover:text-[#1E3AA8] transition-colors duration-200"
+              >
+                <Flag className="w-5 h-3.5 rounded-sm flex-shrink-0 ring-1 ring-black/10" />
+                {label}
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>
