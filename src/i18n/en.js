@@ -430,6 +430,38 @@ export const pagesBiztositott = {
     },
   },
 };
-export const pagesExpressz = {};
+export const pagesExpressz = {
+  metaTitle: "Express Freight Transport — Urgent Shipping | Szikora Transz Kft.",
+  metaDescription:
+    "Urgent shipment? Express transport with a guaranteed delivery time and priority handling. Request a quote now — response within 24 hours.",
+  eyebrow: "Express Shipping",
+  h1: "Express Freight Transport, When Time Matters Most",
+  intro:
+    "Priority handling for urgent jobs, with a guaranteed delivery time — even if you can only give us a few hours' notice. Get in touch and we'll sort out the details right away.",
+  bullets: [
+    { title: "Priority handling", desc: "We handle urgent jobs as a priority, outside our normal scheduling." },
+    {
+      title: "Guaranteed delivery time",
+      desc: "We commit to the deadline agreed on when you request your quote — down to the minute.",
+    },
+    { title: "Fast response", desc: "If it's urgent, call us directly for the fastest response." },
+    {
+      title: "The same reliability, even under time pressure",
+      desc: "Express shipments are also carried out under full insurance coverage.",
+    },
+  ],
+  section: { heading: "What exactly does 'guaranteed delivery time' mean?" },
+  faqOverrides: {
+    response_time: {
+      a: "For express jobs, we respond even faster — typically within a few hours. If it's urgent, call us directly for the quickest possible turnaround.",
+    },
+    pricing_factors: {
+      a: "For urgent shipments, alongside the usual factors (distance, cargo size and type), the available time window also matters — the shorter the notice, the more the quote depends on our capacity at that exact moment. We still price every job individually here too — there's no automatic rush surcharge.",
+    },
+    custom_quote: {
+      a: "Yes — we also provide custom quotes for urgent, oversized, or specially handled cargo, even on short notice. Call us directly if your situation calls for a fast turnaround.",
+    },
+  },
+};
 export const pagesRendezveny = {};
 export const pagesEgyedi = {};

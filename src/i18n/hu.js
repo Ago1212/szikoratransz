@@ -431,6 +431,41 @@ export const pagesBiztositott = {
     },
   },
 };
-export const pagesExpressz = {};
+export const pagesExpressz = {
+  metaTitle: "Expressz fuvarozás — sürgős szállítás | Szikora Transz Kft.",
+  metaDescription:
+    "Sürgős fuvar? Expressz szállítás garantált kiszállítási idővel, soron kívüli kezeléssel. Kérjen ajánlatot most — válasz 24 órán belül.",
+  eyebrow: "Expressz szállítás",
+  h1: "Expressz fuvarozás, ha az idő a legfontosabb",
+  intro:
+    "Sürgős fuvarok soron kívüli kezelése, garantált kiszállítási idővel — akkor is, ha a szállítást csak órákkal előre tudja bejelenteni. Vegye fel velünk a kapcsolatot, és soron kívül egyeztetjük a részleteket.",
+  bullets: [
+    { title: "Soron kívüli kezelés", desc: "Sürgős megbízásokat kiemelten, a normál ütemezésen kívül kezelünk." },
+    {
+      title: "Garantált kiszállítási idő",
+      desc: "Az ajánlatkérés során egyeztetett határidőt vállaljuk — pontosan, percre.",
+    },
+    {
+      title: "Gyors kapcsolatfelvétel",
+      desc: "Sürgős esetben hívjon közvetlenül telefonon a gyorsabb egyeztetésért.",
+    },
+    {
+      title: "Ugyanaz a biztonság, sürgősen is",
+      desc: "Az expressz fuvarok is teljes biztosítási fedezettel zajlanak.",
+    },
+  ],
+  section: { heading: "Mit jelent pontosan a garantált kiszállítási idő?" },
+  faqOverrides: {
+    response_time: {
+      a: "Expressz megbízásoknál ennél is gyorsabban, jellemzően néhány órán belül visszajelzünk — sürgős esetben hívjon minket közvetlenül telefonon a leggyorsabb egyeztetésért.",
+    },
+    pricing_factors: {
+      a: "Sürgős fuvaroknál a szokásos tényezők (távolság, az áru mérete és jellege) mellett a rendelkezésre álló időablak is számít — minél rövidebb a bejelentési idő, annál inkább az adott pillanatban szabad kapacitásunkhoz igazodik az ajánlat. Egyedi, tételes árazás itt is érvényes, nincs automatikus sürgősségi felár.",
+    },
+    custom_quote: {
+      a: "Igen — sürgős, szokatlan méretű vagy speciális kezelést igénylő rakományra is adunk egyedi árajánlatot, akár rövid határidővel is. Hívjon minket közvetlenül, ha a helyzet gyors egyeztetést igényel.",
+    },
+  },
+};
 export const pagesRendezveny = {};
 export const pagesEgyedi = {};
