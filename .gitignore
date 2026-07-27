@@ -36,3 +36,8 @@ commit.sh
 
 # Git worktrees created for isolated feature implementation
 .worktrees/
+
+# Google service-account credential keys (never belong in the repo — store under ~/.config/claude-seo/)
+*service-account*.json
+*-service-account.json
+chatt-*.json
