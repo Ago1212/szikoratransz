@@ -381,7 +381,56 @@ export const pagesNemzetkozi = {
     },
   },
 };
-export const pagesBiztositott = {};
+export const pagesBiztositott = {
+  metaTitle: "Biztosított szállítás | Szikora Transz Kft.",
+  metaDescription:
+    "Minden fuvarunk teljes biztosítási fedezettel történik — az áru felvételtől a kiszállításig biztos kezekben van. Kérjen árajánlatot.",
+  eyebrow: "Biztosított szállítás",
+  h1: "Biztosított szállítás — az árukészlete biztos kezekben van",
+  intro:
+    "Minden fuvarunkat teljes körű biztosítási fedezet mellett végezzük, a felvételtől a kiszállításig. Esetleges kár esetén csapatunk intézi a biztosítóval a kárrendezés teljes ügymenetét, Önnek nem kell utánajárnia.",
+  bullets: [
+    {
+      title: "Teljes körű fedezet minden fuvarra",
+      desc: "Külön kérés nélkül, alapból biztosítási fedezet mellett szállítunk — nincs rejtett kikötés vagy felár.",
+    },
+    {
+      title: "Kárrendezés helyett Ön a dolgára figyelhet",
+      desc: "Kár esetén a biztosítóval való egyeztetést és a kárrendezés ügyintézését csapatunk vállalja át Öntől.",
+    },
+    {
+      title: "Gondos kezelés, a fedezettől függetlenül",
+      desc: "A biztosítás mellett a rakodás és a szállítás során is körültekintően, sérülésmentesen kezeljük az árut.",
+    },
+    {
+      title: "Bármilyen áruféleséghez igazítva",
+      desc: "Az áru jellege és értéke alapján a legmegfelelőbb járművet és fedezetet választjuk a fuvarhoz.",
+    },
+  ],
+  section: {
+    heading: "Hogyan zajlik a kárrendezés lépésről lépésre?",
+    steps: [
+      {
+        step: "Kárbejelentés",
+        desc: "Jelezze felénk telefonon vagy e-mailben, lehetőleg fotókkal dokumentálva az észlelt sérülést vagy hiányt.",
+      },
+      {
+        step: "Kapcsolatfelvétel a biztosítóval",
+        desc: "Csapatunk felveszi a kapcsolatot a biztosítóval, és összeállítja a szükséges dokumentációt — a fuvarlevelet, valamint a fel- és lerakodáskori állapotot rögzítő adatokat.",
+      },
+      {
+        step: "Ügyintézés",
+        desc: "A biztosítóval való egyeztetést és a kárrendezés teljes ügymenetét csapatunk viszi — Önnek nem kell közvetlenül kapcsolatba lépnie velük.",
+      },
+      { step: "Visszajelzés", desc: "Ön a folyamat végén kap tájékoztatást az eredményről." },
+    ],
+  },
+  faqOverrides: {
+    response_time: {
+      a: "Általában 24 órán belül felvesszük Önnel a kapcsolatot egy részletes árajánlattal, amiben a biztosítási fedezet részletei is szerepelnek.",
+    },
+  },
+};
 export const pagesExpressz = {};
 export const pagesRendezveny = {};
 export const pagesEgyedi = {};

@@ -380,7 +380,56 @@ export const pagesNemzetkozi = {
     },
   },
 };
-export const pagesBiztositott = {};
+export const pagesBiztositott = {
+  metaTitle: "Insured Shipping | Szikora Transz Kft.",
+  metaDescription:
+    "Every shipment we handle is fully insured — your goods are in safe hands from pickup to delivery. Request a quote.",
+  eyebrow: "Insured Shipping",
+  h1: "Insured Shipping — Your Goods Are in Safe Hands",
+  intro:
+    "Every job we handle is carried out under full insurance coverage, from pickup to delivery. If damage does occur, our team manages the entire claims process with the insurer, so you don't have to chase it up yourself.",
+  bullets: [
+    {
+      title: "Full coverage on every job",
+      desc: "We ship under insurance coverage by default, no special request needed — no hidden clauses, no surcharges.",
+    },
+    {
+      title: "We handle the claims, so you don't have to",
+      desc: "If damage occurs, our team takes over liaising with the insurer and managing the entire claims process for you.",
+    },
+    {
+      title: "Careful handling, regardless of coverage",
+      desc: "Beyond the insurance itself, we handle loading and transport carefully to avoid damage in the first place.",
+    },
+    {
+      title: "Tailored to any type of cargo",
+      desc: "We choose the most suitable vehicle and coverage for the job based on the nature and value of the goods.",
+    },
+  ],
+  section: {
+    heading: "How does the claims process work, step by step?",
+    steps: [
+      {
+        step: "Report the damage",
+        desc: "Let us know by phone or email, ideally with photos documenting the damage or shortage you've noticed.",
+      },
+      {
+        step: "Contacting the insurer",
+        desc: "Our team contacts the insurer and puts together the necessary documentation — the consignment note, plus records of the goods' condition at pickup and delivery.",
+      },
+      {
+        step: "Handling it for you",
+        desc: "Our team manages the entire process of liaising with the insurer and settling the claim — you won't need to deal with them directly.",
+      },
+      { step: "Follow-up", desc: "You'll be informed of the outcome once the process is complete." },
+    ],
+  },
+  faqOverrides: {
+    response_time: {
+      a: "We typically get back to you within 24 hours with a detailed quote that also spells out the specifics of the insurance coverage.",
+    },
+  },
+};
 export const pagesExpressz = {};
 export const pagesRendezveny = {};
 export const pagesEgyedi = {};
