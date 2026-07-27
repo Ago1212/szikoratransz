@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useHistory } from "react-router-dom";
-import { PiUploadLight, PiMagnifyingGlassLight } from "react-icons/pi";
+import { PiUploadLight, PiMagnifyingGlassLight, PiArrowsClockwiseLight } from "react-icons/pi";
 import PageHeader from "components/UI/PageHeader.js";
 import DokumentumKartya from "components/Fuvarok/DokumentumKartya.js";
 import DokumentumReviewPanel from "components/Fuvarok/DokumentumReviewPanel.js";
@@ -85,11 +85,7 @@ export default function BeerkezettDokumentumok() {
           "elemezBeerkezettDokumentum",
         );
         if (result?.success) {
-          toast.success(
-            result.dokumentum.ocr_allapot === "kesz"
-              ? `${file.name}: feldolgozva.`
-              : `${file.name}: feltöltve, de az automatikus feldolgozás sikertelen — töltsd ki kézzel.`,
-          );
+          toast.success(`${file.name}: feltöltve, a feldolgozás a háttérben folytatódik.`);
         } else {
           toast.error(`${file.name}: ${result?.message || "a feltöltés sikertelen."}`);
         }
@@ -185,6 +181,17 @@ export default function BeerkezettDokumentumok() {
         </button>
       </div>
 
+      <div className="mb-4 flex justify-end">
+        <button
+          type="button"
+          onClick={load}
+          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-ink-500 hover:bg-slate-100 dark:text-ink-400 dark:hover:bg-ink-800"
+        >
+          <PiArrowsClockwiseLight className="h-4 w-4" />
+          Frissítés
+        </button>
+      </div>
+
       <div className="mb-4 rounded-2xl border border-dashed border-ink-200 bg-white p-4 dark:border-ink-700 dark:bg-ink-900">
         <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-brand-700">
           <PiUploadLight className="h-4 w-4" />
@@ -198,21 +205,7 @@ export default function BeerkezettDokumentumok() {
               <div key={t.key} className="text-xs text-ink-500 dark:text-ink-400">
                 <div className="mb-0.5 flex items-center justify-between gap-2">
                   <span className="truncate">{t.nev}</span>
-                  {/* `t.progress` az XHR feltöltés (upload) haladása — 100%-nál a
-                      kérés bájtjai elhagyták a böngészőt, de a szerver ekkor még
-                      csak most kezdi a Gemini OCR-hívást (dokumentáltan ~3-13
-                      másodperc, esetenként több egy rate-limit-retry miatt) —
-                      enélkül a jelzés nélkül a felhasználó egy teljesen tele,
-                      mégis mozdulatlan sávot látott volna, ami leállt/elakadt
-                      feltöltésnek tűnhet. */}
-                  {t.progress < 100 ? (
-                    <span className="flex-shrink-0">{t.progress}%</span>
-                  ) : (
-                    <span className="flex flex-shrink-0 items-center gap-1.5 text-brand-600 dark:text-brand-400">
-                      <span className="h-3 w-3 animate-spin rounded-full border-2 border-brand-200 border-t-brand-600 dark:border-brand-900 dark:border-t-brand-400" />
-                      OCR feldolgozás...
-                    </span>
-                  )}
+                  <span className="flex-shrink-0">{t.progress}%</span>
                 </div>
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-ink-800">
                   <div
