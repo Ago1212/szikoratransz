@@ -32,13 +32,16 @@ function FlagGB({ className }) {
 // Csak HU/EN — a `LOCALES` bővíthető később, ha jön egy harmadik nyelv, a
 // lenyíló lista automatikusan felsorolná a jelenlegitől eltérő összes elemet.
 const LOCALES = {
-  hu: { Flag: FlagHU, label: "Magyar" },
-  en: { Flag: FlagGB, label: "English" },
+  hu: { Flag: FlagHU, code: "HU", label: "Magyar" },
+  en: { Flag: FlagGB, code: "EN", label: "English" },
 };
 
-// Világos, a navigáció többi eleméhez illő "chip" gomb (fehér háttér,
-// halvány szegély) + lenyíló lista — szándékosan NEM sötét/kontrasztos
-// kiemelés, hogy ne törje meg a navigációs sáv visszafogott megjelenését.
+// A trigger szándékosan ugyanazt a stílust kapja, mint a sima szöveges
+// nav-linkek (Kezdőlap/Szolgáltatások/stb.) — nincs saját szegély/háttér-
+// doboz, hogy ne különüljön el önálló "chip"-ként a sávban, hanem simán
+// beleolvadjon a többi menüelem közé. Csak a lenyíló panelnek van saját
+// felülete (fehér lap + árnyék) — az elkerülhetetlen, mert lebegve jelenik
+// meg a tartalom fölött.
 export default function LanguageSwitcher({ locale, path }) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef(null);
@@ -64,19 +67,19 @@ export default function LanguageSwitcher({ locale, path }) {
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="inline-flex items-center gap-2 pl-2.5 pr-2 py-1.5 rounded-xl border border-[#23262B]/15 bg-white hover:border-[#23262B]/30 text-[#23262B]/80 text-sm font-[Overpass] font-semibold transition-colors duration-300"
+        className="inline-flex items-center gap-1.5 py-2 text-sm font-medium text-[#23262B]/70 hover:text-[#23262B] transition-colors duration-300"
       >
-        <current.Flag className="w-5 h-3.5 rounded-sm flex-shrink-0 ring-1 ring-black/10" />
-        {current.label}
+        <current.Flag className="w-5 h-3.5 rounded-sm flex-shrink-0 opacity-90" />
+        {current.code}
         <PiCaretDownLight
-          className={`text-xs text-[#23262B]/40 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+          className={`text-[10px] text-[#23262B]/40 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
         />
       </button>
 
       {open && (
         <div
           role="listbox"
-          className="absolute right-0 mt-2 w-40 rounded-xl border border-[#23262B]/10 bg-white shadow-xl overflow-hidden z-50 py-1"
+          className="absolute right-0 mt-1 w-36 rounded-xl border border-[#23262B]/10 bg-white shadow-lg overflow-hidden z-50 py-1"
         >
           {otherLocales.map((loc) => {
             const { Flag, label } = LOCALES[loc];
@@ -86,9 +89,9 @@ export default function LanguageSwitcher({ locale, path }) {
                 to={localizePath(path, loc)}
                 onClick={() => setOpen(false)}
                 role="option"
-                className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-[#23262B]/70 hover:bg-[#1E3AA8]/5 hover:text-[#1E3AA8] transition-colors duration-200"
+                className="flex items-center gap-2.5 px-3.5 py-2 text-sm text-[#23262B]/70 hover:bg-[#23262B]/5 hover:text-[#23262B] transition-colors duration-200"
               >
-                <Flag className="w-5 h-3.5 rounded-sm flex-shrink-0 ring-1 ring-black/10" />
+                <Flag className="w-5 h-3.5 rounded-sm flex-shrink-0 opacity-90" />
                 {label}
               </Link>
             );
