@@ -151,11 +151,22 @@ class BeerkezettDokumentumInterface {
         }
     }
 
+    // Csak akkor írjuk felül a `tipus`-t, ha még nincs admin/OCR által
+    // eldöntve ('ismeretlen') — és a sofőr-hozzárendelést csak akkor, ha
+    // még nincs kézzel beállítva (COALESCE) — hogy egy admin által a
+    // review-panelen KÉZZEL módosított típus/sofőr ne vesszen el egy
+    // közben lefutó (retry vagy csak lassú) háttér-OCR alatt. A
+    // `WHERE ocr_allapot = 'feldolgozatlan'` biztosítja, hogy egy már
+    // befejezett (`kesz`/`hiba`) sort ne írjon felül egy késve érkező/
+    // duplikált háttérfolyamat.
     private function frissitAllapot($id, $ocrAllapot, $tipus, $adatok, $hozzarendeltSoforId) {
         $stmt = $this->db->prepare(
             "UPDATE beerkezett_dokumentumok
-             SET tipus = :tipus, ocr_allapot = :ocr_allapot, ocr_adatok = :ocr_adatok, hozzarendelt_sofor_id = :hozzarendelt_sofor_id
-             WHERE id = :id"
+             SET tipus = CASE WHEN tipus = 'ismeretlen' THEN :tipus ELSE tipus END,
+                 ocr_allapot = :ocr_allapot,
+                 ocr_adatok = :ocr_adatok,
+                 hozzarendelt_sofor_id = COALESCE(hozzarendelt_sofor_id, :hozzarendelt_sofor_id)
+             WHERE id = :id AND ocr_allapot = 'feldolgozatlan'"
         );
         $stmt->bindValue(':tipus', $tipus);
         $stmt->bindValue(':ocr_allapot', $ocrAllapot);

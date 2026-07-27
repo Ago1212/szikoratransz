@@ -662,14 +662,31 @@ class ApiHandler {
     // (BeerkezettDokumentumInterface::dolgozzFel()) — ld.
     // docs/superpowers/specs/2026-07-27-fuvar-ocr-aszinkron-design.md. A
     // `nohup ... &` mintázat miatt az exec() azonnal visszatér, nem várja
-    // meg a gyerekfolyamat befejezését — ez a helyi, egyszálas
-    // `php8.2 -S` dev szerveren is kritikus, különben egy OCR-hívás
-    // blokkolna minden más egyidejű kérést.
+    // meg a gyerekfolyamat befejezését.
+    //
+    // FONTOS: `PHP_BINARY` a jelenleg FUTÓ SAPI binárisát adja vissza, NEM
+    // feltétlenül a CLI php-t — `php8.2 -S` (cli-server) alatt ez történetesen
+    // maga a CLI bináris (ezért működött minden helyi élő teszt), de
+    // mod_php/php-fpm/fcgi alatt az apache2/php-fpm/php-cgi binárist adná
+    // vissza, amivel a lenti exec() csendben SOHA nem futtatná le a
+    // scriptet — élesben ez lenne a legkritikusabb, néma hibapont ebben a
+    // mechanizmusban (a végpont válasza attól még sikeresnek tűnne, mert a
+    // gyors beszúrás önmagában rendben lefut). Ezért csak cli/cli-server
+    // SAPI alatt bízunk `PHP_BINARY`-ban, egyébként egy explicit, env-ből
+    // felülírható, portábilis alapértelmezésre (`PHP_BINDIR . '/php'`) esünk
+    // vissza.
     private function inditsBackgroundOcr($dokumentumId) {
-        $php = PHP_BINARY ?: 'php8.2';
-        $script = escapeshellarg(__DIR__ . '/cli/ocr_feldolgozas.php');
-        $id = (int) $dokumentumId;
-        exec("nohup $php $script $id > /dev/null 2>&1 &");
+        $php = in_array(PHP_SAPI, ['cli', 'cli-server'], true) && PHP_BINARY
+            ? PHP_BINARY
+            : envOrDefault('PHP_CLI_BINARY', PHP_BINDIR . '/php');
+        if (!function_exists('exec')) {
+            error_log('inditsBackgroundOcr: exec() letiltva, a háttér-OCR nem indul el (id=' . (int) $dokumentumId . ').');
+            return false;
+        }
+        $log = escapeshellarg(__DIR__ . '/cli/ocr_feldolgozas.log');
+        $cmd = escapeshellarg($php) . ' ' . escapeshellarg(__DIR__ . '/cli/ocr_feldolgozas.php') . ' ' . (int) $dokumentumId;
+        exec("nohup $cmd < /dev/null >> $log 2>&1 &");
+        return true;
     }
 
     private function requireAdminRole(array $request) {
@@ -1751,8 +1768,8 @@ class ApiHandler {
                 case 'ujraprobalBeerkezettDokumentumOcr':
                     $kerelmezo = $this->resolveKerelmezo($request);
                     $eredmeny = $beerkezettDokumentumInterface->ujraprobal($request['id'], $kerelmezo['ceg_id']);
-                    if (!empty($eredmeny['success'])) {
-                        $this->inditsBackgroundOcr($request['id']);
+                    if (!empty($eredmeny['success']) && !$this->inditsBackgroundOcr($request['id'])) {
+                        $eredmeny = ['success' => false, 'message' => 'A háttérfeldolgozás elindítása sikertelen (exec letiltva a szerveren) — a dokumentum "feldolgozatlan" állapotban maradt.'];
                     }
                     echo json_encode($eredmeny);
                     return;
