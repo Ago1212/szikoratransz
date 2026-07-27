@@ -1,0 +1,11 @@
+export const landing = {};
+export const servicePage = {};
+export const quoteForm = {};
+export const footer = {};
+export const adatvedelem = {};
+export const pagesBelfoldi = {};
+export const pagesNemzetkozi = {};
+export const pagesBiztositott = {};
+export const pagesExpressz = {};
+export const pagesRendezveny = {};
+export const pagesEgyedi = {};
