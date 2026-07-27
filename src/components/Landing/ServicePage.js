@@ -4,6 +4,7 @@ import { PiArrowRightLight, PiCheckLight, PiQuotesLight } from "react-icons/pi";
 import Footer from "components/Footers/Footer.js";
 import QuoteForm from "components/Landing/QuoteForm.js";
 import Breadcrumb from "components/Landing/Breadcrumb.js";
+import LanguageSwitcher from "components/Landing/LanguageSwitcher.js";
 import { TESTIMONIALS, SERVICE_PAGES } from "data/landingContent.js";
 import { useSeo } from "utils/useSeo.js";
 import { useTranslation, localizePath } from "i18n/index.js";
@@ -115,24 +116,7 @@ export default function ServicePage({
             >
               {t("servicePage.backLink")}
             </Link>
-            <div className="inline-flex items-center rounded-full border border-[#23262B]/15 bg-white p-0.5 text-xs font-[Overpass] font-bold uppercase tracking-wide shadow-sm">
-              <Link
-                to={localizePath(path, "hu")}
-                className={`px-3 py-1.5 rounded-full transition-colors duration-300 ${
-                  locale === "hu" ? "bg-[#1E3AA8] text-white" : "text-[#23262B]/50 hover:text-[#23262B]"
-                }`}
-              >
-                HU
-              </Link>
-              <Link
-                to={localizePath(path, "en")}
-                className={`px-3 py-1.5 rounded-full transition-colors duration-300 ${
-                  locale === "en" ? "bg-[#1E3AA8] text-white" : "text-[#23262B]/50 hover:text-[#23262B]"
-                }`}
-              >
-                EN
-              </Link>
-            </div>
+            <LanguageSwitcher locale={locale} path={path} />
           </div>
         </div>
       </nav>

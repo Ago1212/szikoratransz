@@ -11,6 +11,7 @@ import Footer from "components/Footers/Footer.js";
 import { fetchAction } from "utils/fetchAction";
 import HungaryMapBackground from "components/UI/HungaryMapBackground.js";
 import QuoteForm from "components/Landing/QuoteForm.js";
+import LanguageSwitcher from "components/Landing/LanguageSwitcher.js";
 import {
   FEATURES,
   PROCESS_STEPS,
@@ -300,27 +301,8 @@ export default function Landing() {
                 >
                   {t("landing.nav.login")}
                 </Link>
-                <div className="inline-flex items-center rounded-full border border-[#23262B]/15 bg-white p-0.5 ml-4 text-xs font-[Overpass] font-bold uppercase tracking-wide shadow-sm">
-                  <Link
-                    to={localizePath("/", "hu")}
-                    className={`px-3 py-1.5 rounded-full transition-colors duration-300 ${
-                      locale === "hu"
-                        ? "bg-[#1E3AA8] text-white"
-                        : "text-[#23262B]/50 hover:text-[#23262B]"
-                    }`}
-                  >
-                    HU
-                  </Link>
-                  <Link
-                    to={localizePath("/", "en")}
-                    className={`px-3 py-1.5 rounded-full transition-colors duration-300 ${
-                      locale === "en"
-                        ? "bg-[#1E3AA8] text-white"
-                        : "text-[#23262B]/50 hover:text-[#23262B]"
-                    }`}
-                  >
-                    EN
-                  </Link>
+                <div className="ml-4">
+                  <LanguageSwitcher locale={locale} path="/" />
                 </div>
               </div>
             </div>
@@ -402,24 +384,7 @@ export default function Landing() {
               {t("landing.nav.login")}
             </Link>
             <div className="flex items-center justify-center pt-2">
-              <div className="inline-flex items-center rounded-full border border-[#23262B]/15 bg-white p-0.5 text-xs font-[Overpass] font-bold uppercase tracking-wide shadow-sm">
-                <Link
-                  to={localizePath("/", "hu")}
-                  className={`px-4 py-1.5 rounded-full transition-colors duration-300 ${
-                    locale === "hu" ? "bg-[#1E3AA8] text-white" : "text-[#23262B]/50 hover:text-[#23262B]"
-                  }`}
-                >
-                  HU
-                </Link>
-                <Link
-                  to={localizePath("/", "en")}
-                  className={`px-4 py-1.5 rounded-full transition-colors duration-300 ${
-                    locale === "en" ? "bg-[#1E3AA8] text-white" : "text-[#23262B]/50 hover:text-[#23262B]"
-                  }`}
-                >
-                  EN
-                </Link>
-              </div>
+              <LanguageSwitcher locale={locale} path="/" />
             </div>
           </div>
         </div>
