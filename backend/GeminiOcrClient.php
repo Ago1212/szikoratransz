@@ -26,6 +26,7 @@ class GeminiOcrClient {
     const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/';
     const TIMEOUT_MASODPERC = 60;
     const HTTP_KVOTA_TULLEPVE = 429;
+    const HTTP_SZOLGALTATAS_TULTERHELT = 503;
 
     private $apiKeys;
 
@@ -49,21 +50,27 @@ class GeminiOcrClient {
         }
 
         foreach ($this->apiKeys as $apiKey) {
-            [$adatok, $kvotaTullepve] = $this->hivasEgyKulccsal($apiKey, $imageBytes, $mimeType, $sajatCegnev);
+            [$adatok, $probalkozzunkMasKulccsal] = $this->hivasEgyKulccsal($apiKey, $imageBytes, $mimeType, $sajatCegnev);
             if ($adatok !== null) {
                 return $adatok;
             }
-            if (!$kvotaTullepve) {
+            if (!$probalkozzunkMasKulccsal) {
                 return null;
             }
-            // Kvóta-túllépés esetén megyünk a listában a következő kulcsra.
+            // Kvóta-túllépés (429) VAGY átmeneti túlterheltség (503) esetén
+            // megyünk a listában a következő kulcsra — mindkettő a HÍVOTT
+            // kulcs/projekt aktuális állapotára jellemző, nem a kérésre
+            // magára, úgyhogy egy másik (külön GCP projektbeli) kulcs
+            // sikerrel járhat még akkor is, ha az első 503-at adott.
         }
 
         return null;
     }
 
-    // Visszaad egy [adatok|null, kvotaTullepve] párost — a hívó ez alapján
-    // dönti el, hogy próbálkozzon-e a következő kulccsal.
+    // Visszaad egy [adatok|null, probalkozzunkMasKulccsal] párost — a hívó ez
+    // alapján dönti el, hogy próbálkozzon-e a következő kulccsal (429 vagy
+    // 503 esetén igen, minden más hibánál nem érdemes, mert nem kulcs-
+    // specifikus).
     private function hivasEgyKulccsal($apiKey, $imageBytes, $mimeType, $sajatCegnev) {
         $payload = [
             'contents' => [[
@@ -105,7 +112,8 @@ class GeminiOcrClient {
         curl_close($ch);
 
         if ($body === false || $curlHiba !== '' || $status !== 200) {
-            return [null, $status === self::HTTP_KVOTA_TULLEPVE];
+            $probalkozzunkMasKulccsal = in_array($status, [self::HTTP_KVOTA_TULLEPVE, self::HTTP_SZOLGALTATAS_TULTERHELT], true);
+            return [null, $probalkozzunkMasKulccsal];
         }
 
         $valasz = json_decode($body, true);

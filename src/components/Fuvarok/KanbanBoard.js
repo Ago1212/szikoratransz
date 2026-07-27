@@ -9,7 +9,7 @@ const OSZLOPOK = [
   { key: "teljesitve", label: "Teljesítve" },
 ];
 
-export default function KanbanBoard({ fuvarok, onAllapotChange }) {
+export default function KanbanBoard({ fuvarok, onAllapotChange, onFuvarClick }) {
   const [dragOverKulcs, setDragOverKulcs] = useState(null);
 
   const handleDrop = (e, ujAllapot) => {
@@ -46,7 +46,12 @@ export default function KanbanBoard({ fuvarok, onAllapotChange }) {
             </p>
             <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
               {idevalok.map((fuvar) => (
-                <FuvarKanbanCard key={fuvar.id} fuvar={fuvar} onDragStart={() => {}} />
+                <FuvarKanbanCard
+                  key={fuvar.id}
+                  fuvar={fuvar}
+                  onDragStart={() => {}}
+                  onClick={() => onFuvarClick && onFuvarClick(fuvar)}
+                />
               ))}
             </div>
           </div>

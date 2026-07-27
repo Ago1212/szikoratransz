@@ -1,7 +1,12 @@
 import React, { useState } from "react";
-import { PiWarningCircleLight, PiCaretDownLight, PiCaretUpLight } from "react-icons/pi";
+import {
+  PiWarningCircleLight,
+  PiCaretDownLight,
+  PiCaretUpLight,
+} from "react-icons/pi";
 
-const forint = (ertek) => (ertek != null ? `${Number(ertek).toLocaleString("hu-HU")} Ft` : "—");
+const forint = (ertek) =>
+  ertek != null ? `${Number(ertek).toLocaleString("hu-HU")} Ft` : "—";
 
 // Csak jelez, sosem ír automatikusan az `allapot` mezőbe (explicit felhasználói
 // döntés — ld. CLAUDE.md "Fuvar státusz-workflow" szakasz) — az admin dönt a
@@ -13,21 +18,42 @@ function Lista({ cim, tone, tetelek, onMegnyitas, renderMasodikSor }) {
     tone === "danger"
       ? "border-red-200 bg-red-50 dark:border-red-900/40 dark:bg-red-950/20"
       : "border-amber-200 bg-amber-50 dark:border-amber-900/40 dark:bg-amber-950/20";
-  const cimSzin = tone === "danger" ? "text-red-700 dark:text-red-300" : "text-amber-700 dark:text-amber-300";
+  const cimSzin =
+    tone === "danger"
+      ? "text-red-700 dark:text-red-300"
+      : "text-amber-700 dark:text-amber-300";
 
   return (
     <div className={`rounded-xl border p-3 ${szinek}`}>
-      <h4 className={`mb-2 text-xs font-bold uppercase tracking-wide ${cimSzin}`}>
+      <h4
+        className={`mb-2 text-xs font-bold uppercase tracking-wide ${cimSzin}`}
+      >
         {cim} ({tetelek.length})
       </h4>
       <ul className="flex flex-col gap-1.5">
         {tetelek.map((t) => (
-          <li key={t.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+          <li
+            key={t.id}
+            className="flex flex-wrap items-center justify-between gap-2 text-sm"
+          >
             <span className="min-w-0 truncate text-ink-700 dark:text-ink-200">
               {t.utvonal}
-              {t.megbizoNev && <span className="text-ink-400 dark:text-ink-500"> — {t.megbizoNev}</span>}
-              <span className="text-ink-400 dark:text-ink-500"> · {forint(t.osszesen)}</span>
-              {renderMasodikSor && <span className="text-ink-400 dark:text-ink-500"> · {renderMasodikSor(t)}</span>}
+              {t.megbizoNev && (
+                <span className="text-ink-400 dark:text-ink-500">
+                  {" "}
+                  — {t.megbizoNev}
+                </span>
+              )}
+              <span className="text-ink-400 dark:text-ink-500">
+                {" "}
+                · {forint(t.osszesen)}
+              </span>
+              {renderMasodikSor && (
+                <span className="text-ink-400 dark:text-ink-500">
+                  {" "}
+                  · {renderMasodikSor(t)}
+                </span>
+              )}
             </span>
             <button
               type="button"
@@ -44,7 +70,7 @@ function Lista({ cim, tone, tetelek, onMegnyitas, renderMasodikSor }) {
 }
 
 export default function FigyelmeztetesSav({ figyelmeztetesek, onMegnyitas }) {
-  const [nyitva, setNyitva] = useState(true);
+  const [nyitva, setNyitva] = useState(false);
   if (!figyelmeztetesek) return null;
   const { lejartFizetes = [], szamlazasraVar = [] } = figyelmeztetesek;
   const osszesen = lejartFizetes.length + szamlazasraVar.length;
@@ -61,7 +87,11 @@ export default function FigyelmeztetesSav({ figyelmeztetesek, onMegnyitas }) {
           <PiWarningCircleLight className="h-4 w-4 text-amber-600" />
           Figyelmet igénylő fuvarok ({osszesen})
         </span>
-        {nyitva ? <PiCaretUpLight className="h-4 w-4 text-ink-400" /> : <PiCaretDownLight className="h-4 w-4 text-ink-400" />}
+        {nyitva ? (
+          <PiCaretUpLight className="h-4 w-4 text-ink-400" />
+        ) : (
+          <PiCaretDownLight className="h-4 w-4 text-ink-400" />
+        )}
       </button>
       {nyitva && (
         <div className="mt-3 flex flex-col gap-3">
