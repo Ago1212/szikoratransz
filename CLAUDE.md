@@ -689,6 +689,63 @@ nélkül, a kvóta-kockázat elkerülésére), majd a teljes UI-útvonalon
 Playwright-tal (`/admin/fuvarForm` → mentés → `fuvarok` tábla ellenőrzése) —
 mindkét mező helyesen mentődött, a teszt-sor/session utána törölve.
 
+## Beérkezett dokumentum OCR — aszinkron feldolgozás, nincs cron-tartalék (2026-07-27)
+
+A korábbi `elemezBeerkezettDokumentum` action a HTTP-kérésen BELÜL futtatta a
+Gemini OCR-hívást, ami a válaszidőt a modell "thinking"-latenciájának (3-13+
+másodperc) tette ki mind a sofőr-oldali feltöltő oldalon, mind az admin
+bulk-feltöltőn. Ez mostantól kétfelé bontva fut:
+
+- **`ApiHandler::process()`'s `elemezBeerkezettDokumentum`/
+  `ujraprobalBeerkezettDokumentumOcr` ágai** csak a fájlt mentik + a
+  `beerkezett_dokumentumok` sort hozzák létre/állítják vissza
+  `ocr_allapot='feldolgozatlan'`-ra (`BeerkezettDokumentumInterface::
+  letrehozFeldolgozatlan()`/`ujraprobal()`) — nincs bennük Gemini-hívás, a
+  válasz emiatt közel azonnali (élő méréssel ~70-105 ms a korábbi 3-13+
+  másodperc helyett).
+- **`ApiHandler::inditsBackgroundOcr($dokumentumId)`** egy elszakított,
+  `nohup $php $script $id > /dev/null 2>&1 &` mintázatú `exec()`-hívással
+  indítja el `backend/cli/ocr_feldolgozas.php`-t — egy külön, a HTTP-kéréstől
+  független PHP-processz, ami ténylegesen elvégzi a Gemini-hívást és
+  `BeerkezettDokumentumInterface::dolgozzFel()`-lel frissíti a sort
+  `kesz`/`hiba` állapotra. A `nohup ... &` azért kritikus, mert a helyi,
+  egyszálas `php8.2 -S` dev szerveren egy szinkron `exec()` blokkolna minden
+  más egyidejű kérést a teljes OCR-hívás idejére.
+- **Szándékosan NINCS cron-alapú biztonsági háló ebben a körben** — ha az
+  `exec()` által indított processz bármilyen okból elveszik, a sor
+  `feldolgozatlan`-on ragadhat, és semmilyen ütemezett feladat nem próbálja
+  újra automatikusan. Ehelyett az admin `DokumentumReviewPanel.js`-beli
+  "Újrapróbálás" gombja (`ujraprobalBeerkezettDokumentumOcr` → visszaállítja
+  `feldolgozatlan`-ra + újra elindítja `inditsBackgroundOcr()`-t) a kézi
+  kezelési út egy elakadt/hibás sorra — tudatos, alacsony kockázatú
+  kompromisszum egy admin-only, review-jellegű inbox modulnál. Ha a
+  jövőben mégis szükség lenne rá, egy `backend/cron/`-ba illesztett, X
+  percnél régebbi `feldolgozatlan` sorokat újraindító job lenne a következő
+  lépés.
+- A sofőr-oldali `DokumentumFeltoltes.js` egy korlátozott (4 mp-enként, max
+  15×, ~1 percig) klienspollal frissíti a "Korábbi feltöltéseim" listát,
+  amíg van `feldolgozatlan` sor — az admin `BeerkezettDokumentumok.js` oldal
+  szándékosan NEM pollingol, csak egy kézi "Frissítés" gombot kapott.
+  `DokumentumKartya.js` mostantól 3, vizuálisan megkülönböztetett állapotot
+  mutat (`feldolgozatlan` → kék, pörgő; `hiba` → amber, figyelmeztető ikon;
+  `kesz` → emerald, pipa) — korábban a `feldolgozatlan` állapot tévesen a
+  `kesz`-szel azonos zöld pipát kapta, mert gyakorlatilag sosem fordult elő
+  éles adatban; az aszinkron átállás után ez minden feltöltésnél néhány
+  másodpercig valós állapot.
+
+**Élőben, valódi kétoldalú (sofőr → admin) golden path-tal ellenőrizve**: egy
+helyi `sessions`-be szúrt valódi sofőr-munkamenettel feltöltött szintetikus
+fuvarlevél-kép válasza ~105 ms alatt érkezett, a lista azonnal "Feldolgozás
+alatt" jelvényt mutatott, majd a beépített poll magától "Feldolgozva"-ra
+váltott, mihelyt a háttér-processz lefutott. Ugyanez a dokumentum (azonos
+`id`) egy valódi admin-munkamenettel a "Feldolgozásra vár" fülön, a feltöltő
+sofőr neve alá csoportosítva jelent meg. Egy dokumentumot kézzel `ocr_allapot
+='hiba'`-ra állítva a review panel helyesen mutatta a figyelmeztető sávot +
+"Újrapróbálás" gombot (light és dark módban is) — a gombra kattintva a sor
+visszaállt `feldolgozatlan`-ra, majd egy valódi, újrafutó Gemini-hívás
+helyesen `kesz`-re oldotta fel. A teszt közben létrehozott DB-sorok, fizikai
+fájlok és munkamenetek a teszt végén törölve lettek.
+
 ## Workflow notes for Claude Code
 
 - For any UI/frontend change, verify it by actually running it (`npm start` and/or `php8.2 -S localhost:8001` as needed, opening it in a browser, screenshotting/clicking through the changed flow) before reporting the task done — don't rely on code review or lint alone.
