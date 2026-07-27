@@ -142,6 +142,26 @@ export default function DokumentumFeltoltes() {
     betoltElozmeny();
   }, [betoltElozmeny]);
 
+  const pollSzamlalo = useRef(0);
+  const POLL_KOZ_MS = 4000;
+  const POLL_MAX_SZAMLALO = 15;
+
+  useEffect(() => {
+    const vanFeldolgozatlan = elozmeny.some((d) => d.ocr_allapot === "feldolgozatlan");
+    if (!vanFeldolgozatlan) {
+      pollSzamlalo.current = 0;
+      return undefined;
+    }
+    if (pollSzamlalo.current >= POLL_MAX_SZAMLALO) {
+      return undefined;
+    }
+    const idozito = setTimeout(() => {
+      pollSzamlalo.current += 1;
+      betoltElozmeny();
+    }, POLL_KOZ_MS);
+    return () => clearTimeout(idozito);
+  }, [elozmeny, betoltElozmeny]);
+
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -156,7 +176,7 @@ export default function DokumentumFeltoltes() {
         fajlnev: file.name,
       });
       if (result?.success) {
-        toast.success("Dokumentum feltöltve, az admin fogja feldolgozni.");
+        toast.success("Sikeresen feltöltve! A feldolgozás a háttérben folytatódik, kiléphetsz.");
         betoltElozmeny();
       } else {
         toast.error(result?.message || "A feltöltés sikertelen.");
@@ -189,13 +209,8 @@ export default function DokumentumFeltoltes() {
           <PiCameraLight className="h-8 w-8 text-brand-600" />
         )}
         <span className="text-sm font-semibold text-ink-700">
-          {uploading ? "Feldolgozás folyamatban…" : "Fotó készítése / kiválasztása"}
+          {uploading ? "Feltöltés…" : "Fotó készítése / kiválasztása"}
         </span>
-        {/* A feltöltés maga gyors, de a szerver ezután egy Gemini OCR-hívást
-            futtat a képen (dokumentáltan ~3-13 másodperc, néha több egy
-            rate-limit-retry miatt) — enélkül a szöveg nélkül a sofőr úgy
-            látná, mintha a feltöltés elakadt volna. */}
-        {uploading && <span className="text-xs text-ink-400">Ez néhány másodpercig eltarthat, ne zárd be az oldalt.</span>}
         <input
           type="file"
           accept="image/*,application/pdf"
