@@ -264,7 +264,53 @@ export const servicePage = {
   faqTitle: "Frequently Asked Questions",
   otherServicesTitle: "Other Services",
 };
-export const quoteForm = {};
+export const quoteForm = {
+  directionOptions: { domestic: "Domestic", international: "International", unsure: "Not sure yet" },
+  timingOptions: {
+    urgent: "Urgent (within days)",
+    fewWeeks: "Within a few weeks",
+    justPlanning: "Just planning ahead",
+  },
+  invalid: {
+    name: "Please enter your full name.",
+    phone: "Please enter a valid phone number.",
+    email: "Please enter a valid email address.",
+    description: "Please briefly describe what you'd like to ship.",
+    consent: "You must accept the data processing consent to submit the form.",
+  },
+  defaultTitle: "Request Your Custom Quote",
+  defaultSubtitle:
+    "Fill out the form below — we'll respond within 24 hours with a personalized quote, no obligation.",
+  responseBadge: "Response within 24 hours",
+  successMessage:
+    "Thank you, {name}! We've received your quote request — we'll be in touch by phone or email within 24 hours.",
+  errorFallback: "Something went wrong while sending your request. Please try again, or call us directly:",
+  labels: {
+    name: "Full Name",
+    phone: "Phone Number",
+    email: "Email Address",
+    shipmentDetailsHeading: "Shipment Details",
+    shipmentDetailsHint: "— optional, helps us give you a more accurate quote",
+    direction: "Domestic or international shipment?",
+    from: "From?",
+    to: "To?",
+    timing: "When do you need it?",
+    description: "What and how much would you like to ship?",
+    consentPrefix: "I agree that my data may be processed for the purpose of providing a quote.",
+    consentLinkText: "Privacy Policy",
+    submit: "Request a Quote",
+    submitLoading: "Sending...",
+    footnote: "No obligation · Response within 24 hours",
+  },
+  placeholders: {
+    name: "Full name",
+    phone: "Phone number",
+    email: "Email address",
+    from: "e.g. Budapest",
+    to: "e.g. Munich",
+    description: "e.g. 2 pallets of machine parts, approx. 800 kg",
+  },
+};
 export const footer = {};
 export const adatvedelem = {};
 export const pagesBelfoldi = {};

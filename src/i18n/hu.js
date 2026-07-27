@@ -265,7 +265,53 @@ export const servicePage = {
   faqTitle: "Gyakran ismételt kérdések",
   otherServicesTitle: "Egyéb szolgáltatásaink",
 };
-export const quoteForm = {};
+export const quoteForm = {
+  directionOptions: { domestic: "Belföldi", international: "Nemzetközi", unsure: "Még nem tudom" },
+  timingOptions: {
+    urgent: "Sürgős (napokon belül)",
+    fewWeeks: "Pár héten belül",
+    justPlanning: "Még csak tervezem",
+  },
+  invalid: {
+    name: "Adja meg a teljes nevét.",
+    phone: "Adjon meg egy érvényes telefonszámot.",
+    email: "Adjon meg egy érvényes email címet.",
+    description: "Írja le röviden, mit szállítanánk.",
+    consent: "Az adatkezelési hozzájárulás elfogadása szükséges a küldéshez.",
+  },
+  defaultTitle: "Kérje egyedi árajánlatát",
+  defaultSubtitle:
+    "Töltse ki az alábbi űrlapot — 24 órán belül személyre szabott árajánlattal válaszolunk, kötelezettség nélkül.",
+  responseBadge: "Válasz 24 órán belül",
+  successMessage:
+    "Köszönjük, {name}! Ajánlatkérését megkaptuk — 24 órán belül felvesszük Önnel a kapcsolatot telefonon vagy e-mailben.",
+  errorFallback: "Hiba történt a küldés közben. Kérjük, próbálja meg újra, vagy hívjon minket közvetlenül:",
+  labels: {
+    name: "Teljes név",
+    phone: "Telefonszám",
+    email: "Email cím",
+    shipmentDetailsHeading: "Fuvar részletei",
+    shipmentDetailsHint: "— opcionális, segít pontosabb ajánlatot adni",
+    direction: "Belföldi vagy nemzetközi fuvar?",
+    from: "Honnan?",
+    to: "Hová?",
+    timing: "Mikorra lenne szükség rá?",
+    description: "Mit és mennyit szállítanánk?",
+    consentPrefix: "Elfogadom, hogy adataimat az ajánlatadás céljából kezeljék.",
+    consentLinkText: "Adatvédelmi tájékoztató",
+    submit: "Árajánlatot kérek",
+    submitLoading: "Küldés...",
+    footnote: "Nem jár kötelezettséggel · Válasz 24 órán belül",
+  },
+  placeholders: {
+    name: "Teljes név",
+    phone: "Telefonszám",
+    email: "Email cím",
+    from: "pl. Budapest",
+    to: "pl. München",
+    description: "pl. 2 raklap gépalkatrész, kb. 800 kg",
+  },
+};
 export const footer = {};
 export const adatvedelem = {};
 export const pagesBelfoldi = {};

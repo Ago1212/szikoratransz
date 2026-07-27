@@ -2,18 +2,24 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { PiEnvelopeLight, PiClockLight } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
+import { useTranslation, localizePath } from "i18n/index.js";
 
-const IRANY_OPTIONS = [
-  { value: "belfoldi", label: "Belföldi" },
-  { value: "nemzetkozi", label: "Nemzetközi" },
-  { value: "nemtudom", label: "Még nem tudom" },
-];
+// A `composeMessage()` admin felé menő szabad szöveg-blokkja MINDIG magyarul
+// megy ki, függetlenül a látogató által választott UI-nyelvtől (ld. a design
+// dokumentum "Explicit döntés" pontja) — ezért ez a két map külön, nem
+// fordított marad, elkülönítve a lenti, UI-nak szánt `iranyOptions`/
+// `idozitesOptions`-tól (amik a komponensben, `t()`-vel épülnek fel).
+const IRANY_LABELS_HU = {
+  belfoldi: "Belföldi",
+  nemzetkozi: "Nemzetközi",
+  nemtudom: "Még nem tudom",
+};
 
-const IDOZITES_OPTIONS = [
-  { value: "surgos", label: "Sürgős (napokon belül)" },
-  { value: "nehany_het", label: "Pár héten belül" },
-  { value: "tervezem", label: "Még csak tervezem" },
-];
+const IDOZITES_LABELS_HU = {
+  surgos: "Sürgős (napokon belül)",
+  nehany_het: "Pár héten belül",
+  tervezem: "Még csak tervezem",
+};
 
 // A 2-4 opciós, egy-érintéses döntéseknél (irány, időzítés) szándékosan nem
 // <select>: dropdown-nál a natív mobil-UI egy plusz megnyitó-kattintást
@@ -44,21 +50,6 @@ function PillGroup({ options, value, onChange }) {
       })}
     </div>
   );
-}
-
-const INVALID_MESSAGES = {
-  name: "Adja meg a teljes nevét.",
-  phone: "Adjon meg egy érvényes telefonszámot.",
-  email: "Adjon meg egy érvényes email címet.",
-  leiras: "Írja le röviden, mit szállítanánk.",
-  hozzajarulas: "Az adatkezelési hozzájárulás elfogadása szükséges a küldéshez.",
-};
-
-function handleInvalid(e) {
-  e.target.setCustomValidity(INVALID_MESSAGES[e.target.name] || "");
-}
-function clearInvalid(e) {
-  e.target.setCustomValidity("");
 }
 
 const EMPTY_FORM = {
@@ -92,10 +83,36 @@ const EMPTY_FORM = {
 // ink) — ez ugyanaz az árnyalat, amit a Landing.js hero szekciójának
 // "Kérjen árajánlatot még ma" kártyája használ, hogy a két signature
 // ajánlatkérő-felület vizuálisan egységes, ugyanolyan "fekete" tónusú legyen.
-export default function QuoteForm({
-  title = "Kérje egyedi árajánlatát",
-  subtitle = "Töltse ki az alábbi űrlapot — 24 órán belül személyre szabott árajánlattal válaszolunk, kötelezettség nélkül.",
-}) {
+export default function QuoteForm({ title, subtitle }) {
+  const { t, locale } = useTranslation();
+  const resolvedTitle = title || t("quoteForm.defaultTitle");
+  const resolvedSubtitle = subtitle || t("quoteForm.defaultSubtitle");
+
+  const invalidMessages = {
+    name: t("quoteForm.invalid.name"),
+    phone: t("quoteForm.invalid.phone"),
+    email: t("quoteForm.invalid.email"),
+    leiras: t("quoteForm.invalid.description"),
+    hozzajarulas: t("quoteForm.invalid.consent"),
+  };
+  const handleInvalid = (e) => {
+    e.target.setCustomValidity(invalidMessages[e.target.name] || "");
+  };
+  const clearInvalid = (e) => {
+    e.target.setCustomValidity("");
+  };
+
+  const iranyOptions = [
+    { value: "belfoldi", label: t("quoteForm.directionOptions.domestic") },
+    { value: "nemzetkozi", label: t("quoteForm.directionOptions.international") },
+    { value: "nemtudom", label: t("quoteForm.directionOptions.unsure") },
+  ];
+  const idozitesOptions = [
+    { value: "surgos", label: t("quoteForm.timingOptions.urgent") },
+    { value: "nehany_het", label: t("quoteForm.timingOptions.fewWeeks") },
+    { value: "tervezem", label: t("quoteForm.timingOptions.justPlanning") },
+  ];
+
   const [form, setForm] = useState(EMPTY_FORM);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState({ success: null, message: "" });
@@ -111,9 +128,11 @@ export default function QuoteForm({
     setForm((prev) => ({ ...prev, hozzajarulas: e.target.checked }));
   };
 
+  // Mindig magyarul megy ki, függetlenül a UI nyelvétől — ld. a fájl
+  // tetején lévő megjegyzést.
   const composeMessage = () => {
-    const irany = IRANY_OPTIONS.find((o) => o.value === form.irany)?.label;
-    const idozites = IDOZITES_OPTIONS.find((o) => o.value === form.idozites)?.label;
+    const irany = IRANY_LABELS_HU[form.irany];
+    const idozites = IDOZITES_LABELS_HU[form.idozites];
     const details = [];
     if (irany) details.push(`Fuvar iránya: ${irany}`);
     if (form.honnan) details.push(`Honnan: ${form.honnan}`);
@@ -138,15 +157,13 @@ export default function QuoteForm({
     if (result && result.success) {
       setSubmitStatus({
         success: true,
-        message: `Köszönjük, ${submittedName}! Ajánlatkérését megkaptuk — 24 órán belül felvesszük Önnel a kapcsolatot telefonon vagy e-mailben.`,
+        message: t("quoteForm.successMessage").replace("{name}", submittedName),
       });
       setForm(EMPTY_FORM);
     } else {
       setSubmitStatus({
         success: false,
-        message:
-          result.message ||
-          "Hiba történt a küldés közben. Kérjük, próbálja meg újra, vagy hívjon minket közvetlenül:",
+        message: result.message || t("quoteForm.errorFallback"),
       });
     }
     setIsSubmitting(false);
@@ -159,12 +176,12 @@ export default function QuoteForm({
           <div className="w-12 h-12 bg-white/10 text-white rounded-xl flex items-center justify-center flex-shrink-0">
             <PiEnvelopeLight className="text-lg" />
           </div>
-          <h3 className="font-[Overpass] font-bold text-2xl text-white">{title}</h3>
+          <h3 className="font-[Overpass] font-bold text-2xl text-white">{resolvedTitle}</h3>
         </div>
-        <p className="text-white/50 mb-3">{subtitle}</p>
+        <p className="text-white/50 mb-3">{resolvedSubtitle}</p>
         <div className="inline-flex items-center gap-1.5 text-xs font-[Overpass_Mono] uppercase tracking-wide text-[#7C93FF] bg-[#2F4DE0]/15 px-3 py-1 rounded-full mb-8">
           <PiClockLight />
-          Válasz 24 órán belül
+          {t("quoteForm.responseBadge")}
         </div>
 
         {submitStatus.message && (
@@ -191,7 +208,7 @@ export default function QuoteForm({
           <div className="space-y-5">
             <div>
               <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/55 mb-2">
-                Teljes név
+                {t("quoteForm.labels.name")}
               </label>
               <input
                 type="text"
@@ -200,7 +217,7 @@ export default function QuoteForm({
                 onChange={handleChange}
                 onInvalid={handleInvalid}
                 className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-[#2F4DE0] focus:border-[#2F4DE0] transition duration-300"
-                placeholder="Teljes név"
+                placeholder={t("quoteForm.placeholders.name")}
                 required
               />
             </div>
@@ -208,7 +225,7 @@ export default function QuoteForm({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
                 <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/55 mb-2">
-                  Telefonszám
+                  {t("quoteForm.labels.phone")}
                 </label>
                 <input
                   type="tel"
@@ -217,14 +234,14 @@ export default function QuoteForm({
                   onChange={handleChange}
                   onInvalid={handleInvalid}
                   className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-[#2F4DE0] focus:border-[#2F4DE0] transition duration-300"
-                  placeholder="Telefonszám"
+                  placeholder={t("quoteForm.placeholders.phone")}
                   required
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/55 mb-2">
-                  Email cím
+                  {t("quoteForm.labels.email")}
                 </label>
                 <input
                   type="email"
@@ -233,7 +250,7 @@ export default function QuoteForm({
                   onChange={handleChange}
                   onInvalid={handleInvalid}
                   className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-[#2F4DE0] focus:border-[#2F4DE0] transition duration-300"
-                  placeholder="Email cím"
+                  placeholder={t("quoteForm.placeholders.email")}
                   required
                 />
               </div>
@@ -244,16 +261,17 @@ export default function QuoteForm({
                 lehetővé. Ld. a form-koncepció 2.3-as pontját. */}
             <div className="pt-1 border-t border-white/10">
               <p className="text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/40 mt-5 mb-3">
-                Fuvar részletei <span className="normal-case text-white/30">— opcionális, segít pontosabb ajánlatot adni</span>
+                {t("quoteForm.labels.shipmentDetailsHeading")}{" "}
+                <span className="normal-case text-white/30">{t("quoteForm.labels.shipmentDetailsHint")}</span>
               </p>
 
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/55 mb-2">
-                    Belföldi vagy nemzetközi fuvar?
+                    {t("quoteForm.labels.direction")}
                   </label>
                   <PillGroup
-                    options={IRANY_OPTIONS}
+                    options={iranyOptions}
                     value={form.irany}
                     onChange={(v) => setForm((prev) => ({ ...prev, irany: v }))}
                   />
@@ -262,7 +280,7 @@ export default function QuoteForm({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
                     <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/55 mb-2">
-                      Honnan?
+                      {t("quoteForm.labels.from")}
                     </label>
                     <input
                       type="text"
@@ -270,12 +288,12 @@ export default function QuoteForm({
                       value={form.honnan}
                       onChange={handleChange}
                       className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-[#2F4DE0] focus:border-[#2F4DE0] transition duration-300"
-                      placeholder="pl. Budapest"
+                      placeholder={t("quoteForm.placeholders.from")}
                     />
                   </div>
                   <div>
                     <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/55 mb-2">
-                      Hová?
+                      {t("quoteForm.labels.to")}
                     </label>
                     <input
                       type="text"
@@ -283,17 +301,17 @@ export default function QuoteForm({
                       value={form.hova}
                       onChange={handleChange}
                       className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-[#2F4DE0] focus:border-[#2F4DE0] transition duration-300"
-                      placeholder="pl. München"
+                      placeholder={t("quoteForm.placeholders.to")}
                     />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/55 mb-2">
-                    Mikorra lenne szükség rá?
+                    {t("quoteForm.labels.timing")}
                   </label>
                   <PillGroup
-                    options={IDOZITES_OPTIONS}
+                    options={idozitesOptions}
                     value={form.idozites}
                     onChange={(v) => setForm((prev) => ({ ...prev, idozites: v }))}
                   />
@@ -303,7 +321,7 @@ export default function QuoteForm({
 
             <div className="pt-1 border-t border-white/10">
               <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/55 mb-2 mt-5">
-                Mit és mennyit szállítanánk?
+                {t("quoteForm.labels.description")}
               </label>
               <textarea
                 rows="4"
@@ -312,7 +330,7 @@ export default function QuoteForm({
                 onChange={handleChange}
                 onInvalid={handleInvalid}
                 className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-[#2F4DE0] focus:border-[#2F4DE0] transition duration-300"
-                placeholder="pl. 2 raklap gépalkatrész, kb. 800 kg"
+                placeholder={t("quoteForm.placeholders.description")}
                 required
               ></textarea>
             </div>
@@ -329,14 +347,14 @@ export default function QuoteForm({
               className="mt-1 w-4 h-4 flex-shrink-0 rounded border-white/30 bg-white/5 text-[#1E3AA8] focus:ring-[#2F4DE0]"
             />
             <span className="text-sm text-white/55">
-              Elfogadom, hogy adataimat az ajánlatadás céljából kezeljék.{" "}
+              {t("quoteForm.labels.consentPrefix")}{" "}
               <Link
-                to="/adatvedelem"
+                to={localizePath("/adatvedelem", locale)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="underline text-white/75 hover:text-white"
               >
-                Adatvédelmi tájékoztató
+                {t("quoteForm.labels.consentLinkText")}
               </Link>
             </span>
           </label>
@@ -368,15 +386,13 @@ export default function QuoteForm({
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                Küldés...
+                {t("quoteForm.labels.submitLoading")}
               </span>
             ) : (
-              "Árajánlatot kérek"
+              t("quoteForm.labels.submit")
             )}
           </button>
-          <p className="text-center text-xs text-white/40 mt-3">
-            Nem jár kötelezettséggel · Válasz 24 órán belül
-          </p>
+          <p className="text-center text-xs text-white/40 mt-3">{t("quoteForm.labels.footnote")}</p>
         </form>
       </div>
     </div>
