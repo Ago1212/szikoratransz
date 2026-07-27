@@ -29,7 +29,9 @@ function resolvePath(dict, path) {
   return path.split(".").reduce((acc, key) => (acc == null ? acc : acc[key]), dict);
 }
 
-export function localeFromPathname(pathname) {
+// Nem exportált — kizárólag a lenti useTranslation() belső használatára,
+// a nyelvváltó linkek mindenhol localizePath()-ot használnak (ld. lentebb).
+function localeFromPathname(pathname) {
   return pathname === "/en" || pathname.startsWith("/en/") ? "en" : "hu";
 }
 
@@ -57,10 +59,4 @@ export function useTranslation() {
 export function localizePath(path, locale) {
   if (locale !== "en") return path;
   return path === "/" ? "/en" : `/en${path}`;
-}
-
-export function delocalizePath(pathname) {
-  if (pathname === "/en") return "/";
-  if (pathname.startsWith("/en/")) return pathname.slice(3);
-  return pathname;
 }
