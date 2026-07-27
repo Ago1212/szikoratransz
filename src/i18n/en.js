@@ -313,7 +313,34 @@ export const quoteForm = {
 };
 export const footer = {};
 export const adatvedelem = {};
-export const pagesBelfoldi = {};
+export const pagesBelfoldi = {
+  metaTitle: "Domestic Freight Transport Quote | Szikora Transz Kft.",
+  metaDescription:
+    "Request a free quote for domestic freight transport anywhere in Hungary — modern fleet, insured shipping, response within 24 hours.",
+  eyebrow: "Domestic Freight Transport",
+  h1: "Domestic Freight Transport Quote — Within 24 Hours",
+  intro:
+    "Fast, reliable freight transport across the whole of Hungary, with flexible pricing and precise deadlines. We handle both one-off jobs and regular, recurring routes — regardless of the type of cargo.",
+  bullets: [
+    {
+      title: "Flexible, custom pricing",
+      desc: "There's no flat rate — every job is priced individually based on distance, cargo type, and deadline.",
+    },
+    {
+      title: "Modern, well-maintained fleet",
+      desc: "We match the vehicle to your cargo when we put together your quote.",
+    },
+    {
+      title: "One-off and recurring jobs",
+      desc: "We take on occasional assignments just as readily as long-term, recurring partnerships.",
+    },
+    {
+      title: "Full insurance coverage",
+      desc: "Every domestic shipment we handle is covered by insurance from pickup to delivery.",
+    },
+  ],
+  section: { heading: "How is the price of a domestic shipment calculated?" },
+};
 export const pagesNemzetkozi = {};
 export const pagesBiztositott = {};
 export const pagesExpressz = {};
