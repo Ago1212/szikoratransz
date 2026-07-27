@@ -463,5 +463,43 @@ export const pagesExpressz = {
     },
   },
 };
-export const pagesRendezveny = {};
+export const pagesRendezveny = {
+  metaTitle: "Event Logistics | Szikora Transz Kft.",
+  metaDescription:
+    "Transport for events — booth structures, equipment, and decor delivered precisely at the agreed time. Request a quote.",
+  eyebrow: "Event Logistics",
+  h1: "Event Logistics — Precisely on Your Schedule",
+  intro:
+    "We also handle transport for events — moving booth structures, equipment, decor, and other event materials to and from the venue, timed precisely to the event's schedule.",
+  bullets: [
+    {
+      title: "Built around the event's schedule",
+      desc: "We coordinate delivery and pickup times around the event's program, not the other way around.",
+    },
+    {
+      title: "Careful, attentive handling",
+      desc: "We transport equipment, decor, and other event materials carefully, to avoid damage.",
+    },
+    {
+      title: "Flexible, even on short notice",
+      desc: "By arrangement, we also take on urgent, priority event transport jobs.",
+    },
+    {
+      title: "A custom quote for every event",
+      desc: "We give you a precise quote based on the volume of material, the venue, and the timing.",
+    },
+  ],
+  section: { heading: "What do we pay attention to with event logistics?" },
+  faqOverrides: {
+    response_time: {
+      a: "For event logistics too, we typically get back to you within 24 hours with a quote tailored to your event's date and the venue's specifics — if the event is coming up soon, let us know and we'll treat it as a priority.",
+    },
+    custom_quote: {
+      a: "Yes — we give a custom quote for every event, based on the volume of material to be transported, the venue's specifics (e.g. the loading/unloading time window), and the event's exact schedule.",
+    },
+    vehicles: {
+      a: "We select the right vehicle based on the nature and size of the event materials (booth elements, equipment, decor) — always choosing, from our modern, well-maintained fleet, whichever vehicle gets that particular material to the venue most safely and efficiently.",
+    },
+  },
+};
 export const pagesEgyedi = {};

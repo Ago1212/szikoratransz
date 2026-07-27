@@ -5,35 +5,18 @@ import { pickFaq } from "data/landingContent.js";
 import { useTranslation } from "i18n/index.js";
 
 export default function RendezvenySzallitas() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   return (
     <ServicePage
       icon={PiConfettiLight}
       accent="#BE185D"
       path="/rendezveny-szallitas"
-      metaTitle="Rendezvényszállítás | Szikora Transz Kft."
-      metaDescription="Rendezvényekhez kapcsolódó szállítás — standok, berendezések, dekoráció pontos, egyeztetett időpontra történő kiszállítása. Kérjen árajánlatot."
-      eyebrow="Rendezvényszállítás"
-      h1="Rendezvényszállítás — pontosan, az Ön ütemezése szerint"
-      intro="Rendezvényekhez kapcsolódó szállítást is vállalunk — standok, berendezések, dekoráció és egyéb rendezvényanyagok szállítását a helyszínre és vissza, a rendezvény pontos időbeosztásához igazítva."
-      bullets={[
-        {
-          title: "Az esemény ütemezéséhez igazodva",
-          desc: "A kiszállítás és az elszállítás időpontját a rendezvény programjához egyeztetjük, nem fordítva.",
-        },
-        {
-          title: "Gondos, óvatos kezelés",
-          desc: "Berendezéseket, dekorációt és egyéb rendezvényanyagot is körültekintően, sérülésmentesen szállítunk.",
-        },
-        {
-          title: "Rugalmas, akár rövid határidővel",
-          desc: "Egyeztetés után soron kívüli, sürgős rendezvényszállítást is vállalunk.",
-        },
-        {
-          title: "Egyedi árajánlat minden eseményre",
-          desc: "A szállítandó anyag mennyisége, a helyszín és az időzítés alapján adunk pontos árajánlatot.",
-        },
-      ]}
+      metaTitle={t("pages.rendezveny.metaTitle")}
+      metaDescription={t("pages.rendezveny.metaDescription")}
+      eyebrow={t("pages.rendezveny.eyebrow")}
+      h1={t("pages.rendezveny.h1")}
+      intro={t("pages.rendezveny.intro")}
+      bullets={t("pages.rendezveny.bullets")}
       faqItems={pickFaq(
         t,
         { id: "response_time", aKey: "pages.rendezveny.faqOverrides.response_time.a" },
@@ -44,32 +27,56 @@ export default function RendezvenySzallitas() {
     >
       <section className="py-10 border-t border-[#23262B]/10">
         <h2 className="font-[Overpass] font-extrabold text-2xl text-[#23262B] mb-6">
-          Mire figyelünk rendezvényszállításnál?
+          {t("pages.rendezveny.section.heading")}
         </h2>
         <div className="space-y-4 text-[#23262B]/70 leading-relaxed max-w-2xl">
-          <p>
-            A rendezvényszállítás abban különbözik egy szokásos fuvartól,
-            hogy szinte mindig két, egymástól élesen elváló időpontra kell
-            pontosan érkezni: a kiszállításra (a felállítás/berendezés
-            előtt) és az elszállításra (a bontás után). Mindkettőt a
-            rendezvény, illetve a helyszín saját ütemezéséhez — pl. a be- és
-            kirakodásra kijelölt időablakhoz — igazítjuk, nem fordítva.
-          </p>
-          <p>
-            Standelemeket, kiállítási anyagokat, technikai berendezéseket és
-            dekorációt egyaránt körültekintően, az adott anyag
-            sérülékenységéhez igazított rögzítéssel szállítunk. Ha a
-            helyszínnek egyedi behajtási vagy rakodási szabályai vannak (pl.
-            korlátozott behajtási időszak, emelős rakodás szükségessége),
-            ezt már az ajánlatkérésnél érdemes jeleznie, hogy előre tudjunk
-            vele kalkulálni.
-          </p>
-          <p>
-            Igény esetén közvetlenül egyeztetünk a helyszín
-            kapcsolattartójával vagy a rendezvényszervezővel is, hogy a be-
-            és kiszállítás időpontja garantáltan illeszkedjen a helyszín
-            saját ütemezéséhez.
-          </p>
+          {locale === "en" ? (
+            <>
+              <p>
+                Event logistics differs from a typical job in that there are almost always two sharply distinct
+                deadlines to hit precisely: delivery (before setup) and pickup (after teardown). We coordinate
+                both around the event's — or venue's — own schedule, such as a designated loading/unloading
+                window, rather than the other way around.
+              </p>
+              <p>
+                We handle booth elements, exhibition materials, technical equipment, and decor carefully,
+                securing each item according to how fragile it is. If the venue has specific access or loading
+                rules (e.g. a restricted access window, or a requirement for lift-gate loading), it's worth
+                flagging this when you request your quote, so we can plan for it in advance.
+              </p>
+              <p>
+                If needed, we'll also coordinate directly with the venue's contact person or the event
+                organizer, to make sure delivery and pickup times reliably line up with the venue's own
+                schedule.
+              </p>
+            </>
+          ) : (
+            <>
+              <p>
+                A rendezvényszállítás abban különbözik egy szokásos fuvartól,
+                hogy szinte mindig két, egymástól élesen elváló időpontra kell
+                pontosan érkezni: a kiszállításra (a felállítás/berendezés
+                előtt) és az elszállításra (a bontás után). Mindkettőt a
+                rendezvény, illetve a helyszín saját ütemezéséhez — pl. a be- és
+                kirakodásra kijelölt időablakhoz — igazítjuk, nem fordítva.
+              </p>
+              <p>
+                Standelemeket, kiállítási anyagokat, technikai berendezéseket és
+                dekorációt egyaránt körültekintően, az adott anyag
+                sérülékenységéhez igazított rögzítéssel szállítunk. Ha a
+                helyszínnek egyedi behajtási vagy rakodási szabályai vannak (pl.
+                korlátozott behajtási időszak, emelős rakodás szükségessége),
+                ezt már az ajánlatkérésnél érdemes jeleznie, hogy előre tudjunk
+                vele kalkulálni.
+              </p>
+              <p>
+                Igény esetén közvetlenül egyeztetünk a helyszín
+                kapcsolattartójával vagy a rendezvényszervezővel is, hogy a be-
+                és kiszállítás időpontja garantáltan illeszkedjen a helyszín
+                saját ütemezéséhez.
+              </p>
+            </>
+          )}
         </div>
       </section>
     </ServicePage>

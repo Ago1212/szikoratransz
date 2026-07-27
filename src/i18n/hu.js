@@ -467,5 +467,43 @@ export const pagesExpressz = {
     },
   },
 };
-export const pagesRendezveny = {};
+export const pagesRendezveny = {
+  metaTitle: "Rendezvényszállítás | Szikora Transz Kft.",
+  metaDescription:
+    "Rendezvényekhez kapcsolódó szállítás — standok, berendezések, dekoráció pontos, egyeztetett időpontra történő kiszállítása. Kérjen árajánlatot.",
+  eyebrow: "Rendezvényszállítás",
+  h1: "Rendezvényszállítás — pontosan, az Ön ütemezése szerint",
+  intro:
+    "Rendezvényekhez kapcsolódó szállítást is vállalunk — standok, berendezések, dekoráció és egyéb rendezvényanyagok szállítását a helyszínre és vissza, a rendezvény pontos időbeosztásához igazítva.",
+  bullets: [
+    {
+      title: "Az esemény ütemezéséhez igazodva",
+      desc: "A kiszállítás és az elszállítás időpontját a rendezvény programjához egyeztetjük, nem fordítva.",
+    },
+    {
+      title: "Gondos, óvatos kezelés",
+      desc: "Berendezéseket, dekorációt és egyéb rendezvényanyagot is körültekintően, sérülésmentesen szállítunk.",
+    },
+    {
+      title: "Rugalmas, akár rövid határidővel",
+      desc: "Egyeztetés után soron kívüli, sürgős rendezvényszállítást is vállalunk.",
+    },
+    {
+      title: "Egyedi árajánlat minden eseményre",
+      desc: "A szállítandó anyag mennyisége, a helyszín és az időzítés alapján adunk pontos árajánlatot.",
+    },
+  ],
+  section: { heading: "Mire figyelünk rendezvényszállításnál?" },
+  faqOverrides: {
+    response_time: {
+      a: "Rendezvényszállításnál is jellemzően 24 órán belül jelentkezünk egy, az esemény időpontjához és a helyszín sajátosságaihoz igazított árajánlattal — ha az esemény időpontja már közel van, jelezze ezt is, és soron kívül foglalkozunk vele.",
+    },
+    custom_quote: {
+      a: "Igen — rendezvényenként egyedi árajánlatot adunk a szállítandó anyag mennyisége, a helyszín sajátosságai (pl. be- és kirakodási időablak) és az esemény pontos ütemezése alapján.",
+    },
+    vehicles: {
+      a: "A rendezvényanyagok (standelemek, berendezések, dekoráció) jellege és mérete alapján választjuk ki a megfelelő járművet — modern, karbantartott flottánkból mindig azt, amelyik a legbiztonságosabban és leghatékonyabban szállítja az adott anyagot a helyszínre.",
+    },
+  },
+};
 export const pagesEgyedi = {};
