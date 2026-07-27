@@ -129,14 +129,25 @@ function Reveal({ children, delay = 0, className = "", variant = "fade" }) {
   );
 }
 
+// Stabil objektum-referencia a Landing route hreflang-alternatíváihoz —
+// statikus (nem függ propoktól/state-től), ezért modul-szinten, nem
+// useMemo-val hozzuk létre; `localizePath` adja a HU→EN leképezést, hogy ne
+// legyen kézzel felírt "/en" string (ld. ServicePage.js/Adatvedelem.js
+// ugyanezen mintája).
+const HOME_ALTERNATES = { hu: localizePath("/", "hu"), en: localizePath("/", "en") };
+
 export default function Landing() {
   const { t, locale } = useTranslation();
   useSeo({
+    // HU szándékosan `undefined` — a `public/index.html` statikus,
+    // SEO-auditált title/description marad érvényben; a
+    // `landing.homeMeta` HU értékei csak dokumentációs/EN-fallback célból
+    // léteznek, nem kerülnek ténylegesen felhasználásra.
     title: locale === "en" ? t("landing.homeMeta.title") : undefined,
     description: locale === "en" ? t("landing.homeMeta.description") : undefined,
-    path: locale === "en" ? "/en" : "/",
+    path: localizePath("/", locale),
     lang: locale,
-    alternates: { hu: "/", en: "/en" },
+    alternates: HOME_ALTERNATES,
   });
   const [activeSection, setActiveSection] = useState("home");
   const [applicationForm, setApplicationForm] = useState({
@@ -246,7 +257,7 @@ export default function Landing() {
           <div className="flex justify-between items-center h-16">
             <div className="flex-shrink-0 flex items-center">
               <Link
-                to="/"
+                to={localizePath("/", locale)}
                 onClick={(e) => {
                   e.preventDefault();
                   smoothScroll("home");
@@ -291,14 +302,14 @@ export default function Landing() {
                 </Link>
                 <span className="inline-flex items-center gap-1.5 text-xs font-[Overpass_Mono] uppercase tracking-wide ml-4">
                   <Link
-                    to="/"
+                    to={localizePath("/", "hu")}
                     className={locale === "hu" ? "text-[#1E3AA8] font-bold" : "text-[#23262B]/50 hover:text-[#23262B]"}
                   >
                     HU
                   </Link>
                   <span className="text-[#23262B]/30">|</span>
                   <Link
-                    to="/en"
+                    to={localizePath("/", "en")}
                     className={locale === "en" ? "text-[#1E3AA8] font-bold" : "text-[#23262B]/50 hover:text-[#23262B]"}
                   >
                     EN
@@ -384,11 +395,11 @@ export default function Landing() {
               {t("landing.nav.login")}
             </Link>
             <div className="flex items-center justify-center gap-1.5 text-xs font-[Overpass_Mono] uppercase tracking-wide pt-2">
-              <Link to="/" className={locale === "hu" ? "text-[#1E3AA8] font-bold" : "text-[#23262B]/50"}>
+              <Link to={localizePath("/", "hu")} className={locale === "hu" ? "text-[#1E3AA8] font-bold" : "text-[#23262B]/50"}>
                 HU
               </Link>
               <span className="text-[#23262B]/30">|</span>
-              <Link to="/en" className={locale === "en" ? "text-[#1E3AA8] font-bold" : "text-[#23262B]/50"}>
+              <Link to={localizePath("/", "en")} className={locale === "en" ? "text-[#1E3AA8] font-bold" : "text-[#23262B]/50"}>
                 EN
               </Link>
             </div>

@@ -28,10 +28,15 @@ export const landing = {
       phone: "+36 30 811 5776",
     },
   },
+  // Ez a HU title/description sosincs ténylegesen felhasználva (ld. a
+  // Landing.js useSeo() hívásánál lévő megjegyzést) — a `public/index.html`
+  // statikus, SEO-auditált title/description marad érvényben HU-n. Ez a
+  // szótár-érték csak dokumentációs/EN-fallback célból létezik, ezért
+  // szándékosan szó szerint egyezik a public/index.html tartalmával.
   homeMeta: {
-    title: "Szikora Transz Kft. | Belföldi és nemzetközi fuvarozás",
+    title: "Szikora Transz Kft. | Profi áruszállítás és logisztika",
     description:
-      "Szikora Transz Kft — profi áruszállítás és logisztika 2010 óta: belföldi és nemzetközi fuvarozás, modern flotta, teljes körű biztosítás. Kérjen ingyenes árajánlatot.",
+      "Országos és nemzetközi áruszállítás, raktározás és logisztika 2010 óta. Kérjen ingyenes árajánlatot 24 órán belül — Szikora Transz Kft.",
   },
   process: {
     eyebrow: "A folyamat",
@@ -92,6 +97,7 @@ export const landing = {
     title: "Kérdése van? Válaszolunk.",
   },
   breadcrumbHome: "Főoldal",
+  breadcrumbNavLabel: "Morzsamenü",
   contact: {
     eyebrow: "Kapcsolat",
     title: "Kapcsolatfelvétel",
