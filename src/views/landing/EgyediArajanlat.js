@@ -2,8 +2,10 @@ import React from "react";
 import { PiFileTextLight } from "react-icons/pi";
 import ServicePage from "components/Landing/ServicePage.js";
 import { pickFaq } from "data/landingContent.js";
+import { useTranslation } from "i18n/index.js";
 
 export default function EgyediArajanlat() {
+  const { t } = useTranslation();
   return (
     <ServicePage
       icon={PiFileTextLight}
@@ -33,15 +35,10 @@ export default function EgyediArajanlat() {
         },
       ]}
       faqItems={pickFaq(
-        {
-          q: "Mitől függ egy fuvar ára?",
-          a: "Mivel nincs két egyforma megrendelésünk, nincs egységes díjtáblázatunk sem — minden ajánlatot a konkrét útvonal, az áru mérete, súlya és jellege, valamint a vállalt határidő alapján, egyedileg számolunk ki. Mondja el a részleteket, és pontos, tételes árajánlatot küldünk.",
-        },
-        "Kérhetek egyedi árajánlatot speciális igényekhez?",
-        {
-          q: "Milyen fizetési feltételeket fogadnak el?",
-          a: "Mivel minden megrendelést egyedileg árazunk, a fizetési határidőt és módot (átutalás vagy számlás fizetés) is a konkrét fuvarhoz igazítva állapítjuk meg.",
-        },
+        t,
+        { id: "pricing_factors", aKey: "pages.egyedi.faqOverrides.pricing_factors.a" },
+        "custom_quote",
+        { id: "payment_terms", aKey: "pages.egyedi.faqOverrides.payment_terms.a" },
       )}
       testimonialNames={["Kovács Gábor", "Molnár Eszter", "Szabó Katalin"]}
     >

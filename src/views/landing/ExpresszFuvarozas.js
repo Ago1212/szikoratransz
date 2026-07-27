@@ -2,8 +2,10 @@ import React from "react";
 import { PiLightningLight } from "react-icons/pi";
 import ServicePage from "components/Landing/ServicePage.js";
 import { pickFaq } from "data/landingContent.js";
+import { useTranslation } from "i18n/index.js";
 
 export default function ExpresszFuvarozas() {
+  const { t } = useTranslation();
   return (
     <ServicePage
       icon={PiLightningLight}
@@ -33,18 +35,10 @@ export default function ExpresszFuvarozas() {
         },
       ]}
       faqItems={pickFaq(
-        {
-          q: "Mennyi idő alatt kapok ajánlatot?",
-          a: "Expressz megbízásoknál ennél is gyorsabban, jellemzően néhány órán belül visszajelzünk — sürgős esetben hívjon minket közvetlenül telefonon a leggyorsabb egyeztetésért.",
-        },
-        {
-          q: "Mitől függ egy fuvar ára?",
-          a: "Sürgős fuvaroknál a szokásos tényezők (távolság, az áru mérete és jellege) mellett a rendelkezésre álló időablak is számít — minél rövidebb a bejelentési idő, annál inkább az adott pillanatban szabad kapacitásunkhoz igazodik az ajánlat. Egyedi, tételes árazás itt is érvényes, nincs automatikus sürgősségi felár.",
-        },
-        {
-          q: "Kérhetek egyedi árajánlatot speciális igényekhez?",
-          a: "Igen — sürgős, szokatlan méretű vagy speciális kezelést igénylő rakományra is adunk egyedi árajánlatot, akár rövid határidővel is. Hívjon minket közvetlenül, ha a helyzet gyors egyeztetést igényel.",
-        },
+        t,
+        { id: "response_time", aKey: "pages.expressz.faqOverrides.response_time.a" },
+        { id: "pricing_factors", aKey: "pages.expressz.faqOverrides.pricing_factors.a" },
+        { id: "custom_quote", aKey: "pages.expressz.faqOverrides.custom_quote.a" },
       )}
       testimonialNames={["Farkas Zoltán", "Kovács Gábor", "Nagy Péter"]}
     >

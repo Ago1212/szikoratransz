@@ -2,8 +2,10 @@ import React from "react";
 import { PiConfettiLight } from "react-icons/pi";
 import ServicePage from "components/Landing/ServicePage.js";
 import { pickFaq } from "data/landingContent.js";
+import { useTranslation } from "i18n/index.js";
 
 export default function RendezvenySzallitas() {
+  const { t } = useTranslation();
   return (
     <ServicePage
       icon={PiConfettiLight}
@@ -33,18 +35,10 @@ export default function RendezvenySzallitas() {
         },
       ]}
       faqItems={pickFaq(
-        {
-          q: "Mennyi idő alatt kapok ajánlatot?",
-          a: "Rendezvényszállításnál is jellemzően 24 órán belül jelentkezünk egy, az esemény időpontjához és a helyszín sajátosságaihoz igazított árajánlattal — ha az esemény időpontja már közel van, jelezze ezt is, és soron kívül foglalkozunk vele.",
-        },
-        {
-          q: "Kérhetek egyedi árajánlatot speciális igényekhez?",
-          a: "Igen — rendezvényenként egyedi árajánlatot adunk a szállítandó anyag mennyisége, a helyszín sajátosságai (pl. be- és kirakodási időablak) és az esemény pontos ütemezése alapján.",
-        },
-        {
-          q: "Milyen járművekkel dolgoznak?",
-          a: "A rendezvényanyagok (standelemek, berendezések, dekoráció) jellege és mérete alapján választjuk ki a megfelelő járművet — modern, karbantartott flottánkból mindig azt, amelyik a legbiztonságosabban és leghatékonyabban szállítja az adott anyagot a helyszínre.",
-        },
+        t,
+        { id: "response_time", aKey: "pages.rendezveny.faqOverrides.response_time.a" },
+        { id: "custom_quote", aKey: "pages.rendezveny.faqOverrides.custom_quote.a" },
+        { id: "vehicles", aKey: "pages.rendezveny.faqOverrides.vehicles.a" },
       )}
       testimonialNames={["Molnár Eszter", "Farkas Zoltán", "Tóth Andrea"]}
     >

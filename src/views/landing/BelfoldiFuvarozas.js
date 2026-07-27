@@ -3,8 +3,10 @@ import { Link } from "react-router-dom";
 import { PiTruckLight } from "react-icons/pi";
 import ServicePage from "components/Landing/ServicePage.js";
 import { pickFaq } from "data/landingContent.js";
+import { useTranslation } from "i18n/index.js";
 
 export default function BelfoldiFuvarozas() {
+  const { t } = useTranslation();
   return (
     <ServicePage
       icon={PiTruckLight}
@@ -33,12 +35,7 @@ export default function BelfoldiFuvarozas() {
           desc: "Minden belföldi fuvarunk a felvételtől a kiszállításig biztosítási fedezet mellett zajlik.",
         },
       ]}
-      faqItems={pickFaq(
-        "Mennyi idő alatt kapok ajánlatot?",
-        "Mitől függ egy fuvar ára?",
-        "Milyen járművekkel dolgoznak?",
-        "Milyen fizetési feltételeket fogadnak el?",
-      )}
+      faqItems={pickFaq(t, "response_time", "pricing_factors", "vehicles", "payment_terms")}
       testimonialNames={["Nagy Péter", "Szabó Katalin", "Farkas Zoltán"]}
       areaServed={["HU"]}
     >

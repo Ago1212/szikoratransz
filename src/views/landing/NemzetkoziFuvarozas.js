@@ -2,8 +2,10 @@ import React from "react";
 import { PiGlobeLight } from "react-icons/pi";
 import ServicePage from "components/Landing/ServicePage.js";
 import { pickFaq } from "data/landingContent.js";
+import { useTranslation } from "i18n/index.js";
 
 export default function NemzetkoziFuvarozas() {
+  const { t } = useTranslation();
   return (
     <ServicePage
       icon={PiGlobeLight}
@@ -33,19 +35,11 @@ export default function NemzetkoziFuvarozas() {
         },
       ]}
       faqItems={pickFaq(
-        "Vállalnak nemzetközi szállítást?",
-        {
-          q: "Biztosított a szállított áru?",
-          a: "Igen, nemzetközi fuvarjaink is teljes körű biztosítási fedezettel zajlanak a felvételtől a célországbeli kiszállításig — a határátlépés nem jelent kiesést a fedezetben.",
-        },
-        {
-          q: "Mi történik, ha kár keletkezik szállítás közben?",
-          a: "Nemzetközi fuvarnál is haladéktalanul jelezze felénk telefonon vagy e-mailben — csapatunk a biztosítóval egyeztetve intézi a kárrendezést, függetlenül attól, hogy a kár melyik országban érte az árut.",
-        },
-        {
-          q: "Milyen fizetési feltételeket fogadnak el?",
-          a: "Nemzetközi partnereinknél a fizetési határidőt és — igény esetén — a pénznemet (forint vagy euró) is az adott megrendelés alapján egyeztetjük.",
-        },
+        t,
+        "international",
+        { id: "insurance", aKey: "pages.nemzetkozi.faqOverrides.insurance.a" },
+        { id: "damage", aKey: "pages.nemzetkozi.faqOverrides.damage.a" },
+        { id: "payment_terms", aKey: "pages.nemzetkozi.faqOverrides.payment_terms.a" },
       )}
       testimonialNames={["Tóth Andrea", "Nagy Péter", "Molnár Eszter"]}
     >

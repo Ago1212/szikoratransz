@@ -2,8 +2,10 @@ import React from "react";
 import { PiShieldCheckLight } from "react-icons/pi";
 import ServicePage from "components/Landing/ServicePage.js";
 import { pickFaq } from "data/landingContent.js";
+import { useTranslation } from "i18n/index.js";
 
 export default function BiztositottSzallitas() {
+  const { t } = useTranslation();
   return (
     <ServicePage
       icon={PiShieldCheckLight}
@@ -33,12 +35,10 @@ export default function BiztositottSzallitas() {
         },
       ]}
       faqItems={pickFaq(
-        "Biztosított a szállított áru?",
-        "Mi történik, ha kár keletkezik szállítás közben?",
-        {
-          q: "Mennyi idő alatt kapok ajánlatot?",
-          a: "Általában 24 órán belül felvesszük Önnel a kapcsolatot egy részletes árajánlattal, amiben a biztosítási fedezet részletei is szerepelnek.",
-        },
+        t,
+        "insurance",
+        "damage",
+        { id: "response_time", aKey: "pages.biztositott.faqOverrides.response_time.a" },
       )}
       testimonialNames={["Szabó Katalin", "Tóth Andrea", "Molnár Eszter"]}
     >
