@@ -506,4 +506,36 @@ export const pagesRendezveny = {
     },
   },
 };
-export const pagesEgyedi = {};
+export const pagesEgyedi = {
+  metaTitle: "Egyedi árajánlat fuvarozásra | Szikora Transz Kft.",
+  metaDescription:
+    "Nincs két egyforma fuvar — minden szállítást egyedileg árazunk az útvonal, az áru jellege és a határidő alapján. Kérjen ingyenes árajánlatot még ma.",
+  eyebrow: "Egyedi árajánlat",
+  h1: "Egyedi árajánlat — bármilyen árut szállítunk",
+  intro:
+    "Nem szakosodtunk egyetlen iparágra sem: bármilyen árut szállítunk, az Ön igényei szerint. Mivel nincs két egyforma fuvar, nincs fix díjszabásunk sem — minden megrendelést egyedileg, tételesen árazunk.",
+  bullets: [
+    {
+      title: "Bármilyen áru, bármilyen igény",
+      desc: "Nem korlátozzuk magunkat egy-egy iparágra vagy árutípusra — mondja el, mit kell szállítani, mi megoldjuk.",
+    },
+    {
+      title: "Átlátható, tételes árazás",
+      desc: "A távolság, az áru mérete/súlya/jellege és a határidő alapján adunk pontos, nem sablonos árajánlatot.",
+    },
+    { title: "Nincs rejtett költség", desc: "Az ajánlatban minden tétel átlátható — amit ajánlunk, azt számlázzuk." },
+    {
+      title: "Kötöttség nélküli ajánlatkérés",
+      desc: "Az árajánlat ingyenes és nem kötelezi Önt a megrendelésre.",
+    },
+  ],
+  section: { heading: "Milyen szállítmányokat vállalunk egyedi árajánlattal?" },
+  faqOverrides: {
+    pricing_factors: {
+      a: "Mivel nincs két egyforma megrendelésünk, nincs egységes díjtáblázatunk sem — minden ajánlatot a konkrét útvonal, az áru mérete, súlya és jellege, valamint a vállalt határidő alapján, egyedileg számolunk ki. Mondja el a részleteket, és pontos, tételes árajánlatot küldünk.",
+    },
+    payment_terms: {
+      a: "Mivel minden megrendelést egyedileg árazunk, a fizetési határidőt és módot (átutalás vagy számlás fizetés) is a konkrét fuvarhoz igazítva állapítjuk meg.",
+    },
+  },
+};

@@ -502,4 +502,39 @@ export const pagesRendezveny = {
     },
   },
 };
-export const pagesEgyedi = {};
+export const pagesEgyedi = {
+  metaTitle: "Custom Freight Quote | Szikora Transz Kft.",
+  metaDescription:
+    "No two jobs are the same — every shipment is priced individually based on route, cargo type, and deadline. Request a free quote today.",
+  eyebrow: "Custom Quote",
+  h1: "Custom Quote — We Transport Any Type of Cargo",
+  intro:
+    "We're not limited to a single industry: we transport any type of cargo, tailored to your needs. Since no two jobs are alike, we don't have a fixed price list either — every order is priced individually, item by item.",
+  bullets: [
+    {
+      title: "Any cargo, any requirement",
+      desc: "We don't limit ourselves to any one industry or cargo type — tell us what needs transporting, and we'll make it happen.",
+    },
+    {
+      title: "Transparent, itemized pricing",
+      desc: "We give you a precise, non-generic quote based on distance, the cargo's size/weight/nature, and the deadline.",
+    },
+    {
+      title: "No hidden costs",
+      desc: "Every line item in the quote is transparent — what we quote is what we invoice.",
+    },
+    {
+      title: "No-obligation quote requests",
+      desc: "Getting a quote is free and doesn't commit you to placing an order.",
+    },
+  ],
+  section: { heading: "What kinds of shipments do we handle with a custom quote?" },
+  faqOverrides: {
+    pricing_factors: {
+      a: "Since no two orders are alike, we don't have a fixed price table either — every quote is calculated individually, based on the specific route, the cargo's size, weight and nature, and the agreed deadline. Tell us the details, and we'll send you a precise, itemized quote.",
+    },
+    payment_terms: {
+      a: "Since every order is priced individually, we also set the payment deadline and method (bank transfer or invoiced payment) to match the specific job.",
+    },
+  },
+};
