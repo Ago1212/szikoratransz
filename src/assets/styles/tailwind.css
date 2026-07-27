@@ -1277,6 +1277,10 @@ h1,
   margin-left: 0.75rem;
 }
 
+.ml-4 {
+  margin-left: 1rem;
+}
+
 .ml-auto {
   margin-left: auto;
 }
@@ -3688,6 +3692,10 @@ h1,
 .text-\[\#23262B\] {
   --tw-text-opacity: 1;
   color: rgb(35 38 43 / var(--tw-text-opacity, 1));
+}
+
+.text-\[\#23262B\]\/30 {
+  color: rgb(35 38 43 / 0.3);
 }
 
 .text-\[\#23262B\]\/35 {
