@@ -14,6 +14,14 @@ import { useTranslation, localizePath } from "i18n/index.js";
 // tartalmaz olyan adatkezelést, ami a kódban ne létezne. Az angol verzió
 // (ld. src/i18n/en.js `adatvedelem`) ugyanezt a tartalmat fordítja, ugyanazzal
 // a "nem jogi felülvizsgálat alatt álló sablon" figyelmeztetéssel.
+// Stabil objektum-referencia a hreflang-alternatívákhoz — statikus (nem függ
+// propoktól/state-től), ezért modul-szinten hozzuk létre; `localizePath`
+// adja a HU→EN leképezést, hogy ne legyen kézzel felírt "/en" string.
+const ADATVEDELEM_ALTERNATES = {
+  hu: localizePath("/adatvedelem", "hu"),
+  en: localizePath("/adatvedelem", "en"),
+};
+
 export default function Adatvedelem() {
   const { t, locale } = useTranslation();
   const breadcrumbItems = [
@@ -24,7 +32,7 @@ export default function Adatvedelem() {
     description: t("adatvedelem.metaDescription"),
     path: localizePath("/adatvedelem", locale),
     lang: locale,
-    alternates: { hu: "/adatvedelem", en: "/en/adatvedelem" },
+    alternates: ADATVEDELEM_ALTERNATES,
     breadcrumb: breadcrumbItems,
   });
 
@@ -49,6 +57,7 @@ export default function Adatvedelem() {
           items={breadcrumbItems}
           homeLabel={t("landing.breadcrumbHome")}
           homePath={localizePath("/", locale)}
+          navLabel={t("landing.breadcrumbNavLabel")}
         />
         <span className="inline-flex items-center gap-2 text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-[#1E3AA8] mb-5">
           <span className="w-1.5 h-1.5 rounded-full bg-[#1E3AA8]"></span>

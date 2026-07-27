@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { PiArrowRightLight, PiCheckLight, PiQuotesLight } from "react-icons/pi";
 import Footer from "components/Footers/Footer.js";
@@ -36,12 +36,22 @@ export default function ServicePage({
   const breadcrumbItems = currentService
     ? [{ name: currentServiceLabel, path: localizedPath }]
     : [];
+  // `path` a kanonikus HU útvonal (ld. a fájl tetején lévő komment) —
+  // `localizePath` adja mindkét nyelvi változatot, hogy ne kelljen kézzel
+  // felírt "/en${path}" stringet karbantartani. `useMemo`-val stabil a
+  // referencia rendereléskor át (pl. a QuoteForm gépelése közben), hogy a
+  // useSeo effektje ne bontsa le/építse újra feleslegesen a hreflang
+  // tageket minden billentyűleütésnél.
+  const alternates = useMemo(
+    () => ({ hu: localizePath(path, "hu"), en: localizePath(path, "en") }),
+    [path],
+  );
   useSeo({
     title: metaTitle,
     description: metaDescription,
     path: localizedPath,
     lang: locale,
-    alternates: { hu: path, en: `/en${path}` },
+    alternates,
     faqItems,
     breadcrumb: breadcrumbItems.length > 0 ? breadcrumbItems : undefined,
     service: currentService
@@ -107,14 +117,14 @@ export default function ServicePage({
             </Link>
             <span className="inline-flex items-center gap-1.5 text-xs font-[Overpass_Mono] uppercase tracking-wide">
               <Link
-                to={path}
+                to={localizePath(path, "hu")}
                 className={locale === "hu" ? "text-[#1E3AA8] font-bold" : "text-[#23262B]/50 hover:text-[#23262B]"}
               >
                 HU
               </Link>
               <span className="text-[#23262B]/30">|</span>
               <Link
-                to={`/en${path}`}
+                to={localizePath(path, "en")}
                 className={locale === "en" ? "text-[#1E3AA8] font-bold" : "text-[#23262B]/50 hover:text-[#23262B]"}
               >
                 EN
@@ -130,6 +140,7 @@ export default function ServicePage({
             items={breadcrumbItems}
             homeLabel={t("landing.breadcrumbHome")}
             homePath={localizePath("/", locale)}
+            navLabel={t("landing.breadcrumbNavLabel")}
           />
         )}
 
