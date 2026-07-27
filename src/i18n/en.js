@@ -341,7 +341,45 @@ export const pagesBelfoldi = {
   ],
   section: { heading: "How is the price of a domestic shipment calculated?" },
 };
-export const pagesNemzetkozi = {};
+export const pagesNemzetkozi = {
+  metaTitle: "International Freight Transport with Customs Clearance | Szikora Transz Kft.",
+  metaDescription:
+    "International freight transport across Europe, with full customs clearance and documentation handled for you. Request a custom quote today — response within 24 hours.",
+  eyebrow: "International Shipping",
+  h1: "International Freight Transport, with Full Customs Clearance",
+  intro:
+    "Cross-border freight transport across Europe, with full customs clearance and documentation included. We tailor the route and the deadline to each individual shipment — you don't have to deal with customs at all.",
+  bullets: [
+    {
+      title: "Full customs clearance",
+      desc: "We take full responsibility for the necessary customs clearance and documentation — you don't have to.",
+    },
+    {
+      title: "Europe-wide coverage",
+      desc: "We handle international freight transport across the whole continent, with custom route planning for every job.",
+    },
+    {
+      title: "Insured shipping",
+      desc: "Every international shipment we handle is fully insured — if damage occurs, we're the ones who deal with the insurer.",
+    },
+    {
+      title: "Custom quote",
+      desc: "We price every international job individually, based on the route, the type of cargo, and the deadline.",
+    },
+  ],
+  section: { heading: "What you should know about customs clearance for international shipments" },
+  faqOverrides: {
+    insurance: {
+      a: "Yes — our international shipments are also fully insured from pickup all the way to delivery in the destination country. Crossing a border doesn't create any gap in coverage.",
+    },
+    damage: {
+      a: "For international shipments too, let us know immediately by phone or email. Our team handles the claims process with the insurer, no matter which country the damage occurred in.",
+    },
+    payment_terms: {
+      a: "For our international partners, we agree on payment terms — and, if needed, the currency (forint or euro) — on a per-order basis.",
+    },
+  },
+};
 export const pagesBiztositott = {};
 export const pagesExpressz = {};
 export const pagesRendezveny = {};
