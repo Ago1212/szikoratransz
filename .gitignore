@@ -33,3 +33,6 @@ commit.sh
 
 # Subagent-driven-development scratch workspace (ledgers, briefs, review packages)
 .superpowers/
+
+# Git worktrees created for isolated feature implementation
+.worktrees/
