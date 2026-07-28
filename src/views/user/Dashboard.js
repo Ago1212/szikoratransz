@@ -10,8 +10,7 @@ import {
   PiPhoneLight,
   PiCaretRightLight,
   PiMapPinLight,
-  PiCameraLight,
-  PiFilePdfLight,
+  PiClipboardTextLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import Spinner from "components/UI/Spinner.js";
@@ -66,25 +65,6 @@ const TILE_TONE = {
   danger: "bg-red-50 text-red-600",
 };
 
-function DokumentumMiniElonezet({ fajlId, filename }) {
-  const [src, setSrc] = useState(null);
-
-  useEffect(() => {
-    let elve = false;
-    fetchAction("downloadFile", { id: fajlId }).then((result) => {
-      if (!elve && result?.success && result.mime?.startsWith("image/")) {
-        setSrc(`data:${result.mime};base64,${result.file}`);
-      }
-    });
-    return () => {
-      elve = true;
-    };
-  }, [fajlId]);
-
-  if (!src) return <PiFilePdfLight className="h-5 w-5 text-ink-400" />;
-  return <img src={src} alt={filename || "dokumentum előnézet"} className="h-full w-full object-cover" />;
-}
-
 export default function UserDashboard() {
   const history = useHistory();
   const [user, setUser] = useState(null);
@@ -97,7 +77,7 @@ export default function UserDashboard() {
   const [kerelmek, setKerelmek] = useState([]);
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [legutobbiDokumentumok, setLegutobbiDokumentumok] = useState([]);
+  const [aktivFuvarok, setAktivFuvarok] = useState([]);
 
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem("user"));
@@ -121,7 +101,7 @@ export default function UserDashboard() {
         adminRes,
         kerelemRes,
         elbiraltRes,
-        dokumentumRes,
+        fuvarRes,
       ] = await Promise.all([
         fetchAction("getSajatSofor", { id: userData.id }),
         fetchAction("getKamionok", { id: userData.admin }),
@@ -131,7 +111,7 @@ export default function UserDashboard() {
         fetchAction("getAdminElerhetoseg", { id: userData.admin }),
         fetchAction("getSajatJarmuValtasKerelmek", { sofor_id: userData.id }),
         fetchAction("getElbiraltJarmuValtasok", { sofor_id: userData.id }),
-        fetchAction("getSajatBeerkezettDokumentumok", { sofor_id: userData.id, limit: 3 }),
+        fetchAction("getSajatFuvarok", { sofor_id: userData.id, aktivOnly: true }),
       ]);
       if (freshRes?.success && freshRes.user) {
         const merged = { ...userData, ...freshRes.user };
@@ -152,7 +132,7 @@ export default function UserDashboard() {
       if (kerelemRes?.success) setKerelmek(kerelemRes.kerelmek || []);
       if (elbiraltRes?.success)
         setElbiraltJarmuValtasok(elbiraltRes.kerelmek || []);
-      if (dokumentumRes?.success) setLegutobbiDokumentumok(dokumentumRes.dokumentumok || []);
+      if (fuvarRes?.success) setAktivFuvarok(fuvarRes.fuvarok || []);
       setLoading(false);
     };
     load();
@@ -303,47 +283,50 @@ export default function UserDashboard() {
         </Link>
       </div>
 
-      {/* Dokumentum feltöltése — kiemelt, mert ez a leggyakrabban használt
-          napi művelet lesz (minden lezárt fuvarnál). Csak a fájl típusát/
-          feldolgozási státuszát mutatja, az OCR-eredményt nem — ld.
-          DokumentumFeltoltes.js fejléc-kommentje. */}
-      <Link
-        to="/user/dokumentum-feltoltes"
-        className="rounded-2xl border border-brand-200 bg-brand-50 p-4 shadow-soft"
-      >
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-white text-brand-600">
-              <PiCameraLight className="h-6 w-6" />
-            </span>
-            <div>
-              <p className="font-display text-base font-bold text-brand-900">
-                Dokumentum feltöltése
-              </p>
-              <p className="text-xs text-brand-700">
-                Fuvarlevél vagy szállítólevél lefotózása
-              </p>
-            </div>
-          </div>
-          <PiCaretRightLight className="h-5 w-5 flex-shrink-0 text-brand-500" />
+      {/* Aktív fuvarjaim — a Fuvar-first munkafolyamat elsődleges napi
+          művelete (ld. docs/superpowers/specs/2026-07-28-fuvar-first-
+          workflow-design.md 6.2), a korábbi "Dokumentum feltöltése" kártya
+          helyén és vizuális súlyával. */}
+      <div className="rounded-2xl border border-brand-200 bg-brand-50 p-4 shadow-soft">
+        <div className="mb-2 flex items-center justify-between">
+          <p className="font-display text-base font-bold text-brand-900">Aktív fuvarjaim</p>
+          <PiClipboardTextLight className="h-5 w-5 text-brand-500" />
         </div>
-        {legutobbiDokumentumok.length > 0 && (
-          <div className="mt-3 flex gap-2 border-t border-brand-100 pt-3">
-            {legutobbiDokumentumok.map((d) => (
-              <span
-                key={d.id}
-                className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white"
+        {aktivFuvarok.length === 0 ? (
+          <p className="text-sm text-brand-700">Nincs aktív fuvarod.</p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {aktivFuvarok.slice(0, 3).map((f) => (
+              <Link
+                key={f.id}
+                to="/user/fuvarReszletek"
+                onClick={(e) => {
+                  // history.push state-tel gyorsabb, mint egy plain <Link>
+                  // (nincs extra getSajatFuvar lekérdezés) — ezért kézzel
+                  // navigálunk ahelyett, hogy a Link natív navigációjára
+                  // hagyatkoznánk.
+                  e.preventDefault();
+                  history.push("/user/fuvarReszletek", { data: f });
+                }}
+                className="flex items-center justify-between gap-2 rounded-xl bg-white px-3 py-2.5 text-sm"
               >
-                {d.fajl_kategoria === "kep" ? (
-                  <DokumentumMiniElonezet fajlId={d.fajl_id} filename={d.filename} />
-                ) : (
-                  <PiFilePdfLight className="h-5 w-5 text-ink-400" />
-                )}
-              </span>
+                <span className="min-w-0 truncate text-ink-800">
+                  {f.felrako || "—"} → {f.lerako || "—"}
+                </span>
+                <PiCaretRightLight className="h-4 w-4 flex-shrink-0 text-ink-400" />
+              </Link>
             ))}
+            {aktivFuvarok.length > 3 && (
+              <Link
+                to="/user/fuvarok"
+                className="text-center text-xs font-semibold text-brand-700"
+              >
+                Összes fuvarod ({aktivFuvarok.length})
+              </Link>
+            )}
           </div>
         )}
-      </Link>
+      </div>
 
       {/* Fontos értesítések */}
       {lejaroDokumentumok.length > 0 && (
