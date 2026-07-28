@@ -399,80 +399,35 @@ Két új sofőr-önkiszolgáló backend action (`getSajatBeerkezettDokumentumok`
 ## Fuvar OCR-bővítés: távolság (km) + tömeg (kg) (2026-07-26) — összefoglaló, teljes jegyzőkönyv: `CLAUDE-history.md`
 A Gemini OCR JSON-sémája kapott két numerikus mezőt (`tavolsag_km`/`tomeg_kg`, tonna→kg váltással). `fuvarok.tomeg_kg DECIMAL(8,2) NULL` (`backend/sql/41.sql`), `FuvarInterface::letrehozDokumentumbol()` átveszi mindkettőt, `FuvarForm.js` "Útvonal" szekciója kapott egy "Tömeg (kg)" mezőt. Az OCR-séma `suly` mezője ezzel érdemben kiváltva, de a mező maga a sémában maradt (alacsony kockázatú holt mező).
 
-## Beérkezett dokumentum OCR — aszinkron feldolgozás, nincs cron-tartalék (2026-07-27)
+## Beérkezett dokumentum OCR — visszaállítva szinkron feldolgozásra (2026-07-27)
 
-A korábbi `elemezBeerkezettDokumentum` action a HTTP-kérésen BELÜL futtatta a
-Gemini OCR-hívást, ami a válaszidőt a modell "thinking"-latenciájának (3-13+
-másodperc) tette ki mind a sofőr-oldali feltöltő oldalon, mind az admin
-bulk-feltöltőn. Ez mostantól kétfelé bontva fut:
+Egy 2026-07-27-i kör rövid ideig kétfelé bontotta ezt a feldolgozást: az
+`elemezBeerkezettDokumentum` csak a fájlt mentette + a sort hozta létre
+`ocr_allapot='feldolgozatlan'`-ra, egy külön `ApiHandler::inditsBackgroundOcr()`
+pedig `exec("nohup $php $script $id > /dev/null 2>&1 &")`-vel indított egy
+elszakított PHP-CLI processzt (`backend/cli/ocr_feldolgozas.php`), ami
+ténylegesen elvégezte a Gemini-hívást. Élesben ez nem működött megbízhatóan,
+ezért **ez a kör teljesen visszaállt a korábbi, szinkron verzióra**: az
+`elemezBeerkezettDokumentum` action ismét a HTTP-kérésen BELÜL, közvetlenül
+hívja a Gemini OCR-t (`BeerkezettDokumentumInterface::elemez()`), a válasz a
+modell "thinking"-latenciájának megfelelően (3-13+ másodperc) érkezik. A
+háttérfolyamatos kísérlet minden darabja (`backend/cli/ocr_feldolgozas.php`,
+`ApiHandler::inditsBackgroundOcr()`/`ujraprobalBeerkezettDokumentumOcr` action,
+a `DokumentumReviewPanel.js` "Újrapróbálás" gombja, a sofőr-oldali
+`DokumentumFeltoltes.js` kliens-poll, a `BeerkezettDokumentumok.js` kézi
+"Frissítés" gomb, a `DokumentumKartya.js` 3-állapotú — feldolgozatlan/hiba/kész
+— jelvény-logikája) el lett távolítva.
 
-- **`ApiHandler::process()`'s `elemezBeerkezettDokumentum`/
-  `ujraprobalBeerkezettDokumentumOcr` ágai** csak a fájlt mentik + a
-  `beerkezett_dokumentumok` sort hozzák létre/állítják vissza
-  `ocr_allapot='feldolgozatlan'`-ra (`BeerkezettDokumentumInterface::
-  letrehozFeldolgozatlan()`/`ujraprobal()`) — nincs bennük Gemini-hívás, a
-  válasz emiatt közel azonnali (élő méréssel ~70-105 ms a korábbi 3-13+
-  másodperc helyett).
-- **`ApiHandler::inditsBackgroundOcr($dokumentumId)`** egy elszakított,
-  `nohup $php $script $id > /dev/null 2>&1 &` mintázatú `exec()`-hívással
-  indítja el `backend/cli/ocr_feldolgozas.php`-t — egy külön, a HTTP-kéréstől
-  független PHP-processz, ami ténylegesen elvégzi a Gemini-hívást és
-  `BeerkezettDokumentumInterface::dolgozzFel()`-lel frissíti a sort
-  `kesz`/`hiba` állapotra. A `nohup ... &` azért kritikus, mert a helyi,
-  egyszálas `php8.2 -S` dev szerveren egy szinkron `exec()` blokkolna minden
-  más egyidejű kérést a teljes OCR-hívás idejére.
-- **Szándékosan NINCS cron-alapú biztonsági háló ebben a körben** — ha az
-  `exec()` által indított processz bármilyen okból elveszik, a sor
-  `feldolgozatlan`-on ragadhat, és semmilyen ütemezett feladat nem próbálja
-  újra automatikusan. Ehelyett az admin `DokumentumReviewPanel.js`-beli
-  "Újrapróbálás" gombja (`ujraprobalBeerkezettDokumentumOcr` → visszaállítja
-  `feldolgozatlan`-ra + újra elindítja `inditsBackgroundOcr()`-t) a kézi
-  kezelési út egy elakadt/hibás sorra — tudatos, alacsony kockázatú
-  kompromisszum egy admin-only, review-jellegű inbox modulnál. Ha a
-  jövőben mégis szükség lenne rá, egy `backend/cron/`-ba illesztett, X
-  percnél régebbi `feldolgozatlan` sorokat újraindító job lenne a következő
-  lépés.
-- A sofőr-oldali `DokumentumFeltoltes.js` egy korlátozott (4 mp-enként, max
-  15×, ~1 percig) klienspollal frissíti a "Korábbi feltöltéseim" listát,
-  amíg van `feldolgozatlan` sor — az admin `BeerkezettDokumentumok.js` oldal
-  szándékosan NEM pollingol, csak egy kézi "Frissítés" gombot kapott.
-  `DokumentumKartya.js` mostantól 3, vizuálisan megkülönböztetett állapotot
-  mutat (`feldolgozatlan` → kék, pörgő; `hiba` → amber, figyelmeztető ikon;
-  `kesz` → emerald, pipa) — korábban a `feldolgozatlan` állapot tévesen a
-  `kesz`-szel azonos zöld pipát kapta, mert gyakorlatilag sosem fordult elő
-  éles adatban; az aszinkron átállás után ez minden feltöltésnél néhány
-  másodpercig valós állapot.
-
-**Élőben, valódi kétoldalú (sofőr → admin) golden path-tal ellenőrizve**: egy
-helyi `sessions`-be szúrt valódi sofőr-munkamenettel feltöltött szintetikus
-fuvarlevél-kép válasza ~105 ms alatt érkezett, a lista azonnal "Feldolgozás
-alatt" jelvényt mutatott, majd a beépített poll magától "Feldolgozva"-ra
-váltott, mihelyt a háttér-processz lefutott. Ugyanez a dokumentum (azonos
-`id`) egy valódi admin-munkamenettel a "Feldolgozásra vár" fülön, a feltöltő
-sofőr neve alá csoportosítva jelent meg. Egy dokumentumot kézzel `ocr_allapot
-='hiba'`-ra állítva a review panel helyesen mutatta a figyelmeztető sávot +
-"Újrapróbálás" gombot (light és dark módban is) — a gombra kattintva a sor
-visszaállt `feldolgozatlan`-ra, majd egy valódi, újrafutó Gemini-hívás
-helyesen `kesz`-re oldotta fel. A teszt közben létrehozott DB-sorok, fizikai
-fájlok és munkamenetek a teszt végén törölve lettek.
-
-**Gotcha, amit a whole-branch review talált meg (a helyi teszt sosem futott
-le rajta)**: `ApiHandler::inditsBackgroundOcr()` a háttér-processz
-indításához használt PHP-binárist `PHP_BINARY`-ból olvassa ki — ez a
-JELENLEG FUTÓ SAPI binárisa, nem feltétlenül a CLI php. A helyi
-`php8.2 -S` (SAPI: `cli-server`) alatt ez történetesen maga a CLI bináris,
-ezért minden itteni élő teszt sikeresnek tűnt — de éles Apache/mod_php
-vagy php-fpm alatt `PHP_BINARY` az apache2/php-fpm binárist adná vissza,
-amivel az `exec()`-hívás csendben SOHA nem futtatná le a scriptet (a HTTP-
-válasz eközben rendben, gyorsan visszatérne, mert a gyors beszúrás
-önmagában attól még lefut). Fix: csak `cli`/`cli-server` SAPI alatt bízunk
-`PHP_BINARY`-ban, egyébként egy env-változóval felülírható,
-portábilis (`PHP_BINDIR . '/php'`) alapértelmezésre esünk vissza — de ezt
-az ágat ebben a fejlesztői környezetben (nincs itt Apache/php-fpm) nem
-lehetett élesben kipróbálni, csak kód-olvasással ellenőrizve. **Ha ez a
-mechanizmus valaha éles környezetben nem indítaná el az OCR-t, ez legyen
-az első gyanú** — egy feltöltés után nézd meg, hogy a sor ténylegesen
-elhagyja-e a `feldolgozatlan` állapotot 30-60 másodpercen belül.
+**Nyitott, még nem megoldott probléma**: a szinkron hívás válaszideje (a
+felhasználó eredeti panasza) így visszatért — ez volt az aszinkron kísérlet
+kiváltó oka. A háttérfolyamatos megoldást a `PHP_BINARY`-alapú SAPI-gotcha
+(ld. korábbi git history, `git show cad434a`/`b2acd45`) és/vagy egy még nem
+azonosított hiba miatt a felhasználó élesben működésképtelennek találta —
+mielőtt bármilyen aszinkron/háttérfolyamatos megoldást újra megpróbálnál,
+tisztázd vele, mi pontosan romlott el (a HTTP-kérés maga hibázott, a
+háttér-processz sosem indult el, vagy valami más), mert ez a kör explicit
+kérésre visszaállt a régi viselkedésre ahelyett, hogy ezt kideríteni
+próbálta volna.
 
 ## Workflow notes for Claude Code
 

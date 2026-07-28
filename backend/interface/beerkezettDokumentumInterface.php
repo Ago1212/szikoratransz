@@ -24,99 +24,48 @@ class BeerkezettDokumentumInterface {
         $this->db = $database->connect();
     }
 
-    // A feltöltés MINDIG gyors — az OCR (Gemini-hívás) a háttérben, egy
-    // külön processzben fut le (ld. dolgozzFel() lentebb és
-    // backend/cli/ocr_feldolgozas.php), hogy a sofőr/admin ne várjon
-    // 3-13+ másodpercet a válaszra. Ez a metódus csak a fájlt tölti fel és
-    // létrehozza a sort 'feldolgozatlan' állapotban — semmilyen OCR-hívás
-    // nincs benne.
-    public function letrehozFeldolgozatlan($base64, $fajlnev, $ceg_id, $feltoltoTipus, $feltoltoId, $feltoltoNev) {
-        global $filesInterface;
+    public function elemez($base64, $fajlnev, $ceg_id, $feltoltoTipus, $feltoltoId, $feltoltoNev) {
+        global $filesInterface, $apiConfig;
 
         $raw = base64_decode((string) $base64, true);
         if ($raw === false || $raw === '') {
             return ['success' => false, 'message' => 'A feltöltött fájl nem érvényes.'];
         }
 
-        $nev = $fajlnev ?: 'beerkezett_dokumentum';
-        $feltoltEredmeny = $filesInterface->fileUpload($ceg_id, 'beerkezett_dokumentum', $ceg_id, $base64, $nev, strlen($raw), null, $feltoltoTipus, $feltoltoId, $feltoltoNev);
-        if (empty($feltoltEredmeny['success'])) {
-            return ['success' => false, 'message' => $feltoltEredmeny['message'] ?? 'A fájl mentése sikertelen.'];
-        }
-        $fajlId = $feltoltEredmeny['id'];
-
-        $stmt = $this->db->prepare(
-            "INSERT INTO beerkezett_dokumentumok (admin, fajl_id, tipus, ocr_allapot, ocr_adatok, feltolto_tipus, feltolto_id, feltolto_nev, hozzarendelt_sofor_id)
-             VALUES (:admin, :fajl_id, 'ismeretlen', 'feldolgozatlan', NULL, :feltolto_tipus, :feltolto_id, :feltolto_nev, NULL)"
-        );
-        $stmt->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
-        $stmt->bindValue(':fajl_id', $fajlId, PDO::PARAM_INT);
-        $stmt->bindValue(':feltolto_tipus', $feltoltoTipus);
-        $stmt->bindValue(':feltolto_id', $feltoltoId);
-        $stmt->bindValue(':feltolto_nev', $feltoltoNev);
-        $stmt->execute();
-
-        $dokumentumId = $this->db->lastInsertId();
-        return ['success' => true, 'dokumentum' => [
-            'id' => (int) $dokumentumId,
-            'fajl_id' => (int) $fajlId,
-            'tipus' => 'ismeretlen',
-            'ocr_allapot' => 'feldolgozatlan',
-            'ocr_adatok' => null,
-            'hozzarendelt_sofor_id' => null,
-        ]];
-    }
-
-    // Ezt a metódust a HTTP-kéréstől függetlenül, egy külön, elszakított
-    // PHP-processz hívja (backend/cli/ocr_feldolgozas.php) — SOSEM a
-    // letrehozFeldolgozatlan()-t kiszolgáló kérésen belül. A fizikai fájlt
-    // közvetlenül a `fajlok.hely` oszlopból olvassuk (a projekt saját
-    // SQL-lintere miatt JOIN nélkül, két külön lekérdezéssel, ugyanaz a
-    // minta, mint fajlnevekFeloldasa()-nál), nem a base64-kódoló
-    // filesInterface::downloadFile()-on át, ami felesleges kódolási kör
-    // lenne. Az egész törzs try/catch-ben: bármilyen kivétel (hálózati
-    // hiba, hiányzó Gemini-kulcs, pdftoppm hiba) 'hiba' állapotra állítja a
-    // sort — SOSEM maradhat 'feldolgozatlan'-on egy elszállt hívás után.
-    public function dolgozzFel($dokumentumId) {
-        global $apiConfig;
-
-        $stmt = $this->db->prepare(
-            "SELECT id, admin, fajl_id FROM beerkezett_dokumentumok WHERE id = :id AND torolt <> 'I'"
-        );
-        $stmt->bindValue(':id', $dokumentumId, PDO::PARAM_INT);
-        $stmt->execute();
-        $sor = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($sor === false) {
-            return;
-        }
-
-        $fajlStmt = $this->db->prepare("SELECT hely, filename FROM fajlok WHERE sorszam = :sorszam");
-        $fajlStmt->bindValue(':sorszam', $sor['fajl_id'], PDO::PARAM_INT);
-        $fajlStmt->execute();
-        $fajl = $fajlStmt->fetch(PDO::FETCH_ASSOC);
-        if ($fajl === false || !file_exists($fajl['hely'])) {
-            $this->frissitAllapot($dokumentumId, 'hiba', 'ismeretlen', null, null);
-            return;
-        }
-
+        $kiterjesztes = strtolower(pathinfo((string) $fajlnev, PATHINFO_EXTENSION));
+        $tmpEredetiPath = null;
         $tmpKepPath = null;
-        try {
-            $kiterjesztes = strtolower(pathinfo((string) $fajl['filename'], PATHINFO_EXTENSION));
 
+        try {
             if ($kiterjesztes === 'pdf') {
-                $tmpKepPath = $this->pdfElsoOldalKepe($fajl['hely']);
+                // `tempnam()` maga is létrehozza a fájlt a visszaadott, kiterjesztés
+                // nélküli néven — ha közvetlenül ehhez fűznénk a '.pdf'-et, az eredeti,
+                // tempnam() által ténylegesen létrehozott fájl sosem törlődne (a lenti
+                // `finally` csak a `.pdf`-es nevet unlinkeli), minden PDF-feltöltés egy
+                // 0 bájtos, örökre ott maradó fájlt hagyna a rendszer temp mappájában —
+                // élőben, ismételt PDF-teszttel megerősítve. Ugyanaz a minta, mint lent
+                // a `pdfElsoOldalKepe()`-ben: azonnal unlinkeljük a tempnam() által
+                // létrehozott fájlt, mielőtt a kiterjesztéssel bővített nevet használnánk.
+                $tmpEredetiPath = tempnam(sys_get_temp_dir(), 'bdok_');
+                unlink($tmpEredetiPath);
+                $tmpEredetiPath .= '.pdf';
+                file_put_contents($tmpEredetiPath, $raw);
+                $tmpKepPath = $this->pdfElsoOldalKepe($tmpEredetiPath);
                 if ($tmpKepPath === null) {
-                    $this->frissitAllapot($dokumentumId, 'hiba', 'ismeretlen', null, null);
-                    return;
+                    return $this->mentesEredmennyel($ceg_id, $base64, $fajlnev, $feltoltoTipus, $feltoltoId, $feltoltoNev, 'hiba', null);
                 }
                 $kepBytes = file_get_contents($tmpKepPath);
                 $kepMime = 'image/png';
             } else {
-                $kepBytes = file_get_contents($fajl['hely']);
+                $kepBytes = $raw;
                 $kepMime = $this->kepMimeTipusa($kepBytes, $kiterjesztes);
             }
 
-            $sajatCegnev = $this->sajatCegnev($sor['admin']);
+            $sajatCegnev = $this->sajatCegnev($ceg_id);
+            // `geminiApiKeys` (tömb, ld. config.php) — nem a régi, egyetlen
+            // `geminiApiKey`-t olvassuk, hogy a GeminiOcrClient kvóta-túllépés
+            // esetén tényleg tudjon másik (külön projektben generált) kulcsra
+            // váltani, ne csak egyetlen kulcsot lásson.
             $geminiKulcsok = $apiConfig['geminiApiKeys'] ?? [];
 
             $adatok = null;
@@ -126,78 +75,18 @@ class BeerkezettDokumentumInterface {
             }
 
             if ($adatok === null) {
-                $this->frissitAllapot($dokumentumId, 'hiba', 'ismeretlen', null, null);
-                return;
+                return $this->mentesEredmennyel($ceg_id, $base64, $fajlnev, $feltoltoTipus, $feltoltoId, $feltoltoNev, 'hiba', null);
             }
 
-            $tipus = $adatok['tipus'] ?? 'ismeretlen';
-            if (!in_array($tipus, ['fuvarlevel', 'szallitolevel', 'ismeretlen'], true)) {
-                $tipus = 'ismeretlen';
-            }
-
-            $hozzarendeltSoforId = null;
-            if (!empty($adatok['sofor_neve'])) {
-                $hozzarendeltSoforId = $this->keresSoforNevAlapjan($sor['admin'], $adatok['sofor_neve']);
-            }
-
-            $this->frissitAllapot($dokumentumId, 'kesz', $tipus, $adatok, $hozzarendeltSoforId);
-        } catch (\Throwable $e) {
-            error_log('BeerkezettDokumentumInterface::dolgozzFel hiba (id=' . $dokumentumId . '): ' . $e->getMessage());
-            $this->frissitAllapot($dokumentumId, 'hiba', 'ismeretlen', null, null);
+            return $this->mentesEredmennyel($ceg_id, $base64, $fajlnev, $feltoltoTipus, $feltoltoId, $feltoltoNev, 'kesz', $adatok);
         } finally {
+            if ($tmpEredetiPath !== null && file_exists($tmpEredetiPath)) {
+                unlink($tmpEredetiPath);
+            }
             if ($tmpKepPath !== null && file_exists($tmpKepPath)) {
                 unlink($tmpKepPath);
             }
         }
-    }
-
-    // Csak akkor írjuk felül a `tipus`-t, ha még nincs admin/OCR által
-    // eldöntve ('ismeretlen') — és a sofőr-hozzárendelést csak akkor, ha
-    // még nincs kézzel beállítva (COALESCE) — hogy egy admin által a
-    // review-panelen KÉZZEL módosított típus/sofőr ne vesszen el egy
-    // közben lefutó (retry vagy csak lassú) háttér-OCR alatt. A
-    // `WHERE ocr_allapot = 'feldolgozatlan'` biztosítja, hogy egy már
-    // befejezett (`kesz`/`hiba`) sort ne írjon felül egy késve érkező/
-    // duplikált háttérfolyamat.
-    private function frissitAllapot($id, $ocrAllapot, $tipus, $adatok, $hozzarendeltSoforId) {
-        $stmt = $this->db->prepare(
-            "UPDATE beerkezett_dokumentumok
-             SET tipus = CASE WHEN tipus = 'ismeretlen' THEN :tipus ELSE tipus END,
-                 ocr_allapot = :ocr_allapot,
-                 ocr_adatok = :ocr_adatok,
-                 hozzarendelt_sofor_id = COALESCE(hozzarendelt_sofor_id, :hozzarendelt_sofor_id)
-             WHERE id = :id AND ocr_allapot = 'feldolgozatlan'"
-        );
-        $stmt->bindValue(':tipus', $tipus);
-        $stmt->bindValue(':ocr_allapot', $ocrAllapot);
-        $stmt->bindValue(':ocr_adatok', $adatok !== null ? json_encode($adatok, JSON_UNESCAPED_UNICODE) : null);
-        $stmt->bindValue(':hozzarendelt_sofor_id', $hozzarendeltSoforId, $hozzarendeltSoforId === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
-        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-        $stmt->execute();
-    }
-
-    // Admin-akció (review-panel "Újrapróbálás" gomb) — visszaállítja a sort
-    // 'feldolgozatlan'-ra, az ApiHandler ez után egy új háttérfolyamatot
-    // indít (dolgozzFel() ugyanígy fut le, mint az első feltöltésnél).
-    public function ujraprobal($id, $ceg_id) {
-        $stmt = $this->db->prepare(
-            "SELECT id FROM beerkezett_dokumentumok WHERE id = :id AND admin = :admin AND torolt <> 'I'"
-        );
-        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-        $stmt->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
-        $stmt->execute();
-        if ($stmt->fetch(PDO::FETCH_ASSOC) === false) {
-            return ['success' => false, 'message' => 'A dokumentum nem található.'];
-        }
-
-        $update = $this->db->prepare(
-            "UPDATE beerkezett_dokumentumok SET ocr_allapot = 'feldolgozatlan', ocr_adatok = NULL WHERE id = :id AND admin = :admin"
-        );
-        $update->bindValue(':id', $id, PDO::PARAM_INT);
-        $update->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
-        $update->execute();
-
-        return ['success' => true, 'message' => 'Újrafeldolgozás elindítva.'];
     }
 
     // Whole-branch review Minor finding: a kép MIME-típusát korábban
@@ -248,6 +137,60 @@ class BeerkezettDokumentumInterface {
         $stmt->bindValue(':id', $ceg_id);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC)['cegnev'] ?? null;
+    }
+
+    private function mentesEredmennyel($ceg_id, $base64, $fajlnev, $feltoltoTipus, $feltoltoId, $feltoltoNev, $ocrAllapot, $adatok) {
+        global $filesInterface;
+
+        $raw = base64_decode((string) $base64, true);
+        $nev = $fajlnev ?: 'beerkezett_dokumentum';
+        $feltoltEredmeny = $filesInterface->fileUpload($ceg_id, 'beerkezett_dokumentum', $ceg_id, $base64, $nev, strlen((string) $raw), null, $feltoltoTipus, $feltoltoId, $feltoltoNev);
+        if (empty($feltoltEredmeny['success'])) {
+            return ['success' => false, 'message' => $feltoltEredmeny['message'] ?? 'A fájl mentése sikertelen.'];
+        }
+        $fajlId = $feltoltEredmeny['id'];
+
+        $tipus = $adatok['tipus'] ?? 'ismeretlen';
+        if (!in_array($tipus, ['fuvarlevel', 'szallitolevel', 'ismeretlen'], true)) {
+            $tipus = 'ismeretlen';
+        }
+
+        // Ha az OCR felismert egy sofőr-nevet, próbáljuk automatikusan
+        // hozzárendelni a dokumentumot a felismert sofőrhöz — FÜGGETLENÜL
+        // attól, ki töltötte fel (feltoltoTipus lehet 'admin' is, ha pl. az
+        // admin szkenneli be a fuvarlevelet a sofőr helyett). Ez csak egy
+        // automatikus, felülbírálható javaslat: egyértelmű (egyetlen
+        // találatos) laza névegyezés esetén ténylegesen kitöltjük az oszlopot,
+        // admin bármikor módosíthatja/törölheti a review-panelen.
+        $hozzarendeltSoforId = null;
+        if ($ocrAllapot === 'kesz' && !empty($adatok['sofor_neve'])) {
+            $hozzarendeltSoforId = $this->keresSoforNevAlapjan($ceg_id, $adatok['sofor_neve']);
+        }
+
+        $stmt = $this->db->prepare(
+            "INSERT INTO beerkezett_dokumentumok (admin, fajl_id, tipus, ocr_allapot, ocr_adatok, feltolto_tipus, feltolto_id, feltolto_nev, hozzarendelt_sofor_id)
+             VALUES (:admin, :fajl_id, :tipus, :ocr_allapot, :ocr_adatok, :feltolto_tipus, :feltolto_id, :feltolto_nev, :hozzarendelt_sofor_id)"
+        );
+        $stmt->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
+        $stmt->bindValue(':fajl_id', $fajlId, PDO::PARAM_INT);
+        $stmt->bindValue(':tipus', $tipus);
+        $stmt->bindValue(':ocr_allapot', $ocrAllapot);
+        $stmt->bindValue(':ocr_adatok', $adatok !== null ? json_encode($adatok, JSON_UNESCAPED_UNICODE) : null);
+        $stmt->bindValue(':feltolto_tipus', $feltoltoTipus);
+        $stmt->bindValue(':feltolto_id', $feltoltoId);
+        $stmt->bindValue(':feltolto_nev', $feltoltoNev);
+        $stmt->bindValue(':hozzarendelt_sofor_id', $hozzarendeltSoforId, $hozzarendeltSoforId === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
+        $stmt->execute();
+
+        $dokumentumId = $this->db->lastInsertId();
+        return ['success' => true, 'dokumentum' => [
+            'id' => (int) $dokumentumId,
+            'fajl_id' => (int) $fajlId,
+            'tipus' => $tipus,
+            'ocr_allapot' => $ocrAllapot,
+            'ocr_adatok' => $adatok,
+            'hozzarendelt_sofor_id' => $hozzarendeltSoforId,
+        ]];
     }
 
     // Csak javaslat — a dekódolt sofőr-név és a `user.name` közti laza
