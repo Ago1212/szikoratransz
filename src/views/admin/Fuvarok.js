@@ -23,19 +23,11 @@ export default function Fuvarok() {
   const [loading, setLoading] = useState(true);
   const [sortKey, setSortKey] = useState(null);
   const [sortDir, setSortDir] = useState("asc");
-  const [dokSzam, setDokSzam] = useState(0);
   const [allapotSzuro, setAllapotSzuro] = useState("");
   const [osszesito, setOsszesito] = useState(null);
   const [nezetMod, setNezetMod] = useState("tablazat");
   const [figyelmeztetesek, setFigyelmeztetesek] = useState(null);
   const [keresPreset, setKeresPreset] = useState("");
-
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    fetchAction("getBeerkezettDokumentumokSzama", { ceg_id: user.ceg_id }).then((result) => {
-      if (result?.success) setDokSzam(result.szam);
-    });
-  }, []);
 
   const loadOsszesito = useCallback(async () => {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -126,21 +118,7 @@ export default function Fuvarok() {
 
   return (
     <>
-      <PageHeader
-        eyebrow="Fuvarok"
-        title="Fuvarok"
-        action={
-          dokSzam > 0 && (
-            <button
-              type="button"
-              onClick={() => history.push("/admin/beerkezettDokumentumok")}
-              className="rounded-full bg-amber-50 px-4 py-2 text-xs font-bold uppercase tracking-wide text-amber-700 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300"
-            >
-              {dokSzam} dokumentum feldolgozásra vár →
-            </button>
-          )
-        }
-      />
+      <PageHeader eyebrow="Fuvarok" title="Fuvarok" />
       <FigyelmeztetesSav figyelmeztetesek={figyelmeztetesek} onMegnyitas={handleFigyelmeztetesMegnyitas} />
       <AllapotOsszesitoChips
         osszesito={osszesito}
