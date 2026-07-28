@@ -379,6 +379,9 @@ class ApiHandler {
             'getFuvarok' => ['ceg_id'],
             'getSajatFuvarok' => ['sofor_id'],
             'getSajatFuvar' => ['id', 'sofor_id'],
+            'feltoltFuvarDokumentumot' => ['fuvarId', 'tipus', 'file', 'name', 'size'],
+            'torolSajatFuvarDokumentumot' => ['fajlId'],
+            'getSajatFuvarDokumentumai' => ['fuvarId'],
             'getFuvarEgyeztetesJavaslat' => ['dokumentumId', 'ceg_id'],
             'letrehozFuvarDokumentumbol' => ['dokumentumId', 'ceg_id', 'kerelmezo_id'],
             'csatolBeerkezettDokumentumotFuvarhoz' => ['dokumentumId', 'fuvarId', 'ceg_id', 'kerelmezo_id'],
@@ -1796,6 +1799,64 @@ class ApiHandler {
                         $this->resolveSajatSoforId($request),
                         $this->resolveSajatCegId($request)
                     ));
+                    return;
+                case 'feltoltFuvarDokumentumot':
+                    // Sofőr-only, ownership-ellenőrzött feltöltés — ld.
+                    // design spec 5.2. Nincs MODULE_PERMISSION_MAP-bejegyzés
+                    // (ugyanaz az ok, mint a getSajatFuvar*-nál).
+                    $tipus = $request['tipus'] ?? '';
+                    if (!in_array($tipus, ['menetlevel', 'szallitolevel'], true)) {
+                        echo json_encode(['success' => false, 'message' => 'Érvénytelen dokumentumtípus.']);
+                        return;
+                    }
+                    $soforId = $this->resolveSajatSoforId($request);
+                    $cegId = $this->resolveSajatCegId($request);
+                    $fuvarJavaslat = $fuvarInterface->getSajatFuvar($request['fuvarId'], $soforId, $cegId);
+                    if (!$fuvarJavaslat['success']) {
+                        echo json_encode(['success' => false, 'message' => 'A fuvar nem található.']);
+                        return;
+                    }
+                    [$feltoltoTipus, $feltoltoId, $feltoltoNev] = $this->resolveFeltolto($request);
+                    $result = $filesInterface->fileUpload(
+                        $cegId,
+                        'fuvar',
+                        $request['fuvarId'],
+                        $request['file'],
+                        $request['name'],
+                        $request['size'],
+                        null,
+                        $feltoltoTipus,
+                        $feltoltoId,
+                        $feltoltoNev,
+                        $tipus
+                    );
+                    if ($result['success'] && $tipus === 'menetlevel') {
+                        $fuvarInterface->allitDokumentumFeltoltve($request['fuvarId'], $cegId);
+                    }
+                    echo json_encode($result);
+                    return;
+                case 'torolSajatFuvarDokumentumot':
+                    $soforId = $this->resolveSajatSoforId($request);
+                    $cegId = $this->resolveSajatCegId($request);
+                    $fajlSor = $this->db->prepare("SELECT rowid FROM fajlok WHERE sorszam = :id AND tabla = 'fuvar' AND admin = :ceg_id");
+                    $fajlSor->bindValue(':id', $request['fajlId'], PDO::PARAM_INT);
+                    $fajlSor->bindValue(':ceg_id', $cegId, PDO::PARAM_INT);
+                    $fajlSor->execute();
+                    $fuvarId = $fajlSor->fetchColumn();
+                    if ($fuvarId === false || !$fuvarInterface->getSajatFuvar($fuvarId, $soforId, $cegId)['success']) {
+                        echo json_encode(['success' => false, 'message' => 'A dokumentum nem található.']);
+                        return;
+                    }
+                    echo json_encode($filesInterface->deleteFile($request['fajlId'], $cegId));
+                    return;
+                case 'getSajatFuvarDokumentumai':
+                    $soforId = $this->resolveSajatSoforId($request);
+                    $cegId = $this->resolveSajatCegId($request);
+                    if (!$fuvarInterface->getSajatFuvar($request['fuvarId'], $soforId, $cegId)['success']) {
+                        echo json_encode(['success' => false, 'message' => 'A fuvar nem található.']);
+                        return;
+                    }
+                    echo json_encode($filesInterface->getFiles('fuvar', $request['fuvarId'], null, null, null, $cegId));
                     return;
                 case 'getFuvarEgyeztetesJavaslat':
                     $kerelmezo = $this->resolveKerelmezo($request);
