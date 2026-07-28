@@ -415,9 +415,9 @@ class ApiHandler {
             'logErtesitesek' => ['tetelek', 'kerelmezo_id'],
             'getErtesitesNaplo' => ['kerelmezo_id'],
 
-            'savePushFeliratkozas' => ['endpoint', 'p256dh', 'auth', 'kerelmezo_id'],
-            'deletePushFeliratkozas' => ['endpoint', 'kerelmezo_id'],
-            'getPushStatusz' => ['kerelmezo_id'],
+            'savePushFeliratkozas' => ['endpoint', 'p256dh', 'auth'],
+            'deletePushFeliratkozas' => ['endpoint'],
+            'getPushStatusz' => [],
 
             'generateKarbantartasFromBejelentes' => ['id', 'kerelmezo_id'],
 
@@ -1508,19 +1508,25 @@ class ApiHandler {
                     return;
 
                 case 'savePushFeliratkozas':
-                    $kerelmezo = $this->resolveKerelmezo($request);
-                    echo json_encode($pushInterface->saveFeliratkozas($kerelmezo['id'], $request['endpoint'], $request['p256dh'], $request['auth']));
+                    // Mind admin, mind sofőr munkamenetből hívható (ld. a
+                    // spec 5.5 pontja) — ezért NEM resolveKerelmezo()
+                    // (admin-only), hanem a nyers session, ugyanaz a
+                    // tanulság, mint az elemezBeerkezettDokumentum-nál:
+                    // egy dual-role actionnek nincs MODULE_PERMISSION_MAP
+                    // bejegyzése sem (ld. getActions() alatti komment).
+                    $session = $this->requireValidSession($request);
+                    echo json_encode($pushInterface->saveFeliratkozas($session['felhasznalo_tipus'], $session['felhasznalo_id'], $request['endpoint'], $request['p256dh'], $request['auth']));
                     return;
 
                 case 'deletePushFeliratkozas':
-                    $kerelmezo = $this->resolveKerelmezo($request);
-                    echo json_encode($pushInterface->deleteFeliratkozas($kerelmezo['id'], $request['endpoint']));
+                    $session = $this->requireValidSession($request);
+                    echo json_encode($pushInterface->deleteFeliratkozas($session['felhasznalo_tipus'], $session['felhasznalo_id'], $request['endpoint']));
                     return;
 
                 case 'getPushStatusz':
                     global $apiConfig;
-                    $kerelmezo = $this->resolveKerelmezo($request);
-                    $statusz = $pushInterface->vanFeliratkozva($kerelmezo['id']);
+                    $session = $this->requireValidSession($request);
+                    $statusz = $pushInterface->vanFeliratkozva($session['felhasznalo_tipus'], $session['felhasznalo_id']);
                     $statusz['vapidPublicKey'] = $apiConfig['vapidPublicKey'];
                     echo json_encode($statusz);
                     return;
