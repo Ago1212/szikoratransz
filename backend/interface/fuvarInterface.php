@@ -684,6 +684,67 @@ class FuvarInterface {
         return ['success' => true, 'fuvarok' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
 
+    // Sofőr-oldali "saját fuvarjaim" lekérdezés — csak operatív mezőket ad
+    // vissza (útvonal/dátum/jármű/megbízó), SOHA fuvardíj/egyéb költség/
+    // számlaszámot (ezek admin-oldali pénzügyi mezők, ld. design spec 5.1).
+    // `$aktivOnly=true`: a sofőr még nem zárta le (nincs menetlevél-fotó) ÉS
+    // az admin sem zárta le (`allapot<>'teljesitve'`) — a kettő bármelyike
+    // független módon lezárhatja a fuvart a sofőr szemszögéből (ld. spec 4.1).
+    public function getSajatFuvarok($sofor_id, $ceg_id, $aktivOnly = true) {
+        $lezarasFeltetel = $aktivOnly
+            ? "AND dokumentum_feltoltve IS NULL AND allapot <> 'teljesitve'"
+            : "AND (dokumentum_feltoltve IS NOT NULL OR allapot = 'teljesitve')";
+        $stmt = $this->db->prepare(
+            "SELECT id, kamion_id, furgon_id, potkocsi_id, teljesites_datuma, felrako, lerako,
+                    tavolsag_km, tomeg_kg, megbizo_id, aru_megnevezese, megjegyzes, allapot,
+                    dokumentum_feltoltve
+             FROM fuvarok
+             WHERE sofor_id = :sofor_id AND admin = :ceg_id AND torolt <> 'I' $lezarasFeltetel
+             ORDER BY teljesites_datuma DESC, letrehozva DESC"
+        );
+        $stmt->bindValue(':sofor_id', $sofor_id, PDO::PARAM_INT);
+        $stmt->bindValue(':ceg_id', $ceg_id, PDO::PARAM_INT);
+        $stmt->execute();
+        return ['success' => true, 'fuvarok' => $this->dusitSorokat($stmt->fetchAll(PDO::FETCH_ASSOC), $ceg_id)];
+    }
+
+    // Egyetlen fuvar, `sofor_id` egyezés-ellenőrzéssel — ha a fuvar nem
+    // létezik VAGY nem a hívó sofőré, `success:false` (ugyanaz az IDOR-
+    // védelmi minta, mint `BeerkezettDokumentumInterface::torolSajat()`-nál).
+    public function getSajatFuvar($id, $sofor_id, $ceg_id) {
+        $stmt = $this->db->prepare(
+            "SELECT id, kamion_id, furgon_id, potkocsi_id, teljesites_datuma, felrako, lerako,
+                    tavolsag_km, tomeg_kg, megbizo_id, aru_megnevezese, megjegyzes, allapot,
+                    dokumentum_feltoltve
+             FROM fuvarok
+             WHERE id = :id AND sofor_id = :sofor_id AND admin = :ceg_id AND torolt <> 'I'"
+        );
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        $stmt->bindValue(':sofor_id', $sofor_id, PDO::PARAM_INT);
+        $stmt->bindValue(':ceg_id', $ceg_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $fuvar = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($fuvar === false) {
+            return ['success' => false, 'message' => 'A fuvar nem található.'];
+        }
+        return ['success' => true, 'fuvar' => $this->dusitEgySort($fuvar, $ceg_id)];
+    }
+
+    // Csak az ELSŐ menetlevél-feltöltéskor ír ténylegesen (idempotens) —
+    // ld. design spec 5.1. Sosem hívjuk közvetlenül kliensből; a
+    // feltoltFuvarDokumentumot action (Task 5) hívja belülről sikeres
+    // 'menetlevel'-tagelt feltöltés után.
+    public function allitDokumentumFeltoltve($fuvarId, $ceg_id) {
+        $stmt = $this->db->prepare(
+            "UPDATE fuvarok SET dokumentum_feltoltve = NOW()
+             WHERE id = :id AND admin = :ceg_id AND dokumentum_feltoltve IS NULL"
+        );
+        $stmt->bindValue(':id', $fuvarId, PDO::PARAM_INT);
+        $stmt->bindValue(':ceg_id', $ceg_id, PDO::PARAM_INT);
+        $stmt->execute();
+        return ['success' => true];
+    }
+
     private function keresMegbizoNevAlapjan($ceg_id, $nev) {
         if ($nev === null || trim($nev) === '') {
             return null;

@@ -377,6 +377,8 @@ class ApiHandler {
             'deleteFuvar' => ['id', 'ceg_id', 'kerelmezo_id'],
             'getFuvar' => ['id', 'ceg_id'],
             'getFuvarok' => ['ceg_id'],
+            'getSajatFuvarok' => ['sofor_id'],
+            'getSajatFuvar' => ['id', 'sofor_id'],
             'getFuvarEgyeztetesJavaslat' => ['dokumentumId', 'ceg_id'],
             'letrehozFuvarDokumentumbol' => ['dokumentumId', 'ceg_id', 'kerelmezo_id'],
             'csatolBeerkezettDokumentumotFuvarhoz' => ['dokumentumId', 'fuvarId', 'ceg_id', 'kerelmezo_id'],
@@ -1777,6 +1779,23 @@ class ApiHandler {
                 case 'getFuvarok':
                     $kerelmezo = $this->resolveKerelmezo($request);
                     echo json_encode($fuvarInterface->getFuvarok($kerelmezo['ceg_id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['sortKey'] ?? null, $request['sortDir'] ?? 'asc', $request['allapot'] ?? null));
+                    return;
+                case 'getSajatFuvarok':
+                    // Sofőr-önkiszolgáló akció, nincs MODULE_PERMISSION_MAP
+                    // bejegyzése — a sofőr mindig látja a SAJÁT fuvarjait,
+                    // ugyanaz a minta, mint getSajatBeerkezettDokumentumok-nál.
+                    echo json_encode($fuvarInterface->getSajatFuvarok(
+                        $this->resolveSajatSoforId($request),
+                        $this->resolveSajatCegId($request),
+                        !isset($request['aktivOnly']) || $request['aktivOnly']
+                    ));
+                    return;
+                case 'getSajatFuvar':
+                    echo json_encode($fuvarInterface->getSajatFuvar(
+                        $request['id'],
+                        $this->resolveSajatSoforId($request),
+                        $this->resolveSajatCegId($request)
+                    ));
                     return;
                 case 'getFuvarEgyeztetesJavaslat':
                     $kerelmezo = $this->resolveKerelmezo($request);
