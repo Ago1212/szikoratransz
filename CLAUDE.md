@@ -429,6 +429,15 @@ háttér-processz sosem indult el, vagy valami más), mert ez a kör explicit
 kérésre visszaállt a régi viselkedésre ahelyett, hogy ezt kideríteni
 próbálta volna.
 
+## Fuvar létrehozása — Sofőr/Jármű/Pótkocsi/Megbízó előzetes kitöltése + OCR távolság/tömeg megjelenítése (2026-07-28)
+
+Két kis kiegészítés a Fuvar-dokumentum OCR modulhoz (ld. "Fuvar-dokumentum OCR + Fuvar modul" fentebb):
+
+- **`FuvarInterface::egyeztetOcrAlapjan($ceg_id, $ocrAdatok)`** — az OCR-rendszám/sofőr-név/megbízó-név → entitás-id egyeztetést, amit korábban KIZÁRÓLAG `letrehozDokumentumbol()` futtatott le, MENTÉSKOR, most egy külön, újrafelhasználható privát metódusba emeltük ki. Új publikus, csak-olvasó metódus: **`getEgyeztetesJavaslatDokumentumhoz($dokumentumId, $ceg_id)`** (új API action: `getFuvarEgyeztetesJavaslat`, `['fuvarok', 'hozzaferes']` jogosultsággal) — a `FuvarForm.js` ezt hívja meg a form megnyitásakor (`dokumentumId` jelenlétekor), hogy a Sofőr/Jármű/Megbízó mezők már kitöltve jelenjenek meg, ne csak mentéskor, láthatatlanul dőljenek el. Csak az üres mezőket tölti ki (`prev.x || javaslat.x`), nem írja felül a felhasználó saját szerkesztését.
+- **Pótkocsi-javaslat, ÚJ logika**: az OCR-ből nincs külön pótkocsi-rendszám mező (csak a vontató jármű rendszáma), ezért a pótkocsi-javaslat a felismert **kamion SAJÁT `potkocsi` FK-jából** jön (`potkocsiIdKamionhoz()`, a szokásos cross-tenant `ervenyesEntitasE()` védelemmel — egy admin/potkocsi-pár tenant-mismatch esetén `null`-t ad, nem egy másik cég pótkocsiját). Csak kamionnál van ilyen javaslat, furgonnál sosem (furgon nem vontat). **Ez a `letrehozDokumentumbol()`-ban is megváltoztatta a viselkedést**: eddig egy dokumentumból létrehozott fuvar `potkocsi_id`-je mindig `NULL` maradt, hacsak az admin kézzel be nem állította — mostantól a fenti javaslat automatikusan bekerül (felülírhatóan) a mentéskor is.
+- **A `DokumentumReviewPanel.js` dl-blokkja megjeleníti az OCR által felismert `tavolsag_km`/`tomeg_kg` mezőt is** (eddig csak felrakó/lerakó/megbízó/dátum/rendszám látszott, holott a `fuvarok.tavolsag_km`/`tomeg_kg` oszlopok és az OCR-séma már 2026-07-26 óta léteznek, ld. "Fuvar OCR-bővítés: távolság + tömeg" fentebb).
+- Élőben tesztelve (helyi DB-be szúrt teszt `beerkezett_dokumentumok` sorral, Playwright-tal): a review-panel helyesen mutatja a távolságot/tömeget, a "Fuvar létrehozása" form pedig helyesen előtölti mind a négy mezőt (Sofőr/Jármű/Pótkocsi/Megbízó), beleértve a "Korábbi fuvarok ezzel a megbízóval" panel automatikus betöltését is.
+
 ## Workflow notes for Claude Code
 
 - For any UI/frontend change, verify it by actually running it (`npm start` and/or `php8.2 -S localhost:8001` as needed, opening it in a browser, screenshotting/clicking through the changed flow) before reporting the task done — don't rely on code review or lint alone.

@@ -114,6 +114,40 @@ export default function FuvarForm() {
   const [ugyfelek, setUgyfelek] = useState([]);
   const [ugyfelElozmeny, setUgyfelElozmeny] = useState([]);
 
+  // Ha dokumentumból nyílt a form, az OCR által felismert rendszám/sofőr-
+  // név/megbízó-név alapján a szerver (ugyanazzal az egyeztetéssel, amit
+  // `letrehozFuvarDokumentumbol` eddig is csak MENTÉSKOR futtatott le, ld.
+  // `FuvarInterface::egyeztetOcrAlapjan()`) megpróbálja beazonosítani a
+  // Sofőr/Jármű/Pótkocsi/Megbízó mezőket is — ezek eddig üresen jelentek
+  // meg a form megnyitásakor, holott mentéskor úgyis kitöltődtek volna.
+  // Csak azokat a mezőket töltjük ki, amik még üresek (`prev.x ||`), hogy
+  // ne írjunk felül egy már betöltött/szerkesztett értéket.
+  useEffect(() => {
+    if (!dokumentumId) return;
+    let elvetve = false;
+    fetchAction("getFuvarEgyeztetesJavaslat", { ceg_id: user.ceg_id, dokumentumId }).then((result) => {
+      if (elvetve || !result?.success) return;
+      const javaslat = result.javaslat || {};
+      setFormData((prev) => ({
+        ...prev,
+        sofor_id: prev.sofor_id || javaslat.sofor_id || "",
+        kamion_id: prev.kamion_id || javaslat.kamion_id || "",
+        furgon_id: prev.furgon_id || javaslat.furgon_id || "",
+        potkocsi_id: prev.potkocsi_id || javaslat.potkocsi_id || "",
+        megbizo_id: prev.megbizo_id || javaslat.megbizo_id || "",
+      }));
+      if (javaslat.megbizo_id) {
+        fetchAction("getUgyfelFuvarElozmeny", { ceg_id: user.ceg_id, ugyfelId: javaslat.megbizo_id }).then((r) => {
+          if (!elvetve && r?.success) setUgyfelElozmeny(r.fuvarok || []);
+        });
+      }
+    });
+    return () => {
+      elvetve = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     const loadLookups = async () => {
       const [kamionRes, furgonRes, potkocsiRes, soforRes, ugyfelRes] = await Promise.all([

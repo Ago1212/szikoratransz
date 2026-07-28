@@ -227,6 +227,8 @@ export default function DokumentumReviewPanel({ dokumentum, soforok = [], onClos
           {ocr.megbizo && <div><dt className="inline font-semibold text-ink-400">Megbízó: </dt><dd className="inline">{ocr.megbizo}</dd></div>}
           {ocr.datum && <div><dt className="inline font-semibold text-ink-400">Dátum: </dt><dd className="inline">{ocr.datum}</dd></div>}
           {ocr.rendszam && <div><dt className="inline font-semibold text-ink-400">Rendszám: </dt><dd className="inline">{ocr.rendszam}</dd></div>}
+          {ocr.tavolsag_km != null && <div><dt className="inline font-semibold text-ink-400">Távolság: </dt><dd className="inline">{ocr.tavolsag_km} km</dd></div>}
+          {ocr.tomeg_kg != null && <div><dt className="inline font-semibold text-ink-400">Tömeg: </dt><dd className="inline">{ocr.tomeg_kg} kg</dd></div>}
         </dl>
 
         {bizonytalan && (

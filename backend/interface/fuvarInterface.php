@@ -411,6 +411,65 @@ class FuvarInterface {
         return $munkanapok;
     }
 
+    // Az OCR-ből felismert rendszám/sofőr-név/megbízó-név alapján próbál
+    // egyértelmű, meglévő entitást találni. Korábban ezt kizárólag
+    // `letrehozDokumentumbol()` futtatta le, MENTÉSKOR — a Sofőr/Jármű/
+    // Pótkocsi/Megbízó mezők emiatt üresen jelentek meg a "Fuvar
+    // létrehozása" űrlapon, holott a szerver a mentés pillanatában úgyis
+    // ugyanezt az egyeztetést elvégezte volna. `getEgyeztetesJavaslatDokumentumhoz()`
+    // ugyanezt a logikát ELŐZETESEN (az űrlap megnyitásakor) is lefuttatja,
+    // hogy a mezők már kitöltve jelenjenek meg, admin által felülbírálhatóan.
+    private function egyeztetOcrAlapjan($ceg_id, $ocrAdatok) {
+        $rendszamTalalat = $this->keresRendszamAlapjan($ceg_id, $ocrAdatok['rendszam'] ?? null);
+        $kamionId = $rendszamTalalat['tipus'] === 'kamion' ? $rendszamTalalat['id'] : null;
+        $furgonId = $rendszamTalalat['tipus'] === 'furgon' ? $rendszamTalalat['id'] : null;
+
+        return [
+            'sofor_id' => $this->keresSoforNevAlapjan($ceg_id, $ocrAdatok['sofor_neve'] ?? null),
+            'kamion_id' => $kamionId,
+            'furgon_id' => $furgonId,
+            // Csak a kamionnak van pótkocsija (a furgon nem vontat, ld.
+            // CLAUDE.md "Furgon (van)" szekció) — az OCR-ből nem nyerhető ki
+            // külön pótkocsi-rendszám, ezért a javaslat a felismert kamion
+            // SAJÁT `potkocsi` FK-jából jön (kamion.potkocsi mindig kitöltött).
+            'potkocsi_id' => $kamionId !== null ? $this->potkocsiIdKamionhoz($kamionId, $ceg_id) : null,
+            'megbizo_id' => $this->keresMegbizoNevAlapjan($ceg_id, $ocrAdatok['megbizo'] ?? null),
+        ];
+    }
+
+    private function potkocsiIdKamionhoz($kamionId, $ceg_id) {
+        $stmt = $this->db->prepare("SELECT potkocsi FROM kamion WHERE id = :id AND admin = :ceg_id AND torolt <> 'I'");
+        $stmt->bindValue(':id', $kamionId, PDO::PARAM_INT);
+        $stmt->bindValue(':ceg_id', $ceg_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $potkocsiId = $stmt->fetch(PDO::FETCH_ASSOC)['potkocsi'] ?? null;
+        if (empty($potkocsiId) || !$this->ervenyesEntitasE('potkocsi', $potkocsiId, $ceg_id)) {
+            return null;
+        }
+        return (int) $potkocsiId;
+    }
+
+    // Csak OLVAS, semmit nem ír/hoz létre — a Fuvar létrehozása űrlap
+    // (FuvarForm.js) hívja meg a dokumentumId alapján, hogy a Sofőr/Jármű/
+    // Pótkocsi/Megbízó mezőket már a form megnyitásakor kitöltve mutassa,
+    // ugyanazzal az egyeztetéssel, amit `letrehozDokumentumbol()` eddig is
+    // elvégzett, csak MENTÉSKOR, láthatatlanul.
+    public function getEgyeztetesJavaslatDokumentumhoz($dokumentumId, $ceg_id) {
+        $stmt = $this->db->prepare("SELECT ocr_adatok FROM beerkezett_dokumentumok WHERE id = :id AND admin = :admin AND torolt <> 'I'");
+        $stmt->bindValue(':id', $dokumentumId, PDO::PARAM_INT);
+        $stmt->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $dokumentum = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($dokumentum === false) {
+            return ['success' => false, 'message' => 'A dokumentum nem található.'];
+        }
+
+        $ocrAdatok = $dokumentum['ocr_adatok'] !== null ? json_decode($dokumentum['ocr_adatok'], true) : [];
+        $ocrAdatok = is_array($ocrAdatok) ? $ocrAdatok : [];
+
+        return ['success' => true, 'javaslat' => $this->egyeztetOcrAlapjan($ceg_id, $ocrAdatok)];
+    }
+
     // A `$felulirasok` a review-formon az admin által esetlegesen módosított
     // mezőket tartalmazza (ugyanolyan alakban, mint `newFuvar()` `$data`
     // paramétere) — ahol egy kulcs szerepel benne, az felülírja az OCR-ből
@@ -431,20 +490,19 @@ class FuvarInterface {
         $ocrAdatok = $dokumentum['ocr_adatok'] !== null ? json_decode($dokumentum['ocr_adatok'], true) : [];
         $ocrAdatok = is_array($ocrAdatok) ? $ocrAdatok : [];
 
-        $rendszamTalalat = $this->keresRendszamAlapjan($ceg_id, $ocrAdatok['rendszam'] ?? null);
-        $soforId = $this->keresSoforNevAlapjan($ceg_id, $ocrAdatok['sofor_neve'] ?? null);
-        $megbizoId = $this->keresMegbizoNevAlapjan($ceg_id, $ocrAdatok['megbizo'] ?? null);
+        $javaslat = $this->egyeztetOcrAlapjan($ceg_id, $ocrAdatok);
 
         $adatok = array_merge([
-            'sofor_id' => $soforId,
-            'kamion_id' => $rendszamTalalat['tipus'] === 'kamion' ? $rendszamTalalat['id'] : null,
-            'furgon_id' => $rendszamTalalat['tipus'] === 'furgon' ? $rendszamTalalat['id'] : null,
+            'sofor_id' => $javaslat['sofor_id'],
+            'kamion_id' => $javaslat['kamion_id'],
+            'furgon_id' => $javaslat['furgon_id'],
+            'potkocsi_id' => $javaslat['potkocsi_id'],
             'teljesites_datuma' => $ocrAdatok['datum'] ?? null,
             'felrako' => $ocrAdatok['felrako'] ?? null,
             'lerako' => $ocrAdatok['lerako'] ?? null,
             'tavolsag_km' => $ocrAdatok['tavolsag_km'] ?? null,
             'tomeg_kg' => $ocrAdatok['tomeg_kg'] ?? null,
-            'megbizo_id' => $megbizoId,
+            'megbizo_id' => $javaslat['megbizo_id'],
             'aru_megnevezese' => $ocrAdatok['aru_megnevezese'] ?? null,
             'megjegyzes' => $ocrAdatok['egyeb_megjegyzes'] ?? null,
             'fuvarlevel_szam' => $ocrAdatok['fuvarlevel_szam'] ?? null,
