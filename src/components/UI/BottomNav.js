@@ -5,25 +5,27 @@ import {
   PiSquaresFourFill,
   PiMapPinLight,
   PiMapPinFill,
-  PiWarningCircleLight,
-  PiWarningCircleFill,
+  PiClipboardTextLight,
+  PiClipboardTextFill,
   PiUserLight,
   PiUserFill,
 } from "react-icons/pi";
 
 // Sofőr-oldali alsó navigáció (csak mobilon, md-től a desktop felső
-// navigáció veszi át a szerepét) — a Bejelentés középen kiemelt, piros
-// FAB-ként (ez az egyetlen művelet, amit vezetés közbeni vészhelyzetben
-// egy kézzel, gondolkodás nélkül kell elérni). A jármű-kiválasztás,
-// dokumentumok, tankolás és értesítések szándékosan nincsenek itt —
-// azok a Kezdőlap gyorsműveletein keresztül érhetők el, hogy a sáv ne
-// zsúfolódjon túl (ld. a sofőr UX terv 01. pontját). A Helyszínek viszont
-// elég gyakran kellő eligazodási segédlet ahhoz, hogy önálló, mindig
-// elérhető sávelem legyen, ne csak a Kezdőlap gyorsműveletei közt.
+// navigáció veszi át a szerepét). 2026-07-28: a középső FAB Bejelentésről
+// Fuvarokra váltott (ld. docs/superpowers/specs/2026-07-28-fuvar-first-
+// workflow-design.md 6.1, explicit felhasználói döntés) — a Fuvar-first
+// munkafolyamatban ez lett a naponta legtöbbször használt, egy kézzel
+// elérendő művelet. A Bejelentés emiatt elvesztette az "egy érintésre,
+// bárhonnan" tulajdonságát (ld. a spec 10. pontjának nyitott kockázata) —
+// továbbra is elérhető a Dashboard kis összegző során és a
+// /user/bejelentesek oldalon, csak nem a BottomNav-on. A FAB piros
+// (vészjelzés-jellegű) színe is brand-kékre váltott, mert a Fuvarok egy
+// rutinszerű, nem sürgősségi művelet — a piros itt félrevezető lenne.
 const items = [
   { to: "/user/dashboard", label: "Kezdőlap", icon: PiSquaresFourLight, activeIcon: PiSquaresFourFill },
   { to: "/user/helyszinek", label: "Helyszínek", icon: PiMapPinLight, activeIcon: PiMapPinFill },
-  { to: "/user/bejelentes/uj", label: "Bejelentés", icon: PiWarningCircleLight, activeIcon: PiWarningCircleFill, fab: true },
+  { to: "/user/fuvarok", label: "Fuvarok", icon: PiClipboardTextLight, activeIcon: PiClipboardTextFill, fab: true },
   { to: "/user/profil", label: "Profil", icon: PiUserLight, activeIcon: PiUserFill },
 ];
 
@@ -45,9 +47,9 @@ export default function BottomNav() {
             <Link
               key={item.to}
               to={item.to}
-              className="flex flex-1 flex-col items-center justify-end gap-1 pb-2 pt-1 text-[11px] font-semibold leading-none text-red-600"
+              className="flex flex-1 flex-col items-center justify-end gap-1 pb-2 pt-1 text-[11px] font-semibold leading-none text-brand-600"
             >
-              <span className="-mt-6 flex h-12 w-12 items-center justify-center rounded-full bg-red-600 text-white shadow-[0_10px_24px_-8px_rgba(220,38,38,0.55)] transition-transform duration-200 ease-fluid active:scale-90">
+              <span className="-mt-6 flex h-12 w-12 items-center justify-center rounded-full bg-brand-600 text-white shadow-[0_10px_24px_-8px_rgba(37,99,235,0.55)] transition-transform duration-200 ease-fluid active:scale-90">
                 <Icon className="h-6 w-6" />
               </span>
               {item.label}
