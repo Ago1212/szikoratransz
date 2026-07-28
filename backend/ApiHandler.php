@@ -1757,14 +1757,41 @@ class ApiHandler {
                     $result = $fuvarInterface->newFuvar($request, $kerelmezo['ceg_id']);
                     if ($result['success']) {
                         $this->logAudit($kerelmezo['ceg_id'], 'fuvarok', $result['fuvar']['id'] ?? null, 'letrehozas', $request['felrako'] ?? null);
+                        if (!empty($result['fuvar']['sofor_id'])) {
+                            $pushInterface->sendPushSofornak(
+                                $result['fuvar']['sofor_id'],
+                                'Új fuvar érkezett',
+                                trim(($result['fuvar']['felrako'] ?? '') . ' → ' . ($result['fuvar']['lerako'] ?? '')) . ($result['fuvar']['teljesites_datuma'] ? ' · ' . $result['fuvar']['teljesites_datuma'] : ''),
+                                '/user/fuvarReszletek?id=' . $result['fuvar']['id']
+                            );
+                        }
                     }
                     echo json_encode($result);
                     return;
                 case 'updateFuvar':
                     $kerelmezo = $this->resolveKerelmezo($request);
+                    // A push-küldés eldöntéséhez a RÉGI sofor_id-t az UPDATE
+                    // előtt kell megnézni — csak akkor küldünk, ha ténylegesen
+                    // ÚJ (nem üres) sofőrre került a fuvar, a leváltott sofőr
+                    // nem kap semmit (ld. design spec 5.4, jóváhagyott döntés).
+                    $regiSoforId = $this->db->prepare("SELECT sofor_id FROM fuvarok WHERE id = :id AND admin = :ceg_id");
+                    $regiSoforId->bindValue(':id', $request['id'], PDO::PARAM_INT);
+                    $regiSoforId->bindValue(':ceg_id', $kerelmezo['ceg_id'], PDO::PARAM_INT);
+                    $regiSoforId->execute();
+                    $regiSoforIdErtek = $regiSoforId->fetchColumn();
+
                     $result = $fuvarInterface->updateFuvar($request, $kerelmezo['ceg_id']);
                     if ($result['success']) {
                         $this->logAudit($kerelmezo['ceg_id'], 'fuvarok', $request['id'], 'modositas', $request['felrako'] ?? null);
+                        $ujSoforId = $result['fuvar']['sofor_id'] ?? null;
+                        if (!empty($ujSoforId) && (string) $ujSoforId !== (string) $regiSoforIdErtek) {
+                            $pushInterface->sendPushSofornak(
+                                $ujSoforId,
+                                'Új fuvar érkezett',
+                                trim(($result['fuvar']['felrako'] ?? '') . ' → ' . ($result['fuvar']['lerako'] ?? '')) . ($result['fuvar']['teljesites_datuma'] ? ' · ' . $result['fuvar']['teljesites_datuma'] : ''),
+                                '/user/fuvarReszletek?id=' . $result['fuvar']['id']
+                            );
+                        }
                     }
                     echo json_encode($result);
                     return;
