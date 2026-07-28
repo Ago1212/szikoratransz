@@ -19,6 +19,7 @@ import StatusBadge from "components/UI/StatusBadge.js";
 import SaveButton from "components/UI/SaveButton.js";
 import Spinner from "components/UI/Spinner.js";
 import WebAuthnRegisztracio from "components/UI/WebAuthnRegisztracio.js";
+import PushFeliratkozas from "components/UI/PushFeliratkozas.js";
 import {
   DOCUMENT_FIELDS,
   getDocumentStatus,
@@ -312,6 +313,8 @@ export default function Profil() {
       </form>
 
       <WebAuthnRegisztracio />
+
+      <PushFeliratkozas />
 
       <button
         type="button"
