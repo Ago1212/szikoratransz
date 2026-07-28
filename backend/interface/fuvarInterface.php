@@ -187,8 +187,6 @@ class FuvarInterface {
     }
 
     public function deleteFuvar($id, $ceg_id) {
-        $this->visszaallitForrasDokumentumot($id, $ceg_id);
-
         $stmt = $this->db->prepare("UPDATE fuvarok SET torolt = 'I' WHERE id = :id AND admin = :admin");
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         $stmt->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
@@ -196,57 +194,12 @@ class FuvarInterface {
         return ['success' => true, 'message' => 'Fuvar törölve.'];
     }
 
-    // Whole-branch review finding (nem látta egyik egyedi task-review sem,
-    // mert `letrehozDokumentumbol()` és `deleteFuvar()` két külön Task-hoz
-    // tartozott): ha ezt a fuvart `letrehozDokumentumbol()` hozta létre egy
-    // beérkezett dokumentumból, a törlés a forrás-dokumentumot eddig
-    // véglegesen "elárvult" állapotban hagyta — a `beerkezett_dokumentumok`
-    // sor `fuvar_id`-je egy (mostantól soft-deletelt) fuvarra mutatott
-    // tovább, ezért sosem jelent meg újra a feldolgozatlan-inboxban
-    // (`getDokumentumok()` alapból `fuvar_id IS NULL`-ra szűr), a `fajlok`
-    // sor pedig `tabla='fuvar', rowid=<törölt fuvar id>`-n ragadt, ahonnan
-    // semmilyen élő felület nem éri el. Ez a metódus pontosan a
-    // `letrehozDokumentumbol()` reparentálásának a fordítottját végzi el:
-    // visszaállítja `fuvar_id = NULL`-ra (a dokumentum újra felhasználható
-    // egy friss fuvar létrehozásához) és a `fajlok` sort visszaparentálja
-    // `tabla='beerkezett_dokumentum', rowid=<ceg_id>`-ra. Manuálisan (nem
-    // dokumentumból) létrehozott fuvarnál a SELECT egyszerűen nem talál
-    // sort, a metódus csendben visszatér — nincs extra hatás.
-    private function visszaallitForrasDokumentumot($fuvarId, $ceg_id) {
-        $stmt = $this->db->prepare(
-            "SELECT id, fajl_id FROM beerkezett_dokumentumok
-             WHERE fuvar_id = :fuvar_id AND admin = :admin AND torolt <> 'I'"
-        );
-        $stmt->bindValue(':fuvar_id', $fuvarId, PDO::PARAM_INT);
-        $stmt->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
-        $stmt->execute();
-        $dokumentum = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($dokumentum === false) {
-            return;
-        }
-
-        $update = $this->db->prepare(
-            "UPDATE beerkezett_dokumentumok SET fuvar_id = NULL WHERE id = :id AND admin = :admin"
-        );
-        $update->bindValue(':id', $dokumentum['id'], PDO::PARAM_INT);
-        $update->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
-        $update->execute();
-
-        $reparent = $this->db->prepare(
-            "UPDATE fajlok SET tabla = 'beerkezett_dokumentum', rowid = :ceg_id WHERE sorszam = :fajl_id"
-        );
-        $reparent->bindValue(':ceg_id', $ceg_id, PDO::PARAM_INT);
-        $reparent->bindValue(':fajl_id', $dokumentum['fajl_id'], PDO::PARAM_INT);
-        $reparent->execute();
-    }
-
     // FONTOS: ez a projekt saját SQL-lintere tiltja a JOIN-t és a UNION-t
     // (ld. `koltsegInterface.php`-ban a flotta-átlag-karbantartási-költség
     // hasonló megjegyzését) — a sofőr/kamion/furgon/pótkocsi/megbízó
     // megjelenítendő nevét/rendszámát ezért KÜLÖN lekérdezésekkel, PHP-
     // oldali összefésüléssel csatoljuk a fuvar-sorokhoz, nem JOIN-nal.
-    // Ugyanaz a minta, mint `BeerkezettDokumentumInterface::
-    // fajlnevekFeloldasa()`-nál (Task 6) vagy `helyszinInterface::
+    // Ugyanaz a minta, mint `helyszinInterface::
     // hozzafuzMegjegyzesekSzama()`-nál.
     public function getFuvar($id, $ceg_id) {
         $stmt = $this->db->prepare(
@@ -411,253 +364,6 @@ class FuvarInterface {
         return $munkanapok;
     }
 
-    // Az OCR-ből felismert rendszám/sofőr-név/megbízó-név alapján próbál
-    // egyértelmű, meglévő entitást találni. Korábban ezt kizárólag
-    // `letrehozDokumentumbol()` futtatta le, MENTÉSKOR — a Sofőr/Jármű/
-    // Pótkocsi/Megbízó mezők emiatt üresen jelentek meg a "Fuvar
-    // létrehozása" űrlapon, holott a szerver a mentés pillanatában úgyis
-    // ugyanezt az egyeztetést elvégezte volna. `getEgyeztetesJavaslatDokumentumhoz()`
-    // ugyanezt a logikát ELŐZETESEN (az űrlap megnyitásakor) is lefuttatja,
-    // hogy a mezők már kitöltve jelenjenek meg, admin által felülbírálhatóan.
-    private function egyeztetOcrAlapjan($ceg_id, $ocrAdatok) {
-        $rendszamTalalat = $this->keresRendszamAlapjan($ceg_id, $ocrAdatok['rendszam'] ?? null);
-        $kamionId = $rendszamTalalat['tipus'] === 'kamion' ? $rendszamTalalat['id'] : null;
-        $furgonId = $rendszamTalalat['tipus'] === 'furgon' ? $rendszamTalalat['id'] : null;
-
-        return [
-            'sofor_id' => $this->keresSoforNevAlapjan($ceg_id, $ocrAdatok['sofor_neve'] ?? null),
-            'kamion_id' => $kamionId,
-            'furgon_id' => $furgonId,
-            // Csak a kamionnak van pótkocsija (a furgon nem vontat, ld.
-            // CLAUDE.md "Furgon (van)" szekció) — az OCR-ből nem nyerhető ki
-            // külön pótkocsi-rendszám, ezért a javaslat a felismert kamion
-            // SAJÁT `potkocsi` FK-jából jön (kamion.potkocsi mindig kitöltött).
-            'potkocsi_id' => $kamionId !== null ? $this->potkocsiIdKamionhoz($kamionId, $ceg_id) : null,
-            'megbizo_id' => $this->keresMegbizoNevAlapjan($ceg_id, $ocrAdatok['megbizo'] ?? null),
-        ];
-    }
-
-    private function potkocsiIdKamionhoz($kamionId, $ceg_id) {
-        $stmt = $this->db->prepare("SELECT potkocsi FROM kamion WHERE id = :id AND admin = :ceg_id AND torolt <> 'I'");
-        $stmt->bindValue(':id', $kamionId, PDO::PARAM_INT);
-        $stmt->bindValue(':ceg_id', $ceg_id, PDO::PARAM_INT);
-        $stmt->execute();
-        $potkocsiId = $stmt->fetch(PDO::FETCH_ASSOC)['potkocsi'] ?? null;
-        if (empty($potkocsiId) || !$this->ervenyesEntitasE('potkocsi', $potkocsiId, $ceg_id)) {
-            return null;
-        }
-        return (int) $potkocsiId;
-    }
-
-    // Csak OLVAS, semmit nem ír/hoz létre — a Fuvar létrehozása űrlap
-    // (FuvarForm.js) hívja meg a dokumentumId alapján, hogy a Sofőr/Jármű/
-    // Pótkocsi/Megbízó mezőket már a form megnyitásakor kitöltve mutassa,
-    // ugyanazzal az egyeztetéssel, amit `letrehozDokumentumbol()` eddig is
-    // elvégzett, csak MENTÉSKOR, láthatatlanul.
-    public function getEgyeztetesJavaslatDokumentumhoz($dokumentumId, $ceg_id) {
-        $stmt = $this->db->prepare("SELECT ocr_adatok FROM beerkezett_dokumentumok WHERE id = :id AND admin = :admin AND torolt <> 'I'");
-        $stmt->bindValue(':id', $dokumentumId, PDO::PARAM_INT);
-        $stmt->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
-        $stmt->execute();
-        $dokumentum = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($dokumentum === false) {
-            return ['success' => false, 'message' => 'A dokumentum nem található.'];
-        }
-
-        $ocrAdatok = $dokumentum['ocr_adatok'] !== null ? json_decode($dokumentum['ocr_adatok'], true) : [];
-        $ocrAdatok = is_array($ocrAdatok) ? $ocrAdatok : [];
-
-        return ['success' => true, 'javaslat' => $this->egyeztetOcrAlapjan($ceg_id, $ocrAdatok)];
-    }
-
-    // A `$felulirasok` a review-formon az admin által esetlegesen módosított
-    // mezőket tartalmazza (ugyanolyan alakban, mint `newFuvar()` `$data`
-    // paramétere) — ahol egy kulcs szerepel benne, az felülírja az OCR-ből
-    // származó javaslatot; ahol nem, az OCR/egyeztetés eredménye érvényes.
-    public function letrehozDokumentumbol($dokumentumId, $ceg_id, $felulirasok = []) {
-        $stmt = $this->db->prepare("SELECT * FROM beerkezett_dokumentumok WHERE id = :id AND admin = :admin AND torolt <> 'I'");
-        $stmt->bindValue(':id', $dokumentumId, PDO::PARAM_INT);
-        $stmt->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
-        $stmt->execute();
-        $dokumentum = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($dokumentum === false) {
-            return ['success' => false, 'message' => 'A dokumentum nem található.'];
-        }
-        if (!empty($dokumentum['fuvar_id'])) {
-            return ['success' => false, 'message' => 'Ehhez a dokumentumhoz már tartozik fuvar.'];
-        }
-
-        $ocrAdatok = $dokumentum['ocr_adatok'] !== null ? json_decode($dokumentum['ocr_adatok'], true) : [];
-        $ocrAdatok = is_array($ocrAdatok) ? $ocrAdatok : [];
-
-        $javaslat = $this->egyeztetOcrAlapjan($ceg_id, $ocrAdatok);
-
-        $adatok = array_merge([
-            'sofor_id' => $javaslat['sofor_id'],
-            'kamion_id' => $javaslat['kamion_id'],
-            'furgon_id' => $javaslat['furgon_id'],
-            'potkocsi_id' => $javaslat['potkocsi_id'],
-            'teljesites_datuma' => $ocrAdatok['datum'] ?? null,
-            'felrako' => $ocrAdatok['felrako'] ?? null,
-            'lerako' => $ocrAdatok['lerako'] ?? null,
-            'tavolsag_km' => $ocrAdatok['tavolsag_km'] ?? null,
-            'tomeg_kg' => $ocrAdatok['tomeg_kg'] ?? null,
-            'megbizo_id' => $javaslat['megbizo_id'],
-            'aru_megnevezese' => $ocrAdatok['aru_megnevezese'] ?? null,
-            'megjegyzes' => $ocrAdatok['egyeb_megjegyzes'] ?? null,
-            'fuvarlevel_szam' => $ocrAdatok['fuvarlevel_szam'] ?? null,
-        ], $felulirasok);
-
-        // A forrás-dokumentum id-je SOSEM felülírható a $felulirasok által —
-        // ez szerver-oldali tény (melyik dokumentumból hívtuk ezt a
-        // metódust), nem admin-szerkeszthető mező.
-        $adatok['beerkezett_dokumentum_id'] = $dokumentumId;
-
-        // Whole-branch review Minor finding: a fuvar-létrehozás + a
-        // dokumentum `fuvar_id`-jének beírása + a `fajlok` sor
-        // reparentálása korábban 3 független statement volt tranzakció
-        // nélkül — egy a középső/harmadik lépés közben bekövetkező hiba
-        // (pl. DB-kapcsolat megszakadás) egy már létrehozott, de a forrás-
-        // dokumentumhoz vissza nem kötött fuvart hagyott volna maga után
-        // (vagy egy `beerkezett_dokumentumok.fuvar_id`-t a `fajlok`
-        // reparentálása nélkül). Minden érintett tábla (`fuvarok`,
-        // `beerkezett_dokumentumok`, `fajlok`) InnoDB, tehát a tranzakció
-        // ténylegesen atomi. A validáló/olvasó lépések (dokumentum
-        // lekérdezése, idegenkulcs-ellenőrzés `newFuvar()`-on belül) a
-        // tranzakción KÍVÜL maradnak — csak a tényleges írásokat kell
-        // egyben visszagörgetni.
-        $this->db->beginTransaction();
-        try {
-            $letrehozas = $this->newFuvar($adatok, $ceg_id);
-            if (!$letrehozas['success']) {
-                $this->db->rollBack();
-                return $letrehozas;
-            }
-            $ujFuvarId = $letrehozas['fuvar']['id'];
-
-            $update = $this->db->prepare("UPDATE beerkezett_dokumentumok SET fuvar_id = :fuvar_id WHERE id = :id");
-            $update->bindValue(':fuvar_id', $ujFuvarId, PDO::PARAM_INT);
-            $update->bindValue(':id', $dokumentumId, PDO::PARAM_INT);
-            $update->execute();
-
-            $reparent = $this->db->prepare("UPDATE fajlok SET tabla = 'fuvar', rowid = :fuvar_id WHERE sorszam = :fajl_id");
-            $reparent->bindValue(':fuvar_id', $ujFuvarId, PDO::PARAM_INT);
-            $reparent->bindValue(':fajl_id', $dokumentum['fajl_id'], PDO::PARAM_INT);
-            $reparent->execute();
-
-            $this->db->commit();
-            return $letrehozas;
-        } catch (\Throwable $e) {
-            if ($this->db->inTransaction()) {
-                $this->db->rollBack();
-            }
-            return ['success' => false, 'message' => $e->getMessage()];
-        }
-    }
-
-    // Gyakori, hogy ugyanahhoz a fuvarhoz KÉT beérkezett dokumentum is
-    // tartozik (fuvarlevél ÉS szállítólevél, külön fotózva/feltöltve,
-    // esetleg külön időpontban) — `letrehozDokumentumbol()` csak az ELSŐ,
-    // fuvart LÉTREHOZÓ dokumentumra való, ez a metódus egy MÁR LÉTEZŐ
-    // fuvarhoz csatol egy még feldolgozatlan (fuvar_id IS NULL) dokumentumot,
-    // új fuvar létrehozása nélkül. Ugyanaz a kétlépéses reparent-minta, mint
-    // `letrehozDokumentumbol()`-ban (fuvar_id + fajlok.tabla/rowid), egy
-    // tranzakcióban.
-    public function csatolDokumentumot($dokumentumId, $fuvarId, $ceg_id) {
-        $stmt = $this->db->prepare("SELECT * FROM beerkezett_dokumentumok WHERE id = :id AND admin = :admin AND torolt <> 'I'");
-        $stmt->bindValue(':id', $dokumentumId, PDO::PARAM_INT);
-        $stmt->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
-        $stmt->execute();
-        $dokumentum = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($dokumentum === false) {
-            return ['success' => false, 'message' => 'A dokumentum nem található.'];
-        }
-        if (!empty($dokumentum['fuvar_id'])) {
-            return ['success' => false, 'message' => 'Ehhez a dokumentumhoz már tartozik fuvar.'];
-        }
-        if (!$this->ervenyesEntitasE('fuvarok', $fuvarId, $ceg_id)) {
-            return ['success' => false, 'message' => 'A fuvar nem található.'];
-        }
-
-        $this->db->beginTransaction();
-        try {
-            $update = $this->db->prepare("UPDATE beerkezett_dokumentumok SET fuvar_id = :fuvar_id WHERE id = :id");
-            $update->bindValue(':fuvar_id', $fuvarId, PDO::PARAM_INT);
-            $update->bindValue(':id', $dokumentumId, PDO::PARAM_INT);
-            $update->execute();
-
-            $reparent = $this->db->prepare("UPDATE fajlok SET tabla = 'fuvar', rowid = :fuvar_id WHERE sorszam = :fajl_id");
-            $reparent->bindValue(':fuvar_id', $fuvarId, PDO::PARAM_INT);
-            $reparent->bindValue(':fajl_id', $dokumentum['fajl_id'], PDO::PARAM_INT);
-            $reparent->execute();
-
-            $this->db->commit();
-            return ['success' => true, 'message' => 'Dokumentum csatolva a fuvarhoz.'];
-        } catch (\Throwable $e) {
-            if ($this->db->inTransaction()) {
-                $this->db->rollBack();
-            }
-            return ['success' => false, 'message' => $e->getMessage()];
-        }
-    }
-
-    private function normalizaltRendszam($rendszam) {
-        if ($rendszam === null || trim((string) $rendszam) === '') {
-            return null;
-        }
-        return strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $rendszam));
-    }
-
-    private function keresRendszamAlapjan($ceg_id, $rendszamNyers) {
-        $kulcs = $this->normalizaltRendszam($rendszamNyers);
-        if ($kulcs === null) {
-            return ['tipus' => null, 'id' => null];
-        }
-
-        $stmt = $this->db->prepare("SELECT id, rendszam FROM kamion WHERE admin = :ceg_id AND torolt <> 'I'");
-        $stmt->bindValue(':ceg_id', $ceg_id);
-        $stmt->execute();
-        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            if ($this->normalizaltRendszam($row['rendszam']) === $kulcs) {
-                return ['tipus' => 'kamion', 'id' => (int) $row['id']];
-            }
-        }
-
-        $stmt = $this->db->prepare("SELECT id, rendszam FROM furgon WHERE admin = :ceg_id AND torolt <> 'I'");
-        $stmt->bindValue(':ceg_id', $ceg_id);
-        $stmt->execute();
-        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            if ($this->normalizaltRendszam($row['rendszam']) === $kulcs) {
-                return ['tipus' => 'furgon', 'id' => (int) $row['id']];
-            }
-        }
-
-        return ['tipus' => null, 'id' => null];
-    }
-
-    private function normalizalNev($nev) {
-        $nev = mb_strtoupper(trim((string) $nev));
-        $atirasok = ['Á' => 'A', 'É' => 'E', 'Í' => 'I', 'Ó' => 'O', 'Ö' => 'O', 'Ő' => 'O', 'Ú' => 'U', 'Ü' => 'U', 'Ű' => 'U'];
-        return strtr($nev, $atirasok);
-    }
-
-    private function keresSoforNevAlapjan($ceg_id, $nev) {
-        if ($nev === null || trim($nev) === '') {
-            return null;
-        }
-        $stmt = $this->db->prepare("SELECT id, name FROM user WHERE admin = :ceg_id AND torolt <> 'I'");
-        $stmt->bindValue(':ceg_id', $ceg_id);
-        $stmt->execute();
-        $keresett = $this->normalizalNev($nev);
-        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $jelolt = $this->normalizalNev($row['name']);
-            if ($jelolt !== '' && (strpos($keresett, $jelolt) !== false || strpos($jelolt, $keresett) !== false)) {
-                return (int) $row['id'];
-            }
-        }
-        return null;
-    }
-
     // Referencia, NEM autofill — a megbízó "szokásos fuvardíjai" mezőnek,
     // ld. design spec 6.2. Útvonalanként erősen eltérhet a díj, ezért a
     // frontend csak megjeleníti, nem tölti be automatikusan a fuvardij
@@ -710,7 +416,8 @@ class FuvarInterface {
 
     // Egyetlen fuvar, `sofor_id` egyezés-ellenőrzéssel — ha a fuvar nem
     // létezik VAGY nem a hívó sofőré, `success:false` (ugyanaz az IDOR-
-    // védelmi minta, mint `BeerkezettDokumentumInterface::torolSajat()`-nál).
+    // védelmi minta, mint a `torolSajatFuvarDokumentumot`/
+    // `feltoltFuvarDokumentumot` action-öknél).
     public function getSajatFuvar($id, $sofor_id, $ceg_id) {
         $stmt = $this->db->prepare(
             "SELECT id, kamion_id, furgon_id, potkocsi_id, teljesites_datuma, felrako, lerako,
@@ -743,23 +450,6 @@ class FuvarInterface {
         $stmt->bindValue(':ceg_id', $ceg_id, PDO::PARAM_INT);
         $stmt->execute();
         return ['success' => true];
-    }
-
-    private function keresMegbizoNevAlapjan($ceg_id, $nev) {
-        if ($nev === null || trim($nev) === '') {
-            return null;
-        }
-        $stmt = $this->db->prepare("SELECT id, nev FROM ugyfelek WHERE admin = :ceg_id AND torolt <> 'I'");
-        $stmt->bindValue(':ceg_id', $ceg_id);
-        $stmt->execute();
-        $keresett = $this->normalizalNev($nev);
-        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $jelolt = $this->normalizalNev($row['nev']);
-            if ($jelolt !== '' && (strpos($keresett, $jelolt) !== false || strpos($jelolt, $keresett) !== false)) {
-                return (int) $row['id'];
-            }
-        }
-        return null;
     }
 
     // Statisztikai dashboardok (2026-07-26): sofőr/jármű/megbízó/havi bontás
