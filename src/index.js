@@ -82,6 +82,32 @@ const app = (
           component={EgyediArajanlat}
         />
         <Route path="/adatvedelem" exact component={Adatvedelem} />
+        {/* Angol tükör-route-ok — ugyanazok a komponensek, a nyelvet
+            rendereléskor `useTranslation()` dönti el az URL-ből (ld.
+            src/i18n/index.js). Ld. docs/superpowers/specs/2026-07-27-en-
+            landing-translation-design.md a lapos-fájlos prerender/.htaccess
+            gotcha miatt, amiért ezek NEM egy `en/` alkönyvtárként
+            prerenderelődnek. */}
+        <Route
+          path="/en/belfoldi-fuvarozas-arajanlat"
+          exact
+          component={BelfoldiFuvarozas}
+        />
+        <Route
+          path="/en/nemzetkozi-fuvarozas-vamugyintezessel"
+          exact
+          component={NemzetkoziFuvarozas}
+        />
+        <Route path="/en/biztositott-szallitas" exact component={BiztositottSzallitas} />
+        <Route path="/en/expressz-fuvarozas" exact component={ExpresszFuvarozas} />
+        <Route path="/en/rendezveny-szallitas" exact component={RendezvenySzallitas} />
+        <Route
+          path="/en/egyedi-arajanlat-fuvarozas"
+          exact
+          component={EgyediArajanlat}
+        />
+        <Route path="/en/adatvedelem" exact component={Adatvedelem} />
+        <Route path="/en" exact component={Landing} />
         <Route path="/" exact component={Landing} />
         {/* a /landing a főoldal korábbi, tartalmilag azonos duplikátuma volt
             — most a főoldalra irányít, hogy ne ossza meg a rangsorolási

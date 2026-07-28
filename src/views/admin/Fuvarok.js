@@ -26,13 +26,9 @@ export default function Fuvarok() {
   const [dokSzam, setDokSzam] = useState(0);
   const [allapotSzuro, setAllapotSzuro] = useState("");
   const [osszesito, setOsszesito] = useState(null);
-  const [nezetMod, setNezetMod] = useState(() => localStorage.getItem("fuvarok-nezet-mod") || "tablazat");
+  const [nezetMod, setNezetMod] = useState("tablazat");
   const [figyelmeztetesek, setFigyelmeztetesek] = useState(null);
   const [keresPreset, setKeresPreset] = useState("");
-
-  useEffect(() => {
-    localStorage.setItem("fuvarok-nezet-mod", nezetMod);
-  }, [nezetMod]);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -194,7 +190,11 @@ export default function Fuvarok() {
       </div>
 
       {nezetMod === "kanban" ? (
-        <KanbanBoard fuvarok={fuvarok} onAllapotChange={handleKanbanAllapotChange} />
+        <KanbanBoard
+          fuvarok={fuvarok}
+          onAllapotChange={handleKanbanAllapotChange}
+          onFuvarClick={(fuvar) => history.push("/admin/fuvarForm", { data: fuvar })}
+        />
       ) : nezetMod === "sofor" ? (
         <SoforCsoportositottLista fuvarok={fuvarok} />
       ) : nezetMod === "statisztika" ? (

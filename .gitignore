@@ -33,3 +33,11 @@ commit.sh
 
 # Subagent-driven-development scratch workspace (ledgers, briefs, review packages)
 .superpowers/
+
+# Git worktrees created for isolated feature implementation
+.worktrees/
+
+# Google service-account credential keys (never belong in the repo — store under ~/.config/claude-seo/)
+*service-account*.json
+*-service-account.json
+chatt-*.json

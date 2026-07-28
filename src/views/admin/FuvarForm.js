@@ -63,6 +63,7 @@ const emptyFuvar = {
   felrako: "",
   lerako: "",
   tavolsag_km: "",
+  tomeg_kg: "",
   megbizo_id: "",
   aru_megnevezese: "",
   megjegyzes: "",
@@ -73,9 +74,10 @@ const emptyFuvar = {
 };
 
 // Az OCR-mezőnevek (ld. GeminiOcrClient.php) és a fuvarok tábla mezőnevei
-// nagyrészt egyeznek (felrako/lerako/aru_megnevezese/fuvarlevel_szam) — csak
-// a "datum" -> "teljesites_datuma" és "egyeb_megjegyzes" -> "megjegyzes"
-// nevek térnek el. A sofor_id/kamion_id/furgon_id/megbizo_id ID-egyeztetést
+// nagyrészt egyeznek (felrako/lerako/aru_megnevezese/fuvarlevel_szam/
+// tavolsag_km) — csak a "datum" -> "teljesites_datuma", "egyeb_megjegyzes"
+// -> "megjegyzes" és "tomeg_kg" -> "tomeg_kg" (azonos név) nevek térnek el/
+// egyeznek. A sofor_id/kamion_id/furgon_id/megbizo_id ID-egyeztetést
 // a szerver (letrehozFuvarDokumentumbol -> FuvarInterface::letrehozDokumentumbol)
 // már elvégezte a dokumentum mentésekor — ez a segédfüggvény csak a
 // BeerkezettDokumentumok.js oldalról átadott nyers, szöveges ocrAdatok
@@ -86,6 +88,8 @@ function ocrAdatokToForm(ocrAdatok) {
     teljesites_datuma: ocrAdatok.datum || "",
     felrako: ocrAdatok.felrako || "",
     lerako: ocrAdatok.lerako || "",
+    tavolsag_km: ocrAdatok.tavolsag_km || "",
+    tomeg_kg: ocrAdatok.tomeg_kg || "",
     aru_megnevezese: ocrAdatok.aru_megnevezese || "",
     megjegyzes: ocrAdatok.egyeb_megjegyzes || "",
     fuvarlevel_szam: ocrAdatok.fuvarlevel_szam || "",
@@ -109,6 +113,40 @@ export default function FuvarForm() {
   const [soforok, setSoforok] = useState([]);
   const [ugyfelek, setUgyfelek] = useState([]);
   const [ugyfelElozmeny, setUgyfelElozmeny] = useState([]);
+
+  // Ha dokumentumból nyílt a form, az OCR által felismert rendszám/sofőr-
+  // név/megbízó-név alapján a szerver (ugyanazzal az egyeztetéssel, amit
+  // `letrehozFuvarDokumentumbol` eddig is csak MENTÉSKOR futtatott le, ld.
+  // `FuvarInterface::egyeztetOcrAlapjan()`) megpróbálja beazonosítani a
+  // Sofőr/Jármű/Pótkocsi/Megbízó mezőket is — ezek eddig üresen jelentek
+  // meg a form megnyitásakor, holott mentéskor úgyis kitöltődtek volna.
+  // Csak azokat a mezőket töltjük ki, amik még üresek (`prev.x ||`), hogy
+  // ne írjunk felül egy már betöltött/szerkesztett értéket.
+  useEffect(() => {
+    if (!dokumentumId) return;
+    let elvetve = false;
+    fetchAction("getFuvarEgyeztetesJavaslat", { ceg_id: user.ceg_id, dokumentumId }).then((result) => {
+      if (elvetve || !result?.success) return;
+      const javaslat = result.javaslat || {};
+      setFormData((prev) => ({
+        ...prev,
+        sofor_id: prev.sofor_id || javaslat.sofor_id || "",
+        kamion_id: prev.kamion_id || javaslat.kamion_id || "",
+        furgon_id: prev.furgon_id || javaslat.furgon_id || "",
+        potkocsi_id: prev.potkocsi_id || javaslat.potkocsi_id || "",
+        megbizo_id: prev.megbizo_id || javaslat.megbizo_id || "",
+      }));
+      if (javaslat.megbizo_id) {
+        fetchAction("getUgyfelFuvarElozmeny", { ceg_id: user.ceg_id, ugyfelId: javaslat.megbizo_id }).then((r) => {
+          if (!elvetve && r?.success) setUgyfelElozmeny(r.fuvarok || []);
+        });
+      }
+    });
+    return () => {
+      elvetve = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const loadLookups = async () => {
@@ -350,6 +388,13 @@ export default function FuvarForm() {
                 label="Távolság (km)"
                 name="tavolsag_km"
                 value={formData.tavolsag_km || ""}
+                onChange={handleChange}
+              />
+              <FormField
+                type="number"
+                label="Tömeg (kg)"
+                name="tomeg_kg"
+                value={formData.tomeg_kg || ""}
                 onChange={handleChange}
               />
               <FormField

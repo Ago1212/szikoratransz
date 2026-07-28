@@ -26,6 +26,7 @@ class GeminiOcrClient {
     const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/';
     const TIMEOUT_MASODPERC = 60;
     const HTTP_KVOTA_TULLEPVE = 429;
+    const HTTP_SZOLGALTATAS_TULTERHELT = 503;
 
     private $apiKeys;
 
@@ -49,21 +50,27 @@ class GeminiOcrClient {
         }
 
         foreach ($this->apiKeys as $apiKey) {
-            [$adatok, $kvotaTullepve] = $this->hivasEgyKulccsal($apiKey, $imageBytes, $mimeType, $sajatCegnev);
+            [$adatok, $probalkozzunkMasKulccsal] = $this->hivasEgyKulccsal($apiKey, $imageBytes, $mimeType, $sajatCegnev);
             if ($adatok !== null) {
                 return $adatok;
             }
-            if (!$kvotaTullepve) {
+            if (!$probalkozzunkMasKulccsal) {
                 return null;
             }
-            // Kvóta-túllépés esetén megyünk a listában a következő kulcsra.
+            // Kvóta-túllépés (429) VAGY átmeneti túlterheltség (503) esetén
+            // megyünk a listában a következő kulcsra — mindkettő a HÍVOTT
+            // kulcs/projekt aktuális állapotára jellemző, nem a kérésre
+            // magára, úgyhogy egy másik (külön GCP projektbeli) kulcs
+            // sikerrel járhat még akkor is, ha az első 503-at adott.
         }
 
         return null;
     }
 
-    // Visszaad egy [adatok|null, kvotaTullepve] párost — a hívó ez alapján
-    // dönti el, hogy próbálkozzon-e a következő kulccsal.
+    // Visszaad egy [adatok|null, probalkozzunkMasKulccsal] párost — a hívó ez
+    // alapján dönti el, hogy próbálkozzon-e a következő kulccsal (429 vagy
+    // 503 esetén igen, minden más hibánál nem érdemes, mert nem kulcs-
+    // specifikus).
     private function hivasEgyKulccsal($apiKey, $imageBytes, $mimeType, $sajatCegnev) {
         $payload = [
             'contents' => [[
@@ -105,7 +112,8 @@ class GeminiOcrClient {
         curl_close($ch);
 
         if ($body === false || $curlHiba !== '' || $status !== 200) {
-            return [null, $status === self::HTTP_KVOTA_TULLEPVE];
+            $probalkozzunkMasKulccsal = in_array($status, [self::HTTP_KVOTA_TULLEPVE, self::HTTP_SZOLGALTATAS_TULTERHELT], true);
+            return [null, $probalkozzunkMasKulccsal];
         }
 
         $valasz = json_decode($body, true);
@@ -135,6 +143,8 @@ pontosan ezzel a sémával:
   "megbizo": string | null,
   "aru_megnevezese": string | null,
   "suly": string | null,
+  "tavolsag_km": number | null,
+  "tomeg_kg": number | null,
   "fuvarlevel_szam": string | null,
   "egyeb_megjegyzes": string | null
 }
@@ -156,6 +166,12 @@ Szabályok:
   jellemzően egy "Fuvaroztató neve, címe" vagy hasonló feliratú mezőben található
   (ez NEM a fuvarozó, hanem az ügyfél, aki a fuvart megrendelte), szállítólevélen
   a "Vevő" mező.
+- A dokumentum alján gyakran szerepel a fuvar távolsága (km) és a szállítmány
+  tömege - mindkettő TISZTÁN NUMERIKUS értékként adandó vissza, mértékegység
+  nélkül (pl. "tavolsag_km": 450, ne "450 km"). Ha a tömeg tonnában (t) van
+  megadva, számítsd át kg-ra (1 t = 1000 kg) - a "tomeg_kg" mező mindig
+  kilogrammban értendő. Ha bármelyik nem olvasható vagy nem szerepel a
+  dokumentumon, írj null-t.
 PROMPT;
     }
 }

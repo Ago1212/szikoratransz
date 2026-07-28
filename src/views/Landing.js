@@ -11,12 +11,15 @@ import Footer from "components/Footers/Footer.js";
 import { fetchAction } from "utils/fetchAction";
 import HungaryMapBackground from "components/UI/HungaryMapBackground.js";
 import QuoteForm from "components/Landing/QuoteForm.js";
+import LanguageSwitcher from "components/Landing/LanguageSwitcher.js";
 import {
   FEATURES,
   PROCESS_STEPS,
   TESTIMONIALS,
   FAQ_ITEMS,
 } from "data/landingContent.js";
+import { useTranslation, localizePath } from "i18n/index.js";
+import { useSeo } from "utils/useSeo.js";
 import {
   PiTruckLight,
   PiArrowRightLight,
@@ -26,17 +29,6 @@ import {
   PiCaretDownLight,
   PiIdentificationCardLight,
 } from "react-icons/pi";
-
-// A "Sofőr jelentkezés" kártya saját, kiemelt előny-listája — külön tömbben,
-// hogy a JSX ne legyen zsúfolt, és mert ez a lista kizárólag ide tartozik
-// (nem megosztott adat, mint a data/landingContent.js FEATURES/FAQ_ITEMS).
-// A 3 pont a felhasználóval egyeztetett, valós üzeneteket tükrözi — nem
-// kitalált juttatás/fizetési szám, amit nem tudnánk alátámasztani.
-const SOFOR_ELONYOK = [
-  "Családias légkör — sok sofőrünk évek óta velünk dolgozik",
-  "Modern, karbantartott flotta és rendezett munkakörülmények",
-  "Versenyképes, rendszeres bérezés",
-];
 
 // ---------------------------------------------------------------------------
 // Design tokens (Tailwind arbitrary values — nem igényel config módosítást)
@@ -138,7 +130,26 @@ function Reveal({ children, delay = 0, className = "", variant = "fade" }) {
   );
 }
 
+// Stabil objektum-referencia a Landing route hreflang-alternatíváihoz —
+// statikus (nem függ propoktól/state-től), ezért modul-szinten, nem
+// useMemo-val hozzuk létre; `localizePath` adja a HU→EN leképezést, hogy ne
+// legyen kézzel felírt "/en" string (ld. ServicePage.js/Adatvedelem.js
+// ugyanezen mintája).
+const HOME_ALTERNATES = { hu: localizePath("/", "hu"), en: localizePath("/", "en") };
+
 export default function Landing() {
+  const { t, locale } = useTranslation();
+  useSeo({
+    // HU szándékosan `undefined` — a `public/index.html` statikus,
+    // SEO-auditált title/description marad érvényben; a
+    // `landing.homeMeta` HU értékei csak dokumentációs/EN-fallback célból
+    // léteznek, nem kerülnek ténylegesen felhasználásra.
+    title: locale === "en" ? t("landing.homeMeta.title") : undefined,
+    description: locale === "en" ? t("landing.homeMeta.description") : undefined,
+    path: localizePath("/", locale),
+    lang: locale,
+    alternates: HOME_ALTERNATES,
+  });
   const [activeSection, setActiveSection] = useState("home");
   const [applicationForm, setApplicationForm] = useState({
     name: "",
@@ -177,14 +188,13 @@ export default function Landing() {
     if (result && result.success) {
       setSubmitStatus({
         success: true,
-        message:
-          "Jelentkezés sikeresen elküldve! Hamarosan felvesszük Önnel a kapcsolatot.",
+        message: t("landing.contact.driverForm.successMessage"),
       });
       setApplicationForm({ name: "", phone: "", email: "", message: "" });
     } else {
       setSubmitStatus({
         success: false,
-        message: result.message || "Hiba történt a jelentkezés küldése közben.",
+        message: result.message || t("landing.contact.driverForm.errorMessageDefault"),
       });
     }
     setIsSubmitting(false);
@@ -232,10 +242,10 @@ export default function Landing() {
   };
 
   const navItems = [
-    { id: "home", label: "Kezdőlap" },
-    { id: "services", label: "Szolgáltatások" },
-    { id: "about", label: "Rólunk" },
-    { id: "contact", label: "Kapcsolat" },
+    { id: "home", label: t("landing.nav.home") },
+    { id: "services", label: t("landing.nav.services") },
+    { id: "about", label: t("landing.nav.about") },
+    { id: "contact", label: t("landing.nav.contact") },
   ];
 
   return (
@@ -248,7 +258,7 @@ export default function Landing() {
           <div className="flex justify-between items-center h-16">
             <div className="flex-shrink-0 flex items-center">
               <Link
-                to="/"
+                to={localizePath("/", locale)}
                 onClick={(e) => {
                   e.preventDefault();
                   smoothScroll("home");
@@ -289,8 +299,11 @@ export default function Landing() {
                   to="/auth/login"
                   className="bg-[#1E3AA8] hover:bg-[#172E86] text-white px-5 py-2 rounded-xl text-sm font-semibold transition-colors duration-300"
                 >
-                  Bejelentkezés
+                  {t("landing.nav.login")}
                 </Link>
+                <div className="ml-4">
+                  <LanguageSwitcher locale={locale} path="/" />
+                </div>
               </div>
             </div>
 
@@ -302,7 +315,7 @@ export default function Landing() {
                 aria-controls="mobile-menu"
                 aria-expanded="false"
               >
-                <span className="sr-only">Menü megnyitása</span>
+                <span className="sr-only">{t("landing.nav.menuToggleSr")}</span>
                 {mobileMenuOpen ? (
                   <svg
                     className="block h-6 w-6"
@@ -368,8 +381,11 @@ export default function Landing() {
               to="/auth/login"
               className="block w-full px-3 py-2 rounded-xl text-base font-semibold text-white bg-[#1E3AA8] hover:bg-[#172E86] text-center mt-2"
             >
-              Bejelentkezés
+              {t("landing.nav.login")}
             </Link>
+            <div className="flex items-center justify-center pt-2">
+              <LanguageSwitcher locale={locale} path="/" />
+            </div>
           </div>
         </div>
       </nav>
@@ -419,7 +435,7 @@ export default function Landing() {
                 <Reveal delay={0}>
                   <span className="inline-flex items-center gap-2 text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-[#1E3AA8] mb-6">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#1E3AA8] animate-pulse"></span>
-                    Belföldi és nemzetközi fuvarozás
+                    {t("landing.hero.eyebrow")}
                   </span>
                 </Reveal>
 
@@ -434,7 +450,7 @@ export default function Landing() {
                       className="hero-line-inner"
                       style={{ animationDelay: "120ms" }}
                     >
-                      Szállítás, amire
+                      {t("landing.hero.headline.line1")}
                     </span>
                   </span>{" "}
                   <span className="hero-line-mask">
@@ -442,7 +458,7 @@ export default function Landing() {
                       className="hero-line-inner text-[#1E3AA8]"
                       style={{ animationDelay: "260ms" }}
                     >
-                      percre pontosan
+                      {t("landing.hero.headline.line2")}
                     </span>
                   </span>{" "}
                   <span className="hero-line-mask">
@@ -450,16 +466,14 @@ export default function Landing() {
                       className="hero-line-inner"
                       style={{ animationDelay: "400ms" }}
                     >
-                      számíthat.
+                      {t("landing.hero.headline.line3")}
                     </span>
                   </span>
                 </h1>
 
                 <Reveal delay={520}>
                   <p className="text-lg text-[#23262B]/70 max-w-xl text-balance">
-                    Szikora Transz Kft — profi áruszállítás és logisztika 2010
-                    óta: belföldi és nemzetközi fuvarozás, modern flotta,
-                    teljes körű biztosítás.
+                    {t("landing.hero.subheading")}
                   </p>
                 </Reveal>
 
@@ -472,7 +486,7 @@ export default function Landing() {
                     }}
                     className="mt-6 inline-flex items-center gap-2 text-[#23262B]/70 hover:text-[#23262B] text-sm font-[Overpass] font-semibold transition-colors duration-300"
                   >
-                    Szolgáltatásaink megismerése
+                    {t("landing.hero.servicesLink")}
                     <PiArrowRightLight className="text-xs" />
                   </a>
                 </Reveal>
@@ -486,22 +500,15 @@ export default function Landing() {
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1E3AA8] to-[#172E86]"></div>
 
                 <span className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-white">
-                  Ingyenes árajánlat
+                  {t("landing.hero.quoteCard.eyebrow")}
                 </span>
                 <h2 className="font-[Overpass] font-extrabold text-2xl md:text-3xl text-white mt-3 mb-3">
-                  Kérjen árajánlatot még ma
+                  {t("landing.hero.quoteCard.title")}
                 </h2>
-                <p className="text-white/60 mb-4 md:mb-6">
-                  Töltse ki pár adatát, és 24 órán belül egyedi árajánlattal
-                  válaszolunk — kötöttség nélkül.
-                </p>
+                <p className="text-white/60 mb-4 md:mb-6">{t("landing.hero.quoteCard.subtitle")}</p>
 
                 <div className="space-y-2 mb-5 md:space-y-3 md:mb-8">
-                  {[
-                    "Teljesen ingyenes, nem kötelez semmire",
-                    "Válasz 24 órán belül",
-                    "Egyedi árazás minden fuvarra",
-                  ].map((item) => (
+                  {t("landing.hero.quoteCard.bullets").map((item) => (
                     <div
                       key={item}
                       className="flex items-center gap-3 text-sm text-white/70"
@@ -518,11 +525,11 @@ export default function Landing() {
                   onClick={() => smoothScroll("contact")}
                   className="w-full px-8 py-4 bg-[#1E3AA8] hover:bg-[#172E86] text-white font-[Overpass] font-bold rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-xl"
                 >
-                  Ingyenes ajánlatot kérek
+                  {t("landing.hero.quoteCard.ctaButton")}
                 </button>
 
                 <p className="text-center text-xs text-white/55 mt-5">
-                  vagy hívjon közvetlenül:{" "}
+                  {t("landing.hero.quoteCard.callPrefix")}{" "}
                   <a
                     href="tel:+36308115776"
                     className="text-white/70 hover:text-[#7C93FF] font-[Overpass_Mono]"
@@ -542,29 +549,26 @@ export default function Landing() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-2xl mb-16">
               <span className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-[#1E3AA8]">
-                A folyamat
+                {t("landing.process.eyebrow")}
               </span>
               <h2 className="font-[Overpass] font-extrabold text-3xl md:text-4xl text-[#23262B] mt-3">
-                Így jut el az árujuk A-ból B-be
+                {t("landing.process.title")}
               </h2>
-              <p className="text-[#23262B]/70 mt-4 text-lg">
-                Négy lépés, amely minden fuvarra érvényes — a megrendeléstől a
-                visszaigazolt kézbesítésig.
-              </p>
+              <p className="text-[#23262B]/70 mt-4 text-lg">{t("landing.process.intro")}</p>
             </div>
 
             <div className="relative grid md:grid-cols-4 gap-12 md:gap-8">
               <div className="hidden md:block absolute left-7 right-[calc(25%-3.25rem)] top-7 border-t-2 border-dashed border-[#23262B]/15"></div>
               {PROCESS_STEPS.map((step, index) => (
-                <Reveal key={step.n} delay={index * 100} className="relative">
+                <Reveal key={step.id} delay={index * 100} className="relative">
                   <div className="relative z-10 w-14 h-14 rounded-full bg-[#1E3AA8] text-white flex items-center justify-center font-[Overpass_Mono] font-bold border-4 border-[#F2F3F5] mb-5">
                     {step.n}
                   </div>
                   <p className="font-[Overpass] font-bold text-lg text-[#23262B] mb-2">
-                    {step.title}
+                    {t(`landing.processSteps.${step.id}.title`)}
                   </p>
                   <p className="text-[#23262B]/70 text-sm leading-relaxed">
-                    {step.desc}
+                    {t(`landing.processSteps.${step.id}.desc`)}
                   </p>
                 </Reveal>
               ))}
@@ -579,21 +583,18 @@ export default function Landing() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-2xl mb-16">
               <span className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-[#1E3AA8]">
-                Szolgáltatások
+                {t("landing.services.eyebrow")}
               </span>
               <h2 className="font-[Overpass] font-extrabold text-3xl md:text-4xl text-[#23262B] mt-3">
-                Szolgáltatásaink
+                {t("landing.services.title")}
               </h2>
-              <p className="text-[#23262B]/70 mt-4 text-lg">
-                Teljes körű fuvarozási megoldások, amelyek kielégítik ügyfeleink
-                egyedi igényeit — belföldön és külföldön egyaránt.
-              </p>
+              <p className="text-[#23262B]/70 mt-4 text-lg">{t("landing.services.intro")}</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {FEATURES.map((feature, index) => {
                 return (
-                  <Reveal key={feature.title} delay={index * 80}>
+                  <Reveal key={feature.id} delay={index * 80}>
                     {/* A kártya maga NEM link — csak a cím (h3) az, egy
                         `after:absolute after:inset-0` "stretched link"
                         trükkel kiterjesztve a teljes kártyára (a `relative`
@@ -611,19 +612,22 @@ export default function Landing() {
                       </div>
                       <h3 className="font-[Overpass] font-bold text-xl text-[#23262B] mb-2">
                         {feature.href ? (
-                          <Link to={feature.href} className="after:content-[''] after:absolute after:inset-0">
-                            {feature.title}
+                          <Link
+                            to={localizePath(feature.href, locale)}
+                            className="after:content-[''] after:absolute after:inset-0"
+                          >
+                            {t(`landing.features.${feature.id}.title`)}
                           </Link>
                         ) : (
-                          feature.title
+                          t(`landing.features.${feature.id}.title`)
                         )}
                       </h3>
                       <p className="text-[#23262B]/70 leading-relaxed">
-                        {feature.desc}
+                        {t(`landing.features.${feature.id}.desc`)}
                       </p>
                       {feature.href && (
                         <span className="mt-4 inline-flex items-center gap-1 text-sm font-[Overpass] font-semibold text-[#1E3AA8] opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          Részletek
+                          {t("landing.services.detailsLink")}
                           <PiArrowRightLight className="text-xs" />
                         </span>
                       )}
@@ -637,35 +641,14 @@ export default function Landing() {
             <div className="mt-24 grid lg:grid-cols-2 gap-12 items-center">
               <div>
                 <span className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-[#1E3AA8]">
-                  Miért mi
+                  {t("landing.services.whyUs.eyebrow")}
                 </span>
                 <h3 className="font-[Overpass] font-extrabold text-3xl text-[#23262B] mt-3 mb-6">
-                  Miért válasszon minket?
+                  {t("landing.services.whyUs.title")}
                 </h3>
-                <p className="text-lg text-[#23262B]/70 mb-8">
-                  10+ éves tapasztalattal rendelkezünk a fuvarozási iparágban.
-                  Flottánk állandóan karban van tartva, sofőreink képzettek és
-                  megbízhatóak.
-                </p>
+                <p className="text-lg text-[#23262B]/70 mb-8">{t("landing.services.whyUs.intro")}</p>
                 <div className="space-y-4">
-                  {[
-                    {
-                      title: "Kiváló minőség",
-                      desc: "Minden szállítási folyamat precíz tervezéssel és végrehajtással.",
-                    },
-                    {
-                      title: "Rugalmasság",
-                      desc: "Személyre szabott megoldások minden egyedi igényre.",
-                    },
-                    {
-                      title: "Megbízhatóság",
-                      desc: "Hosszú távú partnerségek, pontos határidőkkel és átlátható kommunikációval.",
-                    },
-                    {
-                      title: "Családias hozzáállás",
-                      desc: "Családi vállalkozásként indultunk, és így is kezelünk minden ügyfelet és sofőrt: emberközpontúan, tisztelettel.",
-                    },
-                  ].map((item, index) => (
+                  {t("landing.services.whyUs.bullets").map((item, index) => (
                     <Reveal key={item.title} delay={index * 80}>
                       <div className="flex items-start gap-4 border-l-2 border-dashed border-[#1E3AA8]/40 pl-5 py-1">
                         <div>
@@ -686,7 +669,7 @@ export default function Landing() {
                   <source srcSet="/kamionflotta-szikora-transz.webp" type="image/webp" />
                   <img
                     src="/kamionflotta-szikora-transz.jpg"
-                    alt="Szikora Transz Kft. modern kamionflottája fuvarozás közben"
+                    alt={t("landing.services.whyUs.imageAlt")}
                     loading="lazy"
                     className="w-full h-full object-cover"
                   />
@@ -694,12 +677,9 @@ export default function Landing() {
                 <div className="absolute inset-0 bg-gradient-to-t from-[#23262B] via-transparent to-transparent"></div>
                 <div className="absolute bottom-0 left-0 p-6">
                   <p className="font-[Overpass] font-bold text-xl text-white mb-1">
-                    Modern flotta
+                    {t("landing.services.whyUs.imageCaption.title")}
                   </p>
-                  <p className="text-white/70 text-sm">
-                    Több modern, karbantartott kamionból álló flottánk és
-                    tapasztalt sofőreink garantálják a megbízható szállítást.
-                  </p>
+                  <p className="text-white/70 text-sm">{t("landing.services.whyUs.imageCaption.desc")}</p>
                 </div>
               </div>
             </div>
@@ -719,7 +699,7 @@ export default function Landing() {
                   <source srcSet="/kamion-orszagut-szikora-transz.webp" type="image/webp" />
                   <img
                     src="/kamion-orszagut-szikora-transz.jpg"
-                    alt="Szikora Transz kamion borult égbolt alatt"
+                    alt={t("landing.about.imageAlt")}
                     loading="lazy"
                     className="w-full h-full object-cover"
                   />
@@ -728,24 +708,13 @@ export default function Landing() {
               </div>
               <div className="order-1 lg:order-2">
                 <span className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-[#1E3AA8]">
-                  Rólunk
+                  {t("landing.about.eyebrow")}
                 </span>
                 <h2 className="font-[Overpass] font-extrabold text-3xl md:text-4xl text-[#23262B] mt-3 mb-6">
-                  Cégtörténetünk
+                  {t("landing.about.title")}
                 </h2>
-                <p className="text-lg text-[#23262B]/70 mb-4">
-                  Szikora Transz Kft 2010-ben alakult kis családi
-                  vállalkozásként. Azóta folyamatosan bővült flottánk és
-                  szolgáltatási körünk, de megtartottuk személyes hangvételünket
-                  és ügyfélközpontú hozzáállásunkat.
-                </p>
-                <p className="text-lg text-[#23262B]/70 mb-8">
-                  Mára belföldi és nemzetközi fuvarokat egyaránt vállalunk, a
-                  rövid távú, sürgős megbízásoktól a rendszeres, hosszú távú
-                  partnerségekig. Minden ügyfelünket úgy szolgáljuk ki, mintha a
-                  saját árujuk lenne — legyen szó egyszeri fuvarról vagy
-                  folyamatos együttműködésről.
-                </p>
+                <p className="text-lg text-[#23262B]/70 mb-4">{t("landing.about.paragraph1")}</p>
+                <p className="text-lg text-[#23262B]/70 mb-8">{t("landing.about.paragraph2")}</p>
                 <div className="space-y-4">
                   <div className="flex items-center gap-4 border border-[#23262B]/10 rounded-xl p-4">
                     <div className="w-11 h-11 rounded-xl bg-[#1E3AA8]/10 text-[#1E3AA8] flex items-center justify-center flex-shrink-0">
@@ -753,12 +722,9 @@ export default function Landing() {
                     </div>
                     <div>
                       <h3 className="font-[Overpass] font-semibold text-[#23262B]">
-                        Karbantartott flotta
+                        {t("landing.about.tiles")[0].title}
                       </h3>
-                      <p className="text-[#23262B]/70 text-sm">
-                        Több modern kamionból álló, állandóan karbantartott
-                        flotta.
-                      </p>
+                      <p className="text-[#23262B]/70 text-sm">{t("landing.about.tiles")[0].desc}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4 border border-[#23262B]/10 rounded-xl p-4">
@@ -767,11 +733,9 @@ export default function Landing() {
                     </div>
                     <div>
                       <h3 className="font-[Overpass] font-semibold text-[#23262B]">
-                        Tapasztalt sofőrök
+                        {t("landing.about.tiles")[1].title}
                       </h3>
-                      <p className="text-[#23262B]/70 text-sm">
-                        Több tapasztalt, hosszú távú sofőr alkotja csapatunkat.
-                      </p>
+                      <p className="text-[#23262B]/70 text-sm">{t("landing.about.tiles")[1].desc}</p>
                     </div>
                   </div>
                 </div>
@@ -787,34 +751,35 @@ export default function Landing() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-2xl mb-16">
               <span className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-[#1E3AA8]">
-                Ügyfélvisszajelzések
+                {t("landing.testimonials.eyebrow")}
               </span>
               <h2 className="font-[Overpass] font-extrabold text-3xl md:text-4xl text-[#23262B] mt-3">
-                Amit partnereink mondanak rólunk
+                {t("landing.testimonials.title")}
               </h2>
             </div>
 
             <div className="grid md:grid-cols-3 gap-8">
-              {TESTIMONIALS.map((t, index) => (
-                <Reveal key={t.name} delay={index * 100}>
+              {TESTIMONIALS.map((testimonial, index) => (
+                <Reveal key={testimonial.id} delay={index * 100}>
                   <div className="bg-white border border-[#23262B]/10 rounded-xl p-8 flex flex-col h-full">
                     <PiQuotesLight className="text-[#1E3AA8]/30 text-2xl mb-4" />
                     <p className="text-[#23262B]/75 leading-relaxed mb-6 flex-grow">
-                      {t.quote}
+                      {t(`landing.testimonialItems.${testimonial.id}.quote`)}
                     </p>
                     <div className="flex items-center gap-3 pt-4 border-t border-[#23262B]/10">
                       <div className="w-11 h-11 rounded-full bg-[#23262B] text-white flex items-center justify-center font-[Overpass_Mono] font-bold text-sm flex-shrink-0">
-                        {t.name
+                        {testimonial.name
                           .split(" ")
                           .map((p) => p[0])
                           .join("")}
                       </div>
                       <div>
                         <div className="font-[Overpass] font-semibold text-[#23262B] text-sm">
-                          {t.name}
+                          {testimonial.name}
                         </div>
                         <div className="text-[#23262B]/50 text-xs">
-                          {t.role}, {t.company}
+                          {t(`landing.testimonialItems.${testimonial.id}.role`)},{" "}
+                          {t(`landing.testimonialItems.${testimonial.id}.company`)}
                         </div>
                       </div>
                     </div>
@@ -822,10 +787,7 @@ export default function Landing() {
                 </Reveal>
               ))}
             </div>
-            <p className="text-xs text-[#23262B]/35 mt-8 max-w-2xl">
-              * A fenti referenciák minta-szövegek — érdemes őket valós ügyfelek
-              visszajelzéseire cserélni a publikálás előtt.
-            </p>
+            <p className="text-xs text-[#23262B]/35 mt-8 max-w-2xl">{t("landing.testimonials.disclaimer")}</p>
           </div>
         </section>
 
@@ -840,13 +802,13 @@ export default function Landing() {
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "FAQPage",
-            inLanguage: "hu",
+            inLanguage: locale,
             mainEntity: FAQ_ITEMS.map((item) => ({
               "@type": "Question",
-              name: item.q,
+              name: t(`landing.faqItems.${item.id}.q`),
               acceptedAnswer: {
                 "@type": "Answer",
-                text: item.a,
+                text: t(`landing.faqItems.${item.id}.a`),
               },
             })),
           })}
@@ -855,10 +817,10 @@ export default function Landing() {
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="mb-12">
               <span className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-[#1E3AA8]">
-                Gyakran ismételt kérdések
+                {t("landing.faq.eyebrow")}
               </span>
               <h2 className="font-[Overpass] font-extrabold text-3xl md:text-4xl text-[#23262B] mt-3">
-                Kérdése van? Válaszolunk.
+                {t("landing.faq.title")}
               </h2>
             </div>
 
@@ -866,14 +828,14 @@ export default function Landing() {
               {FAQ_ITEMS.map((item, index) => {
                 const isOpen = openFaq === index;
                 return (
-                  <div key={item.q}>
+                  <div key={item.id}>
                     <h3>
                       <button
                         onClick={() => setOpenFaq(isOpen ? null : index)}
                         aria-expanded={isOpen}
                         className="w-full flex items-center justify-between gap-4 py-6 text-left font-[Overpass] font-semibold text-[#23262B] text-lg"
                       >
-                        {item.q}
+                        {t(`landing.faqItems.${item.id}.q`)}
                         <PiCaretDownLight
                           className={`text-[#1E3AA8] text-sm flex-shrink-0 transition-transform duration-300 ${
                             isOpen ? "rotate-180" : ""
@@ -883,7 +845,7 @@ export default function Landing() {
                     </h3>
                     {isOpen && (
                       <p className="text-[#23262B]/70 leading-relaxed pb-6 pr-8">
-                        {item.a}
+                        {t(`landing.faqItems.${item.id}.a`)}
                       </p>
                     )}
                   </div>
@@ -900,15 +862,12 @@ export default function Landing() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-2xl mb-16">
               <span className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-[#1E3AA8]">
-                Kapcsolat
+                {t("landing.contact.eyebrow")}
               </span>
               <h2 className="font-[Overpass] font-extrabold text-3xl md:text-4xl text-[#23262B] mt-3">
-                Kapcsolatfelvétel
+                {t("landing.contact.title")}
               </h2>
-              <p className="text-[#23262B]/70 mt-4 text-lg">
-                Kérjük töltse ki az alábbi űrlapot — gyors, ingyenes és
-                semmilyen kötöttséggel nem jár.
-              </p>
+              <p className="text-[#23262B]/70 mt-4 text-lg">{t("landing.contact.intro")}</p>
             </div>
 
             {submitStatus.message && (
@@ -949,19 +908,19 @@ export default function Landing() {
                 <div className="p-8">
                   <span className="inline-flex items-center gap-2 text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-emerald-700 mb-3">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                    Sofőröket keresünk
+                    {t("landing.contact.driverForm.eyebrow")}
                   </span>
                   <div className="flex items-center gap-4 mb-4">
                     <div className="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center flex-shrink-0">
                       <PiTruckLight className="text-lg" />
                     </div>
                     <h3 className="font-[Overpass] font-bold text-xl text-[#23262B]">
-                      Csatlakozzon a csapatunkhoz
+                      {t("landing.contact.driverForm.title")}
                     </h3>
                   </div>
 
                   <div className="space-y-2.5 mb-5">
-                    {SOFOR_ELONYOK.map((elony) => (
+                    {t("landing.contact.driverForm.benefits").map((elony) => (
                       <div key={elony} className="flex items-start gap-2.5 text-sm text-[#23262B]/70">
                         <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0 mt-0.5">
                           <PiCheckLight className="text-[11px]" />
@@ -974,21 +933,20 @@ export default function Landing() {
                   <div className="flex items-start gap-2.5 bg-white/70 border border-emerald-200/70 rounded-lg px-3.5 py-2.5 mb-6">
                     <PiIdentificationCardLight className="text-emerald-700 text-base flex-shrink-0 mt-0.5" />
                     <p className="text-xs text-[#23262B]/60">
-                      <span className="font-semibold text-[#23262B]/80">Amit kérünk: </span>
-                      érvényes C+E kategóriás jogosítvány és GKI kártya.
+                      <span className="font-semibold text-[#23262B]/80">
+                        {t("landing.contact.driverForm.requirementPrefix")}{" "}
+                      </span>
+                      {t("landing.contact.driverForm.requirementText")}
                     </p>
                   </div>
 
-                  <p className="text-[#23262B]/50 mb-6 text-sm">
-                    Nem kérünk azonnal önéletrajzat — írjon pár sort, és
-                    hamarosan felvesszük Önnel a kapcsolatot.
-                  </p>
+                  <p className="text-[#23262B]/50 mb-6 text-sm">{t("landing.contact.driverForm.intro")}</p>
 
                   <form onSubmit={submitDriverApplication}>
                     <div className="space-y-4">
                       <div>
                         <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-[#23262B]/40 mb-2">
-                          Teljes név
+                          {t("landing.contact.driverForm.nameLabel")}
                         </label>
                         <input
                           type="text"
@@ -996,14 +954,14 @@ export default function Landing() {
                           value={applicationForm.name}
                           onChange={handleApplicationChange}
                           className="w-full px-4 py-3 border border-emerald-200 bg-white rounded-xl text-[#23262B] focus:outline-none focus:ring-1 focus:ring-emerald-600 focus:border-emerald-600 transition duration-300"
-                          placeholder="Teljes név"
+                          placeholder={t("landing.contact.driverForm.namePlaceholder")}
                           required
                         />
                       </div>
 
                       <div>
                         <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-[#23262B]/40 mb-2">
-                          Telefonszám
+                          {t("landing.contact.driverForm.phoneLabel")}
                         </label>
                         <input
                           type="tel"
@@ -1011,14 +969,14 @@ export default function Landing() {
                           value={applicationForm.phone}
                           onChange={handleApplicationChange}
                           className="w-full px-4 py-3 border border-emerald-200 bg-white rounded-xl text-[#23262B] focus:outline-none focus:ring-1 focus:ring-emerald-600 focus:border-emerald-600 transition duration-300"
-                          placeholder="Telefonszám"
+                          placeholder={t("landing.contact.driverForm.phonePlaceholder")}
                           required
                         />
                       </div>
 
                       <div>
                         <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-[#23262B]/40 mb-2">
-                          Email cím
+                          {t("landing.contact.driverForm.emailLabel")}
                         </label>
                         <input
                           type="email"
@@ -1026,14 +984,14 @@ export default function Landing() {
                           value={applicationForm.email}
                           onChange={handleApplicationChange}
                           className="w-full px-4 py-3 border border-emerald-200 bg-white rounded-xl text-[#23262B] focus:outline-none focus:ring-1 focus:ring-emerald-600 focus:border-emerald-600 transition duration-300"
-                          placeholder="Email cím"
+                          placeholder={t("landing.contact.driverForm.emailPlaceholder")}
                           required
                         />
                       </div>
 
                       <div>
                         <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-[#23262B]/40 mb-2">
-                          Pár sor Önről
+                          {t("landing.contact.driverForm.messageLabel")}
                         </label>
                         <textarea
                           rows="3"
@@ -1041,7 +999,7 @@ export default function Landing() {
                           value={applicationForm.message}
                           onChange={handleApplicationChange}
                           className="w-full px-4 py-3 border border-emerald-200 bg-white rounded-xl text-[#23262B] focus:outline-none focus:ring-1 focus:ring-emerald-600 focus:border-emerald-600 transition duration-300"
-                          placeholder="Pl. hány éve vezet kamiont, milyen jogosítványa/kártyája van..."
+                          placeholder={t("landing.contact.driverForm.messagePlaceholder")}
                           required
                         ></textarea>
                       </div>
@@ -1074,10 +1032,10 @@ export default function Landing() {
                               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                             ></path>
                           </svg>
-                          Küldés...
+                          {t("landing.contact.driverForm.submitLoading")}
                         </span>
                       ) : (
-                        "Jelentkezem sofőrnek"
+                        t("landing.contact.driverForm.submitDefault")
                       )}
                     </button>
                   </form>

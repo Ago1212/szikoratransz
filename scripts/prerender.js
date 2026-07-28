@@ -61,7 +61,32 @@ const ROUTES_TO_PRERENDER = [
   "/rendezveny-szallitas",
   "/egyedi-arajanlat-fuvarozas",
   "/adatvedelem",
+  "/en",
+  "/en/belfoldi-fuvarozas-arajanlat",
+  "/en/nemzetkozi-fuvarozas-vamugyintezessel",
+  "/en/biztositott-szallitas",
+  "/en/expressz-fuvarozas",
+  "/en/rendezveny-szallitas",
+  "/en/egyedi-arajanlat-fuvarozas",
+  "/en/adatvedelem",
 ];
+
+// `/en/<slug>` NEM `build/en/<slug>.html`-be prerenderelődik (ami egy valódi
+// `en/` alkönyvtárat hozna létre a lemezen), hanem lapos, kötőjeles
+// `build/en-<slug>.html` fájlba — ugyanaz a "sose legyen valódi könyvtár egy
+// route névből" elv, ami a többi route-ot is lapos fájllá tette (ld. a fenti
+// megjegyzést a korábbi alkönyvtár-alapú 301/403-as hibáról). A nézet URL-je
+// (`/en/<slug>`) emiatt nem egyezik meg a mögötte álló fájlnévvel —
+// public/.htaccess végzi a leképezést.
+function routeToOutputFile(route) {
+  if (route === "/") return path.join(BUILD_DIR, "index.html");
+  if (route === "/en") return path.join(BUILD_DIR, "en.html");
+  if (route.startsWith("/en/")) {
+    return path.join(BUILD_DIR, `en-${route.slice(4)}.html`);
+  }
+  return path.join(BUILD_DIR, `${route.replace(/^\//, "")}.html`);
+}
+
 // A kulcsfájl neve = a kulcs maga (public/<kulcs>.txt, a fájl tartalma is
 // csak a kulcs) — ezt a IndexNow protokoll írja elő a tulajdonosi
 // ellenőrzéshez. A generálás egyszeri, kézi lépés volt (`secrets.token_hex`),
@@ -146,10 +171,7 @@ async function main() {
         await page.waitForTimeout(1000);
 
         const html = await page.content();
-        const outFile =
-          route === "/"
-            ? path.join(BUILD_DIR, "index.html")
-            : path.join(BUILD_DIR, `${route.replace(/^\//, "")}.html`);
+        const outFile = routeToOutputFile(route);
         fs.mkdirSync(path.dirname(outFile), { recursive: true });
         fs.writeFileSync(outFile, "<!doctype html>" + html);
         console.log(`Kiírva: ${path.relative(BUILD_DIR, outFile)} (${html.length} byte)`);

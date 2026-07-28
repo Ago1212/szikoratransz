@@ -145,6 +145,7 @@ class ApiHandler {
         'deleteFuvar' => ['fuvarok', 'torles'],
         'getFuvarok' => ['fuvarok', 'hozzaferes'],
         'getFuvar' => ['fuvarok', 'hozzaferes'],
+        'getFuvarEgyeztetesJavaslat' => ['fuvarok', 'hozzaferes'],
         'letrehozFuvarDokumentumbol' => ['fuvarok', 'szerkesztes'],
         'csatolBeerkezettDokumentumotFuvarhoz' => ['fuvarok', 'szerkesztes'],
         'getUgyfelFuvarElozmeny' => ['fuvarok', 'hozzaferes'],
@@ -376,6 +377,7 @@ class ApiHandler {
             'deleteFuvar' => ['id', 'ceg_id', 'kerelmezo_id'],
             'getFuvar' => ['id', 'ceg_id'],
             'getFuvarok' => ['ceg_id'],
+            'getFuvarEgyeztetesJavaslat' => ['dokumentumId', 'ceg_id'],
             'letrehozFuvarDokumentumbol' => ['dokumentumId', 'ceg_id', 'kerelmezo_id'],
             'csatolBeerkezettDokumentumotFuvarhoz' => ['dokumentumId', 'fuvarId', 'ceg_id', 'kerelmezo_id'],
             'updateFuvarAllapot' => ['id', 'ceg_id', 'kerelmezo_id', 'allapot'],
@@ -1769,6 +1771,10 @@ class ApiHandler {
                 case 'getFuvarok':
                     $kerelmezo = $this->resolveKerelmezo($request);
                     echo json_encode($fuvarInterface->getFuvarok($kerelmezo['ceg_id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['sortKey'] ?? null, $request['sortDir'] ?? 'asc', $request['allapot'] ?? null));
+                    return;
+                case 'getFuvarEgyeztetesJavaslat':
+                    $kerelmezo = $this->resolveKerelmezo($request);
+                    echo json_encode($fuvarInterface->getEgyeztetesJavaslatDokumentumhoz($request['dokumentumId'], $kerelmezo['ceg_id']));
                     return;
                 case 'letrehozFuvarDokumentumbol':
                     $kerelmezo = $this->resolveKerelmezo($request);

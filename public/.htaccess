@@ -40,6 +40,18 @@
   RewriteCond %{REQUEST_FILENAME}.html -f
   RewriteRule ^([^/]+)$ $1.html [L]
 
+  # Az angol (`/en/...`) szolgáltatás-oldalak lapos, kötőjeles fájlként
+  # prerenderelődnek (ld. scripts/prerender.js `routeToOutputFile()`), NEM
+  # egy valódi `en/` alkönyvtárként — ugyanazon okból, amiért a fenti szabály
+  # is lapos fájlokra épül (ld. a fájl elején lévő hosszú megjegyzést a
+  # korábbi alkönyvtár-alapú 301/403-as hibáról). Ez a szabály képezi le a
+  # látható, kétszegmenses `/en/<slug>` URL-t a mögötte álló, lapos
+  # `en-<slug>.html` fájlra. A bare `/en`-t (nincs benne `/`) a fenti,
+  # egy-szegmensre szűkített generikus szabály már önmagában lekezeli.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{DOCUMENT_ROOT}/en-$1.html -f
+  RewriteRule ^en/([^/]+)$ en-$1.html [L]
+
   RewriteRule ^index\.html$ - [L]
 
   # A fenti szabály csak akkor talál, ha a prerender.js ténylegesen legyártotta
@@ -60,6 +72,14 @@
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^(belfoldi-fuvarozas-arajanlat|nemzetkozi-fuvarozas-vamugyintezessel|biztositott-szallitas|expressz-fuvarozas|rendezveny-szallitas|egyedi-arajanlat-fuvarozas|adatvedelem)/?$ /index.html [L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^en/?$ /index.html [L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^en/(belfoldi-fuvarozas-arajanlat|nemzetkozi-fuvarozas-vamugyintezessel|biztositott-szallitas|expressz-fuvarozas|rendezveny-szallitas|egyedi-arajanlat-fuvarozas|adatvedelem)/?$ /index.html [L]
 </IfModule>
 
 # Alap biztonsági response headerek — a SEO/technikai audit ezek teljes

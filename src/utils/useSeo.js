@@ -25,10 +25,12 @@ const SITE_URL = "https://szikora-transz.hu";
 // LocalBusiness entitáshoz köti (`@id` hivatkozással). Ez explicitebb
 // szolgáltatás↔cég kapcsolatot ad a kereséseknek/AI-motoroknak, mint az önmagában
 // álló LocalBusiness séma.
-export function useSeo({ title, description, path, faqItems, breadcrumb, service }) {
+export function useSeo({ title, description, path, faqItems, breadcrumb, service, lang, alternates }) {
   useEffect(() => {
     const prevTitle = document.title;
-    document.title = title;
+    if (title) {
+      document.title = title;
+    }
 
     const descTag = document.querySelector('meta[name="description"]');
     const prevDescription = descTag ? descTag.getAttribute("content") : null;
@@ -40,6 +42,27 @@ export function useSeo({ title, description, path, faqItems, breadcrumb, service
     const prevCanonical = canonicalTag ? canonicalTag.getAttribute("href") : null;
     if (canonicalTag && path) {
       canonicalTag.setAttribute("href", `${SITE_URL}${path}`);
+    }
+
+    const prevLang = document.documentElement.lang;
+    if (lang) {
+      document.documentElement.lang = lang;
+    }
+
+    const hreflangTags = [];
+    if (alternates && alternates.hu && alternates.en) {
+      [
+        { hreflang: "hu", href: alternates.hu },
+        { hreflang: "en", href: alternates.en },
+        { hreflang: "x-default", href: alternates.hu },
+      ].forEach(({ hreflang, href }) => {
+        const tag = document.createElement("link");
+        tag.setAttribute("rel", "alternate");
+        tag.setAttribute("hreflang", hreflang);
+        tag.setAttribute("href", `${SITE_URL}${href}`);
+        document.head.appendChild(tag);
+        hreflangTags.push(tag);
+      });
     }
 
     // Az og:*/twitter:* tagek (kép kivételével — arra nincs oldalanként
@@ -69,7 +92,7 @@ export function useSeo({ title, description, path, faqItems, breadcrumb, service
       faqScript.text = JSON.stringify({
         "@context": "https://schema.org",
         "@type": "FAQPage",
-        inLanguage: "hu",
+        inLanguage: lang || "hu",
         mainEntity: faqItems.map((item) => ({
           "@type": "Question",
           name: item.q,
@@ -86,9 +109,14 @@ export function useSeo({ title, description, path, faqItems, breadcrumb, service
       breadcrumbScript.text = JSON.stringify({
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
-        inLanguage: "hu",
+        inLanguage: lang || "hu",
         itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Főoldal", item: `${SITE_URL}/` },
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: lang === "en" ? "Home" : "Főoldal",
+            item: `${SITE_URL}${lang === "en" ? "/en" : "/"}`,
+          },
           ...breadcrumb.map((item, index) => ({
             "@type": "ListItem",
             position: index + 2,
@@ -112,7 +140,7 @@ export function useSeo({ title, description, path, faqItems, breadcrumb, service
       serviceScript.text = JSON.stringify({
         "@context": "https://schema.org",
         "@type": "Service",
-        inLanguage: "hu",
+        inLanguage: lang || "hu",
         name: service.name,
         // Schema.org ajánlása szerint a `serviceType` egy rövid, önálló
         // kategória-címke, elkülönítve a `name`-től — jelen esetben a
@@ -142,7 +170,9 @@ export function useSeo({ title, description, path, faqItems, breadcrumb, service
     }
 
     return () => {
-      document.title = prevTitle;
+      if (title) {
+        document.title = prevTitle;
+      }
       if (descTag && prevDescription !== null) {
         descTag.setAttribute("content", prevDescription);
       }
@@ -158,13 +188,15 @@ export function useSeo({ title, description, path, faqItems, breadcrumb, service
       if (serviceScript) {
         document.head.removeChild(serviceScript);
       }
+      document.documentElement.lang = prevLang;
+      hreflangTags.forEach((tag) => document.head.removeChild(tag));
       metaSyncs.forEach(({ tag, attr, prevValue }) => {
         if (tag && prevValue !== null) {
           tag.setAttribute(attr, prevValue);
         }
       });
     };
-  }, [title, description, path, faqItems, breadcrumb, service]);
+  }, [title, description, path, faqItems, breadcrumb, service, lang, alternates]);
 }
 
 // Néhány oldal (pl. bejelentkezés) funkcionálisan szükséges, de nincs
