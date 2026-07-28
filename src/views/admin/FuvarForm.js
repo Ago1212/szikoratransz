@@ -12,7 +12,6 @@ import {
 import PageHeader from "components/UI/PageHeader.js";
 import FormField, { FormSection } from "components/UI/FormField.js";
 import AutocompleteSelect from "components/UI/AutocompleteSelect.js";
-import FuvarDokumentumLink from "components/Fuvarok/FuvarDokumentumLink.js";
 import CardFuvarFajlok from "components/Cards/CardFuvarFajlok.js";
 import PageCard from "components/UI/PageCard.js";
 import SaveButton from "components/UI/SaveButton.js";
@@ -29,19 +28,14 @@ const ALLAPOT_OPTIONS = [
 
 // Az öt idegenkulcs-mező (sofor_id/kamion_id/furgon_id/potkocsi_id/
 // megbizo_id) `emptyFuvar`-ban mindig "" — ha ezt üres string formájában
-// KÜLDJÜK EL a szervernek (nem hagyjuk el a mezőt), két külön hiba történik:
-// (1) `letrehozFuvarDokumentumbol`-nál a backend `array_merge($ocrBolFeloldott,
-// $felulirasok)`-ot hív — mivel `$felulirasok` (= a teljes formData) MINDIG
-// tartalmazza ezt az 5 kulcsot, egy nem érintett mező "" értéke felülírná
-// (kitörölné) a szerver saját, OCR-alapú rendszám/sofőr/megbízó-egyeztetését,
-// még akkor is, ha a felhasználó a formon egyáltalán nem nyúlt hozzá. (2)
-// `newFuvar`/`updateFuvar`-nál `bindFuvarMezok()` a hiányzó kulcsot `?? null`-
-// lal NULL-ra bindolja, de egy explicit "" stringet változatlanul köt be —
-// ez egy INT oszlopnál (pl. `furgon_id`) MySQL nem-strict módban csendben
-// 0-ra kasztol, ami a NULL-lal ("nincs furgon rendelve") szemantikailag NEM
-// egyenértékű. Mindkét hiba elkerülhető, ha az üres FK-mezőket egyszerűen
-// KIHAGYJUK a kérésből (a hiányzó kulcs a fenti `?? null`/`array_merge`
-// mintáknál pontosan úgy viselkedik, mint egy explicit `null`).
+// KÜLDJÜK EL a szervernek (nem hagyjuk el a mezőt), `newFuvar`/`updateFuvar`-
+// nál `bindFuvarMezok()` a hiányzó kulcsot `?? null`-lal NULL-ra bindolja,
+// de egy explicit "" stringet változatlanul köt be — ez egy INT oszlopnál
+// (pl. `furgon_id`) MySQL nem-strict módban csendben 0-ra kasztol, ami a
+// NULL-lal ("nincs furgon rendelve") szemantikailag NEM egyenértékű. Ezt
+// elkerüljük, ha az üres FK-mezőket egyszerűen KIHAGYJUK a kérésből (a
+// hiányzó kulcs a fenti `?? null` mintánál pontosan úgy viselkedik, mint
+// egy explicit `null`).
 const FK_MEZOK = ["sofor_id", "kamion_id", "furgon_id", "potkocsi_id", "megbizo_id"];
 
 function nelkulUresFkMezok(data) {
@@ -73,36 +67,12 @@ const emptyFuvar = {
   allapot: "rogzitett",
 };
 
-// Az OCR-mezőnevek (ld. GeminiOcrClient.php) és a fuvarok tábla mezőnevei
-// nagyrészt egyeznek (felrako/lerako/aru_megnevezese/fuvarlevel_szam/
-// tavolsag_km) — csak a "datum" -> "teljesites_datuma", "egyeb_megjegyzes"
-// -> "megjegyzes" és "tomeg_kg" -> "tomeg_kg" (azonos név) nevek térnek el/
-// egyeznek. A sofor_id/kamion_id/furgon_id/megbizo_id ID-egyeztetést
-// a szerver (letrehozFuvarDokumentumbol -> FuvarInterface::letrehozDokumentumbol)
-// már elvégezte a dokumentum mentésekor — ez a segédfüggvény csak a
-// BeerkezettDokumentumok.js oldalról átadott nyers, szöveges ocrAdatok
-// mezőket teszi be induló (előnézeti) értéknek, ID-egyeztetés nélkül.
-function ocrAdatokToForm(ocrAdatok) {
-  if (!ocrAdatok) return {};
-  return {
-    teljesites_datuma: ocrAdatok.datum || "",
-    felrako: ocrAdatok.felrako || "",
-    lerako: ocrAdatok.lerako || "",
-    tavolsag_km: ocrAdatok.tavolsag_km || "",
-    tomeg_kg: ocrAdatok.tomeg_kg || "",
-    aru_megnevezese: ocrAdatok.aru_megnevezese || "",
-    megjegyzes: ocrAdatok.egyeb_megjegyzes || "",
-    fuvarlevel_szam: ocrAdatok.fuvarlevel_szam || "",
-  };
-}
-
 export default function FuvarForm() {
   const history = useHistory();
   const location = useLocation();
   const user = JSON.parse(localStorage.getItem("user"));
 
-  const dokumentumId = location.state?.dokumentumId || null;
-  const initialData = location.state?.data || ocrAdatokToForm(location.state?.ocrAdatok);
+  const initialData = location.state?.data || {};
   const isNew = !initialData?.id;
 
   const [formData, setFormData] = useState({ ...emptyFuvar, ...initialData });
@@ -113,40 +83,6 @@ export default function FuvarForm() {
   const [soforok, setSoforok] = useState([]);
   const [ugyfelek, setUgyfelek] = useState([]);
   const [ugyfelElozmeny, setUgyfelElozmeny] = useState([]);
-
-  // Ha dokumentumból nyílt a form, az OCR által felismert rendszám/sofőr-
-  // név/megbízó-név alapján a szerver (ugyanazzal az egyeztetéssel, amit
-  // `letrehozFuvarDokumentumbol` eddig is csak MENTÉSKOR futtatott le, ld.
-  // `FuvarInterface::egyeztetOcrAlapjan()`) megpróbálja beazonosítani a
-  // Sofőr/Jármű/Pótkocsi/Megbízó mezőket is — ezek eddig üresen jelentek
-  // meg a form megnyitásakor, holott mentéskor úgyis kitöltődtek volna.
-  // Csak azokat a mezőket töltjük ki, amik még üresek (`prev.x ||`), hogy
-  // ne írjunk felül egy már betöltött/szerkesztett értéket.
-  useEffect(() => {
-    if (!dokumentumId) return;
-    let elvetve = false;
-    fetchAction("getFuvarEgyeztetesJavaslat", { ceg_id: user.ceg_id, dokumentumId }).then((result) => {
-      if (elvetve || !result?.success) return;
-      const javaslat = result.javaslat || {};
-      setFormData((prev) => ({
-        ...prev,
-        sofor_id: prev.sofor_id || javaslat.sofor_id || "",
-        kamion_id: prev.kamion_id || javaslat.kamion_id || "",
-        furgon_id: prev.furgon_id || javaslat.furgon_id || "",
-        potkocsi_id: prev.potkocsi_id || javaslat.potkocsi_id || "",
-        megbizo_id: prev.megbizo_id || javaslat.megbizo_id || "",
-      }));
-      if (javaslat.megbizo_id) {
-        fetchAction("getUgyfelFuvarElozmeny", { ceg_id: user.ceg_id, ugyfelId: javaslat.megbizo_id }).then((r) => {
-          if (!elvetve && r?.success) setUgyfelElozmeny(r.fuvarok || []);
-        });
-      }
-    });
-    return () => {
-      elvetve = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     const loadLookups = async () => {
@@ -225,22 +161,12 @@ export default function FuvarForm() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      let result;
-      if (dokumentumId) {
-        result = await fetchAction("letrehozFuvarDokumentumbol", {
-          ceg_id: user.ceg_id,
-          kerelmezo_id: user.id,
-          dokumentumId,
-          felulirasok: nelkulUresFkMezok(formData),
-        });
-      } else {
-        const action = formData.id ? "updateFuvar" : "newFuvar";
-        result = await fetchAction(action, {
-          ceg_id: user.ceg_id,
-          kerelmezo_id: user.id,
-          ...nelkulUresFkMezok(formData),
-        });
-      }
+      const action = formData.id ? "updateFuvar" : "newFuvar";
+      const result = await fetchAction(action, {
+        ceg_id: user.ceg_id,
+        kerelmezo_id: user.id,
+        ...nelkulUresFkMezok(formData),
+      });
 
       if (result?.success) {
         toast.success("Fuvar mentve.");
@@ -291,8 +217,6 @@ export default function FuvarForm() {
       </button>
 
       <PageHeader eyebrow="Fuvarok" title={isNew ? "Új fuvar" : "Fuvar szerkesztése"} />
-
-      <FuvarDokumentumLink beerkezettDokumentumId={formData.beerkezett_dokumentum_id} />
 
       <PageCard icon={PiClipboardTextLight} title={isNew ? "Új fuvar" : "Fuvar szerkesztése"}>
         <div className="px-4 py-4 lg:px-6">
