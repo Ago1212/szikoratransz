@@ -50,6 +50,16 @@ class ApiHandler {
     // konkrét személyt.
     private $aktivKerelmezoId = null;
 
+    // A fenti `aktivKerelmezoId` csak admin-táblás bejelentkezésnél ad
+    // vissza névre fordítható azonosítót (ld. `modositokNeveiCeghez()`) —
+    // sofőr-munkamenetből naplózott műveletnél (jelenleg: `newBejelentes`
+    // sofőr-ága) a `user.id` névre fordítása külön admin-tábla-lookuppal
+    // sosem sikerülne, ráadásul a két tábla auto-increment id-jai
+    // ütközhetnek is. Ezért a nevet (nem az id-t) snapshot-oljuk ide,
+    // `process()` elején, session-ből feloldva — ugyanaz a minta, mint a
+    // `fajlok.feltolto_nev`-nél (ld. `resolveFeltolto()`).
+    private $aktivKerelmezoNev = null;
+
     // Ezek az akciók bejelentkezés (érvényes sessionToken) nélkül is
     // meghívhatók — a bejelentkezés maga, a jelszó-visszaállítás folyamata
     // (a felhasználó pont azért van itt, mert nincs érvényes munkamenete),
@@ -700,6 +710,15 @@ class ApiHandler {
             // aktort, ezért ezt külön, egyszer itt tesszük el, ahelyett
             // hogy a naplózó hívás ~35 helyét kellene egyenként bővíteni.
             $this->aktivKerelmezoId = $request['kerelmezo_id'] ?? null;
+            // Best-effort — sok akciónak (login, publikus ajánlatkérés stb.)
+            // nincs érvényes munkamenete, ott a `resolveFeltolto()` dob, és a
+            // naplósor `kerelmezo_nev` nélkül (a régi, csak-id viselkedéssel)
+            // készül.
+            try {
+                [, , $this->aktivKerelmezoNev] = $this->resolveFeltolto($request);
+            } catch (Exception $e) {
+                $this->aktivKerelmezoNev = null;
+            }
 
             switch ($action) {
                 case 'loginUser':
@@ -2768,10 +2787,11 @@ class ApiHandler {
             return;
         }
         try {
-            $query = "INSERT INTO audit_log (admin_id, kerelmezo_id, tabla, rowid, muvelet, leiras) VALUES (:admin_id, :kerelmezo_id, :tabla, :rowid, :muvelet, :leiras)";
+            $query = "INSERT INTO audit_log (admin_id, kerelmezo_id, kerelmezo_nev, tabla, rowid, muvelet, leiras) VALUES (:admin_id, :kerelmezo_id, :kerelmezo_nev, :tabla, :rowid, :muvelet, :leiras)";
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(':admin_id', $adminId);
             $stmt->bindValue(':kerelmezo_id', $this->aktivKerelmezoId);
+            $stmt->bindValue(':kerelmezo_nev', $this->aktivKerelmezoNev);
             $stmt->bindValue(':tabla', $tabla);
             $stmt->bindValue(':rowid', $rowId);
             $stmt->bindValue(':muvelet', $muvelet);
@@ -2832,10 +2852,15 @@ class ApiHandler {
             }
             $query .= " ORDER BY datum DESC";
 
+            // `kerelmezo_nev` (a bevezetése óta minden sorra kitöltött
+            // snapshot, sofőr-akciónál is — ld. `aktivKerelmezoNev` fenti
+            // komment) az elsődleges forrás; a `nevek`-es admin-tábla-lookup
+            // csak a bevezetés ELŐTTI, `kerelmezo_nev IS NULL` sorok
+            // visszamenőleges kitöltésére marad meg.
             $nevek = $this->modositokNeveiCeghez($id);
             $dusit = function ($sorok) use ($nevek) {
                 foreach ($sorok as &$sor) {
-                    $sor['modosito_nev'] = $nevek[$sor['kerelmezo_id']] ?? null;
+                    $sor['modosito_nev'] = $sor['kerelmezo_nev'] ?? ($nevek[$sor['kerelmezo_id']] ?? null);
                 }
                 return $sorok;
             };
