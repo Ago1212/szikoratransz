@@ -18,6 +18,9 @@ export default function FuvarKanbanCard({ fuvar, onDragStart, onClick }) {
       <p className="text-ink-500 dark:text-ink-400">
         {fuvar.megbizo_nev || "—"}
       </p>
+      <p className="mt-0.5 text-ink-400 dark:text-ink-500">
+        {fuvar.sofor_nev || "Nincs sofőrhöz rendelve"}
+      </p>
       <div className="mt-2 flex items-center justify-between text-ink-400 dark:text-ink-500">
         <span>{fuvar.teljesites_datuma || "—"}</span>
         <span>{jarmu}</span>

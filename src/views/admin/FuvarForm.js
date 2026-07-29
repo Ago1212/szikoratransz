@@ -4,18 +4,20 @@ import {
   PiClipboardTextLight,
   PiArrowLeftLight,
   PiUserLight,
-  PiTruckLight,
   PiMapPinLight,
   PiCoinsLight,
   PiNoteLight,
+  PiPlusLight,
+  PiCaretDownLight,
 } from "react-icons/pi";
-import PageHeader from "components/UI/PageHeader.js";
+import AdminBreadcrumb from "components/UI/AdminBreadcrumb.js";
 import FormField, { FormSection } from "components/UI/FormField.js";
 import AutocompleteSelect from "components/UI/AutocompleteSelect.js";
-import FuvarDokumentumLink from "components/Fuvarok/FuvarDokumentumLink.js";
-import CardFuvarFajlok from "components/Cards/CardFuvarFajlok.js";
+import FuvarFajlokPanel from "components/Cards/FuvarFajlokPanel.js";
 import PageCard from "components/UI/PageCard.js";
 import SaveButton from "components/UI/SaveButton.js";
+import StatusBadge from "components/UI/StatusBadge.js";
+import Modal from "components/UI/Modal.js";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
 
@@ -27,21 +29,27 @@ const ALLAPOT_OPTIONS = [
   { value: "teljesitve", label: "Teljesítve" },
 ];
 
+// Ugyanaz a szemantikai tónus-térkép, mint a Kanban/Sofőr-szerinti
+// nézeten (StatusBadge tone-jai) — az űrlap fejlécén egy pillanatra
+// visszaadja, hol tart a fuvar, kártyák közti görgetés nélkül.
+const ALLAPOT_TONE = {
+  rogzitett: "neutral",
+  szamlazasra_var: "warning",
+  szamlazva: "info",
+  fizetesre_var: "warning",
+  teljesitve: "success",
+};
+
 // Az öt idegenkulcs-mező (sofor_id/kamion_id/furgon_id/potkocsi_id/
 // megbizo_id) `emptyFuvar`-ban mindig "" — ha ezt üres string formájában
-// KÜLDJÜK EL a szervernek (nem hagyjuk el a mezőt), két külön hiba történik:
-// (1) `letrehozFuvarDokumentumbol`-nál a backend `array_merge($ocrBolFeloldott,
-// $felulirasok)`-ot hív — mivel `$felulirasok` (= a teljes formData) MINDIG
-// tartalmazza ezt az 5 kulcsot, egy nem érintett mező "" értéke felülírná
-// (kitörölné) a szerver saját, OCR-alapú rendszám/sofőr/megbízó-egyeztetését,
-// még akkor is, ha a felhasználó a formon egyáltalán nem nyúlt hozzá. (2)
-// `newFuvar`/`updateFuvar`-nál `bindFuvarMezok()` a hiányzó kulcsot `?? null`-
-// lal NULL-ra bindolja, de egy explicit "" stringet változatlanul köt be —
-// ez egy INT oszlopnál (pl. `furgon_id`) MySQL nem-strict módban csendben
-// 0-ra kasztol, ami a NULL-lal ("nincs furgon rendelve") szemantikailag NEM
-// egyenértékű. Mindkét hiba elkerülhető, ha az üres FK-mezőket egyszerűen
-// KIHAGYJUK a kérésből (a hiányzó kulcs a fenti `?? null`/`array_merge`
-// mintáknál pontosan úgy viselkedik, mint egy explicit `null`).
+// KÜLDJÜK EL a szervernek (nem hagyjuk el a mezőt), `newFuvar`/`updateFuvar`-
+// nál `bindFuvarMezok()` a hiányzó kulcsot `?? null`-lal NULL-ra bindolja,
+// de egy explicit "" stringet változatlanul köt be — ez egy INT oszlopnál
+// (pl. `furgon_id`) MySQL nem-strict módban csendben 0-ra kasztol, ami a
+// NULL-lal ("nincs furgon rendelve") szemantikailag NEM egyenértékű. Ezt
+// elkerüljük, ha az üres FK-mezőket egyszerűen KIHAGYJUK a kérésből (a
+// hiányzó kulcs a fenti `?? null` mintánál pontosan úgy viselkedik, mint
+// egy explicit `null`).
 const FK_MEZOK = ["sofor_id", "kamion_id", "furgon_id", "potkocsi_id", "megbizo_id"];
 
 function nelkulUresFkMezok(data) {
@@ -73,36 +81,28 @@ const emptyFuvar = {
   allapot: "rogzitett",
 };
 
-// Az OCR-mezőnevek (ld. GeminiOcrClient.php) és a fuvarok tábla mezőnevei
-// nagyrészt egyeznek (felrako/lerako/aru_megnevezese/fuvarlevel_szam/
-// tavolsag_km) — csak a "datum" -> "teljesites_datuma", "egyeb_megjegyzes"
-// -> "megjegyzes" és "tomeg_kg" -> "tomeg_kg" (azonos név) nevek térnek el/
-// egyeznek. A sofor_id/kamion_id/furgon_id/megbizo_id ID-egyeztetést
-// a szerver (letrehozFuvarDokumentumbol -> FuvarInterface::letrehozDokumentumbol)
-// már elvégezte a dokumentum mentésekor — ez a segédfüggvény csak a
-// BeerkezettDokumentumok.js oldalról átadott nyers, szöveges ocrAdatok
-// mezőket teszi be induló (előnézeti) értéknek, ID-egyeztetés nélkül.
-function ocrAdatokToForm(ocrAdatok) {
-  if (!ocrAdatok) return {};
-  return {
-    teljesites_datuma: ocrAdatok.datum || "",
-    felrako: ocrAdatok.felrako || "",
-    lerako: ocrAdatok.lerako || "",
-    tavolsag_km: ocrAdatok.tavolsag_km || "",
-    tomeg_kg: ocrAdatok.tomeg_kg || "",
-    aru_megnevezese: ocrAdatok.aru_megnevezese || "",
-    megjegyzes: ocrAdatok.egyeb_megjegyzes || "",
-    fuvarlevel_szam: ocrAdatok.fuvarlevel_szam || "",
-  };
-}
+// Ugyanaz a mezőkészlet, mint az Ügyfelek modul teljes formjáé
+// (CardUgyfel.js `emptyUgyfel`) — a gyors megbízó-felvétel modal ugyanazt
+// a `newUgyfel` actiont hívja, ugyanazokkal az (opcionális) mezőkkel.
+const UJ_MEGBIZO_URES = {
+  nev: "",
+  adoszam: "",
+  fizetesi_hatarido_nap: "",
+  varos: "",
+  irsz: "",
+  cim: "",
+  kapcsolattarto_nev: "",
+  kapcsolattarto_email: "",
+  kapcsolattarto_telefon: "",
+  megjegyzes: "",
+};
 
 export default function FuvarForm() {
   const history = useHistory();
   const location = useLocation();
   const user = JSON.parse(localStorage.getItem("user"));
 
-  const dokumentumId = location.state?.dokumentumId || null;
-  const initialData = location.state?.data || ocrAdatokToForm(location.state?.ocrAdatok);
+  const initialData = location.state?.data || {};
   const isNew = !initialData?.id;
 
   const [formData, setFormData] = useState({ ...emptyFuvar, ...initialData });
@@ -113,40 +113,10 @@ export default function FuvarForm() {
   const [soforok, setSoforok] = useState([]);
   const [ugyfelek, setUgyfelek] = useState([]);
   const [ugyfelElozmeny, setUgyfelElozmeny] = useState([]);
-
-  // Ha dokumentumból nyílt a form, az OCR által felismert rendszám/sofőr-
-  // név/megbízó-név alapján a szerver (ugyanazzal az egyeztetéssel, amit
-  // `letrehozFuvarDokumentumbol` eddig is csak MENTÉSKOR futtatott le, ld.
-  // `FuvarInterface::egyeztetOcrAlapjan()`) megpróbálja beazonosítani a
-  // Sofőr/Jármű/Pótkocsi/Megbízó mezőket is — ezek eddig üresen jelentek
-  // meg a form megnyitásakor, holott mentéskor úgyis kitöltődtek volna.
-  // Csak azokat a mezőket töltjük ki, amik még üresek (`prev.x ||`), hogy
-  // ne írjunk felül egy már betöltött/szerkesztett értéket.
-  useEffect(() => {
-    if (!dokumentumId) return;
-    let elvetve = false;
-    fetchAction("getFuvarEgyeztetesJavaslat", { ceg_id: user.ceg_id, dokumentumId }).then((result) => {
-      if (elvetve || !result?.success) return;
-      const javaslat = result.javaslat || {};
-      setFormData((prev) => ({
-        ...prev,
-        sofor_id: prev.sofor_id || javaslat.sofor_id || "",
-        kamion_id: prev.kamion_id || javaslat.kamion_id || "",
-        furgon_id: prev.furgon_id || javaslat.furgon_id || "",
-        potkocsi_id: prev.potkocsi_id || javaslat.potkocsi_id || "",
-        megbizo_id: prev.megbizo_id || javaslat.megbizo_id || "",
-      }));
-      if (javaslat.megbizo_id) {
-        fetchAction("getUgyfelFuvarElozmeny", { ceg_id: user.ceg_id, ugyfelId: javaslat.megbizo_id }).then((r) => {
-          if (!elvetve && r?.success) setUgyfelElozmeny(r.fuvarok || []);
-        });
-      }
-    });
-    return () => {
-      elvetve = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const [elozmenyNyitva, setElozmenyNyitva] = useState(false);
+  const [ujMegbizoNyitva, setUjMegbizoNyitva] = useState(false);
+  const [ujMegbizoAdatok, setUjMegbizoAdatok] = useState(UJ_MEGBIZO_URES);
+  const [ujMegbizoMentes, setUjMegbizoMentes] = useState(false);
 
   useEffect(() => {
     const loadLookups = async () => {
@@ -209,6 +179,7 @@ export default function FuvarForm() {
   const handleMegbizoChange = useCallback(
     async (megbizoId) => {
       setFormData((prev) => ({ ...prev, megbizo_id: megbizoId }));
+      setElozmenyNyitva(false);
       if (!megbizoId) {
         setUgyfelElozmeny([]);
         return;
@@ -222,25 +193,64 @@ export default function FuvarForm() {
     [user.ceg_id],
   );
 
+  const handleUjMegbizoChange = (e) => {
+    const { name, value } = e.target;
+    setUjMegbizoAdatok((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Gyors megbízó-felvétel — ugyanazokat a mezőket veszi fel, mint az
+  // Ügyfelek modul teljes formja (CardUgyfel.js), csak modálban, hogy a
+  // fuvarszervezőnek ne kelljen elhagynia a Fuvar űrlapot egy hiányzó
+  // megbízó miatt.
+  const handleUjMegbizoMentes = async () => {
+    if (!ujMegbizoAdatok.nev.trim()) {
+      toast.error("A megbízó neve kötelező.");
+      return;
+    }
+    setUjMegbizoMentes(true);
+    try {
+      const result = await fetchAction("newUgyfel", {
+        // `newUgyfel` a required-params ellenőrzéshez az `admin` kulcs
+        // MEGLÉTÉT várja (nem `ceg_id`-t) — az értékét a szerver úgyis
+        // felülírja a session-ből feloldott ceg_id-vel, de a kulcs nélkül
+        // a validation() "Hiányzó paraméter: admin." hibával elszáll.
+        admin: user.ceg_id,
+        kerelmezo_id: user.id,
+        nev: ujMegbizoAdatok.nev.trim(),
+        adoszam: ujMegbizoAdatok.adoszam.trim() || undefined,
+        fizetesi_hatarido_nap: ujMegbizoAdatok.fizetesi_hatarido_nap || undefined,
+        varos: ujMegbizoAdatok.varos.trim() || undefined,
+        irsz: ujMegbizoAdatok.irsz.trim() || undefined,
+        cim: ujMegbizoAdatok.cim.trim() || undefined,
+        kapcsolattarto_nev: ujMegbizoAdatok.kapcsolattarto_nev.trim() || undefined,
+        kapcsolattarto_email: ujMegbizoAdatok.kapcsolattarto_email.trim() || undefined,
+        kapcsolattarto_telefon: ujMegbizoAdatok.kapcsolattarto_telefon.trim() || undefined,
+        megjegyzes: ujMegbizoAdatok.megjegyzes.trim() || undefined,
+      });
+      if (result?.success) {
+        const ujUgyfel = result.ugyfel;
+        setUgyfelek((prev) => [...prev, ujUgyfel]);
+        handleMegbizoChange(ujUgyfel.id);
+        toast.success("Megbízó felvéve.");
+        setUjMegbizoNyitva(false);
+        setUjMegbizoAdatok(UJ_MEGBIZO_URES);
+      } else {
+        toast.error(result?.message || "A megbízó mentése sikertelen.");
+      }
+    } finally {
+      setUjMegbizoMentes(false);
+    }
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      let result;
-      if (dokumentumId) {
-        result = await fetchAction("letrehozFuvarDokumentumbol", {
-          ceg_id: user.ceg_id,
-          kerelmezo_id: user.id,
-          dokumentumId,
-          felulirasok: nelkulUresFkMezok(formData),
-        });
-      } else {
-        const action = formData.id ? "updateFuvar" : "newFuvar";
-        result = await fetchAction(action, {
-          ceg_id: user.ceg_id,
-          kerelmezo_id: user.id,
-          ...nelkulUresFkMezok(formData),
-        });
-      }
+      const action = formData.id ? "updateFuvar" : "newFuvar";
+      const result = await fetchAction(action, {
+        ceg_id: user.ceg_id,
+        kerelmezo_id: user.id,
+        ...nelkulUresFkMezok(formData),
+      });
 
       if (result?.success) {
         toast.success("Fuvar mentve.");
@@ -280,188 +290,328 @@ export default function FuvarForm() {
   };
 
   return (
-    <div className="flex flex-col gap-3">
-      <button
-        type="button"
-        onClick={() => history.push("/admin/fuvarok")}
-        className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-ink-500 hover:text-brand-700 dark:text-ink-400 dark:hover:text-brand-300"
+    <div className="flex flex-col gap-4 pb-2">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <AdminBreadcrumb
+          group="Fuvarok"
+          listLabel="Fuvarok"
+          listPath="/admin/fuvarok"
+          current={isNew ? "Új fuvar" : initialData.fuvarlevel_szam || "Fuvar szerkesztése"}
+        />
+        {!isNew && (
+          <StatusBadge tone={ALLAPOT_TONE[formData.allapot] || "neutral"}>
+            {ALLAPOT_OPTIONS.find((o) => o.value === formData.allapot)?.label || formData.allapot}
+          </StatusBadge>
+        )}
+      </div>
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSave();
+        }}
+        className="flex flex-col gap-4"
       >
-        <PiArrowLeftLight className="h-4 w-4" />
-        Vissza a fuvarokhoz
-      </button>
-
-      <PageHeader eyebrow="Fuvarok" title={isNew ? "Új fuvar" : "Fuvar szerkesztése"} />
-
-      <FuvarDokumentumLink beerkezettDokumentumId={formData.beerkezett_dokumentum_id} />
-
-      <PageCard icon={PiClipboardTextLight} title={isNew ? "Új fuvar" : "Fuvar szerkesztése"}>
-        <div className="px-4 py-4 lg:px-6">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSave();
-            }}
-            className="space-y-5"
+        {/* A fájl-panel a form MELLETT, jobb oldalon, sticky pozícióban áll
+            (ld. FuvarFajlokPanel.js komment) — a korábbi, form ALJÁN
+            megjelenő CardFuvarFajlok görgetést igényelt. Új fuvarnál
+            (nincs formData.id) nincs mit mutatni, a form marad teljes
+            szélességű. */}
+        <div className={isNew ? "" : "grid grid-cols-1 gap-4 lg:grid-cols-3 lg:items-start"}>
+          <PageCard
+            icon={PiClipboardTextLight}
+            title={isNew ? "Új fuvar" : "Fuvar adatai"}
+            className={isNew ? "" : "lg:col-span-2"}
           >
-            <FormSection title="Résztvevők" icon={PiUserLight} columns={4}>
-              <AutocompleteSelect
-                label="Sofőr"
-                options={soforok.map((s) => ({ value: s.id, label: s.name, searchText: s.name }))}
-                value={formData.sofor_id}
-                onChange={handleSoforChange}
-              />
-              <AutocompleteSelect
-                label="Jármű (kamion/furgon)"
-                options={jarmuOptions}
-                value={jarmuValue}
-                onChange={handleJarmuChange}
-              />
-              <AutocompleteSelect
-                label="Pótkocsi"
-                options={potkocsik.map((p) => ({ value: p.id, label: p.rendszam, searchText: p.rendszam }))}
-                value={formData.potkocsi_id}
-                onChange={(v) => setFormData((prev) => ({ ...prev, potkocsi_id: v }))}
-              />
-              <AutocompleteSelect
-                label="Megbízó"
-                options={ugyfelek.map((u) => ({ value: u.id, label: u.nev, searchText: `${u.nev} ${u.varos || ""}` }))}
-                value={formData.megbizo_id}
-                onChange={handleMegbizoChange}
-              />
-            </FormSection>
+            <div className="flex flex-col gap-5 px-4 py-4 lg:px-6">
+              <FormSection title="Résztvevők" icon={PiUserLight} columns={4}>
+                <AutocompleteSelect
+                  label="Sofőr"
+                  options={soforok.map((s) => ({ value: s.id, label: s.name, searchText: s.name }))}
+                  value={formData.sofor_id}
+                  onChange={handleSoforChange}
+                />
+                <AutocompleteSelect
+                  label="Jármű (kamion/furgon)"
+                  options={jarmuOptions}
+                  value={jarmuValue}
+                  onChange={handleJarmuChange}
+                />
+                <AutocompleteSelect
+                  label="Pótkocsi"
+                  options={potkocsik.map((p) => ({ value: p.id, label: p.rendszam, searchText: p.rendszam }))}
+                  value={formData.potkocsi_id}
+                  onChange={(v) => setFormData((prev) => ({ ...prev, potkocsi_id: v }))}
+                />
+                <div className="flex items-end gap-1.5">
+                  <AutocompleteSelect
+                    label="Megbízó"
+                    className="flex-1"
+                    options={ugyfelek.map((u) => ({ value: u.id, label: u.nev, searchText: `${u.nev} ${u.varos || ""}` }))}
+                    value={formData.megbizo_id}
+                    onChange={handleMegbizoChange}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setUjMegbizoNyitva(true)}
+                    title="Új megbízó felvétele"
+                    aria-label="Új megbízó felvétele"
+                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-ink-200 text-ink-500 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 dark:border-ink-700 dark:text-ink-400 dark:hover:bg-ink-800"
+                  >
+                    <PiPlusLight className="h-4 w-4" />
+                  </button>
+                </div>
+              </FormSection>
 
-            {kivalasztottMegbizo && (
-              <div className="grid grid-cols-1 gap-x-6 gap-y-1 rounded-xl border border-ink-100 bg-white p-3 text-xs text-ink-600 dark:border-ink-800 dark:bg-ink-900 dark:text-ink-300 md:grid-cols-2">
-                <p>
-                  <span className="font-semibold uppercase tracking-wide text-ink-400">Cím: </span>
-                  {[kivalasztottMegbizo.irsz, kivalasztottMegbizo.varos, kivalasztottMegbizo.cim]
-                    .filter(Boolean)
-                    .join(", ") || "—"}
-                </p>
-                <p>
-                  <span className="font-semibold uppercase tracking-wide text-ink-400">Adószám: </span>
-                  {kivalasztottMegbizo.adoszam || "—"}
-                </p>
-                <p>
-                  <span className="font-semibold uppercase tracking-wide text-ink-400">Fizetési határidő: </span>
-                  {kivalasztottMegbizo.fizetesi_hatarido_nap
-                    ? `${kivalasztottMegbizo.fizetesi_hatarido_nap} nap`
-                    : "—"}
-                </p>
-                <p>
-                  <span className="font-semibold uppercase tracking-wide text-ink-400">Kapcsolattartó: </span>
-                  {[kivalasztottMegbizo.kapcsolattarto_nev, kivalasztottMegbizo.kapcsolattarto_telefon]
-                    .filter(Boolean)
-                    .join(" · ") || "—"}
-                </p>
-              </div>
-            )}
+              {kivalasztottMegbizo && (
+                <div className="grid grid-cols-1 gap-x-6 gap-y-1 rounded-xl border border-ink-100 bg-slate-50 p-3 text-xs text-ink-600 dark:border-ink-800 dark:bg-ink-800 dark:text-ink-300 md:grid-cols-2">
+                  <p>
+                    <span className="font-semibold uppercase tracking-wide text-ink-400">Cím: </span>
+                    {[kivalasztottMegbizo.irsz, kivalasztottMegbizo.varos, kivalasztottMegbizo.cim]
+                      .filter(Boolean)
+                      .join(", ") || "—"}
+                  </p>
+                  <p>
+                    <span className="font-semibold uppercase tracking-wide text-ink-400">Adószám: </span>
+                    {kivalasztottMegbizo.adoszam || "—"}
+                  </p>
+                  <p>
+                    <span className="font-semibold uppercase tracking-wide text-ink-400">Fizetési határidő: </span>
+                    {kivalasztottMegbizo.fizetesi_hatarido_nap
+                      ? `${kivalasztottMegbizo.fizetesi_hatarido_nap} nap`
+                      : "—"}
+                  </p>
+                  <p>
+                    <span className="font-semibold uppercase tracking-wide text-ink-400">Kapcsolattartó: </span>
+                    {[kivalasztottMegbizo.kapcsolattarto_nev, kivalasztottMegbizo.kapcsolattarto_telefon]
+                      .filter(Boolean)
+                      .join(" · ") || "—"}
+                  </p>
+                </div>
+              )}
 
-            {ugyfelElozmeny.length > 0 && (
-              <div className="rounded-xl border border-ink-100 bg-sand-50 p-3 text-xs text-ink-600 dark:border-ink-800 dark:bg-ink-800 dark:text-ink-300">
-                <p className="mb-1 font-semibold uppercase tracking-wide text-ink-400">
-                  Korábbi fuvarok ezzel a megbízóval
-                </p>
-                <ul className="space-y-0.5">
-                  {ugyfelElozmeny.map((f, i) => (
-                    <li key={i}>
-                      {f.teljesites_datuma || "—"} · {f.felrako} → {f.lerako} ·{" "}
-                      {f.fuvardij != null ? `${Number(f.fuvardij).toLocaleString("hu-HU")} Ft` : "—"}
-                    </li>
+              {ugyfelElozmeny.length > 0 && (
+                <div className="rounded-xl border border-ink-100 bg-sand-50 dark:border-ink-800 dark:bg-ink-800">
+                  <button
+                    type="button"
+                    onClick={() => setElozmenyNyitva((prev) => !prev)}
+                    aria-expanded={elozmenyNyitva}
+                    className="group flex w-full items-center justify-between rounded-xl p-3 text-left transition-colors hover:bg-slate-100/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 dark:hover:bg-ink-700/50"
+                  >
+                    <span className="text-xs font-semibold uppercase tracking-wide text-ink-400">
+                      Korábbi fuvarok ezzel a megbízóval ({ugyfelElozmeny.length})
+                    </span>
+                    <PiCaretDownLight
+                      className={`h-3.5 w-3.5 flex-shrink-0 text-ink-400 transition-transform duration-200 group-hover:text-brand-600 dark:group-hover:text-brand-400 ${elozmenyNyitva ? "" : "-rotate-90"}`}
+                    />
+                  </button>
+                  {elozmenyNyitva && (
+                    <ul className="space-y-0.5 px-3 pb-3 text-xs text-ink-600 dark:text-ink-300">
+                      {ugyfelElozmeny.map((f, i) => (
+                        <li key={i}>
+                          {f.teljesites_datuma || "—"} · {f.felrako} → {f.lerako} ·{" "}
+                          {f.fuvardij != null ? `${Number(f.fuvardij).toLocaleString("hu-HU")} Ft` : "—"}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+
+              <FormSection title="Útvonal" icon={PiMapPinLight} columns={4}>
+                <FormField
+                  type="date"
+                  label="Teljesítés dátuma"
+                  name="teljesites_datuma"
+                  value={formData.teljesites_datuma || ""}
+                  onChange={handleChange}
+                />
+                <FormField label="Felrakó" name="felrako" value={formData.felrako || ""} onChange={handleChange} />
+                <FormField label="Lerakó" name="lerako" value={formData.lerako || ""} onChange={handleChange} />
+                <FormField
+                  type="number"
+                  label="Távolság (km)"
+                  name="tavolsag_km"
+                  value={formData.tavolsag_km || ""}
+                  onChange={handleChange}
+                />
+                <FormField
+                  type="number"
+                  label="Tömeg (kg)"
+                  name="tomeg_kg"
+                  value={formData.tomeg_kg || ""}
+                  onChange={handleChange}
+                />
+                <FormField
+                  label="Áru megnevezése"
+                  name="aru_megnevezese"
+                  value={formData.aru_megnevezese || ""}
+                  onChange={handleChange}
+                  className="md:col-span-2"
+                />
+                <FormField
+                  label="Fuvarlevél szám"
+                  name="fuvarlevel_szam"
+                  value={formData.fuvarlevel_szam || ""}
+                  onChange={handleChange}
+                />
+              </FormSection>
+
+              <FormSection title="Díjak" icon={PiCoinsLight} columns={4}>
+                <FormField
+                  type="number"
+                  label="Fuvardíj (Ft)"
+                  name="fuvardij"
+                  value={formData.fuvardij || ""}
+                  onChange={handleChange}
+                />
+                <FormField
+                  type="number"
+                  label="Egyéb költség (Ft)"
+                  name="egyeb_koltseg"
+                  value={formData.egyeb_koltseg || ""}
+                  onChange={handleChange}
+                />
+                <FormField
+                  as="select"
+                  label="Állapot"
+                  name="allapot"
+                  value={formData.allapot || "rogzitett"}
+                  onChange={handleChange}
+                >
+                  {ALLAPOT_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
                   ))}
-                </ul>
-              </div>
-            )}
+                </FormField>
+              </FormSection>
 
-            <FormSection title="Útvonal" icon={PiMapPinLight} columns={4}>
-              <FormField
-                type="date"
-                label="Teljesítés dátuma"
-                name="teljesites_datuma"
-                value={formData.teljesites_datuma || ""}
-                onChange={handleChange}
-              />
-              <FormField label="Felrakó" name="felrako" value={formData.felrako || ""} onChange={handleChange} />
-              <FormField label="Lerakó" name="lerako" value={formData.lerako || ""} onChange={handleChange} />
-              <FormField
-                type="number"
-                label="Távolság (km)"
-                name="tavolsag_km"
-                value={formData.tavolsag_km || ""}
-                onChange={handleChange}
-              />
-              <FormField
-                type="number"
-                label="Tömeg (kg)"
-                name="tomeg_kg"
-                value={formData.tomeg_kg || ""}
-                onChange={handleChange}
-              />
-              <FormField
-                icon={PiTruckLight}
-                label="Áru megnevezése"
-                name="aru_megnevezese"
-                value={formData.aru_megnevezese || ""}
-                onChange={handleChange}
-                className="md:col-span-2"
-              />
-              <FormField
-                label="Fuvarlevél szám"
-                name="fuvarlevel_szam"
-                value={formData.fuvarlevel_szam || ""}
-                onChange={handleChange}
-              />
-            </FormSection>
-
-            <FormSection title="Díjak" icon={PiCoinsLight} columns={4}>
-              <FormField
-                type="number"
-                label="Fuvardíj (Ft)"
-                name="fuvardij"
-                value={formData.fuvardij || ""}
-                onChange={handleChange}
-              />
-              <FormField
-                type="number"
-                label="Egyéb költség (Ft)"
-                name="egyeb_koltseg"
-                value={formData.egyeb_koltseg || ""}
-                onChange={handleChange}
-              />
-              <FormField
-                as="select"
-                label="Állapot"
-                name="allapot"
-                value={formData.allapot || "rogzitett"}
-                onChange={handleChange}
-              >
-                {ALLAPOT_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </FormField>
-            </FormSection>
-
-            <FormSection title="Megjegyzés" icon={PiNoteLight} columns={1}>
-              <FormField
-                as="textarea"
-                label="Megjegyzés"
-                name="megjegyzes"
-                value={formData.megjegyzes || ""}
-                onChange={handleChange}
-                rows="3"
-              />
-            </FormSection>
-
-            <div className="flex justify-end border-t border-ink-100 pt-4 dark:border-ink-800">
-              <SaveButton onClick={handleSave} isSaving={isSaving} label={isNew ? "Fuvar rögzítése" : "Mentés"} />
+              <FormSection title="Megjegyzés" icon={PiNoteLight} columns={1}>
+                <FormField
+                  as="textarea"
+                  name="megjegyzes"
+                  value={formData.megjegyzes || ""}
+                  onChange={handleChange}
+                  rows="3"
+                />
+              </FormSection>
             </div>
-          </form>
-        </div>
-      </PageCard>
+          </PageCard>
 
-      {!isNew && <CardFuvarFajlok fuvar_id={formData.id} />}
+          {!isNew && (
+            <div className="lg:sticky lg:top-4">
+              <FuvarFajlokPanel fuvar_id={formData.id} />
+            </div>
+          )}
+        </div>
+
+        {/* Sticky action bar — a Mentés mindig elérhető, görgetés nélkül is;
+            a Vissza vizuálisan alárendelt (szöveg-gomb) a mentéshez képest. */}
+        <div className="sticky bottom-3 z-10 flex items-center justify-between gap-3 rounded-2xl border border-ink-100 bg-white/95 px-4 py-3 shadow-soft-lg backdrop-blur-sm dark:border-ink-800 dark:bg-ink-900/95 md:px-6">
+          <button
+            type="button"
+            onClick={() => history.push("/admin/fuvarok")}
+            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink-500 transition-colors hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 dark:text-ink-400 dark:hover:bg-ink-800"
+          >
+            <PiArrowLeftLight className="h-4 w-4" />
+            Vissza
+          </button>
+          <SaveButton onClick={handleSave} isSaving={isSaving} label={isNew ? "Fuvar rögzítése" : "Mentés"} />
+        </div>
+      </form>
+
+      <Modal
+        open={ujMegbizoNyitva}
+        onClose={() => setUjMegbizoNyitva(false)}
+        title="Új megbízó felvétele"
+        maxWidth="max-w-2xl"
+      >
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleUjMegbizoMentes();
+          }}
+          className="space-y-5"
+        >
+          <FormSection title="Cégadatok" icon={PiClipboardTextLight} columns={2}>
+            <FormField
+              label="Név"
+              name="nev"
+              value={ujMegbizoAdatok.nev}
+              onChange={handleUjMegbizoChange}
+              required
+              className="sm:col-span-2"
+            />
+            <FormField label="Adószám" name="adoszam" value={ujMegbizoAdatok.adoszam} onChange={handleUjMegbizoChange} />
+            <FormField
+              type="number"
+              label="Fizetési határidő (nap)"
+              name="fizetesi_hatarido_nap"
+              value={ujMegbizoAdatok.fizetesi_hatarido_nap}
+              onChange={handleUjMegbizoChange}
+            />
+          </FormSection>
+
+          <FormSection title="Cím" icon={PiMapPinLight} columns={2}>
+            <FormField label="Város" name="varos" value={ujMegbizoAdatok.varos} onChange={handleUjMegbizoChange} />
+            <FormField label="Irányítószám" name="irsz" value={ujMegbizoAdatok.irsz} onChange={handleUjMegbizoChange} />
+            <FormField
+              label="Cím"
+              name="cim"
+              value={ujMegbizoAdatok.cim}
+              onChange={handleUjMegbizoChange}
+              className="sm:col-span-2"
+            />
+          </FormSection>
+
+          <FormSection title="Kapcsolattartó" icon={PiUserLight} columns={2}>
+            <FormField
+              label="Név"
+              name="kapcsolattarto_nev"
+              value={ujMegbizoAdatok.kapcsolattarto_nev}
+              onChange={handleUjMegbizoChange}
+              className="sm:col-span-2"
+            />
+            <FormField
+              type="email"
+              label="Email cím"
+              name="kapcsolattarto_email"
+              value={ujMegbizoAdatok.kapcsolattarto_email}
+              onChange={handleUjMegbizoChange}
+            />
+            <FormField
+              type="tel"
+              label="Telefonszám"
+              name="kapcsolattarto_telefon"
+              value={ujMegbizoAdatok.kapcsolattarto_telefon}
+              onChange={handleUjMegbizoChange}
+            />
+          </FormSection>
+
+          <FormSection title="Megjegyzés" icon={PiNoteLight} columns={1}>
+            <FormField
+              as="textarea"
+              id="ujmegbizo_megjegyzes"
+              name="megjegyzes"
+              value={ujMegbizoAdatok.megjegyzes}
+              onChange={handleUjMegbizoChange}
+              rows="2"
+            />
+          </FormSection>
+
+          <div className="flex justify-end gap-2 border-t border-ink-100 pt-4 dark:border-ink-800">
+            <button
+              type="button"
+              onClick={() => setUjMegbizoNyitva(false)}
+              className="rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink-500 transition-colors hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 dark:text-ink-400 dark:hover:bg-ink-800"
+            >
+              Mégse
+            </button>
+            <SaveButton onClick={handleUjMegbizoMentes} isSaving={ujMegbizoMentes} label="Megbízó felvétele" />
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

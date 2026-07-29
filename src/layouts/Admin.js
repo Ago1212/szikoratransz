@@ -43,9 +43,6 @@ const Ajanlatkeresek = lazy(() => import("views/admin/Ajanlatkeresek.js"));
 const SoforScorecard = lazy(() => import("views/admin/SoforScorecard.js"));
 const ErtesitesiElozmenyek = lazy(() => import("views/admin/ErtesitesiElozmenyek.js"));
 const Tachograf = lazy(() => import("views/admin/Tachograf.js"));
-const BeerkezettDokumentumok = lazy(() =>
-  import("views/admin/BeerkezettDokumentumok.js"),
-);
 const Fuvarok = lazy(() => import("views/admin/Fuvarok.js"));
 const FuvarForm = lazy(() => import("views/admin/FuvarForm.js"));
 const FuvarStatisztika = lazy(() => import("views/admin/FuvarStatisztika.js"));
@@ -225,11 +222,6 @@ export default function Admin() {
               path="/admin/helyszinForm"
               exact
               component={HelyszinForm}
-            />
-            <PrivateRoute
-              path="/admin/beerkezettDokumentumok"
-              exact
-              component={BeerkezettDokumentumok}
             />
             <PrivateRoute path="/admin/fuvarok" exact component={Fuvarok} />
             <PrivateRoute

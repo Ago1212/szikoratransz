@@ -486,8 +486,7 @@ export const landing = {
   testimonials: {
     eyebrow: "Ügyfélvisszajelzések",
     title: "Amit partnereink mondanak rólunk",
-    disclaimer:
-      "* A fenti referenciák minta-szövegek — érdemes őket valós ügyfelek visszajelzéseire cserélni a publikálás előtt.",
+    disclaimer:"",
   },
   faq: {
     eyebrow: "Gyakran ismételt kérdések",

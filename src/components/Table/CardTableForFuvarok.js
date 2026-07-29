@@ -5,6 +5,7 @@ import { PiPencilSimpleLight, PiTrashLight, PiClipboardTextLight } from "react-i
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
 import StatusChangePopover from "components/UI/StatusChangePopover.js";
+import StatusBadge from "components/UI/StatusBadge.js";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
 
@@ -137,6 +138,17 @@ const CardTable = ({
       key: "szamlaszam",
       label: "Számlaszám",
       render: (row) => row.szamlaszam || "—",
+      mobileHidden: true,
+    },
+    {
+      key: "dokumentum_feltoltve",
+      label: "Dokumentum",
+      render: (row) =>
+        row.dokumentum_feltoltve ? (
+          <StatusBadge tone="success">Feltöltve</StatusBadge>
+        ) : (
+          <StatusBadge tone="neutral">Hiányzik</StatusBadge>
+        ),
       mobileHidden: true,
     },
     {

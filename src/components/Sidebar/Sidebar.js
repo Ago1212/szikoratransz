@@ -28,7 +28,6 @@ import {
   PiSunLight,
   PiMoonLight,
   PiIdentificationCardLight,
-  PiFileTextLight,
   PiClipboardTextLight,
   PiPencilSimpleLight,
 } from "react-icons/pi";
@@ -93,11 +92,6 @@ const mobileGroups = [
     label: "Fuvarok",
     icon: PiClipboardTextLight,
     items: [
-      {
-        to: "/admin/beerkezettDokumentumok",
-        icon: PiFileTextLight,
-        text: "Beérkezett dokumentumok",
-      },
       { to: "/admin/fuvarok", icon: PiClipboardTextLight, text: "Fuvarok" },
       { to: "/admin/fuvarStatisztika", icon: PiChartBarLight, text: "Statisztikák" },
     ],
@@ -479,29 +473,6 @@ export default function Sidebar({ isDark, onToggleDark }) {
     return () => clearInterval(intervalId);
   }, [loadNyitottBejelentesek]);
 
-  // Feldolgozásra váró Beérkezett dokumentumok darabszáma — ugyanaz a
-  // route-change + 60s poll minta, mint a Bejelentések unread-badge-nél
-  // fentebb, hogy az admin ne felejtse el megnézni az inboxot.
-  const [beerkezettDokSzam, setBeerkezettDokSzam] = React.useState(0);
-  const loadBeerkezettDokSzam = React.useCallback(() => {
-    if (!user?.ceg_id) return;
-    fetchAction("getBeerkezettDokumentumokSzama", { ceg_id: user.ceg_id }).then(
-      (result) => {
-        if (result?.success) setBeerkezettDokSzam(result.szam);
-      },
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.ceg_id]);
-
-  React.useEffect(() => {
-    loadBeerkezettDokSzam();
-  }, [loadBeerkezettDokSzam, location.pathname]);
-
-  React.useEffect(() => {
-    const intervalId = setInterval(loadBeerkezettDokSzam, 60000);
-    return () => clearInterval(intervalId);
-  }, [loadBeerkezettDokSzam]);
-
   // A menüpontok elrejtéséhez a fuvarszervező a SAJÁT jogosultságait kéri le
   // (nem a admin-only `getJogosultsagok`-ot) — ld. ApiHandler `getSajatJogosultsagok`
   // komment. Amíg nem admin/root, `null` marad, és minden menüpont látszik
@@ -635,13 +606,11 @@ export default function Sidebar({ isDark, onToggleDark }) {
     history.push("/");
   };
 
-  // Jelvény-számok a kitűzött elemekhez — csak a két, ma is jelvényezett
-  // menüponthoz (Bejelentések, Beérkezett dokumentumok) van értelmes érték,
-  // minden más kitűzött elemnél `undefined` marad (a `NavItem` `badge > 0`
-  // ellenőrzése ezt már ma is csendben kezeli).
+  // Jelvény-számok a kitűzött elemekhez — csak a Bejelentések menüponthoz
+  // van értelmes érték, minden más kitűzött elemnél `undefined` marad (a
+  // `NavItem` `badge > 0` ellenőrzése ezt már ma is csendben kezeli).
   const badgeByPath = {
     "/admin/bejelentesek": nyitottBejelentesek.length,
-    "/admin/beerkezettDokumentumok": beerkezettDokSzam,
   };
 
   // A napi zóna ténylegesen renderelt elemei — a `pinnedPaths` sorrendjében,
@@ -826,12 +795,6 @@ export default function Sidebar({ isDark, onToggleDark }) {
             />
             {openGroups.fuvarok && (
               <ul className="space-y-0.5">
-                <NavItem
-                  to="/admin/beerkezettDokumentumok"
-                  icon={PiFileTextLight}
-                  text="Beérkezett dokumentumok"
-                  badge={beerkezettDokSzam}
-                />
                 <NavItem
                   to="/admin/fuvarok"
                   icon={PiClipboardTextLight}

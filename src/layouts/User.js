@@ -28,7 +28,8 @@ const Profil = React.lazy(() => import("views/user/Profil.js"));
 const Ertesitesek = React.lazy(() => import("views/user/Ertesitesek.js"));
 const Helyszinek = React.lazy(() => import("views/user/Helyszinek.js"));
 const HelyszinReszletek = React.lazy(() => import("views/user/HelyszinReszletek.js"));
-const DokumentumFeltoltes = React.lazy(() => import("views/user/DokumentumFeltoltes.js"));
+const Fuvarok = React.lazy(() => import("views/user/Fuvarok.js"));
+const FuvarReszletek = React.lazy(() => import("views/user/FuvarReszletek.js"));
 
 // Ugyanaz a második védelmi vonal, mint layouts/Admin.js PrivateRoute-jában
 // (ld. ott a komment) — egy admin-munkamenet böngészőbe írva egy
@@ -59,6 +60,7 @@ const PrivateRoute = ({ component: Component, ...rest }) => {
 
 const desktopLinks = [
   { to: "/user/dashboard", label: "Kezdőlap" },
+  { to: "/user/fuvarok", label: "Fuvarjaim" },
   { to: "/user/bejelentesek", label: "Bejelentéseim" },
   { to: "/user/helyszinek", label: "Helyszínek" },
   { to: "/user/tankolas", label: "Tankolás" },
@@ -202,10 +204,11 @@ export default function User() {
               exact
               component={HelyszinReszletek}
             />
+            <PrivateRoute path="/user/fuvarok" exact component={Fuvarok} />
             <PrivateRoute
-              path="/user/dokumentum-feltoltes"
+              path="/user/fuvarReszletek"
               exact
-              component={DokumentumFeltoltes}
+              component={FuvarReszletek}
             />
             <Redirect from="/user" to="/user/dashboard" />
           </Switch>
