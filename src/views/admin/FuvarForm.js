@@ -8,13 +8,15 @@ import {
   PiMapPinLight,
   PiCoinsLight,
   PiNoteLight,
+  PiPlusLight,
 } from "react-icons/pi";
 import PageHeader from "components/UI/PageHeader.js";
 import FormField, { FormSection } from "components/UI/FormField.js";
 import AutocompleteSelect from "components/UI/AutocompleteSelect.js";
-import CardFuvarFajlok from "components/Cards/CardFuvarFajlok.js";
+import FuvarFajlokPanel from "components/Cards/FuvarFajlokPanel.js";
 import PageCard from "components/UI/PageCard.js";
 import SaveButton from "components/UI/SaveButton.js";
+import Modal from "components/UI/Modal.js";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
 
@@ -83,6 +85,9 @@ export default function FuvarForm() {
   const [soforok, setSoforok] = useState([]);
   const [ugyfelek, setUgyfelek] = useState([]);
   const [ugyfelElozmeny, setUgyfelElozmeny] = useState([]);
+  const [ujMegbizoNyitva, setUjMegbizoNyitva] = useState(false);
+  const [ujMegbizoAdatok, setUjMegbizoAdatok] = useState({ nev: "", varos: "", kapcsolattarto_telefon: "" });
+  const [ujMegbizoMentes, setUjMegbizoMentes] = useState(false);
 
   useEffect(() => {
     const loadLookups = async () => {
@@ -158,6 +163,45 @@ export default function FuvarForm() {
     [user.ceg_id],
   );
 
+  // Gyors megbízó-felvétel — nem helyettesíti az Ügyfelek modul teljes
+  // formját (adószám/fizetési határidő/kapcsolattartó stb.), csak a
+  // `newUgyfel` szerver-oldalon egyedül kötelező `nev` mezőt + két
+  // leggyakrabban azonnal ismert adatot kéri, hogy a fuvarszervezőnek ne
+  // kelljen elhagynia a Fuvar űrlapot egy hiányzó megbízó miatt. A
+  // részletesebb adatokat az admin utólag, az Ügyfelek oldalon egészítheti ki.
+  const handleUjMegbizoMentes = async () => {
+    if (!ujMegbizoAdatok.nev.trim()) {
+      toast.error("A megbízó neve kötelező.");
+      return;
+    }
+    setUjMegbizoMentes(true);
+    try {
+      const result = await fetchAction("newUgyfel", {
+        // `newUgyfel` a required-params ellenőrzéshez az `admin` kulcs
+        // MEGLÉTÉT várja (nem `ceg_id`-t) — az értékét a szerver úgyis
+        // felülírja a session-ből feloldott ceg_id-vel, de a kulcs nélkül
+        // a validation() "Hiányzó paraméter: admin." hibával elszáll.
+        admin: user.ceg_id,
+        kerelmezo_id: user.id,
+        nev: ujMegbizoAdatok.nev.trim(),
+        varos: ujMegbizoAdatok.varos.trim() || undefined,
+        kapcsolattarto_telefon: ujMegbizoAdatok.kapcsolattarto_telefon.trim() || undefined,
+      });
+      if (result?.success) {
+        const ujUgyfel = result.ugyfel;
+        setUgyfelek((prev) => [...prev, ujUgyfel]);
+        handleMegbizoChange(ujUgyfel.id);
+        toast.success("Megbízó felvéve.");
+        setUjMegbizoNyitva(false);
+        setUjMegbizoAdatok({ nev: "", varos: "", kapcsolattarto_telefon: "" });
+      } else {
+        toast.error(result?.message || "A megbízó mentése sikertelen.");
+      }
+    } finally {
+      setUjMegbizoMentes(false);
+    }
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -218,7 +262,17 @@ export default function FuvarForm() {
 
       <PageHeader eyebrow="Fuvarok" title={isNew ? "Új fuvar" : "Fuvar szerkesztése"} />
 
-      <PageCard icon={PiClipboardTextLight} title={isNew ? "Új fuvar" : "Fuvar szerkesztése"}>
+      {/* A fájl-panel a form MELLETT, jobb oldalon, sticky pozícióban áll
+          (ld. FuvarFajlokPanel.js komment) — a korábbi, form ALJÁN
+          megjelenő CardFuvarFajlok görgetést igényelt. Új fuvarnál
+          (nincs formData.id) nincs mit mutatni, a form marad teljes
+          szélességű. */}
+      <div className={isNew ? "" : "grid grid-cols-1 gap-4 lg:grid-cols-3 lg:items-start"}>
+      <PageCard
+        icon={PiClipboardTextLight}
+        title={isNew ? "Új fuvar" : "Fuvar szerkesztése"}
+        className={isNew ? "" : "lg:col-span-2"}
+      >
         <div className="px-4 py-4 lg:px-6">
           <form
             onSubmit={(e) => {
@@ -246,12 +300,24 @@ export default function FuvarForm() {
                 value={formData.potkocsi_id}
                 onChange={(v) => setFormData((prev) => ({ ...prev, potkocsi_id: v }))}
               />
-              <AutocompleteSelect
-                label="Megbízó"
-                options={ugyfelek.map((u) => ({ value: u.id, label: u.nev, searchText: `${u.nev} ${u.varos || ""}` }))}
-                value={formData.megbizo_id}
-                onChange={handleMegbizoChange}
-              />
+              <div className="flex items-end gap-1.5">
+                <AutocompleteSelect
+                  label="Megbízó"
+                  className="flex-1"
+                  options={ugyfelek.map((u) => ({ value: u.id, label: u.nev, searchText: `${u.nev} ${u.varos || ""}` }))}
+                  value={formData.megbizo_id}
+                  onChange={handleMegbizoChange}
+                />
+                <button
+                  type="button"
+                  onClick={() => setUjMegbizoNyitva(true)}
+                  title="Új megbízó felvétele"
+                  aria-label="Új megbízó felvétele"
+                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-ink-200 text-ink-500 hover:bg-slate-50 dark:border-ink-700 dark:text-ink-400 dark:hover:bg-ink-800"
+                >
+                  <PiPlusLight className="h-4 w-4" />
+                </button>
+              </div>
             </FormSection>
 
             {kivalasztottMegbizo && (
@@ -385,7 +451,59 @@ export default function FuvarForm() {
         </div>
       </PageCard>
 
-      {!isNew && <CardFuvarFajlok fuvar_id={formData.id} />}
+      {!isNew && (
+        <div className="lg:sticky lg:top-4">
+          <FuvarFajlokPanel fuvar_id={formData.id} />
+        </div>
+      )}
+      </div>
+
+      <Modal
+        open={ujMegbizoNyitva}
+        onClose={() => setUjMegbizoNyitva(false)}
+        title="Új megbízó felvétele"
+      >
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleUjMegbizoMentes();
+          }}
+          className="space-y-4"
+        >
+          <FormField
+            label="Név"
+            name="nev"
+            value={ujMegbizoAdatok.nev}
+            onChange={(e) => setUjMegbizoAdatok((prev) => ({ ...prev, nev: e.target.value }))}
+            required
+          />
+          <FormField
+            label="Város"
+            name="varos"
+            value={ujMegbizoAdatok.varos}
+            onChange={(e) => setUjMegbizoAdatok((prev) => ({ ...prev, varos: e.target.value }))}
+          />
+          <FormField
+            label="Kapcsolattartó telefon"
+            name="kapcsolattarto_telefon"
+            value={ujMegbizoAdatok.kapcsolattarto_telefon}
+            onChange={(e) => setUjMegbizoAdatok((prev) => ({ ...prev, kapcsolattarto_telefon: e.target.value }))}
+          />
+          <p className="text-xs text-ink-400">
+            A további adatok (adószám, fizetési határidő, kapcsolattartó e-mail stb.) az Ügyfelek oldalon adhatók meg utólag.
+          </p>
+          <div className="flex justify-end gap-2 border-t border-ink-100 pt-4 dark:border-ink-800">
+            <button
+              type="button"
+              onClick={() => setUjMegbizoNyitva(false)}
+              className="rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink-500 hover:bg-slate-100 dark:text-ink-400 dark:hover:bg-ink-800"
+            >
+              Mégse
+            </button>
+            <SaveButton onClick={handleUjMegbizoMentes} isSaving={ujMegbizoMentes} label="Megbízó felvétele" />
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
