@@ -50,6 +50,16 @@ class ApiHandler {
     // konkrét személyt.
     private $aktivKerelmezoId = null;
 
+    // A fenti `aktivKerelmezoId` csak admin-táblás bejelentkezésnél ad
+    // vissza névre fordítható azonosítót (ld. `modositokNeveiCeghez()`) —
+    // sofőr-munkamenetből naplózott műveletnél (jelenleg: `newBejelentes`
+    // sofőr-ága) a `user.id` névre fordítása külön admin-tábla-lookuppal
+    // sosem sikerülne, ráadásul a két tábla auto-increment id-jai
+    // ütközhetnek is. Ezért a nevet (nem az id-t) snapshot-oljuk ide,
+    // `process()` elején, session-ből feloldva — ugyanaz a minta, mint a
+    // `fajlok.feltolto_nev`-nél (ld. `resolveFeltolto()`).
+    private $aktivKerelmezoNev = null;
+
     // Ezek az akciók bejelentkezés (érvényes sessionToken) nélkül is
     // meghívhatók — a bejelentkezés maga, a jelszó-visszaállítás folyamata
     // (a felhasználó pont azért van itt, mert nincs érvényes munkamenete),
@@ -700,6 +710,15 @@ class ApiHandler {
             // aktort, ezért ezt külön, egyszer itt tesszük el, ahelyett
             // hogy a naplózó hívás ~35 helyét kellene egyenként bővíteni.
             $this->aktivKerelmezoId = $request['kerelmezo_id'] ?? null;
+            // Best-effort — sok akciónak (login, publikus ajánlatkérés stb.)
+            // nincs érvényes munkamenete, ott a `resolveFeltolto()` dob, és a
+            // naplósor `kerelmezo_nev` nélkül (a régi, csak-id viselkedéssel)
+            // készül.
+            try {
+                [, , $this->aktivKerelmezoNev] = $this->resolveFeltolto($request);
+            } catch (Exception $e) {
+                $this->aktivKerelmezoNev = null;
+            }
 
             switch ($action) {
                 case 'loginUser':
@@ -793,8 +812,15 @@ class ApiHandler {
                     echo json_encode($result);
                     return;
                 case 'getKamionok':
-                    $kerelmezo = $this->resolveKerelmezo($request);
-                    echo json_encode($kamionInterface->getKamionok($kerelmezo['ceg_id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['sortKey'] ?? null, $request['sortDir'] ?? 'asc'));
+                    // `resolveSajatCegId()` (nem `resolveKerelmezo()`) — ez az
+                    // action admin- ÉS sofőr-oldalról is hívott (a sofőr saját
+                    // Dashboard/JarmuValaszto oldala is ezt hívja a hozzárendelt
+                    // kamion adatainak/listájának betöltéséhez); `resolveKerelmezo()`
+                    // admin-only session-t követelt volna, ami sofőr-munkamenetből
+                    // mindig "Ehhez a művelethez admin-oldali bejelentkezés
+                    // szükséges." hibával elszállt — élesen jelentett hiba
+                    // ("nem tölt be a kamion, nem lehet váltani").
+                    echo json_encode($kamionInterface->getKamionok($this->resolveSajatCegId($request), $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['sortKey'] ?? null, $request['sortDir'] ?? 'asc'));
                     return;
                 case 'getKamionValaszto':
                     echo json_encode($kamionInterface->getKamionValaszto($this->resolveSajatCegId($request)));
@@ -837,8 +863,8 @@ class ApiHandler {
                     echo json_encode($result);
                     return;
                 case 'getFurgonok':
-                    $kerelmezo = $this->resolveKerelmezo($request);
-                    echo json_encode($furgonInterface->getFurgonok($kerelmezo['ceg_id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['sortKey'] ?? null, $request['sortDir'] ?? 'asc'));
+                    // `resolveSajatCegId()` — ugyanaz az indok, mint `getKamionok`-nál.
+                    echo json_encode($furgonInterface->getFurgonok($this->resolveSajatCegId($request), $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['sortKey'] ?? null, $request['sortDir'] ?? 'asc'));
                     return;
                 case 'getFurgonValaszto':
                     echo json_encode($furgonInterface->getFurgonValaszto($this->resolveSajatCegId($request)));
@@ -889,8 +915,8 @@ class ApiHandler {
                     echo json_encode($result);
                     return;
                 case 'getPotkocsik':
-                    $kerelmezo = $this->resolveKerelmezo($request);
-                    echo json_encode($potkocsiInterface->getPotkocsik($kerelmezo['ceg_id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['sortKey'] ?? null, $request['sortDir'] ?? 'asc'));
+                    // `resolveSajatCegId()` — ugyanaz az indok, mint `getKamionok`-nál.
+                    echo json_encode($potkocsiInterface->getPotkocsik($this->resolveSajatCegId($request), $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['sortKey'] ?? null, $request['sortDir'] ?? 'asc'));
                     return;
                 case 'getPotkocsiRendszamok':
                     echo json_encode($potkocsiInterface->getPotkocsiRendszamok($this->resolveSajatCegId($request)));
@@ -2761,10 +2787,11 @@ class ApiHandler {
             return;
         }
         try {
-            $query = "INSERT INTO audit_log (admin_id, kerelmezo_id, tabla, rowid, muvelet, leiras) VALUES (:admin_id, :kerelmezo_id, :tabla, :rowid, :muvelet, :leiras)";
+            $query = "INSERT INTO audit_log (admin_id, kerelmezo_id, kerelmezo_nev, tabla, rowid, muvelet, leiras) VALUES (:admin_id, :kerelmezo_id, :kerelmezo_nev, :tabla, :rowid, :muvelet, :leiras)";
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(':admin_id', $adminId);
             $stmt->bindValue(':kerelmezo_id', $this->aktivKerelmezoId);
+            $stmt->bindValue(':kerelmezo_nev', $this->aktivKerelmezoNev);
             $stmt->bindValue(':tabla', $tabla);
             $stmt->bindValue(':rowid', $rowId);
             $stmt->bindValue(':muvelet', $muvelet);
@@ -2825,10 +2852,15 @@ class ApiHandler {
             }
             $query .= " ORDER BY datum DESC";
 
+            // `kerelmezo_nev` (a bevezetése óta minden sorra kitöltött
+            // snapshot, sofőr-akciónál is — ld. `aktivKerelmezoNev` fenti
+            // komment) az elsődleges forrás; a `nevek`-es admin-tábla-lookup
+            // csak a bevezetés ELŐTTI, `kerelmezo_nev IS NULL` sorok
+            // visszamenőleges kitöltésére marad meg.
             $nevek = $this->modositokNeveiCeghez($id);
             $dusit = function ($sorok) use ($nevek) {
                 foreach ($sorok as &$sor) {
-                    $sor['modosito_nev'] = $nevek[$sor['kerelmezo_id']] ?? null;
+                    $sor['modosito_nev'] = $sor['kerelmezo_nev'] ?? ($nevek[$sor['kerelmezo_id']] ?? null);
                 }
                 return $sorok;
             };

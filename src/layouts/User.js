@@ -23,7 +23,6 @@ const PotkocsiValaszto = React.lazy(
 const FurgonValaszto = React.lazy(() => import("views/user/FurgonValaszto.js"));
 const BejelentesUj = React.lazy(() => import("views/user/BejelentesUj.js"));
 const Bejelentesek = React.lazy(() => import("views/user/Bejelentesek.js"));
-const Tankolas = React.lazy(() => import("views/user/Tankolas.js"));
 const Profil = React.lazy(() => import("views/user/Profil.js"));
 const Ertesitesek = React.lazy(() => import("views/user/Ertesitesek.js"));
 const Helyszinek = React.lazy(() => import("views/user/Helyszinek.js"));
@@ -63,7 +62,6 @@ const desktopLinks = [
   { to: "/user/fuvarok", label: "Fuvarjaim" },
   { to: "/user/bejelentesek", label: "Bejelentéseim" },
   { to: "/user/helyszinek", label: "Helyszínek" },
-  { to: "/user/tankolas", label: "Tankolás" },
   { to: "/user/profil", label: "Profil" },
 ];
 
@@ -191,7 +189,6 @@ export default function User() {
               exact
               component={Bejelentesek}
             />
-            <PrivateRoute path="/user/tankolas" exact component={Tankolas} />
             <PrivateRoute path="/user/profil" exact component={Profil} />
             <PrivateRoute
               path="/user/ertesitesek"
