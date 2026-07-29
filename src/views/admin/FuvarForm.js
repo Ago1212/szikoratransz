@@ -81,6 +81,22 @@ const emptyFuvar = {
   allapot: "rogzitett",
 };
 
+// Ugyanaz a mezőkészlet, mint az Ügyfelek modul teljes formjáé
+// (CardUgyfel.js `emptyUgyfel`) — a gyors megbízó-felvétel modal ugyanazt
+// a `newUgyfel` actiont hívja, ugyanazokkal az (opcionális) mezőkkel.
+const UJ_MEGBIZO_URES = {
+  nev: "",
+  adoszam: "",
+  fizetesi_hatarido_nap: "",
+  varos: "",
+  irsz: "",
+  cim: "",
+  kapcsolattarto_nev: "",
+  kapcsolattarto_email: "",
+  kapcsolattarto_telefon: "",
+  megjegyzes: "",
+};
+
 export default function FuvarForm() {
   const history = useHistory();
   const location = useLocation();
@@ -99,7 +115,7 @@ export default function FuvarForm() {
   const [ugyfelElozmeny, setUgyfelElozmeny] = useState([]);
   const [elozmenyNyitva, setElozmenyNyitva] = useState(false);
   const [ujMegbizoNyitva, setUjMegbizoNyitva] = useState(false);
-  const [ujMegbizoAdatok, setUjMegbizoAdatok] = useState({ nev: "", varos: "", kapcsolattarto_telefon: "" });
+  const [ujMegbizoAdatok, setUjMegbizoAdatok] = useState(UJ_MEGBIZO_URES);
   const [ujMegbizoMentes, setUjMegbizoMentes] = useState(false);
 
   useEffect(() => {
@@ -177,12 +193,15 @@ export default function FuvarForm() {
     [user.ceg_id],
   );
 
-  // Gyors megbízó-felvétel — nem helyettesíti az Ügyfelek modul teljes
-  // formját (adószám/fizetési határidő/kapcsolattartó stb.), csak a
-  // `newUgyfel` szerver-oldalon egyedül kötelező `nev` mezőt + két
-  // leggyakrabban azonnal ismert adatot kéri, hogy a fuvarszervezőnek ne
-  // kelljen elhagynia a Fuvar űrlapot egy hiányzó megbízó miatt. A
-  // részletesebb adatokat az admin utólag, az Ügyfelek oldalon egészítheti ki.
+  const handleUjMegbizoChange = (e) => {
+    const { name, value } = e.target;
+    setUjMegbizoAdatok((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Gyors megbízó-felvétel — ugyanazokat a mezőket veszi fel, mint az
+  // Ügyfelek modul teljes formja (CardUgyfel.js), csak modálban, hogy a
+  // fuvarszervezőnek ne kelljen elhagynia a Fuvar űrlapot egy hiányzó
+  // megbízó miatt.
   const handleUjMegbizoMentes = async () => {
     if (!ujMegbizoAdatok.nev.trim()) {
       toast.error("A megbízó neve kötelező.");
@@ -198,8 +217,15 @@ export default function FuvarForm() {
         admin: user.ceg_id,
         kerelmezo_id: user.id,
         nev: ujMegbizoAdatok.nev.trim(),
+        adoszam: ujMegbizoAdatok.adoszam.trim() || undefined,
+        fizetesi_hatarido_nap: ujMegbizoAdatok.fizetesi_hatarido_nap || undefined,
         varos: ujMegbizoAdatok.varos.trim() || undefined,
+        irsz: ujMegbizoAdatok.irsz.trim() || undefined,
+        cim: ujMegbizoAdatok.cim.trim() || undefined,
+        kapcsolattarto_nev: ujMegbizoAdatok.kapcsolattarto_nev.trim() || undefined,
+        kapcsolattarto_email: ujMegbizoAdatok.kapcsolattarto_email.trim() || undefined,
         kapcsolattarto_telefon: ujMegbizoAdatok.kapcsolattarto_telefon.trim() || undefined,
+        megjegyzes: ujMegbizoAdatok.megjegyzes.trim() || undefined,
       });
       if (result?.success) {
         const ujUgyfel = result.ugyfel;
@@ -207,7 +233,7 @@ export default function FuvarForm() {
         handleMegbizoChange(ujUgyfel.id);
         toast.success("Megbízó felvéve.");
         setUjMegbizoNyitva(false);
-        setUjMegbizoAdatok({ nev: "", varos: "", kapcsolattarto_telefon: "" });
+        setUjMegbizoAdatok(UJ_MEGBIZO_URES);
       } else {
         toast.error(result?.message || "A megbízó mentése sikertelen.");
       }
@@ -326,22 +352,27 @@ export default function FuvarForm() {
                     onChange={handleMegbizoChange}
                   />
                   <div className="flex flex-shrink-0 flex-col">
-                    {/* Láthatatlan címke-helykitöltő — pontosan ugyanaz a
-                        magasság, mint az AutocompleteSelect saját "Megbízó"
-                        címkéjének sora, hogy a gomb az input dobozzal (ne a
-                        teljes komponens aljával) legyen egy magasságban. */}
+                    {/* Láthatatlan címke-helykitöltő, hogy a lenti sáv
+                        (h-14 = 56px, az AutocompleteSelect input-dobozának
+                        TÉNYLEGES, mért magassága) pontosan az input-doboz
+                        magasságában kezdődjön, ne a címke alatt. A gomb
+                        maga csak h-9 (36px), a sávon belül középre igazítva
+                        — így az input dobozzal egy magasságban van, de nem
+                        nyúlik szét a teljes 56px-re. */}
                     <span aria-hidden="true" className="mb-1 block text-xs font-semibold uppercase tracking-wide">
                       &nbsp;
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => setUjMegbizoNyitva(true)}
-                      title="Új megbízó felvétele"
-                      aria-label="Új megbízó felvétele"
-                      className="flex h-9 w-9 items-center justify-center rounded-xl border border-ink-200 text-ink-500 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-300 dark:border-ink-700 dark:text-ink-400 dark:hover:bg-ink-800"
-                    >
-                      <PiPlusLight className="h-4 w-4" />
-                    </button>
+                    <div className="flex h-14 w-9 items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={() => setUjMegbizoNyitva(true)}
+                        title="Új megbízó felvétele"
+                        aria-label="Új megbízó felvétele"
+                        className="flex h-9 w-9 items-center justify-center rounded-xl border border-ink-200 text-ink-500 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-300 dark:border-ink-700 dark:text-ink-400 dark:hover:bg-ink-800"
+                      >
+                        <PiPlusLight className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </FormSection>
@@ -508,36 +539,81 @@ export default function FuvarForm() {
         open={ujMegbizoNyitva}
         onClose={() => setUjMegbizoNyitva(false)}
         title="Új megbízó felvétele"
+        maxWidth="max-w-2xl"
       >
         <form
           onSubmit={(e) => {
             e.preventDefault();
             handleUjMegbizoMentes();
           }}
-          className="space-y-4"
+          className="space-y-5"
         >
-          <FormField
-            label="Név"
-            name="nev"
-            value={ujMegbizoAdatok.nev}
-            onChange={(e) => setUjMegbizoAdatok((prev) => ({ ...prev, nev: e.target.value }))}
-            required
-          />
-          <FormField
-            label="Város"
-            name="varos"
-            value={ujMegbizoAdatok.varos}
-            onChange={(e) => setUjMegbizoAdatok((prev) => ({ ...prev, varos: e.target.value }))}
-          />
-          <FormField
-            label="Kapcsolattartó telefon"
-            name="kapcsolattarto_telefon"
-            value={ujMegbizoAdatok.kapcsolattarto_telefon}
-            onChange={(e) => setUjMegbizoAdatok((prev) => ({ ...prev, kapcsolattarto_telefon: e.target.value }))}
-          />
-          <p className="text-xs text-ink-400">
-            A további adatok (adószám, fizetési határidő, kapcsolattartó e-mail stb.) az Ügyfelek oldalon adhatók meg utólag.
-          </p>
+          <FormSection title="Cégadatok" icon={PiClipboardTextLight} columns={2}>
+            <FormField
+              label="Név"
+              name="nev"
+              value={ujMegbizoAdatok.nev}
+              onChange={handleUjMegbizoChange}
+              required
+              className="sm:col-span-2"
+            />
+            <FormField label="Adószám" name="adoszam" value={ujMegbizoAdatok.adoszam} onChange={handleUjMegbizoChange} />
+            <FormField
+              type="number"
+              label="Fizetési határidő (nap)"
+              name="fizetesi_hatarido_nap"
+              value={ujMegbizoAdatok.fizetesi_hatarido_nap}
+              onChange={handleUjMegbizoChange}
+            />
+          </FormSection>
+
+          <FormSection title="Cím" icon={PiMapPinLight} columns={2}>
+            <FormField label="Város" name="varos" value={ujMegbizoAdatok.varos} onChange={handleUjMegbizoChange} />
+            <FormField label="Irányítószám" name="irsz" value={ujMegbizoAdatok.irsz} onChange={handleUjMegbizoChange} />
+            <FormField
+              label="Cím"
+              name="cim"
+              value={ujMegbizoAdatok.cim}
+              onChange={handleUjMegbizoChange}
+              className="sm:col-span-2"
+            />
+          </FormSection>
+
+          <FormSection title="Kapcsolattartó" icon={PiUserLight} columns={2}>
+            <FormField
+              label="Név"
+              name="kapcsolattarto_nev"
+              value={ujMegbizoAdatok.kapcsolattarto_nev}
+              onChange={handleUjMegbizoChange}
+              className="sm:col-span-2"
+            />
+            <FormField
+              type="email"
+              label="Email cím"
+              name="kapcsolattarto_email"
+              value={ujMegbizoAdatok.kapcsolattarto_email}
+              onChange={handleUjMegbizoChange}
+            />
+            <FormField
+              type="tel"
+              label="Telefonszám"
+              name="kapcsolattarto_telefon"
+              value={ujMegbizoAdatok.kapcsolattarto_telefon}
+              onChange={handleUjMegbizoChange}
+            />
+          </FormSection>
+
+          <FormSection title="Megjegyzés" icon={PiNoteLight} columns={1}>
+            <FormField
+              as="textarea"
+              id="ujmegbizo_megjegyzes"
+              name="megjegyzes"
+              value={ujMegbizoAdatok.megjegyzes}
+              onChange={handleUjMegbizoChange}
+              rows="2"
+            />
+          </FormSection>
+
           <div className="flex justify-end gap-2 border-t border-ink-100 pt-4 dark:border-ink-800">
             <button
               type="button"

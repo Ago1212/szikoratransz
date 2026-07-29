@@ -15,6 +15,7 @@ export default function AutocompleteSelect({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const containerRef = useRef(null);
+  const inputRef = useRef(null);
 
   const selected = options.find((o) => String(o.value) === String(value)) || null;
 
@@ -55,8 +56,12 @@ export default function AutocompleteSelect({
           {label}
         </label>
       )}
-      <div className="flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm text-ink-700 focus-within:border-brand-400 focus-within:ring-1 focus-within:ring-brand-400 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-100">
+      <div
+        onClick={() => !disabled && inputRef.current?.focus()}
+        className="flex cursor-text items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm text-ink-700 focus-within:border-brand-400 focus-within:ring-1 focus-within:ring-brand-400 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-100"
+      >
         <input
+          ref={inputRef}
           type="text"
           className="w-full bg-transparent text-sm outline-none disabled:cursor-not-allowed"
           placeholder={selected ? selected.label : placeholder || "Keresés..."}

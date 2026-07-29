@@ -2003,6 +2003,10 @@ h1,
   cursor: pointer;
 }
 
+.cursor-text {
+  cursor: text;
+}
+
 .select-none {
   -webkit-user-select: none;
           user-select: none;
