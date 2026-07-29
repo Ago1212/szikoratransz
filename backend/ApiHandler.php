@@ -793,8 +793,15 @@ class ApiHandler {
                     echo json_encode($result);
                     return;
                 case 'getKamionok':
-                    $kerelmezo = $this->resolveKerelmezo($request);
-                    echo json_encode($kamionInterface->getKamionok($kerelmezo['ceg_id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['sortKey'] ?? null, $request['sortDir'] ?? 'asc'));
+                    // `resolveSajatCegId()` (nem `resolveKerelmezo()`) — ez az
+                    // action admin- ÉS sofőr-oldalról is hívott (a sofőr saját
+                    // Dashboard/JarmuValaszto oldala is ezt hívja a hozzárendelt
+                    // kamion adatainak/listájának betöltéséhez); `resolveKerelmezo()`
+                    // admin-only session-t követelt volna, ami sofőr-munkamenetből
+                    // mindig "Ehhez a művelethez admin-oldali bejelentkezés
+                    // szükséges." hibával elszállt — élesen jelentett hiba
+                    // ("nem tölt be a kamion, nem lehet váltani").
+                    echo json_encode($kamionInterface->getKamionok($this->resolveSajatCegId($request), $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['sortKey'] ?? null, $request['sortDir'] ?? 'asc'));
                     return;
                 case 'getKamionValaszto':
                     echo json_encode($kamionInterface->getKamionValaszto($this->resolveSajatCegId($request)));
@@ -837,8 +844,8 @@ class ApiHandler {
                     echo json_encode($result);
                     return;
                 case 'getFurgonok':
-                    $kerelmezo = $this->resolveKerelmezo($request);
-                    echo json_encode($furgonInterface->getFurgonok($kerelmezo['ceg_id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['sortKey'] ?? null, $request['sortDir'] ?? 'asc'));
+                    // `resolveSajatCegId()` — ugyanaz az indok, mint `getKamionok`-nál.
+                    echo json_encode($furgonInterface->getFurgonok($this->resolveSajatCegId($request), $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['sortKey'] ?? null, $request['sortDir'] ?? 'asc'));
                     return;
                 case 'getFurgonValaszto':
                     echo json_encode($furgonInterface->getFurgonValaszto($this->resolveSajatCegId($request)));
@@ -889,8 +896,8 @@ class ApiHandler {
                     echo json_encode($result);
                     return;
                 case 'getPotkocsik':
-                    $kerelmezo = $this->resolveKerelmezo($request);
-                    echo json_encode($potkocsiInterface->getPotkocsik($kerelmezo['ceg_id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['sortKey'] ?? null, $request['sortDir'] ?? 'asc'));
+                    // `resolveSajatCegId()` — ugyanaz az indok, mint `getKamionok`-nál.
+                    echo json_encode($potkocsiInterface->getPotkocsik($this->resolveSajatCegId($request), $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['sortKey'] ?? null, $request['sortDir'] ?? 'asc'));
                     return;
                 case 'getPotkocsiRendszamok':
                     echo json_encode($potkocsiInterface->getPotkocsiRendszamok($this->resolveSajatCegId($request)));

@@ -6,7 +6,7 @@ import {
   PiTruckTrailerLight,
   PiVanLight,
   PiWarningCircleLight,
-  PiGasPumpLight,
+  PiChatCircleTextLight,
   PiPhoneLight,
   PiCaretRightLight,
   PiMapPinLight,
@@ -20,13 +20,20 @@ import {
   daysUntil,
 } from "utils/documentStatus.js";
 
-// A "Bejelentés" csempe szándékosan NINCS itt — a BottomNav középső,
-// mindig piros FAB-ja már ugyanoda vezet, egy második, azonos célú
-// csempe a Gyors műveletek rácsban felesleges duplikáció lenne.
-// A "Dokumentum" csempe SEM itt van — saját, kiemelt kártyát kapott
-// feljebb (ld. a "Dokumentum feltöltése" szekciót), mert ez lett a
-// leggyakrabban használt napi művelet; egy második, azonos célú tile itt
-// ugyanolyan felesleges duplikáció lenne, mint a Bejelentésé.
+// A BottomNav középső FAB-ja 2026-07-28 óta Fuvarokra vezet, nem
+// Bejelentésre (ld. BottomNav.js komment) — emiatt mobilon a Bejelentés
+// EGY IDEIG semmilyen közvetlen, "új bejelentés" gombhoz vezető úton nem
+// volt elérhető (a Dashboard "Legutóbbi bejelentéseim" sora csak a
+// listára, /user/bejelentesek-re mutat, ott pedig nincs "+" gomb — élesen
+// jelentett hiba). Ezért a Bejelentés most itt, a Gyors műveletek
+// rácsban kapott helyet, a Tankolás rovására — a sofőr-oldali kézi
+// tankolás-rögzítés (`/user/tankolas`, `Tankolas.js`) explicit felhasználói
+// kérésre teljesen megszűnt (útvonal+nav-linkek törölve), mert a
+// tankolás-adatok jellemzően úgyis a MOL-kártya PDF-import admin-oldali
+// folyamatán keresztül kerülnek be (ld. CLAUDE.md "MOL üzemanyagkártya
+// PDF import"). A backend `newTankolas`/`getTankolasok` action és a
+// `tankolasok` tábla (amit az admin-oldali fogyasztás-elemzés/import is
+// használ) változatlan maradt, csak a sofőr-oldali kézi bevitel tűnt el.
 const quickActions = [
   {
     to: "/user/jarmu-valaszto",
@@ -53,10 +60,10 @@ const quickActions = [
     tone: "brand",
   },
   {
-    to: "/user/tankolas",
-    icon: PiGasPumpLight,
-    label: "Tankolás",
-    tone: "brand",
+    to: "/user/bejelentes/uj",
+    icon: PiChatCircleTextLight,
+    label: "Bejelentés",
+    tone: "danger",
   },
 ];
 
@@ -385,10 +392,10 @@ export default function UserDashboard() {
         </div>
       </div>
 
-      {/* Legutóbbi bejelentéseim — a Dokumentum-kártya feljebb kapta a fő
-          hangsúlyt (ld. a terv indoklását), a Bejelentés-funkció maga
-          változatlanul elérhető a BottomNav piros FAB-ján és itt, csak
-          kevesebb vizuális súllyal, egyetlen összegző sorként. */}
+      {/* Legutóbbi bejelentéseim — a tényleges "új bejelentés" belépési
+          pont a fenti Gyors műveletek rácsban van; ez itt csak a saját
+          korábbi bejelentések listájára (/user/bejelentesek) mutat,
+          egyetlen összegző sorként. */}
       <Link
         to="/user/bejelentesek"
         className="flex items-center justify-between rounded-2xl border border-ink-100 bg-white px-4 py-3 shadow-soft"
