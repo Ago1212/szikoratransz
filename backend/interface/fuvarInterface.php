@@ -217,7 +217,7 @@ class FuvarInterface {
         return ['success' => true, 'fuvar' => $this->dusitEgySort($fuvar, $ceg_id)];
     }
 
-    public function getFuvarok($ceg_id, $search = null, $page = null, $pageSize = null, $sortKey = null, $sortDir = 'asc', $allapot = null) {
+    public function getFuvarok($ceg_id, $search = null, $page = null, $pageSize = null, $sortKey = null, $sortDir = 'asc', $allapot = null, $datumTol = null, $datumIg = null) {
         $params = [':admin' => $ceg_id];
         $query = "SELECT *, (fuvardij + IFNULL(egyeb_koltseg, 0)) AS osszesen
                   FROM fuvarok
@@ -226,6 +226,18 @@ class FuvarInterface {
         if (!empty($allapot)) {
             $query .= " AND allapot = :allapot";
             $params[':allapot'] = $allapot;
+        }
+        // `$datumTol`/`$datumIg` — a Sofőr szerinti nézet heti navigációjához
+        // (ld. Fuvarok.js/SoforCsoportositottLista.js): az a nézet a
+        // lapozás megkerülésével (page=null) kéri le EGY adott hét összes
+        // fuvarját, nem a táblázat-nézet oldalankénti szeletét.
+        if (!empty($datumTol)) {
+            $query .= " AND teljesites_datuma >= :datumTol";
+            $params[':datumTol'] = $datumTol;
+        }
+        if (!empty($datumIg)) {
+            $query .= " AND teljesites_datuma <= :datumIg";
+            $params[':datumIg'] = $datumIg;
         }
         if (!empty($search)) {
             // A saját mezők (felrakó/lerakó/áru/fuvarlevél szám) LIKE-

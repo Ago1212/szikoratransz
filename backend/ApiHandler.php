@@ -1710,7 +1710,7 @@ class ApiHandler {
                     return;
                 case 'getFuvarok':
                     $kerelmezo = $this->resolveKerelmezo($request);
-                    echo json_encode($fuvarInterface->getFuvarok($kerelmezo['ceg_id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['sortKey'] ?? null, $request['sortDir'] ?? 'asc', $request['allapot'] ?? null));
+                    echo json_encode($fuvarInterface->getFuvarok($kerelmezo['ceg_id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['sortKey'] ?? null, $request['sortDir'] ?? 'asc', $request['allapot'] ?? null, $request['datumTol'] ?? null, $request['datumIg'] ?? null));
                     return;
                 case 'getSajatFuvarok':
                     // Sofőr-önkiszolgáló akció, nincs MODULE_PERMISSION_MAP

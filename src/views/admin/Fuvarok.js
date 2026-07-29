@@ -174,7 +174,7 @@ export default function Fuvarok() {
           onFuvarClick={(fuvar) => history.push("/admin/fuvarForm", { data: fuvar })}
         />
       ) : nezetMod === "sofor" ? (
-        <SoforCsoportositottLista fuvarok={fuvarok} />
+        <SoforCsoportositottLista />
       ) : nezetMod === "statisztika" ? (
         <StatisztikaDashboard />
       ) : (
