@@ -21,8 +21,12 @@ export default function Fuvarok() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
-  const [sortKey, setSortKey] = useState(null);
-  const [sortDir, setSortDir] = useState("asc");
+  // Alapértelmezetten dátum szerint csökkenő sorrend (legutóbbi fuvar
+  // legfelül) — ugyanaz a rendezés, mint amit a backend `getFuvarok()`
+  // saját maga is választana `sortKey` hiányában, csak itt explicit,
+  // hogy a táblázat fejlécének rendezés-jelzése is helyesen mutassa.
+  const [sortKey, setSortKey] = useState("teljesites_datuma");
+  const [sortDir, setSortDir] = useState("desc");
   const [allapotSzuro, setAllapotSzuro] = useState("");
   const [osszesito, setOsszesito] = useState(null);
   const [nezetMod, setNezetMod] = useState("tablazat");

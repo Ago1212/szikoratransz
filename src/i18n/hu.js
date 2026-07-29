@@ -9,7 +9,11 @@ export const landing = {
   },
   hero: {
     eyebrow: "Belföldi és nemzetközi fuvarozás",
-    headline: { line1: "Szállítás, amire", line2: "percre pontosan", line3: "számíthat." },
+    headline: {
+      line1: "Szállítás, amire",
+      line2: "percre pontosan",
+      line3: "számíthat.",
+    },
     subheading:
       "Szikora Transz Kft — profi áruszállítás és logisztika 2010 óta: belföldi és nemzetközi fuvarozás, modern flotta, teljes körű biztosítás.",
     servicesLink: "Szolgáltatásaink megismerése",
@@ -41,7 +45,8 @@ export const landing = {
   process: {
     eyebrow: "A folyamat",
     title: "Így jut el az árujuk A-ból B-be",
-    intro: "Négy lépés, amely minden fuvarra érvényes — a megrendeléstől a visszaigazolt kézbesítésig.",
+    intro:
+      "Négy lépés, amely minden fuvarra érvényes — a megrendeléstől a visszaigazolt kézbesítésig.",
   },
   services: {
     eyebrow: "Szolgáltatások",
@@ -55,8 +60,14 @@ export const landing = {
       intro:
         "10+ éves tapasztalattal rendelkezünk a fuvarozási iparágban. Flottánk állandóan karban van tartva, sofőreink képzettek és megbízhatóak.",
       bullets: [
-        { title: "Kiváló minőség", desc: "Minden szállítási folyamat precíz tervezéssel és végrehajtással." },
-        { title: "Rugalmasság", desc: "Személyre szabott megoldások minden egyedi igényre." },
+        {
+          title: "Kiváló minőség",
+          desc: "Minden szállítási folyamat precíz tervezéssel és végrehajtással.",
+        },
+        {
+          title: "Rugalmasság",
+          desc: "Személyre szabott megoldások minden egyedi igényre.",
+        },
         {
           title: "Megbízhatóság",
           desc: "Hosszú távú partnerségek, pontos határidőkkel és átlátható kommunikációval.",
@@ -82,15 +93,20 @@ export const landing = {
     paragraph2:
       "Mára belföldi és nemzetközi fuvarokat egyaránt vállalunk, a rövid távú, sürgős megbízásoktól a rendszeres, hosszú távú partnerségekig. Minden ügyfelünket úgy szolgáljuk ki, mintha a saját árujuk lenne — legyen szó egyszeri fuvarról vagy folyamatos együttműködésről.",
     tiles: [
-      { title: "Karbantartott flotta", desc: "Több modern kamionból álló, állandóan karbantartott flotta." },
-      { title: "Tapasztalt sofőrök", desc: "Több tapasztalt, hosszú távú sofőr alkotja csapatunkat." },
+      {
+        title: "Karbantartott flotta",
+        desc: "Több modern kamionból álló, állandóan karbantartott flotta.",
+      },
+      {
+        title: "Tapasztalt sofőrök",
+        desc: "Több tapasztalt, hosszú távú sofőr alkotja csapatunkat.",
+      },
     ],
   },
   testimonials: {
     eyebrow: "Ügyfélvisszajelzések",
     title: "Amit partnereink mondanak rólunk",
-    disclaimer:
-      "* A fenti referenciák minta-szövegek — érdemes őket valós ügyfelek visszajelzéseire cserélni a publikálás előtt.",
+    disclaimer: "",
   },
   faq: {
     eyebrow: "Gyakran ismételt kérdések",
@@ -101,7 +117,8 @@ export const landing = {
   contact: {
     eyebrow: "Kapcsolat",
     title: "Kapcsolatfelvétel",
-    intro: "Kérjük töltse ki az alábbi űrlapot — gyors, ingyenes és semmilyen kötöttséggel nem jár.",
+    intro:
+      "Kérjük töltse ki az alábbi űrlapot — gyors, ingyenes és semmilyen kötöttséggel nem jár.",
     driverForm: {
       eyebrow: "Sofőröket keresünk",
       title: "Csatlakozzon a csapatunkhoz",
@@ -112,7 +129,8 @@ export const landing = {
       ],
       requirementPrefix: "Amit kérünk:",
       requirementText: "érvényes C+E kategóriás jogosítvány és GKI kártya.",
-      intro: "Nem kérünk azonnal önéletrajzot — írjon pár sort, és hamarosan felvesszük Önnel a kapcsolatot.",
+      intro:
+        "Nem kérünk azonnal önéletrajzot — írjon pár sort, és hamarosan felvesszük Önnel a kapcsolatot.",
       nameLabel: "Teljes név",
       namePlaceholder: "Teljes név",
       phoneLabel: "Telefonszám",
@@ -120,43 +138,39 @@ export const landing = {
       emailLabel: "Email cím",
       emailPlaceholder: "Email cím",
       messageLabel: "Pár sor Önről",
-      messagePlaceholder: "Pl. hány éve vezet kamiont, milyen jogosítványa/kártyája van...",
+      messagePlaceholder:
+        "Pl. hány éve vezet kamiont, milyen jogosítványa/kártyája van...",
       submitLoading: "Küldés...",
       submitDefault: "Jelentkezem sofőrnek",
-      successMessage: "Jelentkezés sikeresen elküldve! Hamarosan felvesszük Önnel a kapcsolatot.",
+      successMessage:
+        "Jelentkezés sikeresen elküldve! Hamarosan felvesszük Önnel a kapcsolatot.",
       errorMessageDefault: "Hiba történt a jelentkezés küldése közben.",
     },
   },
   features: {
     domestic: {
       title: "Belföldi fuvarozás",
-      desc:
-        "Gyors és megbízható áruszállítás Magyarország egész területén, rugalmas árazással és pontos határidőkkel. Egyaránt vállalunk egyszeri megbízásokat és rendszeres, ismétlődő fuvarokat.",
+      desc: "Gyors és megbízható áruszállítás Magyarország egész területén, rugalmas árazással és pontos határidőkkel. Egyaránt vállalunk egyszeri megbízásokat és rendszeres, ismétlődő fuvarokat.",
     },
     international: {
       title: "Nemzetközi szállítás",
-      desc:
-        "Határon átnyúló fuvarozási szolgáltatás Európa-szerte, teljes körű vámügyintézéssel és okmányolással. Az útvonalat és a határidőt minden esetben az adott fuvarhoz igazítjuk.",
+      desc: "Határon átnyúló fuvarozási szolgáltatás Európa-szerte, teljes körű vámügyintézéssel és okmányolással. Az útvonalat és a határidőt minden esetben az adott fuvarhoz igazítjuk.",
     },
     insured: {
       title: "Biztosított szállítás",
-      desc:
-        "Minden fuvarunk teljes biztosítási fedezettel történik — az árukészlete nálunk biztos kezekben van. Esetleges kár esetén csapatunk intézi a biztosítóval a kárrendezést.",
+      desc: "Minden fuvarunk teljes biztosítási fedezettel történik — az árukészlete nálunk biztos kezekben van. Esetleges kár esetén csapatunk intézi a biztosítóval a kárrendezést.",
     },
     express: {
       title: "Expressz szállítás",
-      desc:
-        "Sürgős fuvarok soron kívüli kezelése, garantált kiszállítási idővel, ha az idő a legfontosabb tényező. Vegye fel velünk a kapcsolatot, és soron kívül egyeztetjük a részleteket.",
+      desc: "Sürgős fuvarok soron kívüli kezelése, garantált kiszállítási idővel, ha az idő a legfontosabb tényező. Vegye fel velünk a kapcsolatot, és soron kívül egyeztetjük a részleteket.",
     },
     event: {
       title: "Rendezvényszállítás",
-      desc:
-        "Standok, berendezések, dekoráció és egyéb rendezvényanyagok szállítása a helyszínre és vissza, a rendezvény ütemezéséhez igazítva.",
+      desc: "Standok, berendezések, dekoráció és egyéb rendezvényanyagok szállítása a helyszínre és vissza, a rendezvény ütemezéséhez igazítva.",
     },
     custom: {
       title: "Egyedi árajánlat",
-      desc:
-        "Minden megrendelést egyedileg árazunk az útvonal, az áru jellege és a határidő alapján — gyors, személyre szabott ajánlattal. Nincs rejtett költség, az ajánlatban minden tétel átlátható.",
+      desc: "Minden megrendelést egyedileg árazunk az útvonal, az áru jellege és a határidő alapján — gyors, személyre szabott ajánlattal. Nincs rejtett költség, az ajánlatban minden tétel átlátható.",
     },
   },
   processSteps: {
@@ -266,13 +280,16 @@ export const servicePage = {
   backLink: "← Vissza a főoldalra",
   ctaButton: "Ingyenes ajánlatot kérek",
   testimonialsTitle: "Amit partnereink mondanak rólunk",
-  testimonialsDisclaimer:
-    "* A fenti referenciák minta-szövegek — érdemes őket valós ügyfelek visszajelzéseire cserélni a publikálás előtt.",
+  testimonialsDisclaimer: "",
   faqTitle: "Gyakran ismételt kérdések",
   otherServicesTitle: "Egyéb szolgáltatásaink",
 };
 export const quoteForm = {
-  directionOptions: { domestic: "Belföldi", international: "Nemzetközi", unsure: "Még nem tudom" },
+  directionOptions: {
+    domestic: "Belföldi",
+    international: "Nemzetközi",
+    unsure: "Még nem tudom",
+  },
   timingOptions: {
     urgent: "Sürgős (napokon belül)",
     fewWeeks: "Pár héten belül",
@@ -291,7 +308,8 @@ export const quoteForm = {
   responseBadge: "Válasz 24 órán belül",
   successMessage:
     "Köszönjük, {name}! Ajánlatkérését megkaptuk — 24 órán belül felvesszük Önnel a kapcsolatot telefonon vagy e-mailben.",
-  errorFallback: "Hiba történt a küldés közben. Kérjük, próbálja meg újra, vagy hívjon minket közvetlenül:",
+  errorFallback:
+    "Hiba történt a küldés közben. Kérjük, próbálja meg újra, vagy hívjon minket közvetlenül:",
   labels: {
     name: "Teljes név",
     phone: "Telefonszám",
@@ -303,7 +321,8 @@ export const quoteForm = {
     to: "Hová?",
     timing: "Mikorra lenne szükség rá?",
     description: "Mit és mennyit szállítanánk?",
-    consentPrefix: "Elfogadom, hogy adataimat az ajánlatadás céljából kezeljék.",
+    consentPrefix:
+      "Elfogadom, hogy adataimat az ajánlatadás céljából kezeljék.",
     consentLinkText: "Adatvédelmi tájékoztató",
     submit: "Árajánlatot kérek",
     submitLoading: "Küldés...",
@@ -321,7 +340,11 @@ export const quoteForm = {
 export const footer = {
   description:
     "Szikora Transz Kft. — belföldi és nemzetközi fuvarozás 2010 óta, modern flottával és teljes körű biztosítással.",
-  bullets: ["10+ év tapasztalat", "Teljes körű biztosítás", "Válasz 24 órán belül"],
+  bullets: [
+    "10+ év tapasztalat",
+    "Teljes körű biztosítás",
+    "Válasz 24 órán belül",
+  ],
   servicesHeading: "Szolgáltatásaink",
   companyHeading: "Cég",
   companyLinks: {
@@ -441,7 +464,9 @@ export const pagesNemzetkozi = {
       desc: "Az útvonal, az áru jellege és a határidő alapján minden nemzetközi megbízást egyedileg árazunk.",
     },
   ],
-  section: { heading: "Amit érdemes tudni a nemzetközi fuvarok vámkezeléséről" },
+  section: {
+    heading: "Amit érdemes tudni a nemzetközi fuvarok vámkezeléséről",
+  },
   faqOverrides: {
     insurance: {
       a: "Igen, nemzetközi fuvarjaink is teljes körű biztosítási fedezettel zajlanak a felvételtől a célországbeli kiszállításig — a határátlépés nem jelent kiesést a fedezetben.",
@@ -495,7 +520,10 @@ export const pagesBiztositott = {
         step: "Ügyintézés",
         desc: "A biztosítóval való egyeztetést és a kárrendezés teljes ügymenetét csapatunk viszi — Önnek nem kell közvetlenül kapcsolatba lépnie velük.",
       },
-      { step: "Visszajelzés", desc: "Ön a folyamat végén kap tájékoztatást az eredményről." },
+      {
+        step: "Visszajelzés",
+        desc: "Ön a folyamat végén kap tájékoztatást az eredményről.",
+      },
     ],
   },
   faqOverrides: {
@@ -513,7 +541,10 @@ export const pagesExpressz = {
   intro:
     "Sürgős fuvarok soron kívüli kezelése, garantált kiszállítási idővel — akkor is, ha a szállítást csak órákkal előre tudja bejelenteni. Vegye fel velünk a kapcsolatot, és soron kívül egyeztetjük a részleteket.",
   bullets: [
-    { title: "Soron kívüli kezelés", desc: "Sürgős megbízásokat kiemelten, a normál ütemezésen kívül kezelünk." },
+    {
+      title: "Soron kívüli kezelés",
+      desc: "Sürgős megbízásokat kiemelten, a normál ütemezésen kívül kezelünk.",
+    },
     {
       title: "Garantált kiszállítási idő",
       desc: "Az ajánlatkérés során egyeztetett határidőt vállaljuk — pontosan, percre.",
@@ -596,7 +627,10 @@ export const pagesEgyedi = {
       title: "Átlátható, tételes árazás",
       desc: "A távolság, az áru mérete/súlya/jellege és a határidő alapján adunk pontos, nem sablonos árajánlatot.",
     },
-    { title: "Nincs rejtett költség", desc: "Az ajánlatban minden tétel átlátható — amit ajánlunk, azt számlázzuk." },
+    {
+      title: "Nincs rejtett költség",
+      desc: "Az ajánlatban minden tétel átlátható — amit ajánlunk, azt számlázzuk.",
+    },
     {
       title: "Kötöttség nélküli ajánlatkérés",
       desc: "Az árajánlat ingyenes és nem kötelezi Önt a megrendelésre.",

@@ -9,7 +9,11 @@ export const landing = {
   },
   hero: {
     eyebrow: "Domestic and international freight transport",
-    headline: { line1: "Delivery you can", line2: "count on, right", line3: "down to the minute." },
+    headline: {
+      line1: "Delivery you can",
+      line2: "count on, right",
+      line3: "down to the minute.",
+    },
     subheading:
       "Szikora Transz Kft — professional freight transport and logistics since 2010: domestic and international shipping, a modern fleet, and full insurance coverage.",
     servicesLink: "Explore our services",
@@ -36,7 +40,8 @@ export const landing = {
   process: {
     eyebrow: "The process",
     title: "How your cargo gets from A to B",
-    intro: "Four steps that apply to every shipment — from order to confirmed delivery.",
+    intro:
+      "Four steps that apply to every shipment — from order to confirmed delivery.",
   },
   services: {
     eyebrow: "Services",
@@ -50,8 +55,14 @@ export const landing = {
       intro:
         "We have 10+ years of experience in the freight transport industry. Our fleet is continuously maintained, and our drivers are skilled and reliable.",
       bullets: [
-        { title: "Outstanding quality", desc: "Every shipment is precisely planned and executed." },
-        { title: "Flexibility", desc: "Tailored solutions for every individual need." },
+        {
+          title: "Outstanding quality",
+          desc: "Every shipment is precisely planned and executed.",
+        },
+        {
+          title: "Flexibility",
+          desc: "Tailored solutions for every individual need.",
+        },
         {
           title: "Reliability",
           desc: "Long-term partnerships, built on punctual deadlines and transparent communication.",
@@ -77,15 +88,20 @@ export const landing = {
     paragraph2:
       "Today we handle both domestic and international shipments, from short-notice urgent jobs to regular, long-term partnerships. We treat every client's cargo as if it were our own — whether it's a one-off shipment or an ongoing collaboration.",
     tiles: [
-      { title: "Well-maintained fleet", desc: "A fleet of modern trucks, continuously maintained." },
-      { title: "Experienced drivers", desc: "Our team is made up of several experienced, long-tenured drivers." },
+      {
+        title: "Well-maintained fleet",
+        desc: "A fleet of modern trucks, continuously maintained.",
+      },
+      {
+        title: "Experienced drivers",
+        desc: "Our team is made up of several experienced, long-tenured drivers.",
+      },
     ],
   },
   testimonials: {
     eyebrow: "Client Feedback",
     title: "What our partners say about us",
-    disclaimer:
-      "* The testimonials above are placeholder text — they should be replaced with real client feedback before publishing.",
+    disclaimer: "",
   },
   faq: {
     eyebrow: "Frequently Asked Questions",
@@ -96,7 +112,8 @@ export const landing = {
   contact: {
     eyebrow: "Contact",
     title: "Get in Touch",
-    intro: "Please fill out the form below — it's quick, free, and comes with no obligation.",
+    intro:
+      "Please fill out the form below — it's quick, free, and comes with no obligation.",
     driverForm: {
       eyebrow: "We're Hiring Drivers",
       title: "Join Our Team",
@@ -106,8 +123,10 @@ export const landing = {
         "Competitive, regular pay",
       ],
       requirementPrefix: "What we require:",
-      requirementText: "a valid category C+E driving licence and a GKI (professional driver qualification) card.",
-      intro: "No need to send a résumé right away — just write a few lines, and we'll be in touch with you soon.",
+      requirementText:
+        "a valid category C+E driving licence and a GKI (professional driver qualification) card.",
+      intro:
+        "No need to send a résumé right away — just write a few lines, and we'll be in touch with you soon.",
       nameLabel: "Full Name",
       namePlaceholder: "Full name",
       phoneLabel: "Phone Number",
@@ -115,43 +134,40 @@ export const landing = {
       emailLabel: "Email Address",
       emailPlaceholder: "Email address",
       messageLabel: "A Few Words About You",
-      messagePlaceholder: "E.g. how many years you've been driving, what licence/cards you hold...",
+      messagePlaceholder:
+        "E.g. how many years you've been driving, what licence/cards you hold...",
       submitLoading: "Sending...",
       submitDefault: "Apply as a Driver",
-      successMessage: "Your application was submitted successfully! We'll be in touch with you soon.",
-      errorMessageDefault: "Something went wrong while sending your application.",
+      successMessage:
+        "Your application was submitted successfully! We'll be in touch with you soon.",
+      errorMessageDefault:
+        "Something went wrong while sending your application.",
     },
   },
   features: {
     domestic: {
       title: "Domestic Freight Transport",
-      desc:
-        "Fast, reliable freight transport across the whole of Hungary, with flexible pricing and precise deadlines. We handle both one-off jobs and regular, recurring routes.",
+      desc: "Fast, reliable freight transport across the whole of Hungary, with flexible pricing and precise deadlines. We handle both one-off jobs and regular, recurring routes.",
     },
     international: {
       title: "International Shipping",
-      desc:
-        "Cross-border freight transport across Europe, with full customs clearance and documentation included. We tailor the route and the deadline to each individual shipment.",
+      desc: "Cross-border freight transport across Europe, with full customs clearance and documentation included. We tailor the route and the deadline to each individual shipment.",
     },
     insured: {
       title: "Insured Shipping",
-      desc:
-        "Every shipment we handle is fully insured — your goods are in safe hands with us. If damage does occur, our team handles the claims process with the insurer.",
+      desc: "Every shipment we handle is fully insured — your goods are in safe hands with us. If damage does occur, our team handles the claims process with the insurer.",
     },
     express: {
       title: "Express Shipping",
-      desc:
-        "Priority handling for urgent jobs, with a guaranteed delivery time, when time is the most important factor. Get in touch and we'll sort out the details right away.",
+      desc: "Priority handling for urgent jobs, with a guaranteed delivery time, when time is the most important factor. Get in touch and we'll sort out the details right away.",
     },
     event: {
       title: "Event Logistics",
-      desc:
-        "Transport of booth structures, equipment, decor, and other event materials to and from the venue, timed to the event's schedule.",
+      desc: "Transport of booth structures, equipment, decor, and other event materials to and from the venue, timed to the event's schedule.",
     },
     custom: {
       title: "Custom Quote",
-      desc:
-        "We price every order individually, based on the route, the type of cargo, and the deadline — with a fast, personalized quote. No hidden costs — every line item in the quote is transparent.",
+      desc: "We price every order individually, based on the route, the type of cargo, and the deadline — with a fast, personalized quote. No hidden costs — every line item in the quote is transparent.",
     },
   },
   processSteps: {
@@ -186,7 +202,8 @@ export const landing = {
       company: "ÉszakBau Kft.",
     },
     kovacs_gabor: {
-      quote: "We get a fast, tailored quote for every job, and we can reach the team anytime we have a question.",
+      quote:
+        "We get a fast, tailored quote for every job, and we can reach the team anytime we have a question.",
       role: "Managing Director",
       company: "Dunapack Csomagolástechnika Kft.",
     },
@@ -260,13 +277,16 @@ export const servicePage = {
   backLink: "← Back to homepage",
   ctaButton: "Request a Free Quote",
   testimonialsTitle: "What our partners say about us",
-  testimonialsDisclaimer:
-    "* The testimonials above are placeholder text — they should be replaced with real client feedback before publishing.",
+  testimonialsDisclaimer: "",
   faqTitle: "Frequently Asked Questions",
   otherServicesTitle: "Other Services",
 };
 export const quoteForm = {
-  directionOptions: { domestic: "Domestic", international: "International", unsure: "Not sure yet" },
+  directionOptions: {
+    domestic: "Domestic",
+    international: "International",
+    unsure: "Not sure yet",
+  },
   timingOptions: {
     urgent: "Urgent (within days)",
     fewWeeks: "Within a few weeks",
@@ -285,7 +305,8 @@ export const quoteForm = {
   responseBadge: "Response within 24 hours",
   successMessage:
     "Thank you, {name}! We've received your quote request — we'll be in touch by phone or email within 24 hours.",
-  errorFallback: "Something went wrong while sending your request. Please try again, or call us directly:",
+  errorFallback:
+    "Something went wrong while sending your request. Please try again, or call us directly:",
   labels: {
     name: "Full Name",
     phone: "Phone Number",
@@ -297,7 +318,8 @@ export const quoteForm = {
     to: "To?",
     timing: "When do you need it?",
     description: "What and how much would you like to ship?",
-    consentPrefix: "I agree that my data may be processed for the purpose of providing a quote.",
+    consentPrefix:
+      "I agree that my data may be processed for the purpose of providing a quote.",
     consentLinkText: "Privacy Policy",
     submit: "Request a Quote",
     submitLoading: "Sending...",
@@ -315,7 +337,11 @@ export const quoteForm = {
 export const footer = {
   description:
     "Szikora Transz Kft. — domestic and international freight transport since 2010, with a modern fleet and full insurance coverage.",
-  bullets: ["10+ years of experience", "Full insurance coverage", "Response within 24 hours"],
+  bullets: [
+    "10+ years of experience",
+    "Full insurance coverage",
+    "Response within 24 hours",
+  ],
   servicesHeading: "Our Services",
   companyHeading: "Company",
   companyLinks: {
@@ -410,7 +436,8 @@ export const pagesBelfoldi = {
   section: { heading: "How is the price of a domestic shipment calculated?" },
 };
 export const pagesNemzetkozi = {
-  metaTitle: "International Freight Transport with Customs Clearance | Szikora Transz Kft.",
+  metaTitle:
+    "International Freight Transport with Customs Clearance | Szikora Transz Kft.",
   metaDescription:
     "International freight transport across Europe, with full customs clearance and documentation handled for you. Request a custom quote today — response within 24 hours.",
   eyebrow: "International Shipping",
@@ -435,7 +462,10 @@ export const pagesNemzetkozi = {
       desc: "We price every international job individually, based on the route, the type of cargo, and the deadline.",
     },
   ],
-  section: { heading: "What you should know about customs clearance for international shipments" },
+  section: {
+    heading:
+      "What you should know about customs clearance for international shipments",
+  },
   faqOverrides: {
     insurance: {
       a: "Yes — our international shipments are also fully insured from pickup all the way to delivery in the destination country. Crossing a border doesn't create any gap in coverage.",
@@ -489,7 +519,10 @@ export const pagesBiztositott = {
         step: "Handling it for you",
         desc: "Our team manages the entire process of liaising with the insurer and settling the claim — you won't need to deal with them directly.",
       },
-      { step: "Follow-up", desc: "You'll be informed of the outcome once the process is complete." },
+      {
+        step: "Follow-up",
+        desc: "You'll be informed of the outcome once the process is complete.",
+      },
     ],
   },
   faqOverrides: {
@@ -499,7 +532,8 @@ export const pagesBiztositott = {
   },
 };
 export const pagesExpressz = {
-  metaTitle: "Express Freight Transport — Urgent Shipping | Szikora Transz Kft.",
+  metaTitle:
+    "Express Freight Transport — Urgent Shipping | Szikora Transz Kft.",
   metaDescription:
     "Urgent shipment? Express transport with a guaranteed delivery time and priority handling. Request a quote now — response within 24 hours.",
   eyebrow: "Express Shipping",
@@ -507,12 +541,18 @@ export const pagesExpressz = {
   intro:
     "Priority handling for urgent jobs, with a guaranteed delivery time — even if you can only give us a few hours' notice. Get in touch and we'll sort out the details right away.",
   bullets: [
-    { title: "Priority handling", desc: "We handle urgent jobs as a priority, outside our normal scheduling." },
+    {
+      title: "Priority handling",
+      desc: "We handle urgent jobs as a priority, outside our normal scheduling.",
+    },
     {
       title: "Guaranteed delivery time",
       desc: "We commit to the deadline agreed on when you request your quote — down to the minute.",
     },
-    { title: "Fast response", desc: "If it's urgent, call us directly for the fastest response." },
+    {
+      title: "Fast response",
+      desc: "If it's urgent, call us directly for the fastest response.",
+    },
     {
       title: "The same reliability, even under time pressure",
       desc: "Express shipments are also carried out under full insurance coverage.",
@@ -596,7 +636,9 @@ export const pagesEgyedi = {
       desc: "Getting a quote is free and doesn't commit you to placing an order.",
     },
   ],
-  section: { heading: "What kinds of shipments do we handle with a custom quote?" },
+  section: {
+    heading: "What kinds of shipments do we handle with a custom quote?",
+  },
   faqOverrides: {
     pricing_factors: {
       a: "Since no two orders are alike, we don't have a fixed price table either — every quote is calculated individually, based on the specific route, the cargo's size, weight and nature, and the agreed deadline. Tell us the details, and we'll send you a precise, itemized quote.",

@@ -343,7 +343,7 @@ export default function FuvarForm() {
                   value={formData.potkocsi_id}
                   onChange={(v) => setFormData((prev) => ({ ...prev, potkocsi_id: v }))}
                 />
-                <div className="flex items-start gap-1.5">
+                <div className="flex items-end gap-1.5">
                   <AutocompleteSelect
                     label="Megbízó"
                     className="flex-1"
@@ -351,29 +351,15 @@ export default function FuvarForm() {
                     value={formData.megbizo_id}
                     onChange={handleMegbizoChange}
                   />
-                  <div className="flex flex-shrink-0 flex-col">
-                    {/* Láthatatlan címke-helykitöltő, hogy a lenti sáv
-                        (h-14 = 56px, az AutocompleteSelect input-dobozának
-                        TÉNYLEGES, mért magassága) pontosan az input-doboz
-                        magasságában kezdődjön, ne a címke alatt. A gomb
-                        maga csak h-9 (36px), a sávon belül középre igazítva
-                        — így az input dobozzal egy magasságban van, de nem
-                        nyúlik szét a teljes 56px-re. */}
-                    <span aria-hidden="true" className="mb-1 block text-xs font-semibold uppercase tracking-wide">
-                      &nbsp;
-                    </span>
-                    <div className="flex h-14 w-9 items-center justify-center">
-                      <button
-                        type="button"
-                        onClick={() => setUjMegbizoNyitva(true)}
-                        title="Új megbízó felvétele"
-                        aria-label="Új megbízó felvétele"
-                        className="flex h-9 w-9 items-center justify-center rounded-xl border border-ink-200 text-ink-500 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-300 dark:border-ink-700 dark:text-ink-400 dark:hover:bg-ink-800"
-                      >
-                        <PiPlusLight className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setUjMegbizoNyitva(true)}
+                    title="Új megbízó felvétele"
+                    aria-label="Új megbízó felvétele"
+                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-ink-200 text-ink-500 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 dark:border-ink-700 dark:text-ink-400 dark:hover:bg-ink-800"
+                  >
+                    <PiPlusLight className="h-4 w-4" />
+                  </button>
                 </div>
               </FormSection>
 
@@ -410,7 +396,7 @@ export default function FuvarForm() {
                     type="button"
                     onClick={() => setElozmenyNyitva((prev) => !prev)}
                     aria-expanded={elozmenyNyitva}
-                    className="group flex w-full items-center justify-between p-3 text-left"
+                    className="group flex w-full items-center justify-between rounded-xl p-3 text-left transition-colors hover:bg-slate-100/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 dark:hover:bg-ink-700/50"
                   >
                     <span className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                       Korábbi fuvarok ezzel a megbízóval ({ugyfelElozmeny.length})
@@ -526,7 +512,7 @@ export default function FuvarForm() {
           <button
             type="button"
             onClick={() => history.push("/admin/fuvarok")}
-            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink-500 transition-colors hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-300 dark:text-ink-400 dark:hover:bg-ink-800"
+            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink-500 transition-colors hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 dark:text-ink-400 dark:hover:bg-ink-800"
           >
             <PiArrowLeftLight className="h-4 w-4" />
             Vissza
@@ -618,7 +604,7 @@ export default function FuvarForm() {
             <button
               type="button"
               onClick={() => setUjMegbizoNyitva(false)}
-              className="rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink-500 hover:bg-slate-100 dark:text-ink-400 dark:hover:bg-ink-800"
+              className="rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink-500 transition-colors hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 dark:text-ink-400 dark:hover:bg-ink-800"
             >
               Mégse
             </button>
