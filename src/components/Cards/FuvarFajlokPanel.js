@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import ReactDOM from "react-dom";
 import { PiUploadSimpleLight, PiTrashLight, PiXLight } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { fileToBase64 } from "utils/fileToBase64.js";
@@ -152,35 +153,39 @@ export default function FuvarFajlokPanel({ fuvar_id }) {
         </div>
       )}
 
-      {previewLoading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <span className="h-8 w-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-        </div>
-      )}
+      {previewLoading &&
+        ReactDOM.createPortal(
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+            <span className="h-8 w-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+          </div>,
+          document.body,
+        )}
 
-      {preview && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-black/90" onClick={() => setPreview(null)}>
-          <div className="flex items-center justify-between p-4">
-            <p className="truncate pr-4 text-sm font-semibold text-white">{preview.filename}</p>
-            <button
-              type="button"
-              onClick={() => setPreview(null)}
-              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-white"
-              aria-label="Bezárás"
-            >
-              <PiXLight className="h-5 w-5" />
-            </button>
-          </div>
-          <div className="flex flex-1 items-center justify-center overflow-auto p-4">
-            <img
-              src={preview.src}
-              alt={preview.filename}
-              className="max-h-full max-w-full rounded-lg object-contain"
-              onClick={(e) => e.stopPropagation()}
-            />
-          </div>
-        </div>
-      )}
+      {preview &&
+        ReactDOM.createPortal(
+          <div className="fixed inset-0 z-50 flex flex-col bg-black/90" onClick={() => setPreview(null)}>
+            <div className="flex items-center justify-between p-4">
+              <p className="truncate pr-4 text-sm font-semibold text-white">{preview.filename}</p>
+              <button
+                type="button"
+                onClick={() => setPreview(null)}
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-white"
+                aria-label="Bezárás"
+              >
+                <PiXLight className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="flex flex-1 items-center justify-center overflow-auto p-4">
+              <img
+                src={preview.src}
+                alt={preview.filename}
+                className="max-h-full max-w-full rounded-lg object-contain"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
