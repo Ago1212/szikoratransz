@@ -1,12 +1,25 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useHistory } from "react-router-dom";
-import { PiCameraLight, PiFilePdfLight, PiTrashLight, PiMapTrifoldLight } from "react-icons/pi";
+import {
+  PiCameraLight,
+  PiFilePdfLight,
+  PiTrashLight,
+  PiScalesLight,
+  PiStackLight,
+  PiPackageLight,
+  PiTruckLight,
+  PiBuildingsLight,
+} from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { fileToBase64 } from "utils/fileToBase64.js";
 import { toast } from "utils/toast";
 import { confirmDialog } from "utils/confirm.js";
 import MobileHeader from "components/UI/MobileHeader.js";
-import Spinner from "components/UI/Spinner.js";
+import StatusBadge from "components/UI/StatusBadge.js";
+import StatChip from "components/UI/StatChip.js";
+import NoteCard from "components/UI/NoteCard.js";
+import { RouteCardSkeleton } from "components/UI/Skeleton.js";
+import RouteTimelineCard from "components/Fuvarok/RouteTimelineCard.js";
 
 // A push-értesítésből érkező kattintás egy sima URL-t nyit meg (a service
 // worker-nek nincs React Router state-je, amit átadhatna), ezért ez az
@@ -89,6 +102,7 @@ function DokumentumFotoSor({ fajl, onDeleted }) {
 function FeltoltoSzekcio({ cim, tipus, kotelezo, fajlok, onUploaded, onDeleted }) {
   const [uploading, setUploading] = useState(false);
   const sajatFajlok = fajlok.filter((f) => f.cimkek === tipus);
+  const hianyzik = kotelezo && sajatFajlok.length === 0;
 
   const handleFileChange = async (e) => {
     const files = Array.from(e.target.files || []);
@@ -118,7 +132,7 @@ function FeltoltoSzekcio({ cim, tipus, kotelezo, fajlok, onUploaded, onDeleted }
   };
 
   return (
-    <div>
+    <div className={hianyzik ? "rounded-2xl border border-amber-200 bg-amber-50/40 p-3" : ""}>
       <div className="mb-2 flex items-center gap-2">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-400">{cim}</h2>
         <span
@@ -202,10 +216,15 @@ export default function FuvarReszletek() {
   }, [loadFajlok]);
 
   if (loading || !fuvar) {
-    return <Spinner wrapperClassName="flex justify-center py-24" />;
+    return (
+      <div className="flex flex-col gap-4 pb-4">
+        <MobileHeader title="Fuvar" />
+        <RouteCardSkeleton />
+      </div>
+    );
   }
 
-  const jarmu = fuvar.kamion_rendszam || fuvar.furgon_rendszam || "—";
+  const jarmu = fuvar.kamion_rendszam || fuvar.furgon_rendszam || null;
 
   const felrakoTeljesCim = [fuvar.felrako_ceg, fuvar.felrako_cim].filter(Boolean).join(", ");
   const lerakoTeljesCim = [fuvar.lerako_ceg, fuvar.lerako_cim].filter(Boolean).join(", ");
@@ -222,83 +241,39 @@ export default function FuvarReszletek() {
 
   return (
     <div className="flex flex-col gap-4 pb-4">
-      <MobileHeader title="Fuvar" />
-
-      <div className="rounded-2xl border border-ink-100 bg-white p-4 shadow-soft">
-        <p className="font-display text-base font-bold text-brand-900">
-          {fuvar.felrako_ceg || "—"} → {fuvar.lerako_ceg || "—"}
-        </p>
-        <dl className="mt-2 space-y-1 text-sm text-ink-600">
-          <div>
-            <dt className="inline font-semibold text-ink-400">Felrakás: </dt>
-            <dd className="inline">{fuvar.felrakas_datuma || "—"}</dd>
-          </div>
-          <div>
-            <dt className="inline font-semibold text-ink-400">Lerakás: </dt>
-            <dd className="inline">{fuvar.lerakas_datuma || "—"}</dd>
-          </div>
-          <div>
-            <dt className="inline font-semibold text-ink-400">Jármű: </dt>
-            <dd className="inline">{jarmu}</dd>
-          </div>
-          <div>
-            <dt className="inline font-semibold text-ink-400">Távolság: </dt>
-            <dd className="inline">{fuvar.tavolsag_km ? `${fuvar.tavolsag_km} km` : "—"}</dd>
-          </div>
-          <div>
-            <dt className="inline font-semibold text-ink-400">Tömeg: </dt>
-            <dd className="inline">{fuvar.tomeg_tonna != null ? `${fuvar.tomeg_tonna} t` : "—"}</dd>
-          </div>
-          <div>
-            <dt className="inline font-semibold text-ink-400">Raklapszám: </dt>
-            <dd className="inline">{fuvar.raklapszam ?? "—"}</dd>
-          </div>
-          {fuvar.megbizo_nev && (
-            <div>
-              <dt className="inline font-semibold text-ink-400">Megbízó: </dt>
-              <dd className="inline">
-                {fuvar.megbizo_nev}
-                {megbizoTeljesCim ? ` (${megbizoTeljesCim})` : ""}
-              </dd>
-            </div>
-          )}
-          {fuvar.aru_megnevezese && (
-            <div>
-              <dt className="inline font-semibold text-ink-400">Áru: </dt>
-              <dd className="inline">{fuvar.aru_megnevezese}</dd>
-            </div>
-          )}
-          {fuvar.megjegyzes && (
-            <div>
-              <dt className="inline font-semibold text-ink-400">Megjegyzés: </dt>
-              <dd className="inline">{fuvar.megjegyzes}</dd>
-            </div>
-          )}
-        </dl>
-
-        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <div className="rounded-xl bg-slate-50 p-2.5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">Felrakó</p>
-            <p className="text-sm font-semibold text-ink-800">{fuvar.felrako_ceg || "—"}</p>
-            {fuvar.felrako_cim && <p className="text-xs text-ink-400">{fuvar.felrako_cim}</p>}
-          </div>
-          <div className="rounded-xl bg-slate-50 p-2.5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">Lerakó</p>
-            <p className="text-sm font-semibold text-ink-800">{fuvar.lerako_ceg || "—"}</p>
-            {fuvar.lerako_cim && <p className="text-xs text-ink-400">{fuvar.lerako_cim}</p>}
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={handleUtvonalterv}
-          disabled={!utvonaltervEleheto}
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 py-2.5 text-sm font-bold uppercase tracking-wide text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-ink-400"
-        >
-          <PiMapTrifoldLight className="h-4 w-4" />
-          Útvonaltervezés
-        </button>
+      <div className="flex items-center justify-between">
+        <MobileHeader title="Fuvar" />
+        <StatusBadge tone={fuvar.dokumentum_feltoltve ? "success" : "brand"}>
+          {fuvar.dokumentum_feltoltve ? "Dokumentálva" : "Aktív"}
+        </StatusBadge>
       </div>
+
+      <RouteTimelineCard
+        felrako={{ ceg: fuvar.felrako_ceg, cim: fuvar.felrako_cim, datum: fuvar.felrakas_datuma }}
+        lerako={{ ceg: fuvar.lerako_ceg, cim: fuvar.lerako_cim, datum: fuvar.lerakas_datuma }}
+        tavolsagKm={fuvar.tavolsag_km}
+        onUtvonalterv={handleUtvonalterv}
+        eleheto={utvonaltervEleheto}
+      />
+
+      <div className="flex flex-wrap gap-2">
+        <StatChip icon={PiScalesLight} value={fuvar.tomeg_tonna != null ? `${fuvar.tomeg_tonna} t` : null} label="Tömeg" />
+        <StatChip icon={PiStackLight} value={fuvar.raklapszam ?? null} label="Raklap" />
+        <StatChip icon={PiPackageLight} value={fuvar.aru_megnevezese} label="Áru" />
+        <StatChip icon={PiTruckLight} value={jarmu} label="Jármű" />
+      </div>
+
+      {fuvar.megbizo_nev && (
+        <div className="flex items-center gap-2 text-sm text-ink-600">
+          <PiBuildingsLight className="h-4 w-4 flex-shrink-0 text-ink-400" />
+          <span>
+            {fuvar.megbizo_nev}
+            {megbizoTeljesCim ? ` (${megbizoTeljesCim})` : ""}
+          </span>
+        </div>
+      )}
+
+      <NoteCard text={fuvar.megjegyzes} />
 
       <FeltoltoSzekcio
         cim="Menetlevél"
