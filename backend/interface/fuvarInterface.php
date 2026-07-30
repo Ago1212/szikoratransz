@@ -3,8 +3,9 @@
 // Fuvar modul — a korábban tudatosan kivezetett `fuvarok` tábla
 // újraépítése (ld. docs/superpowers/specs/2026-07-25-fuvar-dokumentum-
 // ocr-design.md), most OCR-alapú dokumentum-beérkeztetésre építve, nem
-// szóbeli/kézi bejegyzésre. "Összesen" nincs tárolva — mindig
-// `fuvardij + egyeb_koltseg` a lekérdezésben.
+// szóbeli/kézi bejegyzésre. A `dij` oszlop már maga a teljes összeg (ld.
+// docs/superpowers/specs/2026-07-30-fuvar-mezok-atalakitas-design.md) —
+// nincs külön "Összesen" számítás.
 class FuvarInterface {
     protected $db;
 
@@ -13,10 +14,11 @@ class FuvarInterface {
     // oszlopneveknek EMIATT alias-prefix nélkülinek kell lenniük, különben
     // minden explicit sortKey egy "Column not found" SQL-hibával elszáll.
     const RENDEZHETO_OSZLOPOK = [
-        'teljesites_datuma' => 'teljesites_datuma',
-        'felrako' => 'felrako',
-        'lerako' => 'lerako',
-        'fuvardij' => 'fuvardij',
+        'lerakas_datuma' => 'lerakas_datuma',
+        'felrakas_datuma' => 'felrakas_datuma',
+        'felrako' => 'felrako_ceg',
+        'lerako' => 'lerako_ceg',
+        'dij' => 'dij',
         'allapot' => 'allapot',
     ];
 
@@ -65,13 +67,16 @@ class FuvarInterface {
             return ['success' => false, 'message' => $hiba];
         }
         try {
-            $query = "INSERT INTO fuvarok (admin, sofor_id, kamion_id, furgon_id, potkocsi_id, teljesites_datuma, felrako, lerako, tavolsag_km, tomeg_kg, megbizo_id, aru_megnevezese, megjegyzes, fuvardij, egyeb_koltseg, fuvarlevel_szam, beerkezett_dokumentum_id, allapot)
-                      VALUES (:admin, :sofor_id, :kamion_id, :furgon_id, :potkocsi_id, :teljesites_datuma, :felrako, :lerako, :tavolsag_km, :tomeg_kg, :megbizo_id, :aru_megnevezese, :megjegyzes, :fuvardij, :egyeb_koltseg, :fuvarlevel_szam, :beerkezett_dokumentum_id, :allapot)";
+            $query = "INSERT INTO fuvarok (admin, sofor_id, kamion_id, furgon_id, potkocsi_id, felrakas_datuma, lerakas_datuma, felrako_ceg, felrako_cim, lerako_ceg, lerako_cim, tavolsag_km, tomeg_tonna, megbizo_id, aru_megnevezese, megjegyzes, dij, raklapszam, beerkezett_dokumentum_id, allapot)
+                      VALUES (:admin, :sofor_id, :kamion_id, :furgon_id, :potkocsi_id, :felrakas_datuma, :lerakas_datuma, :felrako_ceg, :felrako_cim, :lerako_ceg, :lerako_cim, :tavolsag_km, :tomeg_tonna, :megbizo_id, :aru_megnevezese, :megjegyzes, :dij, :raklapszam, :beerkezett_dokumentum_id, :allapot)";
             $stmt = $this->db->prepare($query);
             $this->bindFuvarMezok($stmt, $data, $ceg_id);
             $stmt->execute();
 
             $ujId = $this->db->lastInsertId();
+            if (!empty($data['megbizo_id'])) {
+                $this->frissitsMegbizoFelrakoLerako($data['megbizo_id'], $data, $ceg_id);
+            }
             return ['success' => true, 'message' => 'Fuvar rögzítve.', 'fuvar' => $this->getFuvar($ujId, $ceg_id)['fuvar']];
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
@@ -86,10 +91,11 @@ class FuvarInterface {
         try {
             $query = "UPDATE fuvarok SET
                         sofor_id = :sofor_id, kamion_id = :kamion_id, furgon_id = :furgon_id, potkocsi_id = :potkocsi_id,
-                        teljesites_datuma = :teljesites_datuma, felrako = :felrako, lerako = :lerako, tavolsag_km = :tavolsag_km,
-                        tomeg_kg = :tomeg_kg,
+                        felrakas_datuma = :felrakas_datuma, lerakas_datuma = :lerakas_datuma,
+                        felrako_ceg = :felrako_ceg, felrako_cim = :felrako_cim, lerako_ceg = :lerako_ceg, lerako_cim = :lerako_cim,
+                        tavolsag_km = :tavolsag_km, tomeg_tonna = :tomeg_tonna,
                         megbizo_id = :megbizo_id, aru_megnevezese = :aru_megnevezese, megjegyzes = :megjegyzes,
-                        fuvardij = :fuvardij, egyeb_koltseg = :egyeb_koltseg, fuvarlevel_szam = :fuvarlevel_szam,
+                        dij = :dij, raklapszam = :raklapszam,
                         beerkezett_dokumentum_id = :beerkezett_dokumentum_id, allapot = :allapot
                       WHERE id = :id AND admin = :admin";
             $stmt = $this->db->prepare($query);
@@ -97,6 +103,9 @@ class FuvarInterface {
             $this->bindFuvarMezok($stmt, $data, $ceg_id);
             $stmt->execute();
 
+            if (!empty($data['megbizo_id'])) {
+                $this->frissitsMegbizoFelrakoLerako($data['megbizo_id'], $data, $ceg_id);
+            }
             return ['success' => true, 'message' => 'Fuvar frissítve.', 'fuvar' => $this->getFuvar($data['id'], $ceg_id)['fuvar']];
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
@@ -109,19 +118,70 @@ class FuvarInterface {
         $stmt->bindValue(':kamion_id', $data['kamion_id'] ?? null);
         $stmt->bindValue(':furgon_id', $data['furgon_id'] ?? null);
         $stmt->bindValue(':potkocsi_id', $data['potkocsi_id'] ?? null);
-        $stmt->bindValue(':teljesites_datuma', $data['teljesites_datuma'] ?? null);
-        $stmt->bindValue(':felrako', $data['felrako'] ?? null);
-        $stmt->bindValue(':lerako', $data['lerako'] ?? null);
+        $stmt->bindValue(':felrakas_datuma', $data['felrakas_datuma'] ?? null);
+        $stmt->bindValue(':lerakas_datuma', $data['lerakas_datuma'] ?? null);
+        $stmt->bindValue(':felrako_ceg', $data['felrako_ceg'] ?? null);
+        $stmt->bindValue(':felrako_cim', $data['felrako_cim'] ?? null);
+        $stmt->bindValue(':lerako_ceg', $data['lerako_ceg'] ?? null);
+        $stmt->bindValue(':lerako_cim', $data['lerako_cim'] ?? null);
         $stmt->bindValue(':tavolsag_km', empty($data['tavolsag_km']) ? null : (int) $data['tavolsag_km'], empty($data['tavolsag_km']) ? PDO::PARAM_NULL : PDO::PARAM_INT);
-        $stmt->bindValue(':tomeg_kg', empty($data['tomeg_kg']) ? null : (float) $data['tomeg_kg']);
+        $stmt->bindValue(':tomeg_tonna', empty($data['tomeg_tonna']) ? null : (float) $data['tomeg_tonna']);
         $stmt->bindValue(':megbizo_id', $data['megbizo_id'] ?? null);
         $stmt->bindValue(':aru_megnevezese', $data['aru_megnevezese'] ?? null);
         $stmt->bindValue(':megjegyzes', $data['megjegyzes'] ?? null);
-        $stmt->bindValue(':fuvardij', $data['fuvardij'] === '' || $data['fuvardij'] === null ? null : (float) $data['fuvardij']);
-        $stmt->bindValue(':egyeb_koltseg', $data['egyeb_koltseg'] === '' || $data['egyeb_koltseg'] === null ? null : (float) $data['egyeb_koltseg']);
-        $stmt->bindValue(':fuvarlevel_szam', $data['fuvarlevel_szam'] ?? null);
+        $stmt->bindValue(':dij', $data['dij'] === '' || $data['dij'] === null ? null : (float) $data['dij']);
+        $stmt->bindValue(':raklapszam', empty($data['raklapszam']) ? null : (int) $data['raklapszam'], empty($data['raklapszam']) ? PDO::PARAM_NULL : PDO::PARAM_INT);
         $stmt->bindValue(':beerkezett_dokumentum_id', empty($data['beerkezett_dokumentum_id']) ? null : (int) $data['beerkezett_dokumentum_id'], empty($data['beerkezett_dokumentum_id']) ? PDO::PARAM_NULL : PDO::PARAM_INT);
         $stmt->bindValue(':allapot', $data['allapot'] ?? 'rogzitett');
+    }
+
+    // Ha a fuvaron megadott felrakó/lerakó adat van, de a kiválasztott
+    // megbízónál még NINCS elmentve (mezőnként külön nézve), automatikusan
+    // visszaírjuk az ugyfelek táblába — csak akkor, ha ott jelenleg NULL/
+    // üres. Sosem írja felül a megbízónál már meglévő értéket (ld. design
+    // spec "Automatikus ajánlás + visszamentés"). newFuvar()/updateFuvar()
+    // saját sikeres ágán hívva, csendben (nincs UI-visszajelzés hozzá).
+    private function frissitsMegbizoFelrakoLerako($megbizoId, $data, $ceg_id) {
+        $mezok = ['felrako_ceg', 'felrako_cim', 'lerako_ceg', 'lerako_cim'];
+        $ujErtekek = [];
+        foreach ($mezok as $mezo) {
+            if (!empty($data[$mezo])) {
+                $ujErtekek[$mezo] = $data[$mezo];
+            }
+        }
+        if (empty($ujErtekek)) {
+            return;
+        }
+
+        $stmt = $this->db->prepare(
+            "SELECT felrako_ceg, felrako_cim, lerako_ceg, lerako_cim FROM ugyfelek WHERE id = :id AND admin = :ceg_id"
+        );
+        $stmt->bindValue(':id', $megbizoId, PDO::PARAM_INT);
+        $stmt->bindValue(':ceg_id', $ceg_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $megbizo = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($megbizo === false) {
+            return;
+        }
+
+        $frissitendo = [];
+        foreach ($ujErtekek as $mezo => $ertek) {
+            if (empty($megbizo[$mezo])) {
+                $frissitendo[$mezo] = $ertek;
+            }
+        }
+        if (empty($frissitendo)) {
+            return;
+        }
+
+        $setResz = implode(', ', array_map(fn($mezo) => "$mezo = :$mezo", array_keys($frissitendo)));
+        $update = $this->db->prepare("UPDATE ugyfelek SET $setResz WHERE id = :id AND admin = :ceg_id");
+        foreach ($frissitendo as $mezo => $ertek) {
+            $update->bindValue(":$mezo", $ertek);
+        }
+        $update->bindValue(':id', $megbizoId, PDO::PARAM_INT);
+        $update->bindValue(':ceg_id', $ceg_id, PDO::PARAM_INT);
+        $update->execute();
     }
 
     const ALLAPOT_ERTEKEK = ['rogzitett', 'szamlazasra_var', 'szamlazva', 'fizetesre_var', 'teljesitve'];
@@ -203,9 +263,7 @@ class FuvarInterface {
     // hozzafuzMegjegyzesekSzama()`-nál.
     public function getFuvar($id, $ceg_id) {
         $stmt = $this->db->prepare(
-            "SELECT *, (fuvardij + IFNULL(egyeb_koltseg, 0)) AS osszesen
-             FROM fuvarok
-             WHERE id = :id AND admin = :admin AND torolt <> 'I'"
+            "SELECT * FROM fuvarok WHERE id = :id AND admin = :admin AND torolt <> 'I'"
         );
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         $stmt->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
@@ -219,9 +277,7 @@ class FuvarInterface {
 
     public function getFuvarok($ceg_id, $search = null, $page = null, $pageSize = null, $sortKey = null, $sortDir = 'asc', $allapot = null, $datumTol = null, $datumIg = null) {
         $params = [':admin' => $ceg_id];
-        $query = "SELECT *, (fuvardij + IFNULL(egyeb_koltseg, 0)) AS osszesen
-                  FROM fuvarok
-                  WHERE admin = :admin AND torolt <> 'I'";
+        $query = "SELECT * FROM fuvarok WHERE admin = :admin AND torolt <> 'I'";
 
         if (!empty($allapot)) {
             $query .= " AND allapot = :allapot";
@@ -230,17 +286,18 @@ class FuvarInterface {
         // `$datumTol`/`$datumIg` — a Sofőr szerinti nézet heti navigációjához
         // (ld. Fuvarok.js/SoforCsoportositottLista.js): az a nézet a
         // lapozás megkerülésével (page=null) kéri le EGY adott hét összes
-        // fuvarját, nem a táblázat-nézet oldalankénti szeletét.
+        // fuvarját, nem a táblázat-nézet oldalankénti szeletét. A lerakás
+        // dátuma az elsődleges dátum (ld. design spec).
         if (!empty($datumTol)) {
-            $query .= " AND teljesites_datuma >= :datumTol";
+            $query .= " AND lerakas_datuma >= :datumTol";
             $params[':datumTol'] = $datumTol;
         }
         if (!empty($datumIg)) {
-            $query .= " AND teljesites_datuma <= :datumIg";
+            $query .= " AND lerakas_datuma <= :datumIg";
             $params[':datumIg'] = $datumIg;
         }
         if (!empty($search)) {
-            // A saját mezők (felrakó/lerakó/áru/fuvarlevél szám) LIKE-
+            // A saját mezők (felrakó/lerakó cég+cím/áru/raklapszám) LIKE-
             // egyezése mellett a kapcsolódó entitások (sofőr/kamion/
             // furgon/megbízó) nevét/rendszámát KÜLÖN lekérdezéssel
             // egyeztetjük a keresőszóval, és a talált id-ket egy IN(...)
@@ -259,13 +316,13 @@ class FuvarInterface {
                 }
             }
 
-            $sajatMezoFeltetel = "(felrako LIKE :search OR lerako LIKE :search OR aru_megnevezese LIKE :search OR fuvarlevel_szam LIKE :search)";
+            $sajatMezoFeltetel = "(felrako_ceg LIKE :search OR felrako_cim LIKE :search OR lerako_ceg LIKE :search OR lerako_cim LIKE :search OR aru_megnevezese LIKE :search OR raklapszam LIKE :search)";
             $params[':search'] = '%' . $search . '%';
 
             $query .= " AND (" . implode(' OR ', array_merge([$sajatMezoFeltetel], $entitasFeltetelek)) . ")";
         }
 
-        $rendezoOszlop = self::RENDEZHETO_OSZLOPOK[$sortKey] ?? 'teljesites_datuma';
+        $rendezoOszlop = self::RENDEZHETO_OSZLOPOK[$sortKey] ?? 'lerakas_datuma';
         $irany = strtolower((string) $sortDir) === 'desc' ? 'DESC' : 'ASC';
         $query .= " ORDER BY $rendezoOszlop $irany";
 
@@ -304,6 +361,9 @@ class FuvarInterface {
         $fuvar['furgon_rendszam'] = $this->egyMezoLekerdezese('furgon', 'rendszam', $fuvar['furgon_id'], $ceg_id);
         $fuvar['potkocsi_rendszam'] = $this->egyMezoLekerdezese('potkocsi', 'rendszam', $fuvar['potkocsi_id'], $ceg_id);
         $fuvar['megbizo_nev'] = $this->egyMezoLekerdezese('ugyfelek', 'nev', $fuvar['megbizo_id'], $ceg_id);
+        $fuvar['megbizo_cim'] = $this->egyMezoLekerdezese('ugyfelek', 'cim', $fuvar['megbizo_id'], $ceg_id);
+        $fuvar['megbizo_irsz'] = $this->egyMezoLekerdezese('ugyfelek', 'irsz', $fuvar['megbizo_id'], $ceg_id);
+        $fuvar['megbizo_varos'] = $this->egyMezoLekerdezese('ugyfelek', 'varos', $fuvar['megbizo_id'], $ceg_id);
         return $fuvar;
     }
 
@@ -332,6 +392,9 @@ class FuvarInterface {
         $furgonRendszamok = $this->batchLekerdezes('furgon', 'rendszam', array_column($fuvarok, 'furgon_id'), $ceg_id);
         $potkocsiRendszamok = $this->batchLekerdezes('potkocsi', 'rendszam', array_column($fuvarok, 'potkocsi_id'), $ceg_id);
         $megbizoNevek = $this->batchLekerdezes('ugyfelek', 'nev', array_column($fuvarok, 'megbizo_id'), $ceg_id);
+        $megbizoCimek = $this->batchLekerdezes('ugyfelek', 'cim', array_column($fuvarok, 'megbizo_id'), $ceg_id);
+        $megbizoIrszek = $this->batchLekerdezes('ugyfelek', 'irsz', array_column($fuvarok, 'megbizo_id'), $ceg_id);
+        $megbizoVarosok = $this->batchLekerdezes('ugyfelek', 'varos', array_column($fuvarok, 'megbizo_id'), $ceg_id);
 
         foreach ($fuvarok as &$fuvar) {
             $fuvar['sofor_nev'] = $soforNevek[$fuvar['sofor_id']] ?? null;
@@ -339,6 +402,9 @@ class FuvarInterface {
             $fuvar['furgon_rendszam'] = $furgonRendszamok[$fuvar['furgon_id']] ?? null;
             $fuvar['potkocsi_rendszam'] = $potkocsiRendszamok[$fuvar['potkocsi_id']] ?? null;
             $fuvar['megbizo_nev'] = $megbizoNevek[$fuvar['megbizo_id']] ?? null;
+            $fuvar['megbizo_cim'] = $megbizoCimek[$fuvar['megbizo_id']] ?? null;
+            $fuvar['megbizo_irsz'] = $megbizoIrszek[$fuvar['megbizo_id']] ?? null;
+            $fuvar['megbizo_varos'] = $megbizoVarosok[$fuvar['megbizo_id']] ?? null;
         }
         unset($fuvar);
         return $fuvarok;
@@ -378,22 +444,22 @@ class FuvarInterface {
 
     // Referencia, NEM autofill — a megbízó "szokásos fuvardíjai" mezőnek,
     // ld. design spec 6.2. Útvonalanként erősen eltérhet a díj, ezért a
-    // frontend csak megjeleníti, nem tölti be automatikusan a fuvardij
+    // frontend csak megjeleníti, nem tölti be automatikusan a dij
     // mezőbe.
-    // Whole-branch review Minor finding: `ORDER BY teljesites_datuma DESC`
-    // önmagában NULL `teljesites_datuma`-jú sorokat mindig a lista VÉGÉRE
+    // Whole-branch review Minor finding: `ORDER BY lerakas_datuma DESC`
+    // önmagában NULL `lerakas_datuma`-jú sorokat mindig a lista VÉGÉRE
     // sorolt (MySQL NULL-DESC szemantika) — egy ténylegesen friss, de még
     // dátum nélküli fuvar így kieshetett a `LIMIT`-ből egy régebbi, de
     // dátumozott sor mögött. A `letrehozva DESC` másodlagos rendezőkulcs
     // egyrészt a NULL-datumú sorokat is ésszerű (rögzítés-időrendi)
     // sorrendbe teszi egymás között, másrészt tiebreaker azonos
-    // `teljesites_datuma` esetén is.
+    // `lerakas_datuma` esetén is.
     public function getUgyfelElozmeny($ugyfelId, $ceg_id, $limit = 5) {
         $stmt = $this->db->prepare(
-            "SELECT teljesites_datuma, felrako, lerako, fuvardij
+            "SELECT lerakas_datuma, felrako_ceg, lerako_ceg, dij
              FROM fuvarok
              WHERE megbizo_id = :megbizo_id AND admin = :admin AND torolt <> 'I'
-             ORDER BY teljesites_datuma DESC, letrehozva DESC
+             ORDER BY lerakas_datuma DESC, letrehozva DESC
              LIMIT " . (int) $limit
         );
         $stmt->bindValue(':megbizo_id', $ugyfelId, PDO::PARAM_INT);
@@ -413,12 +479,13 @@ class FuvarInterface {
             ? "AND dokumentum_feltoltve IS NULL AND allapot <> 'teljesitve'"
             : "AND (dokumentum_feltoltve IS NOT NULL OR allapot = 'teljesitve')";
         $stmt = $this->db->prepare(
-            "SELECT id, kamion_id, furgon_id, potkocsi_id, teljesites_datuma, felrako, lerako,
-                    tavolsag_km, tomeg_kg, megbizo_id, aru_megnevezese, megjegyzes, allapot,
+            "SELECT id, kamion_id, furgon_id, potkocsi_id, felrakas_datuma, lerakas_datuma,
+                    felrako_ceg, felrako_cim, lerako_ceg, lerako_cim,
+                    tavolsag_km, tomeg_tonna, raklapszam, megbizo_id, aru_megnevezese, megjegyzes, allapot,
                     dokumentum_feltoltve
              FROM fuvarok
              WHERE sofor_id = :sofor_id AND admin = :ceg_id AND torolt <> 'I' $lezarasFeltetel
-             ORDER BY teljesites_datuma DESC, letrehozva DESC"
+             ORDER BY lerakas_datuma DESC, letrehozva DESC"
         );
         $stmt->bindValue(':sofor_id', $sofor_id, PDO::PARAM_INT);
         $stmt->bindValue(':ceg_id', $ceg_id, PDO::PARAM_INT);
@@ -432,8 +499,9 @@ class FuvarInterface {
     // `feltoltFuvarDokumentumot` action-öknél).
     public function getSajatFuvar($id, $sofor_id, $ceg_id) {
         $stmt = $this->db->prepare(
-            "SELECT id, kamion_id, furgon_id, potkocsi_id, teljesites_datuma, felrako, lerako,
-                    tavolsag_km, tomeg_kg, megbizo_id, aru_megnevezese, megjegyzes, allapot,
+            "SELECT id, kamion_id, furgon_id, potkocsi_id, felrakas_datuma, lerakas_datuma,
+                    felrako_ceg, felrako_cim, lerako_ceg, lerako_cim,
+                    tavolsag_km, tomeg_tonna, raklapszam, megbizo_id, aru_megnevezese, megjegyzes, allapot,
                     dokumentum_feltoltve
              FROM fuvarok
              WHERE id = :id AND sofor_id = :sofor_id AND admin = :ceg_id AND torolt <> 'I'"
@@ -475,15 +543,15 @@ class FuvarInterface {
     // ugyanígy ki tudunk számolni a már meglévő adatokból).
     public function getStatisztikak($ceg_id) {
         $stmt = $this->db->prepare(
-            "SELECT id, sofor_id, kamion_id, furgon_id, teljesites_datuma, tavolsag_km,
-                    megbizo_id, fuvardij, egyeb_koltseg, allapot
+            "SELECT id, sofor_id, kamion_id, furgon_id, lerakas_datuma, tavolsag_km,
+                    megbizo_id, dij, allapot
              FROM fuvarok WHERE admin = :admin AND torolt <> 'I'"
         );
         $stmt->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
         $stmt->execute();
         $fuvarok = $stmt->fetchAll(PDO::FETCH_ASSOC);
         foreach ($fuvarok as &$f) {
-            $f['osszesen'] = (float) $f['fuvardij'] + (float) ($f['egyeb_koltseg'] ?? 0);
+            $f['osszesen'] = (float) ($f['dij'] ?? 0);
         }
         unset($f);
 
@@ -495,14 +563,14 @@ class FuvarInterface {
 
         $ma = date('Y-m-d');
         $lejartE = function ($f) use ($megbizoHataridok, $ma) {
-            if (empty($f['teljesites_datuma']) || empty($f['megbizo_id'])) {
+            if (empty($f['lerakas_datuma']) || empty($f['megbizo_id'])) {
                 return false;
             }
             $napok = $megbizoHataridok[$f['megbizo_id']] ?? null;
             if ($napok === null || $napok === '') {
                 return false;
             }
-            $hatarido = date('Y-m-d', strtotime($f['teljesites_datuma'] . " +{$napok} days"));
+            $hatarido = date('Y-m-d', strtotime($f['lerakas_datuma'] . " +{$napok} days"));
             return $hatarido < $ma;
         };
 
@@ -585,13 +653,13 @@ class FuvarInterface {
         $megbizoStat = array_values($megbizoStat);
         usort($megbizoStat, fn($a, $b) => $b['arbevetel'] <=> $a['arbevetel']);
 
-        // 4. Havi statisztika (utolsó 12, teljesítés dátuma szerinti hónap)
+        // 4. Havi statisztika (utolsó 12, lerakás dátuma szerinti hónap)
         $havi = [];
         foreach ($fuvarok as $f) {
-            if (empty($f['teljesites_datuma'])) {
+            if (empty($f['lerakas_datuma'])) {
                 continue;
             }
-            $ho = substr($f['teljesites_datuma'], 0, 7);
+            $ho = substr($f['lerakas_datuma'], 0, 7);
             if (!isset($havi[$ho])) {
                 $havi[$ho] = ['honap' => $ho, 'fuvarokSzama' => 0, 'bevetelOsszesen' => 0.0, 'kmOsszesen' => 0];
             }
@@ -608,8 +676,8 @@ class FuvarInterface {
         ksort($havi);
         $havi = array_values(array_slice($havi, -12, 12, true));
 
-        // Fuvarozási profit — a Fuvarok saját bevétele (fuvardij+egyeb_
-        // koltseg) mínusz a flotta-szintű üzemanyag+útdíj+bér kiadás,
+        // Fuvarozási profit — a Fuvarok saját bevétele (dij) mínusz a
+        // flotta-szintű üzemanyag+útdíj+bér kiadás,
         // havi bontásban. Ez EGY ÖNÁLLÓ, csak-a-fuvarozásból nézet — a
         // Fuvar-bevétel sosem folyik be a Pénzforgalom fő `egyeb_koltsegek`
         // bevétel-táblájába, tehát ez a szám NEM egyezik a Pénzforgalom
@@ -693,7 +761,7 @@ class FuvarInterface {
     // pusztán a tény, hogy a leszállítás megtörtént, de semmi nincs számlázva.
     public function getFigyelmeztetesek($ceg_id) {
         $stmt = $this->db->prepare(
-            "SELECT id, felrako, lerako, teljesites_datuma, megbizo_id, fuvardij, egyeb_koltseg, allapot, szamlaszam
+            "SELECT id, felrako_ceg, lerako_ceg, lerakas_datuma, megbizo_id, dij, allapot, szamlaszam
              FROM fuvarok
              WHERE admin = :admin AND torolt <> 'I' AND allapot IN ('rogzitett', 'szamlazva', 'fizetesre_var')"
         );
@@ -708,20 +776,20 @@ class FuvarInterface {
         $lejartFizetes = [];
         $szamlazasraVar = [];
         foreach ($fuvarok as $f) {
-            $osszesen = round((float) $f['fuvardij'] + (float) ($f['egyeb_koltseg'] ?? 0), 2);
-            $utvonal = trim(($f['felrako'] ?: '') . ($f['felrako'] && $f['lerako'] ? ' → ' : '') . ($f['lerako'] ?: ''));
+            $osszesen = round((float) ($f['dij'] ?? 0), 2);
+            $utvonal = trim(($f['felrako_ceg'] ?: '') . ($f['felrako_ceg'] && $f['lerako_ceg'] ? ' → ' : '') . ($f['lerako_ceg'] ?: ''));
             $utvonal = $utvonal !== '' ? $utvonal : 'Fuvar';
             $megbizoNev = !empty($f['megbizo_id']) ? ($megbizoNevek[$f['megbizo_id']] ?? 'Ismeretlen') : null;
 
-            if (in_array($f['allapot'], ['szamlazva', 'fizetesre_var'], true) && !empty($f['teljesites_datuma']) && !empty($f['megbizo_id'])) {
+            if (in_array($f['allapot'], ['szamlazva', 'fizetesre_var'], true) && !empty($f['lerakas_datuma']) && !empty($f['megbizo_id'])) {
                 $napok = $megbizoHataridok[$f['megbizo_id']] ?? null;
                 if ($napok !== null && $napok !== '') {
-                    $hatarido = date('Y-m-d', strtotime($f['teljesites_datuma'] . " +{$napok} days"));
+                    $hatarido = date('Y-m-d', strtotime($f['lerakas_datuma'] . " +{$napok} days"));
                     if ($hatarido < $ma) {
                         $lejartFizetes[] = [
                             'id' => (int) $f['id'],
                             'utvonal' => $utvonal,
-                            'felrako' => $f['felrako'],
+                            'felrako' => $f['felrako_ceg'],
                             'megbizoNev' => $megbizoNev,
                             'osszesen' => $osszesen,
                             'hatarido' => $hatarido,
@@ -731,14 +799,14 @@ class FuvarInterface {
                 }
             }
 
-            if ($f['allapot'] === 'rogzitett' && !empty($f['teljesites_datuma']) && $f['teljesites_datuma'] < $ma) {
+            if ($f['allapot'] === 'rogzitett' && !empty($f['lerakas_datuma']) && $f['lerakas_datuma'] < $ma) {
                 $szamlazasraVar[] = [
                     'id' => (int) $f['id'],
                     'utvonal' => $utvonal,
-                    'felrako' => $f['felrako'],
+                    'felrako' => $f['felrako_ceg'],
                     'megbizoNev' => $megbizoNev,
                     'osszesen' => $osszesen,
-                    'teljesitesDatuma' => $f['teljesites_datuma'],
+                    'teljesitesDatuma' => $f['lerakas_datuma'],
                 ];
             }
         }
@@ -770,16 +838,16 @@ class FuvarInterface {
         $granularitas = null
     ) {
         $params = [':admin' => $ceg_id];
-        $query = "SELECT id, sofor_id, teljesites_datuma, allapot, beerkezett_dokumentum_id,
-                         fuvardij, egyeb_koltseg
+        $query = "SELECT id, sofor_id, lerakas_datuma, allapot, beerkezett_dokumentum_id,
+                         dij
                   FROM fuvarok WHERE admin = :admin AND torolt <> 'I'";
 
         if (!empty($datumTol)) {
-            $query .= " AND teljesites_datuma >= :datum_tol";
+            $query .= " AND lerakas_datuma >= :datum_tol";
             $params[':datum_tol'] = $datumTol;
         }
         if (!empty($datumIg)) {
-            $query .= " AND teljesites_datuma <= :datum_ig";
+            $query .= " AND lerakas_datuma <= :datum_ig";
             $params[':datum_ig'] = $datumIg;
         }
         if (!empty($soforId)) {
@@ -803,7 +871,7 @@ class FuvarInterface {
         $stmt->execute();
         $fuvarok = $stmt->fetchAll(PDO::FETCH_ASSOC);
         foreach ($fuvarok as &$f) {
-            $f['osszesen'] = (float) $f['fuvardij'] + (float) ($f['egyeb_koltseg'] ?? 0);
+            $f['osszesen'] = (float) ($f['dij'] ?? 0);
         }
         unset($f);
 
@@ -834,10 +902,10 @@ class FuvarInterface {
             }
             $soforStat[$sid]['bevetelOsszesen'] += $f['osszesen'];
             if (
-                !empty($f['teljesites_datuma'])
-                && ($soforStat[$sid]['utolsoFuvarDatuma'] === null || $f['teljesites_datuma'] > $soforStat[$sid]['utolsoFuvarDatuma'])
+                !empty($f['lerakas_datuma'])
+                && ($soforStat[$sid]['utolsoFuvarDatuma'] === null || $f['lerakas_datuma'] > $soforStat[$sid]['utolsoFuvarDatuma'])
             ) {
-                $soforStat[$sid]['utolsoFuvarDatuma'] = $f['teljesites_datuma'];
+                $soforStat[$sid]['utolsoFuvarDatuma'] = $f['lerakas_datuma'];
             }
         }
         foreach ($soforStat as &$s) {
@@ -885,15 +953,15 @@ class FuvarInterface {
         }
         $trendBucket = [];
         foreach ($fuvarok as $f) {
-            if (empty($f['teljesites_datuma'])) {
+            if (empty($f['lerakas_datuma'])) {
                 continue;
             }
             if ($granularitas === 'nap') {
-                $kulcs = $f['teljesites_datuma'];
+                $kulcs = $f['lerakas_datuma'];
             } elseif ($granularitas === 'het') {
-                $kulcs = date('o-\WW', strtotime($f['teljesites_datuma']));
+                $kulcs = date('o-\WW', strtotime($f['lerakas_datuma']));
             } else {
-                $kulcs = substr($f['teljesites_datuma'], 0, 7);
+                $kulcs = substr($f['lerakas_datuma'], 0, 7);
             }
             $trendBucket[$kulcs] = ($trendBucket[$kulcs] ?? 0) + 1;
         }
