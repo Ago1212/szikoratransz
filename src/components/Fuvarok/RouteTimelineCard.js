@@ -1,5 +1,5 @@
 import React from "react";
-import { PiMapPinFill, PiMapTrifoldLight } from "react-icons/pi";
+import { PiMapPinFill, PiGpsFill } from "react-icons/pi";
 
 function Vegpont({ label, tone, adat }) {
   const toneClasses = tone === "felrako" ? "bg-brand-100 text-brand-600" : "bg-emerald-100 text-emerald-600";
@@ -40,10 +40,10 @@ export default function RouteTimelineCard({ felrako, lerako, tavolsagKm, onUtvon
         type="button"
         onClick={onUtvonalterv}
         disabled={!eleheto}
-        className="mt-4 flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 text-base font-bold uppercase tracking-wide text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-ink-400"
+        className="mx-auto mt-4 flex min-h-11 items-center justify-center gap-2 rounded-full bg-brand-600 px-5 text-sm font-bold uppercase tracking-wide text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-ink-400"
       >
-        <PiMapTrifoldLight className="h-5 w-5" />
-        Útvonaltervezés
+        <PiGpsFill className="h-4 w-4" />
+        Navigáció
       </button>
     </div>
   );
