@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useHistory } from "react-router-dom";
-import { PiCameraLight, PiFilePdfLight, PiTrashLight } from "react-icons/pi";
+import { PiCameraLight, PiFilePdfLight, PiTrashLight, PiMapTrifoldLight } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { fileToBase64 } from "utils/fileToBase64.js";
 import { toast } from "utils/toast";
@@ -207,27 +207,59 @@ export default function FuvarReszletek() {
 
   const jarmu = fuvar.kamion_rendszam || fuvar.furgon_rendszam || "—";
 
+  const felrakoTeljesCim = [fuvar.felrako_ceg, fuvar.felrako_cim].filter(Boolean).join(", ");
+  const lerakoTeljesCim = [fuvar.lerako_ceg, fuvar.lerako_cim].filter(Boolean).join(", ");
+  const megbizoTeljesCim = [fuvar.megbizo_irsz, fuvar.megbizo_varos, fuvar.megbizo_cim].filter(Boolean).join(", ");
+  const utvonaltervEleheto = Boolean(felrakoTeljesCim && lerakoTeljesCim);
+
+  const handleUtvonalterv = () => {
+    window.open(
+      `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(felrakoTeljesCim)}&destination=${encodeURIComponent(lerakoTeljesCim)}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  };
+
   return (
     <div className="flex flex-col gap-4 pb-4">
       <MobileHeader title="Fuvar" />
 
       <div className="rounded-2xl border border-ink-100 bg-white p-4 shadow-soft">
         <p className="font-display text-base font-bold text-brand-900">
-          {fuvar.felrako || "—"} → {fuvar.lerako || "—"}
+          {fuvar.felrako_ceg || "—"} → {fuvar.lerako_ceg || "—"}
         </p>
         <dl className="mt-2 space-y-1 text-sm text-ink-600">
           <div>
-            <dt className="inline font-semibold text-ink-400">Dátum: </dt>
-            <dd className="inline">{fuvar.teljesites_datuma || "—"}</dd>
+            <dt className="inline font-semibold text-ink-400">Felrakás: </dt>
+            <dd className="inline">{fuvar.felrakas_datuma || "—"}</dd>
+          </div>
+          <div>
+            <dt className="inline font-semibold text-ink-400">Lerakás: </dt>
+            <dd className="inline">{fuvar.lerakas_datuma || "—"}</dd>
           </div>
           <div>
             <dt className="inline font-semibold text-ink-400">Jármű: </dt>
             <dd className="inline">{jarmu}</dd>
           </div>
+          <div>
+            <dt className="inline font-semibold text-ink-400">Távolság: </dt>
+            <dd className="inline">{fuvar.tavolsag_km ? `${fuvar.tavolsag_km} km` : "—"}</dd>
+          </div>
+          <div>
+            <dt className="inline font-semibold text-ink-400">Tömeg: </dt>
+            <dd className="inline">{fuvar.tomeg_tonna != null ? `${fuvar.tomeg_tonna} t` : "—"}</dd>
+          </div>
+          <div>
+            <dt className="inline font-semibold text-ink-400">Raklapszám: </dt>
+            <dd className="inline">{fuvar.raklapszam ?? "—"}</dd>
+          </div>
           {fuvar.megbizo_nev && (
             <div>
               <dt className="inline font-semibold text-ink-400">Megbízó: </dt>
-              <dd className="inline">{fuvar.megbizo_nev}</dd>
+              <dd className="inline">
+                {fuvar.megbizo_nev}
+                {megbizoTeljesCim ? ` (${megbizoTeljesCim})` : ""}
+              </dd>
             </div>
           )}
           {fuvar.aru_megnevezese && (
@@ -243,6 +275,29 @@ export default function FuvarReszletek() {
             </div>
           )}
         </dl>
+
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div className="rounded-xl bg-slate-50 p-2.5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">Felrakó</p>
+            <p className="text-sm font-semibold text-ink-800">{fuvar.felrako_ceg || "—"}</p>
+            {fuvar.felrako_cim && <p className="text-xs text-ink-400">{fuvar.felrako_cim}</p>}
+          </div>
+          <div className="rounded-xl bg-slate-50 p-2.5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">Lerakó</p>
+            <p className="text-sm font-semibold text-ink-800">{fuvar.lerako_ceg || "—"}</p>
+            {fuvar.lerako_cim && <p className="text-xs text-ink-400">{fuvar.lerako_cim}</p>}
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleUtvonalterv}
+          disabled={!utvonaltervEleheto}
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 py-2.5 text-sm font-bold uppercase tracking-wide text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-ink-400"
+        >
+          <PiMapTrifoldLight className="h-4 w-4" />
+          Útvonaltervezés
+        </button>
       </div>
 
       <FeltoltoSzekcio
