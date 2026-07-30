@@ -110,12 +110,12 @@ export default function GlobalSearch({ open, onClose }) {
             onChange={(e) => setQ(e.target.value)}
             placeholder="Keresés rendszámra, névre, ügyfélre…"
             aria-label="Keresés rendszámra, névre, ügyfélre"
-            className="min-w-0 flex-1 border-none bg-transparent text-sm text-ink-900 placeholder-ink-300 focus:outline-none dark:text-ink-50 dark:placeholder-ink-600"
+            className="min-h-11 min-w-0 flex-1 border-none bg-transparent text-sm text-ink-900 placeholder-ink-300 focus:outline-none dark:text-ink-50 dark:placeholder-ink-600"
           />
           <button
             type="button"
             onClick={onClose}
-            className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-slate-100 hover:text-ink-700 dark:text-ink-500 dark:hover:bg-ink-800 dark:hover:text-ink-100"
+            className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-slate-100 hover:text-ink-700 dark:text-ink-500 dark:hover:bg-ink-800 dark:hover:text-ink-100"
             aria-label="Bezárás"
           >
             <PiXLight className="h-4 w-4" />

@@ -10,7 +10,13 @@ import DataTable from "components/UI/DataTable.js";
 // `ertesites_naplo` táblára épülő teljes előzmény (ld. Sidebar.js
 // logErtesitesek hívása), egy már dismisselt vagy azóta lezárult ügyre is
 // visszakereshető.
-export default function ErtesitesiElozmenyek() {
+//
+// Mobil navigáció újratervezés (2026-07-30): a tényleges tartalom kikerült
+// egy named exportba, hogy az Elozmenyek.js "Értesítések" füle közvetlenül
+// újrafelhasználhassa saját PageHeader/wrapper nélkül — az önálló
+// `/admin/ertesitesi-elozmenyek` route (mélylink-kompatibilitás miatt
+// megtartva) a lenti default export segítségével ugyanezt csomagolja.
+export function ErtesitesiElozmenyekTartalom() {
   const [naplo, setNaplo] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,25 +38,31 @@ export default function ErtesitesiElozmenyek() {
   ];
 
   return (
+    <DataTable
+      icon={PiBellLight}
+      title="Minden, ami valaha megjelent a haranG-ban"
+      columns={columns}
+      rows={naplo}
+      loading={loading}
+      exportFilename="ertesitesi-elozmenyek"
+      mobileTitleKey="szoveg"
+      emptyLabel="Még nincs naplózott értesítés"
+      fill
+      searchable
+      searchPlaceholder="Keresés az értesítés szövegében..."
+      pageSize={20}
+    />
+  );
+}
+
+export default function ErtesitesiElozmenyek() {
+  return (
     <div className="flex h-full w-full flex-col px-0 md:px-4">
       <div className="flex-shrink-0">
         <PageHeader eyebrow="Rendszer" title="Értesítési előzmények" />
       </div>
       <div className="min-h-0 flex-1">
-        <DataTable
-          icon={PiBellLight}
-          title="Minden, ami valaha megjelent a haranG-ban"
-          columns={columns}
-          rows={naplo}
-          loading={loading}
-          exportFilename="ertesitesi-elozmenyek"
-          mobileTitleKey="szoveg"
-          emptyLabel="Még nincs naplózott értesítés"
-          fill
-          searchable
-          searchPlaceholder="Keresés az értesítés szövegében..."
-          pageSize={20}
-        />
+        <ErtesitesiElozmenyekTartalom />
       </div>
     </div>
   );

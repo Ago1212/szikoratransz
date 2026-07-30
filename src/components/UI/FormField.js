@@ -1,8 +1,11 @@
 import React from "react";
 import DatePicker from "components/UI/DatePicker.js";
 
+// `min-h-11` (44px) — a mobil UX audit (2026-07-30) érintési célpont
+// méret találata: py-2 + text-sm önmagában csak ~38px-et adott ki,
+// a HIG/Material 44px-es minimuma alatt.
 const inputClass =
-  "w-full rounded-lg border border-ink-100 bg-slate-50 px-3 py-2 text-sm text-brand-900 placeholder-ink-300 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300 disabled:cursor-not-allowed disabled:opacity-60 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-50";
+  "w-full min-h-11 rounded-lg border border-ink-100 bg-slate-50 px-3 py-2 text-sm text-brand-900 placeholder-ink-300 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300 disabled:cursor-not-allowed disabled:opacity-60 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-50";
 
 // Egységes mező-minta (label + ikon + input/select/textarea) — korábban
 // minden nagy űrlap (jármű, pótkocsi, sofőr, saját adatok) mezőnként

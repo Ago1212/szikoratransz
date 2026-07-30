@@ -6,7 +6,7 @@ import { PiPencilSimpleLight, PiTrashLight, PiUsersLight } from "react-icons/pi"
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
 
-const CardTable = ({ soforok = [], loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll, sortKey, sortDir, onSortChange }) => {
+const CardTable = ({ soforok = [], loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll, sortKey, sortDir, onSortChange, fill = false }) => {
   const history = useHistory();
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -85,6 +85,7 @@ const CardTable = ({ soforok = [], loading, total, page, pageSize, onPageChange,
       onRowDoubleClick={handleEditClick}
       emptyLabel="Nincsenek sofőrök megjelenítve"
       loading={loading}
+      fill={fill}
       searchable
       searchPlaceholder="Keresés név, email, telefon szerint..."
       serverSide

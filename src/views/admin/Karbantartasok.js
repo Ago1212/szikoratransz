@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useLocation, useHistory } from "react-router-dom";
 import { useMediaQuery } from "react-responsive";
 import {
   PiFunnelLight,
@@ -46,6 +47,8 @@ const formatHuf = (value) =>
 const PAGE_SIZE = 15;
 
 const Karbantartasok = () => {
+  const location = useLocation();
+  const history = useHistory();
   const isMobile = useMediaQuery({ maxWidth: 767 });
   // Mobilon alapból zárva (helyet spórolunk), asztali nézeten viszont
   // változatlanul mindig nyitva indul, ahogy eddig is.
@@ -248,6 +251,23 @@ const Karbantartasok = () => {
     setOpenDialog(false);
     resetForm();
   };
+
+  // Mobil navigáció újratervezés (2026-07-30): a FAB "Karbantartás
+  // rögzítése" gyorsművelete nincs önálló route-ra kötve (nincs
+  // "/admin/karbantartasokForm" — ez az oldal az "Új karbantartás"
+  // létrehozást mindig ezzel az in-page Modal-lal oldja meg), ezért egy
+  // router state-tel jelzi a szándékot: ha `location.state.ujKarbantartas`
+  // igaz, betöltéskor ugyanazt a két hívást futtatjuk le, amit a "+ Új"
+  // gomb (`resetForm(); setOpenDialog(true);`), majd törlünk a state-ből,
+  // hogy egy "vissza" navigáció ne nyissa meg újra a modalt.
+  useEffect(() => {
+    if (location.state?.ujKarbantartas) {
+      resetForm();
+      setOpenDialog(true);
+      history.replace(location.pathname);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleEditKarbantartas = (karb) => {
     setEditingId(karb.id);

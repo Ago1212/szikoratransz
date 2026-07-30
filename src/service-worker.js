@@ -90,8 +90,19 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
+      // A nagy ikon (`icon`) a márkázott wordmark — jól olvasható a
+      // közlemény-listában. A `badge` viszont Androidon mindig
+      // monokróm sziluettként, ~24dp-re kicsinyítve jelenik meg (a
+      // rendszer maga tintázza), ezért ennek egy külön, erre a célra
+      // rajzolt, vastag kontúrú monogramnak kell lennie — a wordmark
+      // ugyanerre a méretre zsugorítva felismerhetetlen folttá mosódna.
       icon: "/icon-192.png",
-      badge: "/icon-192.png",
+      badge: "/badge-192.png",
+      vibrate: [200, 100, 200],
+      requireInteraction: true,
+      tag: data.tag || undefined,
+      renotify: Boolean(data.tag),
+      actions: [{ action: "megnyitas", title: "Megnyitás" }],
       data: { url: data.url || "/admin/dashboard" },
     })
   );

@@ -1689,8 +1689,9 @@ class ApiHandler {
                             $pushInterface->sendPushSofornak(
                                 $result['fuvar']['sofor_id'],
                                 'Új fuvar érkezett',
-                                trim(($result['fuvar']['felrako'] ?? '') . ' → ' . ($result['fuvar']['lerako'] ?? '')) . ($result['fuvar']['teljesites_datuma'] ? ' · ' . $result['fuvar']['teljesites_datuma'] : ''),
-                                '/user/fuvarReszletek?id=' . $result['fuvar']['id']
+                                trim(($result['fuvar']['felrako'] ?? '') . ' → ' . ($result['fuvar']['lerako'] ?? '')) . ($result['fuvar']['teljesites_datuma'] ? ' · ' . date('Y.m.d.', strtotime($result['fuvar']['teljesites_datuma'])) : ''),
+                                '/user/fuvarReszletek?id=' . $result['fuvar']['id'],
+                                'fuvar-' . $result['fuvar']['id']
                             );
                         }
                     }
@@ -1716,8 +1717,9 @@ class ApiHandler {
                             $pushInterface->sendPushSofornak(
                                 $ujSoforId,
                                 'Új fuvar érkezett',
-                                trim(($result['fuvar']['felrako'] ?? '') . ' → ' . ($result['fuvar']['lerako'] ?? '')) . ($result['fuvar']['teljesites_datuma'] ? ' · ' . $result['fuvar']['teljesites_datuma'] : ''),
-                                '/user/fuvarReszletek?id=' . $result['fuvar']['id']
+                                trim(($result['fuvar']['felrako'] ?? '') . ' → ' . ($result['fuvar']['lerako'] ?? '')) . ($result['fuvar']['teljesites_datuma'] ? ' · ' . date('Y.m.d.', strtotime($result['fuvar']['teljesites_datuma'])) : ''),
+                                '/user/fuvarReszletek?id=' . $result['fuvar']['id'],
+                                'fuvar-' . $result['fuvar']['id']
                             );
                         }
                     }

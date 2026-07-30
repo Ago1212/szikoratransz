@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect } from "react";
 import {
   Switch,
   Route,
@@ -12,6 +12,7 @@ import { PiBellLight, PiSignOutLight } from "react-icons/pi";
 import useNoIndex from "utils/useNoIndex";
 import { fetchAction } from "utils/fetchAction";
 import { useSajatErtesitesek } from "utils/useSajatErtesitesek.js";
+import { ensurePushSubscriptionSynced } from "utils/pushSubscribe.js";
 import BottomNav from "components/UI/BottomNav.js";
 import Spinner from "components/UI/Spinner.js";
 
@@ -151,6 +152,17 @@ function DesktopNav() {
 
 export default function User() {
   useNoIndex();
+
+  // Ha a böngésző korábban már megkapta az értesítési engedélyt, de a
+  // tényleges push-feliratkozás időközben elveszett (kijelentkezés,
+  // eszközváltás, service worker-frissítés), ez néma, gesztus nélküli
+  // újra-feliratkozást próbál minden sofőr-oldali betöltéskor — nem kér
+  // új engedélyt, csak akkor csinál bármit, ha az már "granted" (ld.
+  // utils/pushSubscribe.js).
+  useEffect(() => {
+    ensurePushSubscriptionSynced();
+  }, []);
+
   return (
     <div className="min-h-screen bg-slate-50">
       <DesktopNav />

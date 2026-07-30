@@ -1,6 +1,91 @@
 import React, { useEffect, useRef } from "react";
 import { PiCheckCircleLight, PiXLight } from "react-icons/pi";
 
+// Mobil navigáció újratervezés (2026-07-30) — swipe gesztus a jármű-váltási
+// kérelem sorokon (`n.swipeActions`, ld. Sidebar.js `kerelemNotifications`):
+// jobbra húzás jóváhagy, balra húzás elutasít, a küszöb alatti húzás
+// visszaugrik. A meglévő gombos Jóváhagyás/Elutasítás megmarad — a swipe egy
+// gyorsabb ALTERNATÍVA, nem az egyetlen út.
+const SWIPE_THRESHOLD = 64;
+
+function NotificationRow({ n, onDismiss }) {
+  const [dragX, setDragX] = React.useState(0);
+  const touchStartX = useRef(null);
+
+  const handleTouchStart = (e) => {
+    if (!n.swipeActions) return;
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const handleTouchMove = (e) => {
+    if (!n.swipeActions || touchStartX.current == null) return;
+    setDragX(e.touches[0].clientX - touchStartX.current);
+  };
+  const handleTouchEnd = () => {
+    if (!n.swipeActions) return;
+    if (dragX > SWIPE_THRESHOLD) n.swipeActions.approve();
+    else if (dragX < -SWIPE_THRESHOLD) n.swipeActions.reject();
+    setDragX(0);
+    touchStartX.current = null;
+  };
+
+  return (
+    <div
+      className="group relative flex items-start gap-2 overflow-hidden px-4 py-3 hover:bg-slate-50 dark:hover:bg-ink-800"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {n.swipeActions && (
+        <>
+          <div
+            className="pointer-events-none absolute inset-y-0 left-0 flex w-16 items-center justify-center bg-emerald-500 text-white"
+            style={{ opacity: Math.min(Math.max(dragX / SWIPE_THRESHOLD, 0), 1) }}
+          >
+            <PiCheckCircleLight className="h-5 w-5" />
+          </div>
+          <div
+            className="pointer-events-none absolute inset-y-0 right-0 flex w-16 items-center justify-center bg-red-500 text-white"
+            style={{ opacity: Math.min(Math.max(-dragX / SWIPE_THRESHOLD, 0), 1) }}
+          >
+            <PiXLight className="h-5 w-5" />
+          </div>
+        </>
+      )}
+      <div className="min-w-0 flex-1 bg-inherit" style={{ transform: `translateX(${dragX}px)` }}>
+        <p className="text-sm text-ink-700 dark:text-ink-100">{n.text}</p>
+        {n.meta && <p className="mt-0.5 text-xs text-ink-400 dark:text-ink-500">{n.meta}</p>}
+        {n.actions?.length > 0 && (
+          <div className="mt-2 flex gap-2">
+            {n.actions.map((action, ai) => (
+              <button
+                key={ai}
+                type="button"
+                onClick={action.onClick}
+                className={`rounded-lg px-2.5 py-1 text-xs font-bold ${
+                  action.tone === "danger"
+                    ? "bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/50 dark:text-red-300 dark:hover:bg-red-950"
+                    : "bg-brand-600 text-white hover:bg-brand-700"
+                }`}
+              >
+                {action.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+      <button
+        type="button"
+        onClick={() => onDismiss(n.id)}
+        className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-ink-300 hover:bg-slate-200 hover:text-ink-600 dark:text-ink-600 dark:hover:bg-ink-700 dark:hover:text-ink-200"
+        title="Törlés"
+        aria-label="Értesítés törlése"
+      >
+        <PiXLight className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
+}
+
 // Korábban egy Popper-pozicionált, kis dropdown volt (a haranG-gombhoz
 // horgonyozva) — ehelyett most a GlobalSearch.js-ben már bevált,
 // konzisztens teljes-képernyős overlay mintát követi (háttér-elhomályosítás
@@ -52,7 +137,7 @@ export default function NotificationDropdown({ notifications = [], open, onClose
               ref={closeButtonRef}
               type="button"
               onClick={onClose}
-              className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-slate-100 hover:text-ink-700 dark:text-ink-500 dark:hover:bg-ink-800 dark:hover:text-ink-100"
+              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-slate-100 hover:text-ink-700 dark:text-ink-500 dark:hover:bg-ink-800 dark:hover:text-ink-100"
               aria-label="Bezárás"
             >
               <PiXLight className="h-4 w-4" />
@@ -70,39 +155,7 @@ export default function NotificationDropdown({ notifications = [], open, onClose
         ) : (
           <div className="max-h-[60vh] overflow-y-auto py-1">
             {notifications.map((n, i) => (
-              <div key={n.id ?? i} className="group flex items-start gap-2 px-4 py-3 hover:bg-slate-50 dark:hover:bg-ink-800">
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm text-ink-700 dark:text-ink-100">{n.text}</p>
-                  {n.meta && <p className="mt-0.5 text-xs text-ink-400 dark:text-ink-500">{n.meta}</p>}
-                  {n.actions?.length > 0 && (
-                    <div className="mt-2 flex gap-2">
-                      {n.actions.map((action, ai) => (
-                        <button
-                          key={ai}
-                          type="button"
-                          onClick={action.onClick}
-                          className={`rounded-lg px-2.5 py-1 text-xs font-bold ${
-                            action.tone === "danger"
-                              ? "bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/50 dark:text-red-300 dark:hover:bg-red-950"
-                              : "bg-brand-600 text-white hover:bg-brand-700"
-                          }`}
-                        >
-                          {action.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => onDismiss(n.id)}
-                  className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-ink-300 hover:bg-slate-200 hover:text-ink-600 dark:text-ink-600 dark:hover:bg-ink-700 dark:hover:text-ink-200"
-                  title="Törlés"
-                  aria-label="Értesítés törlése"
-                >
-                  <PiXLight className="h-3.5 w-3.5" />
-                </button>
-              </div>
+              <NotificationRow key={n.id ?? i} n={n} onDismiss={onDismiss} />
             ))}
           </div>
         )}

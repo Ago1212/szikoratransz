@@ -15,6 +15,7 @@ import {
   PiCheckLight,
   PiXLight,
   PiIdentificationCardLight,
+  PiMapTrifoldLight,
 } from "react-icons/pi";
 
 // components
@@ -208,7 +209,7 @@ function MireFigyeljekMaCard({
                         type="button"
                         disabled={elbiralasAlatt === k.id}
                         onClick={() => onElbiral(k.id, "jovahagyva")}
-                        className="flex items-center gap-1 rounded-lg bg-brand-600 px-2.5 py-1.5 text-xs font-bold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="flex min-h-11 items-center gap-1 rounded-lg bg-brand-600 px-2.5 py-1.5 text-xs font-bold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         <PiCheckLight className="h-3.5 w-3.5" /> Jóváhagyás
                       </button>
@@ -216,7 +217,7 @@ function MireFigyeljekMaCard({
                         type="button"
                         disabled={elbiralasAlatt === k.id}
                         onClick={() => onElbiral(k.id, "elutasitva")}
-                        className="flex items-center gap-1 rounded-lg bg-red-50 px-2.5 py-1.5 text-xs font-bold text-red-600 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-red-950/50 dark:text-red-300"
+                        className="flex min-h-11 items-center gap-1 rounded-lg bg-red-50 px-2.5 py-1.5 text-xs font-bold text-red-600 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-red-950/50 dark:text-red-300"
                       >
                         <PiXLight className="h-3.5 w-3.5" /> Elutasítás
                       </button>
@@ -236,7 +237,7 @@ function MireFigyeljekMaCard({
                     <button
                       type="button"
                       onClick={() => onNavigate("/admin/bejelentesForm", { data: b })}
-                      className="flex flex-shrink-0 items-center gap-1 self-end rounded-lg bg-brand-50 px-2.5 py-1.5 text-xs font-bold text-brand-700 hover:bg-brand-100 dark:bg-brand-950/40 dark:text-brand-300 sm:self-auto"
+                      className="flex min-h-11 flex-shrink-0 items-center gap-1 self-end rounded-lg bg-brand-50 px-2.5 py-1.5 text-xs font-bold text-brand-700 hover:bg-brand-100 dark:bg-brand-950/40 dark:text-brand-300 sm:self-auto"
                     >
                       Megnyitás <PiArrowRightLight className="h-3.5 w-3.5" />
                     </button>
@@ -255,14 +256,14 @@ function MireFigyeljekMaCard({
                       <button
                         type="button"
                         onClick={() => onAjanlatkeresFelvette(a.id)}
-                        className="flex items-center gap-1 rounded-lg bg-brand-600 px-2.5 py-1.5 text-xs font-bold text-white hover:bg-brand-700"
+                        className="flex min-h-11 items-center gap-1 rounded-lg bg-brand-600 px-2.5 py-1.5 text-xs font-bold text-white hover:bg-brand-700"
                       >
                         <PiCheckLight className="h-3.5 w-3.5" /> Felvettem
                       </button>
                       <button
                         type="button"
                         onClick={() => onNavigate("/admin/ajanlatkeresek")}
-                        className="rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-bold text-ink-600 hover:bg-slate-200 dark:bg-ink-800 dark:text-ink-300"
+                        className="flex min-h-11 items-center justify-center rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-bold text-ink-600 hover:bg-slate-200 dark:bg-ink-800 dark:text-ink-300"
                       >
                         Megnyitás
                       </button>
@@ -284,7 +285,7 @@ function MireFigyeljekMaCard({
                     <button
                       type="button"
                       onClick={() => onNavigate(`/admin/tachograf?sofor=${t.sofor_id}`)}
-                      className="flex flex-shrink-0 items-center gap-1 self-end rounded-lg bg-brand-50 px-2.5 py-1.5 text-xs font-bold text-brand-700 hover:bg-brand-100 dark:bg-brand-950/40 dark:text-brand-300 sm:self-auto"
+                      className="flex min-h-11 flex-shrink-0 items-center gap-1 self-end rounded-lg bg-brand-50 px-2.5 py-1.5 text-xs font-bold text-brand-700 hover:bg-brand-100 dark:bg-brand-950/40 dark:text-brand-300 sm:self-auto"
                     >
                       Megnyitás <PiArrowRightLight className="h-3.5 w-3.5" />
                     </button>
@@ -313,6 +314,31 @@ function MireFigyeljekMaCard({
         )}
       </div>
     </div>
+  );
+}
+
+// Mobil navigáció újratervezés (2026-07-30) — mobil-only gyorslink a
+// Flottakövetésre, a "Mire figyeljek ma" + naptár blokk és a Flotta
+// összesítő sáv között, hogy a leggyakoribb "hol van most a kamionom"
+// kérdés egy érintésre elérhető legyen a Kezdőlapról. Deszktopon nincs rá
+// szükség (ott a sidebar Flotta csoportja/napi zóna már egy kattintásra
+// van), ezért `md:hidden`.
+function FlottakovetesGyorslink({ onClick, className = "" }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`group flex w-full flex-shrink-0 items-center gap-3 rounded-3xl bg-white px-5 py-4 text-left shadow-soft ring-1 ring-ink-100 transition-all duration-300 ease-fluid hover:-translate-y-0.5 hover:shadow-soft-lg dark:bg-ink-900 dark:ring-ink-800 md:hidden ${className}`}
+    >
+      <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 dark:bg-brand-950/50 dark:text-brand-300">
+        <PiMapTrifoldLight className="h-5 w-5" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-semibold text-brand-900 dark:text-ink-50">Élő flottakövetés</span>
+        <span className="block text-xs text-ink-400 dark:text-ink-500">Hol vannak most a járműveim?</span>
+      </span>
+      <PiArrowRightLight className="h-4 w-4 flex-shrink-0 text-ink-300 group-hover:text-brand-600 dark:text-ink-600 dark:group-hover:text-brand-300" />
+    </button>
   );
 }
 
@@ -519,10 +545,37 @@ export default function Dashboard() {
 
   const navigateTo = (path, state) => history.push(path, state);
 
+  // Mobil UX audit (2026-07-30): a Dashboard betöltése eddig egy sima
+  // forgó spinnerre váltott, miközben a `components/UI/Skeleton.js`
+  // (`TableSkeleton`) mintája már bevált a lista oldalakon — ez a
+  // Dashboard saját, a végleges tartalom (KPI-kártya + Teendők-lista)
+  // durva geometriáját előrevetítő "csontváz" változata, ugyanazzal a
+  // vizuális nyelvvel (`animate-pulse` + `motion-reduce:animate-none`).
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-brand-200 border-t-brand-600 dark:border-brand-900 dark:border-t-brand-400" />
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-4">
+        <div className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft dark:border-ink-800 dark:bg-ink-900">
+          <div className="h-3 w-32 animate-pulse rounded bg-ink-100 motion-reduce:animate-none dark:bg-ink-700" />
+          <div className="mt-3 h-8 w-40 animate-pulse rounded bg-ink-100 motion-reduce:animate-none dark:bg-ink-700" />
+          <div className="mt-4 flex gap-6">
+            <div className="h-4 w-24 animate-pulse rounded bg-ink-100 motion-reduce:animate-none dark:bg-ink-700" />
+            <div className="h-4 w-24 animate-pulse rounded bg-ink-100 motion-reduce:animate-none dark:bg-ink-700" />
+          </div>
+        </div>
+        <div className="rounded-2xl border border-ink-100 bg-white dark:border-ink-800 dark:bg-ink-900">
+          <div className="flex items-center justify-between px-4 py-3.5">
+            <div className="h-4 w-40 animate-pulse rounded bg-ink-100 motion-reduce:animate-none dark:bg-ink-700" />
+            <div className="h-4 w-16 animate-pulse rounded bg-ink-100 motion-reduce:animate-none dark:bg-ink-700" />
+          </div>
+          <div className="divide-y divide-ink-100 dark:divide-ink-800">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between gap-3 px-4 py-3.5">
+                <div className="h-4 w-2/3 animate-pulse rounded bg-ink-100 motion-reduce:animate-none dark:bg-ink-700" />
+                <div className="h-8 w-20 flex-shrink-0 animate-pulse rounded-lg bg-ink-100 motion-reduce:animate-none dark:bg-ink-700" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -589,6 +642,8 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      <FlottakovetesGyorslink onClick={() => navigateTo("/admin/flottakovetes")} className="mt-4" />
 
       {/* 3 — Flotta összesítő: alacsony súlyú, összevont sáv a lap alján —
           ritkán döntés-releváns leltárszámok, nem KPI-k. */}
