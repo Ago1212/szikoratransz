@@ -16,7 +16,7 @@ export default function AllapotOsszesitoChips({ osszesito, active, onSelect }) {
       <button
         type="button"
         onClick={() => onSelect("")}
-        className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+        className={`flex min-h-11 items-center rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
           !active
             ? "bg-brand-600 text-white"
             : "bg-slate-100 text-ink-600 hover:bg-slate-200 dark:bg-ink-800 dark:text-ink-300 dark:hover:bg-ink-700"
@@ -29,7 +29,7 @@ export default function AllapotOsszesitoChips({ osszesito, active, onSelect }) {
           key={kulcs}
           type="button"
           onClick={() => onSelect(active === kulcs ? "" : kulcs)}
-          className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+          className={`flex min-h-11 items-center rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
             active === kulcs
               ? "bg-brand-600 text-white"
               : "bg-slate-100 text-ink-600 hover:bg-slate-200 dark:bg-ink-800 dark:text-ink-300 dark:hover:bg-ink-700"

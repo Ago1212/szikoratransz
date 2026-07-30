@@ -213,6 +213,29 @@ export default function DataTable({
   const sortKey = serverSide ? sortKeyProp : localSortKey;
   const sortDir = serverSide ? sortDirProp : localSortDir;
 
+  // Sok oszlopos táblázatoknál (pl. Fuvarok) az asztali nézet vízszintesen
+  // túlcsordulhat anélkül, hogy ez bármivel jelezve lenne — a felhasználó
+  // nem is sejti, hogy görgetéssel további oszlopok (pl. a Műveletek) is
+  // elérhetők. Ez a finom, csak akkor megjelenő szél-elhalványítás pusztán
+  // vizuális jelzés, nem változtat a táblázat viselkedésén — nem-túlcsorduló
+  // táblázatoknál (a `right`/`left` mindkettő false marad) semmi nem látszik.
+  const scrollContainerRef = useRef(null);
+  const [scrollShadow, setScrollShadow] = useState({ left: false, right: false });
+
+  const updateScrollShadow = () => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    setScrollShadow({
+      left: el.scrollLeft > 4,
+      right: el.scrollLeft + el.clientWidth < el.scrollWidth - 4,
+    });
+  };
+
+  useEffect(() => {
+    updateScrollShadow();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, columns]);
+
   const handleSortClick = (col) => {
     if (!col.sortable) return;
     const nextDir = sortKey === col.key && sortDir === "asc" ? "desc" : "asc";
@@ -644,7 +667,10 @@ export default function DataTable({
           </div>
 
           {/* Asztali nézet — táblázat */}
+          <div className="relative">
           <div
+            ref={scrollContainerRef}
+            onScroll={updateScrollShadow}
             className={`hidden w-full overflow-auto md:block ${bodyFillClass}`}
             style={{ maxHeight: bodyMaxHeight }}
           >
@@ -768,6 +794,13 @@ export default function DataTable({
                 )}
               </tbody>
             </table>
+          </div>
+          {scrollShadow.left && (
+            <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-10 bg-gradient-to-r from-white to-transparent md:block dark:from-ink-900" />
+          )}
+          {scrollShadow.right && (
+            <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-10 bg-gradient-to-l from-white to-transparent md:block dark:from-ink-900" />
+          )}
           </div>
 
           {paginationBar}

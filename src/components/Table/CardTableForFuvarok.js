@@ -8,6 +8,7 @@ import StatusChangePopover from "components/UI/StatusChangePopover.js";
 import StatusBadge from "components/UI/StatusBadge.js";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
+import { formatFuvarDatum } from "utils/formatDatum";
 
 const ALLAPOT_LABEL = {
   rogzitett: "Rögzítve",
@@ -115,25 +116,45 @@ const CardTable = ({
   const jarmuLabel = (row) => row.kamion_rendszam || row.furgon_rendszam || "—";
 
   const columns = [
-    { key: "lerakas_datuma", label: "Lerakás", sortable: true, render: (row) => row.lerakas_datuma || "—" },
     {
-      key: "felrakas_datuma",
-      label: "Felrakás",
+      // A Lerakás az elsődleges dátum (ld. RENDEZHETO_OSZLOPOK), a
+      // Felrakás csak kiegészítő infó alatta — ez a két korábban külön
+      // oszlop most eggyé vonva, hogy kevesebb oszlop-szélesség kelljen
+      // (ld. UX-audit: az asztali táblázat 15 oszlopa erősen túlcsordult
+      // 1400px-es nézeten is, a Műveletek oszlop görgetés nélkül nem
+      // látszott).
+      key: "lerakas_datuma",
+      label: "Dátum",
       sortable: true,
-      render: (row) => row.felrakas_datuma || "—",
-      mobileHidden: true,
+      render: (row) => {
+        const lerakas = formatFuvarDatum(row.lerakas_datuma);
+        const felrakas = formatFuvarDatum(row.felrakas_datuma);
+        return (
+          <div className="leading-tight">
+            <p>{lerakas || "—"}</p>
+            {felrakas && <p className="text-xs text-ink-400">Felrakás: {felrakas}</p>}
+          </div>
+        );
+      },
     },
     {
+      // Felrakó+Lerakó szintén egy oszlopba vonva, ugyanazzal a "Cég A →
+      // Cég B" mintával, mint a Kanban-kártya/Sofőr-szerinti nézet —
+      // a teljes cím a title tooltipben marad elérhető.
       key: "felrako",
-      label: "Felrakó",
+      label: "Útvonal",
       sortable: true,
-      render: (row) => <span title={row.felrako_cim || ""}>{row.felrako_ceg || "—"}</span>,
-    },
-    {
-      key: "lerako",
-      label: "Lerakó",
-      sortable: true,
-      render: (row) => <span title={row.lerako_cim || ""}>{row.lerako_ceg || "—"}</span>,
+      render: (row) => {
+        if (!row.felrako_ceg && !row.lerako_ceg) {
+          return <span className="text-ink-400">Nincs útvonal megadva</span>;
+        }
+        const teljesCim = [row.felrako_cim, row.lerako_cim].filter(Boolean).join(" → ");
+        return (
+          <span title={teljesCim}>
+            {row.felrako_ceg || "—"} → {row.lerako_ceg || "—"}
+          </span>
+        );
+      },
     },
     { key: "megbizo_nev", label: "Megbízó", render: (row) => row.megbizo_nev || "—" },
     { key: "sofor_nev", label: "Sofőr", render: (row) => row.sofor_nev || "—", mobileHidden: true },
