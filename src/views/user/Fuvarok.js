@@ -16,7 +16,7 @@ function FuvarSor({ fuvar, onOpen }) {
     >
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-semibold text-ink-900">
-          {fuvar.felrako || "—"} → {fuvar.lerako || "—"}
+          {fuvar.felrako_ceg || "—"} → {fuvar.lerako_ceg || "—"}
         </p>
         {fuvar.dokumentum_feltoltve ? (
           <StatusBadge tone="success">Dokumentum ✓</StatusBadge>
@@ -25,7 +25,7 @@ function FuvarSor({ fuvar, onOpen }) {
         )}
       </div>
       <p className="text-xs text-ink-400">
-        {fuvar.teljesites_datuma || "Nincs dátum"} · {jarmu}
+        {fuvar.lerakas_datuma || "Nincs dátum"} · {jarmu}
         {fuvar.megbizo_nev ? ` · ${fuvar.megbizo_nev}` : ""}
       </p>
     </button>
