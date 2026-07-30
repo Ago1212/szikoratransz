@@ -50,3 +50,32 @@ export default function TableSkeleton({ columns = 4, rows = 6, selectable = fals
     </>
   );
 }
+
+// A RouteTimelineCard alakját előrevetítő betöltő-állapot a sofőr Fuvar
+// részletező oldalán — ugyanaz a minta, mint a fenti TableSkeleton, csak
+// a route-kártya geometriájára szabva. A sofőr-oldal nem dark-módosított
+// (ld. CLAUDE.md), ezért itt szándékosan nincs `dark:` variáns.
+export function RouteCardSkeleton() {
+  return (
+    <div className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft">
+      <div className="flex gap-3">
+        <div className="h-9 w-9 flex-shrink-0 animate-pulse rounded-full bg-ink-100 motion-reduce:animate-none" />
+        <div className="flex-1 space-y-2">
+          <div className="h-3 w-1/3 animate-pulse rounded bg-ink-100 motion-reduce:animate-none" />
+          <div className="h-4 w-2/3 animate-pulse rounded bg-ink-100 motion-reduce:animate-none" />
+          <div className="h-3 w-1/2 animate-pulse rounded bg-ink-100 motion-reduce:animate-none" />
+        </div>
+      </div>
+      <div className="ml-[18px] h-10 border-l-2 border-dashed border-ink-100" />
+      <div className="flex gap-3">
+        <div className="h-9 w-9 flex-shrink-0 animate-pulse rounded-full bg-ink-100 motion-reduce:animate-none" />
+        <div className="flex-1 space-y-2">
+          <div className="h-3 w-1/3 animate-pulse rounded bg-ink-100 motion-reduce:animate-none" />
+          <div className="h-4 w-2/3 animate-pulse rounded bg-ink-100 motion-reduce:animate-none" />
+          <div className="h-3 w-1/2 animate-pulse rounded bg-ink-100 motion-reduce:animate-none" />
+        </div>
+      </div>
+      <div className="mt-4 h-14 w-full animate-pulse rounded-xl bg-ink-100 motion-reduce:animate-none" />
+    </div>
+  );
+}
