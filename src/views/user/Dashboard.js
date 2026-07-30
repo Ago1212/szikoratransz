@@ -186,7 +186,7 @@ export default function UserDashboard() {
                 className="flex items-center justify-between gap-2 rounded-xl bg-white px-3 py-2.5 text-sm"
               >
                 <span className="min-w-0 truncate text-ink-800">
-                  {f.felrako || "—"} → {f.lerako || "—"}
+                  {f.felrako_ceg || "—"} → {f.lerako_ceg || "—"}
                 </span>
                 <PiCaretRightLight className="h-4 w-4 flex-shrink-0 text-ink-400" />
               </Link>
