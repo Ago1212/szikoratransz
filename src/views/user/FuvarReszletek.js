@@ -256,6 +256,23 @@ export default function FuvarReszletek() {
         eleheto={utvonaltervEleheto}
       />
 
+      <FeltoltoSzekcio
+        cim="Menetlevél"
+        tipus="menetlevel"
+        kotelezo
+        fajlok={fajlok}
+        onUploaded={{ fuvarId: fuvar.id, reload: loadFajlok }}
+        onDeleted={loadFajlok}
+      />
+      <FeltoltoSzekcio
+        cim="Szállítólevél"
+        tipus="szallitolevel"
+        kotelezo={false}
+        fajlok={fajlok}
+        onUploaded={{ fuvarId: fuvar.id, reload: loadFajlok }}
+        onDeleted={loadFajlok}
+      />
+
       <div className="flex flex-wrap gap-2">
         <StatChip icon={PiScalesLight} value={fuvar.tomeg_tonna != null ? `${fuvar.tomeg_tonna} t` : null} label="Tömeg" />
         <StatChip icon={PiStackLight} value={fuvar.raklapszam ?? null} label="Raklap" />
@@ -274,23 +291,6 @@ export default function FuvarReszletek() {
       )}
 
       <NoteCard text={fuvar.megjegyzes} />
-
-      <FeltoltoSzekcio
-        cim="Menetlevél"
-        tipus="menetlevel"
-        kotelezo
-        fajlok={fajlok}
-        onUploaded={{ fuvarId: fuvar.id, reload: loadFajlok }}
-        onDeleted={loadFajlok}
-      />
-      <FeltoltoSzekcio
-        cim="Szállítólevél"
-        tipus="szallitolevel"
-        kotelezo={false}
-        fajlok={fajlok}
-        onUploaded={{ fuvarId: fuvar.id, reload: loadFajlok }}
-        onDeleted={loadFajlok}
-      />
     </div>
   );
 }
