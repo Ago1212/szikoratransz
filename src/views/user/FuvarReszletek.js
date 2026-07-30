@@ -1,15 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useHistory } from "react-router-dom";
-import {
-  PiCameraLight,
-  PiFilePdfLight,
-  PiTrashLight,
-  PiScalesLight,
-  PiStackLight,
-  PiPackageLight,
-  PiTruckLight,
-  PiBuildingsLight,
-} from "react-icons/pi";
+import { PiCameraLight, PiFilePdfLight, PiTrashLight, PiScalesLight, PiStackLight } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { fileToBase64 } from "utils/fileToBase64.js";
 import { toast } from "utils/toast";
@@ -224,8 +215,6 @@ export default function FuvarReszletek() {
     );
   }
 
-  const jarmu = fuvar.kamion_rendszam || fuvar.furgon_rendszam || null;
-
   const felrakoTeljesCim = [fuvar.felrako_ceg, fuvar.felrako_cim].filter(Boolean).join(", ");
   const lerakoTeljesCim = [fuvar.lerako_ceg, fuvar.lerako_cim].filter(Boolean).join(", ");
   const megbizoTeljesCim = [fuvar.megbizo_irsz, fuvar.megbizo_varos, fuvar.megbizo_cim].filter(Boolean).join(", ");
@@ -252,6 +241,9 @@ export default function FuvarReszletek() {
         felrako={{ ceg: fuvar.felrako_ceg, cim: fuvar.felrako_cim, datum: fuvar.felrakas_datuma }}
         lerako={{ ceg: fuvar.lerako_ceg, cim: fuvar.lerako_cim, datum: fuvar.lerakas_datuma }}
         tavolsagKm={fuvar.tavolsag_km}
+        aru={fuvar.aru_megnevezese}
+        megbizoNev={fuvar.megbizo_nev}
+        megbizoCim={megbizoTeljesCim}
         onUtvonalterv={handleUtvonalterv}
         eleheto={utvonaltervEleheto}
       />
@@ -273,22 +265,10 @@ export default function FuvarReszletek() {
         onDeleted={loadFajlok}
       />
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <StatChip icon={PiScalesLight} value={fuvar.tomeg_tonna != null ? `${fuvar.tomeg_tonna} t` : null} label="Tömeg" />
         <StatChip icon={PiStackLight} value={fuvar.raklapszam ?? null} label="Raklap" />
-        <StatChip icon={PiPackageLight} value={fuvar.aru_megnevezese} label="Áru" />
-        <StatChip icon={PiTruckLight} value={jarmu} label="Jármű" />
       </div>
-
-      {fuvar.megbizo_nev && (
-        <div className="flex items-center gap-2 text-sm text-ink-600">
-          <PiBuildingsLight className="h-4 w-4 flex-shrink-0 text-ink-400" />
-          <span>
-            {fuvar.megbizo_nev}
-            {megbizoTeljesCim ? ` (${megbizoTeljesCim})` : ""}
-          </span>
-        </div>
-      )}
 
       <NoteCard text={fuvar.megjegyzes} />
     </div>
