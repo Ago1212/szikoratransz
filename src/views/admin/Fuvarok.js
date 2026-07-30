@@ -25,7 +25,7 @@ export default function Fuvarok() {
   // legfelül) — ugyanaz a rendezés, mint amit a backend `getFuvarok()`
   // saját maga is választana `sortKey` hiányában, csak itt explicit,
   // hogy a táblázat fejlécének rendezés-jelzése is helyesen mutassa.
-  const [sortKey, setSortKey] = useState("teljesites_datuma");
+  const [sortKey, setSortKey] = useState("lerakas_datuma");
   const [sortDir, setSortDir] = useState("desc");
   const [allapotSzuro, setAllapotSzuro] = useState("");
   const [osszesito, setOsszesito] = useState(null);
