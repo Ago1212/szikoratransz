@@ -117,7 +117,8 @@ export default function FuvarForm() {
   const [soforok, setSoforok] = useState([]);
   const [ugyfelek, setUgyfelek] = useState([]);
   const [ugyfelElozmeny, setUgyfelElozmeny] = useState([]);
-  const [helyszinElozmenyek, setHelyszinElozmenyek] = useState({ felrakok: [], lerakok: [] });
+  const [utvonalElozmenyek, setUtvonalElozmenyek] = useState([]);
+  const [utvonalValasztoNyitva, setUtvonalValasztoNyitva] = useState(false);
   const [elozmenyNyitva, setElozmenyNyitva] = useState(false);
   const [ujMegbizoNyitva, setUjMegbizoNyitva] = useState(false);
   const [ujMegbizoAdatok, setUjMegbizoAdatok] = useState(UJ_MEGBIZO_URES);
@@ -125,24 +126,18 @@ export default function FuvarForm() {
 
   useEffect(() => {
     const loadLookups = async () => {
-      const [kamionRes, furgonRes, potkocsiRes, soforRes, ugyfelRes, helyszinRes] = await Promise.all([
+      const [kamionRes, furgonRes, potkocsiRes, soforRes, ugyfelRes] = await Promise.all([
         fetchAction("getKamionValaszto", { ceg_id: user.ceg_id }),
         fetchAction("getFurgonValaszto", { ceg_id: user.ceg_id }),
         fetchAction("getPotkocsiRendszamok", { id: user.ceg_id }),
         fetchAction("getSoforok", { id: user.ceg_id, kerelmezo_id: user.id }),
         fetchAction("getUgyfelek", { id: user.ceg_id, kerelmezo_id: user.id }),
-        fetchAction("getFuvarHelyszinElozmenyek", { ceg_id: user.ceg_id }),
       ]);
       setKamionok(kamionRes?.success ? kamionRes.kamionok || [] : []);
       setFurgonok(furgonRes?.success ? furgonRes.furgonok || [] : []);
       setPotkocsik(potkocsiRes?.success ? potkocsiRes.potkocsik || [] : []);
       setSoforok(soforRes?.success ? soforRes.soforok || [] : []);
       setUgyfelek(ugyfelRes?.success ? ugyfelRes.ugyfelek || [] : []);
-      setHelyszinElozmenyek(
-        helyszinRes?.success
-          ? { felrakok: helyszinRes.felrakok || [], lerakok: helyszinRes.lerakok || [] }
-          : { felrakok: [], lerakok: [] },
-      );
     };
     loadLookups();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -204,26 +199,38 @@ export default function FuvarForm() {
       });
       if (!megbizoId) {
         setUgyfelElozmeny([]);
+        setUtvonalElozmenyek([]);
         return;
       }
-      const result = await fetchAction("getUgyfelFuvarElozmeny", {
-        ceg_id: user.ceg_id,
-        ugyfelId: megbizoId,
-      });
-      setUgyfelElozmeny(result?.success ? result.fuvarok || [] : []);
+      const [elozmenyRes, utvonalRes] = await Promise.all([
+        fetchAction("getUgyfelFuvarElozmeny", { ceg_id: user.ceg_id, ugyfelId: megbizoId }),
+        fetchAction("getFuvarUtvonalElozmenyek", { ceg_id: user.ceg_id, megbizoId }),
+      ]);
+      setUgyfelElozmeny(elozmenyRes?.success ? elozmenyRes.fuvarok || [] : []);
+      const utvonalak = utvonalRes?.success ? utvonalRes.utvonalak || [] : [];
+      setUtvonalElozmenyek(utvonalak);
+      // A választó CSAK a megbízó kiválasztásának a következménye jelenik
+      // meg — ezért itt, nem pl. szerkesztéskori mountkor (ott a fuvarnak
+      // már úgyis van útvonala, felugró ablak csak zavarna).
+      if (utvonalak.length > 0) {
+        setUtvonalValasztoNyitva(true);
+      }
     },
     [user.ceg_id, ugyfelek],
   );
 
-  // Gyors kiválasztás egy korábban (bármelyik fuvaron, nem csak a
-  // kiválasztott megbízónál) már használt felrakó/lerakó cég+cím
-  // kombinációból — explicit kattintás, ezért mindig felülírja a mezőt
-  // (más logika, mint a megbízó-alapú "csak ha üres" ajánlás).
-  const handleFelrakoValaszt = (helyszin) => {
-    setFormData((prev) => ({ ...prev, felrako_ceg: helyszin.ceg, felrako_cim: helyszin.cim || "" }));
-  };
-  const handleLerakoValaszt = (helyszin) => {
-    setFormData((prev) => ({ ...prev, lerako_ceg: helyszin.ceg, lerako_cim: helyszin.cim || "" }));
+  // Egy korábbi (ehhez a megbízóhoz tartozó) útvonal kiválasztása a
+  // felugró ablakból — mindkét vég (felrakó+lerakó cég+cím) egyszerre
+  // töltődik ki, explicit kattintásra, ezért mindig felülírja a mezőket.
+  const handleUtvonalValaszt = (utvonal) => {
+    setFormData((prev) => ({
+      ...prev,
+      felrako_ceg: utvonal.felrako_ceg,
+      felrako_cim: utvonal.felrako_cim || "",
+      lerako_ceg: utvonal.lerako_ceg,
+      lerako_cim: utvonal.lerako_cim || "",
+    }));
+    setUtvonalValasztoNyitva(false);
   };
 
   const handleUjMegbizoChange = (e) => {
@@ -462,7 +469,7 @@ export default function FuvarForm() {
                 </div>
               )}
 
-              <FormSection title="Felrakás" icon={PiMapPinLight} columns={3}>
+              <FormSection title="Útvonal" icon={PiMapPinLight} columns={3}>
                 <FormField
                   type="date"
                   label="Felrakás dátuma"
@@ -482,27 +489,6 @@ export default function FuvarForm() {
                   value={formData.felrako_cim || ""}
                   onChange={handleChange}
                 />
-                {helyszinElozmenyek.felrakok.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-1.5 md:col-span-3">
-                    <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-400">
-                      Korábbiak:
-                    </span>
-                    {helyszinElozmenyek.felrakok.map((h, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => handleFelrakoValaszt(h)}
-                        title={h.cim || ""}
-                        className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-ink-600 transition-colors hover:bg-slate-200 dark:bg-ink-800 dark:text-ink-300 dark:hover:bg-ink-700"
-                      >
-                        {h.ceg}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </FormSection>
-
-              <FormSection title="Lerakás" icon={PiMapPinLight} columns={3}>
                 <FormField
                   type="date"
                   label="Lerakás dátuma"
@@ -522,24 +508,6 @@ export default function FuvarForm() {
                   value={formData.lerako_cim || ""}
                   onChange={handleChange}
                 />
-                {helyszinElozmenyek.lerakok.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-1.5 md:col-span-3">
-                    <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-400">
-                      Korábbiak:
-                    </span>
-                    {helyszinElozmenyek.lerakok.map((h, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => handleLerakoValaszt(h)}
-                        title={h.cim || ""}
-                        className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-ink-600 transition-colors hover:bg-slate-200 dark:bg-ink-800 dark:text-ink-300 dark:hover:bg-ink-700"
-                      >
-                        {h.ceg}
-                      </button>
-                    ))}
-                  </div>
-                )}
               </FormSection>
 
               <FormSection title="Rakomány" icon={PiPackageLight} columns={4}>
@@ -563,7 +531,6 @@ export default function FuvarForm() {
                   name="aru_megnevezese"
                   value={formData.aru_megnevezese || ""}
                   onChange={handleChange}
-                  className="md:col-span-2"
                 />
                 <FormField
                   type="number"
@@ -615,7 +582,7 @@ export default function FuvarForm() {
                   name="megjegyzes"
                   value={formData.megjegyzes || ""}
                   onChange={handleChange}
-                  rows="3"
+                  rows="2"
                 />
               </FormSection>
             </div>
@@ -733,6 +700,48 @@ export default function FuvarForm() {
             <SaveButton onClick={handleUjMegbizoMentes} isSaving={ujMegbizoMentes} label="Megbízó felvétele" />
           </div>
         </form>
+      </Modal>
+
+      <Modal
+        open={utvonalValasztoNyitva}
+        onClose={() => setUtvonalValasztoNyitva(false)}
+        title="Korábbi útvonalak"
+        maxWidth="max-w-lg"
+      >
+        <p className="mb-3 text-xs text-ink-400">
+          {kivalasztottMegbizo?.nev
+            ? `Korábban ezekkel az útvonalakkal szállítottunk ${kivalasztottMegbizo.nev} részére — válassz egyet, vagy zárd be, ha ez most más útvonal.`
+            : "Válassz egy korábbi útvonalat, vagy zárd be, ha ez most más útvonal."}
+        </p>
+        <ul className="divide-y divide-ink-100 dark:divide-ink-800">
+          {utvonalElozmenyek.map((u, i) => (
+            <li key={i}>
+              <button
+                type="button"
+                onClick={() => handleUtvonalValaszt(u)}
+                className="flex w-full flex-col gap-0.5 rounded-lg px-2 py-2.5 text-left transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 dark:hover:bg-ink-800"
+              >
+                <span className="text-sm font-semibold text-ink-800 dark:text-ink-100">
+                  {u.felrako_ceg} → {u.lerako_ceg}
+                </span>
+                {(u.felrako_cim || u.lerako_cim) && (
+                  <span className="text-xs text-ink-400">
+                    {[u.felrako_cim, u.lerako_cim].filter(Boolean).join(" · ")}
+                  </span>
+                )}
+              </button>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-3 flex justify-end border-t border-ink-100 pt-3 dark:border-ink-800">
+          <button
+            type="button"
+            onClick={() => setUtvonalValasztoNyitva(false)}
+            className="rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink-500 transition-colors hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 dark:text-ink-400 dark:hover:bg-ink-800"
+          >
+            Mégse (új útvonal)
+          </button>
+        </div>
       </Modal>
     </div>
   );
