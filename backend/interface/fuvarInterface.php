@@ -474,43 +474,32 @@ class FuvarInterface {
         return ['success' => true, 'fuvarok' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
 
-    // Cégszinten (nem csak a kiválasztott megbízóra szűkítve) korábban
-    // már használt felrakó/lerakó cég+cím kombinációk, legutóbb
-    // használt elöl — a FuvarForm.js gyors-választó chipjeihez, hogy a
-    // sofőrszervezőnek ne kelljen mindig újra begépelnie ugyanazt a
-    // telephelyet. Két külön lekérdezés (nincs UNION), ugyanaz a minta,
-    // mint máshol a projektben. `$limit` közvetlenül a lekérdezésbe
-    // fűzve (int-re kasztolva, nem bind-elhető LIMIT paraméterként) —
+    // A KIVÁLASZTOTT megbízóhoz korábban már rögzített útvonalak
+    // (felrakó+lerakó PÁRBAN, ahogy ténylegesen együtt előfordultak),
+    // legutóbb használt elöl — a FuvarForm.js "Korábbi útvonalak"
+    // felugró választójához, ami a megbízó kiválasztása után jelenik
+    // meg. Szándékosan CSAK az adott megbízóra szűkítve (nem
+    // cégszinten) — egy másik ügyfél telephelye itt irreleváns/
+    // félrevezető lenne. `$limit` közvetlenül a lekérdezésbe fűzve
+    // (int-re kasztolva, nem bind-elhető LIMIT paraméterként) —
     // ugyanaz a minta, mint getUgyfelElozmeny()-nél.
-    public function getHelyszinElozmenyek($ceg_id, $limit = 6) {
+    public function getUtvonalElozmenyek($ceg_id, $megbizoId, $limit = 8) {
         $limit = (int) $limit;
-        $felrakoStmt = $this->db->prepare(
-            "SELECT felrako_ceg AS ceg, felrako_cim AS cim, MAX(letrehozva) AS utolso
+        $stmt = $this->db->prepare(
+            "SELECT felrako_ceg, felrako_cim, lerako_ceg, lerako_cim, MAX(letrehozva) AS utolso
              FROM fuvarok
-             WHERE admin = :admin AND torolt <> 'I' AND felrako_ceg IS NOT NULL AND felrako_ceg <> ''
-             GROUP BY felrako_ceg, felrako_cim
+             WHERE admin = :admin AND megbizo_id = :megbizo_id AND torolt <> 'I'
+               AND felrako_ceg IS NOT NULL AND felrako_ceg <> ''
+               AND lerako_ceg IS NOT NULL AND lerako_ceg <> ''
+             GROUP BY felrako_ceg, felrako_cim, lerako_ceg, lerako_cim
              ORDER BY utolso DESC
              LIMIT $limit"
         );
-        $felrakoStmt->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
-        $felrakoStmt->execute();
+        $stmt->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
+        $stmt->bindValue(':megbizo_id', $megbizoId, PDO::PARAM_INT);
+        $stmt->execute();
 
-        $lerakoStmt = $this->db->prepare(
-            "SELECT lerako_ceg AS ceg, lerako_cim AS cim, MAX(letrehozva) AS utolso
-             FROM fuvarok
-             WHERE admin = :admin AND torolt <> 'I' AND lerako_ceg IS NOT NULL AND lerako_ceg <> ''
-             GROUP BY lerako_ceg, lerako_cim
-             ORDER BY utolso DESC
-             LIMIT $limit"
-        );
-        $lerakoStmt->bindValue(':admin', $ceg_id, PDO::PARAM_INT);
-        $lerakoStmt->execute();
-
-        return [
-            'success' => true,
-            'felrakok' => $felrakoStmt->fetchAll(PDO::FETCH_ASSOC),
-            'lerakok' => $lerakoStmt->fetchAll(PDO::FETCH_ASSOC),
-        ];
+        return ['success' => true, 'utvonalak' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
 
     // Sofőr-oldali "saját fuvarjaim" lekérdezés — csak operatív mezőket ad
