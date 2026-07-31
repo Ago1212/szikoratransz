@@ -140,6 +140,7 @@ class ApiHandler {
         'getFuvarok' => ['fuvarok', 'hozzaferes'],
         'getFuvar' => ['fuvarok', 'hozzaferes'],
         'getUgyfelFuvarElozmeny' => ['fuvarok', 'hozzaferes'],
+        'getFuvarHelyszinElozmenyek' => ['fuvarok', 'hozzaferes'],
         'getFuvarStatisztikak' => ['fuvarok', 'hozzaferes'],
         'getFuvarFigyelmeztetesek' => ['fuvarok', 'hozzaferes'],
         'updateFuvarAllapot' => ['fuvarok', 'szerkesztes'],
@@ -359,6 +360,7 @@ class ApiHandler {
             'deleteFuvar' => ['id', 'ceg_id', 'kerelmezo_id'],
             'getFuvar' => ['id', 'ceg_id'],
             'getFuvarok' => ['ceg_id'],
+            'getFuvarHelyszinElozmenyek' => ['ceg_id'],
             'getSajatFuvarok' => ['sofor_id'],
             'getSajatFuvar' => ['id', 'sofor_id'],
             'feltoltFuvarDokumentumot' => ['fuvarId', 'tipus', 'file', 'name', 'size'],
@@ -1739,6 +1741,9 @@ class ApiHandler {
                 case 'getFuvarok':
                     $kerelmezo = $this->resolveKerelmezo($request);
                     echo json_encode($fuvarInterface->getFuvarok($kerelmezo['ceg_id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['sortKey'] ?? null, $request['sortDir'] ?? 'asc', $request['allapot'] ?? null, $request['datumTol'] ?? null, $request['datumIg'] ?? null));
+                    return;
+                case 'getFuvarHelyszinElozmenyek':
+                    echo json_encode($fuvarInterface->getHelyszinElozmenyek($this->resolveKerelmezo($request)['ceg_id']));
                     return;
                 case 'getSajatFuvarok':
                     // Sofőr-önkiszolgáló akció, nincs MODULE_PERMISSION_MAP
