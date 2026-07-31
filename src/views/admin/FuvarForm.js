@@ -5,6 +5,7 @@ import {
   PiArrowLeftLight,
   PiUserLight,
   PiMapPinLight,
+  PiPackageLight,
   PiCoinsLight,
   PiNoteLight,
   PiPlusLight,
@@ -78,7 +79,8 @@ const emptyFuvar = {
   megbizo_id: "",
   aru_megnevezese: "",
   megjegyzes: "",
-  dij: "",
+  fuvardij: "",
+  egyeb_koltseg: "",
   raklapszam: "",
   allapot: "rogzitett",
 };
@@ -115,6 +117,7 @@ export default function FuvarForm() {
   const [soforok, setSoforok] = useState([]);
   const [ugyfelek, setUgyfelek] = useState([]);
   const [ugyfelElozmeny, setUgyfelElozmeny] = useState([]);
+  const [helyszinElozmenyek, setHelyszinElozmenyek] = useState({ felrakok: [], lerakok: [] });
   const [elozmenyNyitva, setElozmenyNyitva] = useState(false);
   const [ujMegbizoNyitva, setUjMegbizoNyitva] = useState(false);
   const [ujMegbizoAdatok, setUjMegbizoAdatok] = useState(UJ_MEGBIZO_URES);
@@ -122,18 +125,24 @@ export default function FuvarForm() {
 
   useEffect(() => {
     const loadLookups = async () => {
-      const [kamionRes, furgonRes, potkocsiRes, soforRes, ugyfelRes] = await Promise.all([
+      const [kamionRes, furgonRes, potkocsiRes, soforRes, ugyfelRes, helyszinRes] = await Promise.all([
         fetchAction("getKamionValaszto", { ceg_id: user.ceg_id }),
         fetchAction("getFurgonValaszto", { ceg_id: user.ceg_id }),
         fetchAction("getPotkocsiRendszamok", { id: user.ceg_id }),
         fetchAction("getSoforok", { id: user.ceg_id, kerelmezo_id: user.id }),
         fetchAction("getUgyfelek", { id: user.ceg_id, kerelmezo_id: user.id }),
+        fetchAction("getFuvarHelyszinElozmenyek", { ceg_id: user.ceg_id }),
       ]);
       setKamionok(kamionRes?.success ? kamionRes.kamionok || [] : []);
       setFurgonok(furgonRes?.success ? furgonRes.furgonok || [] : []);
       setPotkocsik(potkocsiRes?.success ? potkocsiRes.potkocsik || [] : []);
       setSoforok(soforRes?.success ? soforRes.soforok || [] : []);
       setUgyfelek(ugyfelRes?.success ? ugyfelRes.ugyfelek || [] : []);
+      setHelyszinElozmenyek(
+        helyszinRes?.success
+          ? { felrakok: helyszinRes.felrakok || [], lerakok: helyszinRes.lerakok || [] }
+          : { felrakok: [], lerakok: [] },
+      );
     };
     loadLookups();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -205,6 +214,17 @@ export default function FuvarForm() {
     },
     [user.ceg_id, ugyfelek],
   );
+
+  // Gyors kiválasztás egy korábban (bármelyik fuvaron, nem csak a
+  // kiválasztott megbízónál) már használt felrakó/lerakó cég+cím
+  // kombinációból — explicit kattintás, ezért mindig felülírja a mezőt
+  // (más logika, mint a megbízó-alapú "csak ha üres" ajánlás).
+  const handleFelrakoValaszt = (helyszin) => {
+    setFormData((prev) => ({ ...prev, felrako_ceg: helyszin.ceg, felrako_cim: helyszin.cim || "" }));
+  };
+  const handleLerakoValaszt = (helyszin) => {
+    setFormData((prev) => ({ ...prev, lerako_ceg: helyszin.ceg, lerako_cim: helyszin.cim || "" }));
+  };
 
   const handleUjMegbizoChange = (e) => {
     const { name, value } = e.target;
@@ -279,6 +299,11 @@ export default function FuvarForm() {
   };
 
   const kivalasztottMegbizo = ugyfelek.find((u) => String(u.id) === String(formData.megbizo_id)) || null;
+
+  // Csak megjelenítés — a szerver is ugyanígy (fuvardij + IFNULL(egyeb_
+  // koltseg,0)) számolja, ez a kliens-oldali élő visszajelzés, mielőtt
+  // a mentés megtörténne.
+  const osszesenSzamitott = (Number(formData.fuvardij) || 0) + (Number(formData.egyeb_koltseg) || 0);
 
   const jarmuOptions = [
     ...kamionok.map((k) => ({ value: `kamion:${k.id}`, label: k.rendszam, searchText: k.rendszam })),
@@ -437,19 +462,12 @@ export default function FuvarForm() {
                 </div>
               )}
 
-              <FormSection title="Útvonal" icon={PiMapPinLight} columns={4}>
+              <FormSection title="Felrakás" icon={PiMapPinLight} columns={3}>
                 <FormField
                   type="date"
                   label="Felrakás dátuma"
                   name="felrakas_datuma"
                   value={formData.felrakas_datuma || ""}
-                  onChange={handleChange}
-                />
-                <FormField
-                  type="date"
-                  label="Lerakás dátuma"
-                  name="lerakas_datuma"
-                  value={formData.lerakas_datuma || ""}
                   onChange={handleChange}
                 />
                 <FormField
@@ -464,6 +482,34 @@ export default function FuvarForm() {
                   value={formData.felrako_cim || ""}
                   onChange={handleChange}
                 />
+                {helyszinElozmenyek.felrakok.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5 md:col-span-3">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-400">
+                      Korábbiak:
+                    </span>
+                    {helyszinElozmenyek.felrakok.map((h, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => handleFelrakoValaszt(h)}
+                        title={h.cim || ""}
+                        className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-ink-600 transition-colors hover:bg-slate-200 dark:bg-ink-800 dark:text-ink-300 dark:hover:bg-ink-700"
+                      >
+                        {h.ceg}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </FormSection>
+
+              <FormSection title="Lerakás" icon={PiMapPinLight} columns={3}>
+                <FormField
+                  type="date"
+                  label="Lerakás dátuma"
+                  name="lerakas_datuma"
+                  value={formData.lerakas_datuma || ""}
+                  onChange={handleChange}
+                />
                 <FormField
                   label="Lerakó cég"
                   name="lerako_ceg"
@@ -476,6 +522,27 @@ export default function FuvarForm() {
                   value={formData.lerako_cim || ""}
                   onChange={handleChange}
                 />
+                {helyszinElozmenyek.lerakok.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5 md:col-span-3">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-400">
+                      Korábbiak:
+                    </span>
+                    {helyszinElozmenyek.lerakok.map((h, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => handleLerakoValaszt(h)}
+                        title={h.cim || ""}
+                        className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-ink-600 transition-colors hover:bg-slate-200 dark:bg-ink-800 dark:text-ink-300 dark:hover:bg-ink-700"
+                      >
+                        {h.ceg}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </FormSection>
+
+              <FormSection title="Rakomány" icon={PiPackageLight} columns={4}>
                 <FormField
                   type="number"
                   label="Távolság (km)"
@@ -510,10 +577,22 @@ export default function FuvarForm() {
               <FormSection title="Díjak" icon={PiCoinsLight} columns={4}>
                 <FormField
                   type="number"
-                  label="Díj (Ft)"
-                  name="dij"
-                  value={formData.dij || ""}
+                  label="Fuvardíj (Ft)"
+                  name="fuvardij"
+                  value={formData.fuvardij || ""}
                   onChange={handleChange}
+                />
+                <FormField
+                  type="number"
+                  label="Egyéb költség (Ft)"
+                  name="egyeb_koltseg"
+                  value={formData.egyeb_koltseg || ""}
+                  onChange={handleChange}
+                />
+                <FormField
+                  as="info"
+                  label="Összesen"
+                  value={osszesenSzamitott ? `${osszesenSzamitott.toLocaleString("hu-HU")} Ft` : ""}
                 />
                 <FormField
                   as="select"
