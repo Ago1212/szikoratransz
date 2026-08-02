@@ -6,12 +6,13 @@
 // komment) nincs JOIN — minden tábla saját lekérdezést kap, az eredmények
 // PHP oldalon egy közös, egységes alakra hozva.
 //
-// Az `url` szándékosan a LISTA oldalra mutat, nem közvetlenül a szerkesztő
-// formra — a szerkesztő oldalak (pl. KamionForm.js) kizárólag a
-// `location.state.data`-ból töltik fel magukat (nincs önálló "adott id
-// lekérése" akció egyik modulnál sem), a keresés viszont csak részleges
-// mezőket ad vissza. Közvetlen mélylinkeléshez egy külön "getById" akciót
-// kellene bevezetni minden modulhoz — ez túlmutat ezen a körön.
+// Az `url` a LISTA oldalra mutat (fallbackként) — a GlobalSearch.js viszont
+// egy találat kiválasztásakor mostantól a szerkesztő FORM route-ra navigál,
+// `?id=`-vel (ld. GlobalSearch.js `TIPUS_FORM_URL`), amit a Form komponensek
+// `useDeepLinkRecord.js`-en keresztül egy dedikált, modulonkénti "adott id
+// lekérése" akcióval (getKamion/getPotkocsi/getFurgon/getSofor/getUgyfel/
+// getHelyszin/getFuvar) oldanak fel teljes rekorddá — ez a lenti keresés
+// ugyanis csak részleges mezőket ad vissza, formba töltésre nem elég.
 class KeresesInterface {
     protected $db;
 

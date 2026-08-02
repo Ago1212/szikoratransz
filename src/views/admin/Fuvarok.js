@@ -132,11 +132,11 @@ export default function Fuvarok() {
           setPage(1);
         }}
       />
-      <div className="mb-3 flex justify-end gap-1">
+      <div className="mb-3 flex gap-1.5 overflow-x-auto pb-1 md:flex-wrap md:justify-end md:overflow-visible md:pb-0">
         <button
           type="button"
           onClick={() => setNezetMod("tablazat")}
-          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${
+          className={`flex min-h-11 flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${
             nezetMod === "tablazat" ? "bg-brand-600 text-white" : "bg-slate-100 text-ink-600 dark:bg-ink-800 dark:text-ink-300"
           }`}
         >
@@ -145,7 +145,7 @@ export default function Fuvarok() {
         <button
           type="button"
           onClick={() => setNezetMod("kanban")}
-          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${
+          className={`hidden min-h-11 flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wide md:flex ${
             nezetMod === "kanban" ? "bg-brand-600 text-white" : "bg-slate-100 text-ink-600 dark:bg-ink-800 dark:text-ink-300"
           }`}
         >
@@ -154,7 +154,7 @@ export default function Fuvarok() {
         <button
           type="button"
           onClick={() => setNezetMod("sofor")}
-          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${
+          className={`flex min-h-11 flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${
             nezetMod === "sofor" ? "bg-brand-600 text-white" : "bg-slate-100 text-ink-600 dark:bg-ink-800 dark:text-ink-300"
           }`}
         >
@@ -163,7 +163,7 @@ export default function Fuvarok() {
         <button
           type="button"
           onClick={() => setNezetMod("statisztika")}
-          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${
+          className={`flex min-h-11 flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${
             nezetMod === "statisztika" ? "bg-brand-600 text-white" : "bg-slate-100 text-ink-600 dark:bg-ink-800 dark:text-ink-300"
           }`}
         >

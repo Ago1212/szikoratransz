@@ -1617,10 +1617,6 @@ h1,
   min-height: 2.75rem;
 }
 
-.min-h-14 {
-  min-height: 3.5rem;
-}
-
 .min-h-full {
   min-height: 100%;
 }
@@ -3146,6 +3142,18 @@ h1,
 .from-slate-100 {
   --tw-gradient-from: #f1f5f9 var(--tw-gradient-from-position);
   --tw-gradient-to: rgb(241 245 249 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.from-slate-50 {
+  --tw-gradient-from: #f8fafc var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(248 250 252 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.from-white {
+  --tw-gradient-from: #fff var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(255 255 255 / 0) var(--tw-gradient-to-position);
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
 
@@ -5277,6 +5285,18 @@ h1,
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
 
+.dark\:from-ink-900:is(.dark *) {
+  --tw-gradient-from: #1a1c1f var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(26 28 31 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.dark\:from-ink-950:is(.dark *) {
+  --tw-gradient-from: #101113 var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(16 17 19 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
 .dark\:text-amber-200:is(.dark *) {
   --tw-text-opacity: 1;
   color: rgb(253 230 138 / var(--tw-text-opacity, 1));
@@ -5821,6 +5841,10 @@ h1,
     grid-column: span 2 / span 2;
   }
 
+  .md\:col-span-3 {
+    grid-column: span 3 / span 3;
+  }
+
   .md\:-mx-4 {
     margin-left: -1rem;
     margin-right: -1rem;
@@ -5935,6 +5959,10 @@ h1,
     flex-direction: row;
   }
 
+  .md\:flex-wrap {
+    flex-wrap: wrap;
+  }
+
   .md\:flex-nowrap {
     flex-wrap: nowrap;
   }
@@ -5983,6 +6011,10 @@ h1,
 
   .md\:overflow-hidden {
     overflow: hidden;
+  }
+
+  .md\:overflow-visible {
+    overflow: visible;
   }
 
   .md\:rounded-3xl {
@@ -6039,6 +6071,10 @@ h1,
   .md\:py-4 {
     padding-top: 1rem;
     padding-bottom: 1rem;
+  }
+
+  .md\:pb-0 {
+    padding-bottom: 0px;
   }
 
   .md\:pb-10 {

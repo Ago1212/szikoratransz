@@ -201,7 +201,10 @@ class SoforokInterface {
     // `$ceg_id`-vel és `torolt` szűréssel scope-olva — enélkül egy soft-
     // törölt, vagy más céghez tartozó sofőr rekordja is visszakapható volt
     // (ld. `getSajatSofor()` alábbi, korábban ellenőrzés nélküli hívása).
-    private function getSofor($id, $ceg_id) {
+    // Publikus, mert az admin-oldali szerkesztő form (globális keresésből
+    // mélylinkelve) is ezt hívja — a `ber` mezőt (eltérően `getSajatSofor()`-
+    // tól) admin-hívónál szándékosan NEM szűrjük ki, csak a `password`-öt.
+    public function getSofor($id, $ceg_id) {
         $query = "SELECT * FROM user WHERE id = :id AND admin = :ceg_id AND torolt <> 'I'";
         $stmt = $this->db->prepare($query);
         $stmt->bindValue(':id', $id);

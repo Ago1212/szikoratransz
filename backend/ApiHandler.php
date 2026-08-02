@@ -140,6 +140,7 @@ class ApiHandler {
         'getFuvarok' => ['fuvarok', 'hozzaferes'],
         'getFuvar' => ['fuvarok', 'hozzaferes'],
         'getUgyfelFuvarElozmeny' => ['fuvarok', 'hozzaferes'],
+        'getFuvarUtvonalElozmenyek' => ['fuvarok', 'hozzaferes'],
         'getFuvarStatisztikak' => ['fuvarok', 'hozzaferes'],
         'getFuvarFigyelmeztetesek' => ['fuvarok', 'hozzaferes'],
         'updateFuvarAllapot' => ['fuvarok', 'szerkesztes'],
@@ -157,6 +158,7 @@ class ApiHandler {
         'getKmAlapuKarbantartasEsedekesseg' => ['karbantartasok', 'hozzaferes'],
 
         'getSoforok' => ['soforok', 'hozzaferes'],
+        'getSofor' => ['soforok', 'hozzaferes'],
         'newSofor' => ['soforok', 'szerkesztes'],
         'deleteSofor' => ['soforok', 'torles'],
         // R08 (fejlesztési audit, 2026-07-19): sofőrönkénti összesítő riport —
@@ -175,6 +177,7 @@ class ApiHandler {
         'deleteSzabadsag' => ['szabadsagok', 'torles'],
 
         'getUgyfelek' => ['ugyfelek', 'hozzaferes'],
+        'getUgyfel' => ['ugyfelek', 'hozzaferes'],
         'newUgyfel' => ['ugyfelek', 'szerkesztes'],
         'saveUgyfelData' => ['ugyfelek', 'szerkesztes'],
         'deleteUgyfel' => ['ugyfelek', 'torles'],
@@ -249,12 +252,14 @@ class ApiHandler {
             'getKamionValaszto' => ['ceg_id'],
             'deleteKamion' => ['id', 'kerelmezo_id'],
             'getKamionRendszamok' => ['id'],
+            'getKamion' => ['id'],
 
             'newPotkocsi' => ['rendszam', 'kerelmezo_id'],
             'savePotkocsiData' => ['id', 'kerelmezo_id'],
             'getPotkocsik' => ['id'],
             'deletePotkocsi' => ['id', 'kerelmezo_id'],
             'getPotkocsiRendszamok' => ['id'],
+            'getPotkocsi' => ['id'],
 
             'newFurgon' => ['rendszam', 'kerelmezo_id'],
             'saveFurgonData' => ['id', 'kerelmezo_id'],
@@ -262,6 +267,7 @@ class ApiHandler {
             'getFurgonValaszto' => ['ceg_id'],
             'deleteFurgon' => ['id', 'kerelmezo_id'],
             'getFurgonRendszamok' => ['id'],
+            'getFurgon' => ['id'],
 
             'deleteKarbantartas' => ['id', 'kerelmezo_id'],
             'updateKarbantartas' => ['admin', 'log', 'kamion_id', 'datum', 'km_oraallas', 'elvegezte', 'kerelmezo_id'],
@@ -278,6 +284,7 @@ class ApiHandler {
             'getSoforok' => ['id', 'kerelmezo_id'],
             'getSoforScorecard' => ['id', 'kerelmezo_id'],
             'getSajatSofor' => ['id'],
+            'getSofor' => ['id'],
             'newSofor' => ['name', 'email', 'kerelmezo_id'],
             'saveSoforData' => ['id'],
             'deleteSofor' => ['id', 'kerelmezo_id'],
@@ -303,6 +310,7 @@ class ApiHandler {
             'getAdminElerhetoseg' => ['id'],
 
             'getUgyfelek' => ['id', 'kerelmezo_id'],
+            'getUgyfel' => ['id'],
             'newUgyfel' => ['admin', 'nev', 'kerelmezo_id'],
             'saveUgyfelData' => ['id', 'ceg_id', 'kerelmezo_id'],
             'deleteUgyfel' => ['id', 'ceg_id', 'kerelmezo_id'],
@@ -357,8 +365,9 @@ class ApiHandler {
             'newFuvar' => ['ceg_id', 'kerelmezo_id'],
             'updateFuvar' => ['id', 'ceg_id', 'kerelmezo_id'],
             'deleteFuvar' => ['id', 'ceg_id', 'kerelmezo_id'],
-            'getFuvar' => ['id', 'ceg_id'],
+            'getFuvar' => ['id'],
             'getFuvarok' => ['ceg_id'],
+            'getFuvarUtvonalElozmenyek' => ['ceg_id', 'megbizoId'],
             'getSajatFuvarok' => ['sofor_id'],
             'getSajatFuvar' => ['id', 'sofor_id'],
             'feltoltFuvarDokumentumot' => ['fuvarId', 'tipus', 'file', 'name', 'size'],
@@ -828,6 +837,10 @@ class ApiHandler {
                 case 'getKamionRendszamok':
                     echo json_encode($kamionInterface->getKamionRendszamok($this->resolveSajatCegId($request)));
                     return;
+                case 'getKamion':
+                    $kamion = $kamionInterface->getKamion($request['id'], $this->resolveSajatCegId($request));
+                    echo json_encode($kamion ? ['success' => true, 'kamion' => $kamion] : ['success' => false, 'message' => 'A kamion nem található.']);
+                    return;
                 case 'deleteKamion':
                     $kerelmezo = $this->resolveKerelmezo($request);
                     $result = $kamionInterface->deleteKamion($request['id'], $kerelmezo['ceg_id']);
@@ -871,6 +884,10 @@ class ApiHandler {
                     return;
                 case 'getFurgonRendszamok':
                     echo json_encode($furgonInterface->getFurgonRendszamok($this->resolveSajatCegId($request)));
+                    return;
+                case 'getFurgon':
+                    $furgon = $furgonInterface->getFurgon($request['id'], $this->resolveSajatCegId($request));
+                    echo json_encode($furgon ? ['success' => true, 'furgon' => $furgon] : ['success' => false, 'message' => 'A furgon nem található.']);
                     return;
                 case 'deleteFurgon':
                     $kerelmezo = $this->resolveKerelmezo($request);
@@ -921,6 +938,10 @@ class ApiHandler {
                 case 'getPotkocsiRendszamok':
                     echo json_encode($potkocsiInterface->getPotkocsiRendszamok($this->resolveSajatCegId($request)));
                     return;
+                case 'getPotkocsi':
+                    $potkocsi = $potkocsiInterface->getPotkocsi($request['id'], $this->resolveSajatCegId($request));
+                    echo json_encode($potkocsi ? ['success' => true, 'potkocsi' => $potkocsi] : ['success' => false, 'message' => 'A pótkocsi nem található.']);
+                    return;
                 case 'getPotkocsiKarbantartas':
                     echo json_encode($karbantartasInterface->getPotkocsiKarbantartas($request['potkocsi_id'], $this->resolveKerelmezo($request)['ceg_id']));
                     return;
@@ -948,6 +969,13 @@ class ApiHandler {
                 case 'getSajatSofor':
                     $sajatSoforId = $this->resolveSajatSoforId($request);
                     echo json_encode($soforokInterface->getSajatSofor($sajatSoforId, $this->resolveSajatCegId($request)));
+                    return;
+                case 'getSofor':
+                    $sofor = $soforokInterface->getSofor($request['id'], $this->resolveKerelmezo($request)['ceg_id']);
+                    if ($sofor) {
+                        unset($sofor['password']);
+                    }
+                    echo json_encode($sofor ? ['success' => true, 'sofor' => $sofor] : ['success' => false, 'message' => 'A sofőr nem található.']);
                     return;
                 case 'newSofor':
                     $kerelmezo = $this->resolveKerelmezo($request);
@@ -1095,6 +1123,10 @@ class ApiHandler {
                     // (IDOR, ld. biztonsági audit). Most a szerver-oldalon
                     // feloldott ceg_id-t adjuk át, sosem a kliensét.
                     echo json_encode($ugyfelInterface->getUgyfelek($this->resolveKerelmezo($request)['ceg_id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['sortKey'] ?? null, $request['sortDir'] ?? 'asc'));
+                    return;
+                case 'getUgyfel':
+                    $ugyfel = $ugyfelInterface->getUgyfel($request['id'], $this->resolveKerelmezo($request)['ceg_id']);
+                    echo json_encode($ugyfel ? ['success' => true, 'ugyfel' => $ugyfel] : ['success' => false, 'message' => 'Az ügyfél nem található.']);
                     return;
                 case 'newUgyfel':
                     // Ugyanez a hiba: `$request['admin']`-t közvetlenül az
@@ -1739,6 +1771,9 @@ class ApiHandler {
                 case 'getFuvarok':
                     $kerelmezo = $this->resolveKerelmezo($request);
                     echo json_encode($fuvarInterface->getFuvarok($kerelmezo['ceg_id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['sortKey'] ?? null, $request['sortDir'] ?? 'asc', $request['allapot'] ?? null, $request['datumTol'] ?? null, $request['datumIg'] ?? null));
+                    return;
+                case 'getFuvarUtvonalElozmenyek':
+                    echo json_encode($fuvarInterface->getUtvonalElozmenyek($this->resolveKerelmezo($request)['ceg_id'], $request['megbizoId']));
                     return;
                 case 'getSajatFuvarok':
                     // Sofőr-önkiszolgáló akció, nincs MODULE_PERMISSION_MAP

@@ -23,11 +23,24 @@ const TIPUS_ICON = {
   fuvar: PiClipboardTextLight,
 };
 
+// Melyik típus melyik szerkesztő FORM route-jára nyisson (nem a lista-
+// oldalra) — a Form komponensek `useDeepLinkRecord.js`-en keresztül
+// `?id=`-ből töltik be a teljes rekordot, ld. ott.
+const TIPUS_FORM_URL = {
+  kamion: "/admin/kamionForm",
+  potkocsi: "/admin/potkocsiForm",
+  furgon: "/admin/furgonForm",
+  sofor: "/admin/soforForm",
+  ugyfel: "/admin/ugyfelForm",
+  helyszin: "/admin/helyszinForm",
+  fuvar: "/admin/fuvarForm",
+};
+
 // Egyetlen keresőmezőből minden fő modulban keres (ld. backend
-// keresesInterface.php). A találatok a lista-oldalra navigálnak (nem
-// közvetlenül a szerkesztő formra) — a szerkesztő oldalak kizárólag a
-// route-state-ből töltődnek, a keresés viszont csak részleges mezőket ad
-// vissza, ld. keresesInterface.php komment.
+// keresesInterface.php). A találat kiválasztása a rekord SZERKESZTŐ
+// formját nyitja meg (nem a lista-oldalt) — `?id=`-vel, amit a Form
+// komponensek `useDeepLinkRecord.js`-en keresztül aszinkron feloldanak
+// teljes rekorddá, mivel a keresés csak részleges mezőket ad vissza.
 export default function GlobalSearch({ open, onClose }) {
   const [q, setQ] = useState("");
   const [talalatok, setTalalatok] = useState([]);
@@ -80,7 +93,8 @@ export default function GlobalSearch({ open, onClose }) {
 
   const handleSelect = (item) => {
     onClose();
-    history.push(item.url);
+    const formUrl = TIPUS_FORM_URL[item.tipus];
+    history.push(formUrl ? `${formUrl}?id=${item.id}` : item.url);
   };
 
   const handleKeyDown = (e) => {

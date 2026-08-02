@@ -38,6 +38,15 @@ class UgyfelInterface {
         }
     }
 
+    public function getUgyfel($id, $ceg_id) {
+        $query = "SELECT * FROM ugyfelek WHERE id = :id AND admin = :ceg_id AND torolt <> 'I'";
+        $stmt = $this->db->prepare($query);
+        $stmt->bindValue(':id', $id);
+        $stmt->bindValue(':ceg_id', $ceg_id);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     public function newUgyfel($data) {
         try {
             $query = "INSERT INTO ugyfelek (admin, nev, adoszam, cim, irsz, varos, kapcsolattarto_nev, kapcsolattarto_email, kapcsolattarto_telefon, fizetesi_hatarido_nap, megjegyzes, felrako_ceg, felrako_cim, lerako_ceg, lerako_cim)

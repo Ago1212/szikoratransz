@@ -1,11 +1,11 @@
 import React from "react";
-import { useLocation } from "react-router-dom";
 import CardHelyszin from "components/Cards/CardHelyszin.js";
 import AdminBreadcrumb from "components/UI/AdminBreadcrumb.js";
+import Spinner from "components/UI/Spinner.js";
+import useDeepLinkRecord from "utils/useDeepLinkRecord.js";
 
 export default function HelyszinForm() {
-  const location = useLocation();
-  const data = location.state?.data;
+  const { data, loading } = useDeepLinkRecord("getHelyszin", "helyszin");
 
   return (
     <div className="flex flex-wrap">
@@ -16,7 +16,7 @@ export default function HelyszinForm() {
           listPath="/admin/helyszinek"
           current={data?.nev || "Új helyszín"}
         />
-        <CardHelyszin initialHelyszin={data} />
+        {loading ? <Spinner /> : <CardHelyszin initialHelyszin={data} />}
       </div>
     </div>
   );

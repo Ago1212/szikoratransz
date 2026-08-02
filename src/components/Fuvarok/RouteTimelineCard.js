@@ -1,5 +1,5 @@
 import React from "react";
-import { PiMapPinFill, PiMapTrifoldLight } from "react-icons/pi";
+import { PiMapPinFill, PiPackageLight, PiMapTrifoldLight, PiBuildingsLight } from "react-icons/pi";
 
 function Vegpont({ label, tone, adat }) {
   const toneClasses = tone === "felrako" ? "bg-brand-100 text-brand-600" : "bg-emerald-100 text-emerald-600";
@@ -21,13 +21,23 @@ function Vegpont({ label, tone, adat }) {
 }
 
 // Nagy, domináns "pickup → dropoff" kártya (Uber/Bolt Driver mintára) —
-// felrakó/lerakó pont + a köztük futó szaggatott vonal középen a
-// távolság-chippel, alul a fő navigációs CTA. A `felrako`/`lerako` prop
-// alakja: { ceg, cim, datum } — mindhárom mező hiányozhat, "—"-ra esik
-// vissza, sosem generálunk kitalált adatot.
-export default function RouteTimelineCard({ felrako, lerako, tavolsagKm, onUtvonalterv, eleheto }) {
+// felül a megbízó neve+címe (ha van), alatta felrakó/lerakó pont + a
+// köztük futó szaggatott vonal középen a távolság-chippel, a kártya
+// alján az áru megnevezése (bal) és a navigációs gomb (jobbra igazítva).
+// A `felrako`/`lerako` prop alakja: { ceg, cim, datum } — mindhárom mező
+// hiányozhat, "—"-ra esik vissza, sosem generálunk kitalált adatot.
+export default function RouteTimelineCard({ felrako, lerako, tavolsagKm, aru, megbizoNev, megbizoCim, onUtvonalterv, eleheto }) {
   return (
     <div className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft">
+      {megbizoNev && (
+        <div className="mb-4 flex items-center gap-2 border-b border-ink-100 pb-4 text-sm text-ink-600">
+          <PiBuildingsLight className="h-4 w-4 flex-shrink-0 text-ink-400" />
+          <span>
+            {megbizoNev}
+            {megbizoCim ? ` (${megbizoCim})` : ""}
+          </span>
+        </div>
+      )}
       <Vegpont label="Felrakás" tone="felrako" adat={felrako} />
       <div className="ml-[18px] flex h-10 items-center border-l-2 border-dashed border-ink-200 pl-5">
         {tavolsagKm ? (
@@ -36,15 +46,23 @@ export default function RouteTimelineCard({ felrako, lerako, tavolsagKm, onUtvon
       </div>
       <Vegpont label="Lerakás" tone="lerako" adat={lerako} />
 
-      <button
-        type="button"
-        onClick={onUtvonalterv}
-        disabled={!eleheto}
-        className="mt-4 flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 text-base font-bold uppercase tracking-wide text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-ink-400"
-      >
-        <PiMapTrifoldLight className="h-5 w-5" />
-        Útvonaltervezés
-      </button>
+      <div className="mt-4 flex items-center gap-3 border-t border-ink-100 pt-4">
+        {aru && (
+          <div className="flex min-w-0 items-center gap-2">
+            <PiPackageLight className="h-4 w-4 flex-shrink-0 text-ink-400" />
+            <p className="truncate text-sm text-ink-700">{aru}</p>
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={onUtvonalterv}
+          disabled={!eleheto}
+          aria-label="Útvonaltervezés indítása"
+          className="ml-auto flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-brand-600 text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-ink-400"
+        >
+          <PiMapTrifoldLight className="h-5 w-5" />
+        </button>
+      </div>
     </div>
   );
 }
