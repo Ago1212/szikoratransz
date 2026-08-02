@@ -67,17 +67,19 @@ const emptyFuvar = {
   kamion_id: "",
   furgon_id: "",
   potkocsi_id: "",
-  teljesites_datuma: "",
-  felrako: "",
-  lerako: "",
+  felrakas_datuma: "",
+  lerakas_datuma: "",
+  felrako_ceg: "",
+  felrako_cim: "",
+  lerako_ceg: "",
+  lerako_cim: "",
   tavolsag_km: "",
-  tomeg_kg: "",
+  tomeg_tonna: "",
   megbizo_id: "",
   aru_megnevezese: "",
   megjegyzes: "",
-  fuvardij: "",
-  egyeb_koltseg: "",
-  fuvarlevel_szam: "",
+  dij: "",
+  raklapszam: "",
   allapot: "rogzitett",
 };
 
@@ -178,8 +180,19 @@ export default function FuvarForm() {
 
   const handleMegbizoChange = useCallback(
     async (megbizoId) => {
-      setFormData((prev) => ({ ...prev, megbizo_id: megbizoId }));
       setElozmenyNyitva(false);
+      const kivalasztott = ugyfelek.find((u) => String(u.id) === String(megbizoId));
+      setFormData((prev) => {
+        const uj = { ...prev, megbizo_id: megbizoId };
+        if (kivalasztott) {
+          ["felrako_ceg", "felrako_cim", "lerako_ceg", "lerako_cim"].forEach((mezo) => {
+            if (!uj[mezo] && kivalasztott[mezo]) {
+              uj[mezo] = kivalasztott[mezo];
+            }
+          });
+        }
+        return uj;
+      });
       if (!megbizoId) {
         setUgyfelElozmeny([]);
         return;
@@ -190,7 +203,7 @@ export default function FuvarForm() {
       });
       setUgyfelElozmeny(result?.success ? result.fuvarok || [] : []);
     },
-    [user.ceg_id],
+    [user.ceg_id, ugyfelek],
   );
 
   const handleUjMegbizoChange = (e) => {
@@ -296,7 +309,13 @@ export default function FuvarForm() {
           group="Fuvarok"
           listLabel="Fuvarok"
           listPath="/admin/fuvarok"
-          current={isNew ? "Új fuvar" : initialData.fuvarlevel_szam || "Fuvar szerkesztése"}
+          current={
+            isNew
+              ? "Új fuvar"
+              : initialData.felrako_ceg && initialData.lerako_ceg
+                ? `${initialData.felrako_ceg} → ${initialData.lerako_ceg}`
+                : "Fuvar szerkesztése"
+          }
         />
         {!isNew && (
           <StatusBadge tone={ALLAPOT_TONE[formData.allapot] || "neutral"}>
@@ -409,8 +428,8 @@ export default function FuvarForm() {
                     <ul className="space-y-0.5 px-3 pb-3 text-xs text-ink-600 dark:text-ink-300">
                       {ugyfelElozmeny.map((f, i) => (
                         <li key={i}>
-                          {f.teljesites_datuma || "—"} · {f.felrako} → {f.lerako} ·{" "}
-                          {f.fuvardij != null ? `${Number(f.fuvardij).toLocaleString("hu-HU")} Ft` : "—"}
+                          {f.lerakas_datuma || "—"} · {f.felrako_ceg} → {f.lerako_ceg} ·{" "}
+                          {f.dij != null ? `${Number(f.dij).toLocaleString("hu-HU")} Ft` : "—"}
                         </li>
                       ))}
                     </ul>
@@ -421,13 +440,42 @@ export default function FuvarForm() {
               <FormSection title="Útvonal" icon={PiMapPinLight} columns={4}>
                 <FormField
                   type="date"
-                  label="Teljesítés dátuma"
-                  name="teljesites_datuma"
-                  value={formData.teljesites_datuma || ""}
+                  label="Felrakás dátuma"
+                  name="felrakas_datuma"
+                  value={formData.felrakas_datuma || ""}
                   onChange={handleChange}
                 />
-                <FormField label="Felrakó" name="felrako" value={formData.felrako || ""} onChange={handleChange} />
-                <FormField label="Lerakó" name="lerako" value={formData.lerako || ""} onChange={handleChange} />
+                <FormField
+                  type="date"
+                  label="Lerakás dátuma"
+                  name="lerakas_datuma"
+                  value={formData.lerakas_datuma || ""}
+                  onChange={handleChange}
+                />
+                <FormField
+                  label="Felrakó cég"
+                  name="felrako_ceg"
+                  value={formData.felrako_ceg || ""}
+                  onChange={handleChange}
+                />
+                <FormField
+                  label="Felrakó cím"
+                  name="felrako_cim"
+                  value={formData.felrako_cim || ""}
+                  onChange={handleChange}
+                />
+                <FormField
+                  label="Lerakó cég"
+                  name="lerako_ceg"
+                  value={formData.lerako_ceg || ""}
+                  onChange={handleChange}
+                />
+                <FormField
+                  label="Lerakó cím"
+                  name="lerako_cim"
+                  value={formData.lerako_cim || ""}
+                  onChange={handleChange}
+                />
                 <FormField
                   type="number"
                   label="Távolság (km)"
@@ -437,9 +485,10 @@ export default function FuvarForm() {
                 />
                 <FormField
                   type="number"
-                  label="Tömeg (kg)"
-                  name="tomeg_kg"
-                  value={formData.tomeg_kg || ""}
+                  step="0.1"
+                  label="Tömeg (tonna)"
+                  name="tomeg_tonna"
+                  value={formData.tomeg_tonna || ""}
                   onChange={handleChange}
                 />
                 <FormField
@@ -450,9 +499,10 @@ export default function FuvarForm() {
                   className="md:col-span-2"
                 />
                 <FormField
-                  label="Fuvarlevél szám"
-                  name="fuvarlevel_szam"
-                  value={formData.fuvarlevel_szam || ""}
+                  type="number"
+                  label="Raklapszám"
+                  name="raklapszam"
+                  value={formData.raklapszam || ""}
                   onChange={handleChange}
                 />
               </FormSection>
@@ -460,16 +510,9 @@ export default function FuvarForm() {
               <FormSection title="Díjak" icon={PiCoinsLight} columns={4}>
                 <FormField
                   type="number"
-                  label="Fuvardíj (Ft)"
-                  name="fuvardij"
-                  value={formData.fuvardij || ""}
-                  onChange={handleChange}
-                />
-                <FormField
-                  type="number"
-                  label="Egyéb költség (Ft)"
-                  name="egyeb_koltseg"
-                  value={formData.egyeb_koltseg || ""}
+                  label="Díj (Ft)"
+                  name="dij"
+                  value={formData.dij || ""}
                   onChange={handleChange}
                 />
                 <FormField

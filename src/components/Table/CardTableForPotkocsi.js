@@ -10,6 +10,7 @@ import {
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
 import AllapotBadge from "components/UI/AllapotBadge.js";
+import EmptyValue from "components/UI/EmptyValue.js";
 
 const CardTable = ({ potkocsik = [], loading, total, page, pageSize, onPageChange, onSearchChange, onExportAll, sortKey, sortDir, onSortChange }) => {
   const history = useHistory();
@@ -33,8 +34,8 @@ const CardTable = ({ potkocsik = [], loading, total, page, pageSize, onPageChang
 
   const columns = [
     { key: "rendszam", label: "Rendszám", sortable: true, className: "font-semibold text-brand-900 dark:text-ink-50" },
-    { key: "tipus", label: "Típus", sortable: true, render: (row) => row.tipus || "Nincs" },
-    { key: "meret", label: "Méret", sortable: true, render: (row) => row.meret || "Nincs" },
+    { key: "tipus", label: "Típus", sortable: true, render: (row) => row.tipus || <EmptyValue /> },
+    { key: "meret", label: "Méret", sortable: true, render: (row) => row.meret || <EmptyValue /> },
     {
       key: "allapot",
       label: "Állapot",

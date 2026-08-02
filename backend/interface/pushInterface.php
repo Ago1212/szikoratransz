@@ -73,7 +73,7 @@ class PushInterface {
     // Egy adott felhasználó MINDEN feliratkozott eszközének elküldi
     // ugyanazt az üzenetet. A már érvénytelen (404/410) feliratkozásokat
     // rögtön törli is.
-    private function kuldMinden($felhasznaloTipus, $felhasznaloId, $cim, $szoveg, $url, $alapertelmezettUrl) {
+    private function kuldMinden($felhasznaloTipus, $felhasznaloId, $cim, $szoveg, $url, $alapertelmezettUrl, $tag = null) {
         global $apiConfig;
         if (empty($apiConfig['vapidPrivateKeyPem']) || empty($apiConfig['vapidPublicKey'])) {
             return;
@@ -92,6 +92,9 @@ class PushInterface {
 
         $sender = new WebPushSender($apiConfig['vapidPrivateKeyPem'], $apiConfig['vapidPublicKey'], $apiConfig['vapidSubject']);
         $payload = ['title' => $cim, 'body' => $szoveg, 'url' => $url ?: $alapertelmezettUrl];
+        if ($tag) {
+            $payload['tag'] = $tag;
+        }
 
         foreach ($feliratkozasok as $f) {
             try {
@@ -110,15 +113,19 @@ class PushInterface {
         }
     }
 
-    public function sendPushAdminnak($admin_id, $cim, $szoveg, $url = null) {
-        $this->kuldMinden('admin', $admin_id, $cim, $szoveg, $url, '/admin/dashboard');
+    public function sendPushAdminnak($admin_id, $cim, $szoveg, $url = null, $tag = null) {
+        $this->kuldMinden('admin', $admin_id, $cim, $szoveg, $url, '/admin/dashboard', $tag);
     }
 
     // Új: sofőr-címzett push (ld. docs/superpowers/specs/2026-07-28-fuvar-
     // first-workflow-design.md 5.4/5.5) — jelenleg egyetlen hívója az "új
     // fuvar hozzárendelve" esemény (ApiHandler newFuvar/updateFuvar).
-    public function sendPushSofornak($sofor_id, $cim, $szoveg, $url = null) {
-        $this->kuldMinden('sofor', $sofor_id, $cim, $szoveg, $url, '/user/dashboard');
+    // `$tag` opcionális: ha meg van adva, egy UGYANARRA a fuvarra érkező
+    // ismételt push (pl. admin javítja az útvonalat) lecseréli a
+    // korábbi értesítést a sofőr eszközén ahelyett, hogy halmozódna —
+    // ld. src/service-worker.js `renotify`/`tag` kezelése.
+    public function sendPushSofornak($sofor_id, $cim, $szoveg, $url = null, $tag = null) {
+        $this->kuldMinden('sofor', $sofor_id, $cim, $szoveg, $url, '/user/dashboard', $tag);
     }
 }
 

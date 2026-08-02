@@ -115,16 +115,40 @@ const CardTable = ({
   const jarmuLabel = (row) => row.kamion_rendszam || row.furgon_rendszam || "—";
 
   const columns = [
-    { key: "teljesites_datuma", label: "Teljesítés", sortable: true, render: (row) => row.teljesites_datuma || "—" },
-    { key: "felrako", label: "Felrakó", sortable: true, render: (row) => row.felrako || "—" },
-    { key: "lerako", label: "Lerakó", sortable: true, render: (row) => row.lerako || "—" },
+    { key: "lerakas_datuma", label: "Lerakás", sortable: true, render: (row) => row.lerakas_datuma || "—" },
+    {
+      key: "felrakas_datuma",
+      label: "Felrakás",
+      sortable: true,
+      render: (row) => row.felrakas_datuma || "—",
+      mobileHidden: true,
+    },
+    {
+      key: "felrako",
+      label: "Felrakó",
+      sortable: true,
+      render: (row) => <span title={row.felrako_cim || ""}>{row.felrako_ceg || "—"}</span>,
+    },
+    {
+      key: "lerako",
+      label: "Lerakó",
+      sortable: true,
+      render: (row) => <span title={row.lerako_cim || ""}>{row.lerako_ceg || "—"}</span>,
+    },
     { key: "megbizo_nev", label: "Megbízó", render: (row) => row.megbizo_nev || "—" },
     { key: "sofor_nev", label: "Sofőr", render: (row) => row.sofor_nev || "—", mobileHidden: true },
     { key: "jarmu", label: "Jármű", render: jarmuLabel, mobileHidden: true },
+    { key: "raklapszam", label: "Raklapszám", render: (row) => row.raklapszam ?? "—", mobileHidden: true },
     {
-      key: "osszesen",
-      label: "Összesen",
-      render: (row) => (row.osszesen != null ? `${Number(row.osszesen).toLocaleString("hu-HU")} Ft` : "—"),
+      key: "tomeg_tonna",
+      label: "Tömeg",
+      render: (row) => (row.tomeg_tonna != null ? `${Number(row.tomeg_tonna).toLocaleString("hu-HU")} t` : "—"),
+      mobileHidden: true,
+    },
+    {
+      key: "dij",
+      label: "Díj",
+      render: (row) => (row.dij != null ? `${Number(row.dij).toLocaleString("hu-HU")} Ft` : "—"),
     },
     {
       key: "allapot",
@@ -165,14 +189,17 @@ const CardTable = ({
   ];
 
   const exportColumns = [
-    { key: "teljesites_datuma", label: "Teljesítés" },
-    { key: "felrako", label: "Felrakó" },
-    { key: "lerako", label: "Lerakó" },
+    { key: "lerakas_datuma", label: "Lerakás" },
+    { key: "felrakas_datuma", label: "Felrakás" },
+    { key: "felrako_ceg", label: "Felrakó cég" },
+    { key: "felrako_cim", label: "Felrakó cím" },
+    { key: "lerako_ceg", label: "Lerakó cég" },
+    { key: "lerako_cim", label: "Lerakó cím" },
     { key: "megbizo_nev", label: "Megbízó" },
     { key: "sofor_nev", label: "Sofőr" },
-    { key: "fuvardij", label: "Fuvardíj" },
-    { key: "egyeb_koltseg", label: "Egyéb költség" },
-    { key: "osszesen", label: "Összesen" },
+    { key: "raklapszam", label: "Raklapszám" },
+    { key: "tomeg_tonna", label: "Tömeg (t)" },
+    { key: "dij", label: "Díj" },
     { key: "allapot", label: "Állapot" },
     { key: "szamlaszam", label: "Számlaszám" },
   ];

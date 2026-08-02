@@ -339,7 +339,12 @@ export default function DataTable({
   const selectedRows = pagedRows.filter((row, i) => selected.has(rowKey(row, i)));
 
   const searchInput = searchable && (
-    <div className="relative">
+    // `min-w-0 flex-1` — mobil UX audit (2026-07-30): a wrapper korábban
+    // explicit szélesség nélkül, a szomszédos "+ Új" gomb mellett
+    // összenyomódott, a placeholder láthatóan csonkolva jelent meg
+    // ("...típus sze"). `flex-1` a sorban maradó helyet adja neki
+    // (`sm:`-től a fix `sm:w-44` veszi át, változatlanul).
+    <div className="relative min-w-0 flex-1 sm:flex-none">
       <PiMagnifyingGlassLight className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-300" />
       <input
         type="text"
@@ -349,7 +354,7 @@ export default function DataTable({
           if (!serverSide) setPage(1);
         }}
         placeholder={searchPlaceholder}
-        className="w-full rounded-xl border border-ink-200 bg-white py-2 pl-8 pr-3 text-xs text-ink-700 placeholder-ink-300 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-100 sm:w-44"
+        className="min-h-11 w-full rounded-xl border border-ink-200 bg-white py-2 pl-8 pr-3 text-xs text-ink-700 placeholder-ink-300 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-100 sm:min-h-0 sm:w-44"
       />
     </div>
   );
@@ -397,7 +402,7 @@ export default function DataTable({
         {headerAction ??
           (onAdd && (
             <button
-              className="flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-all duration-300 ease-fluid hover:bg-brand-700 active:scale-95"
+              className="flex min-h-11 flex-shrink-0 items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-all duration-300 ease-fluid hover:bg-brand-700 active:scale-95"
               type="button"
               onClick={onAdd}
             >
@@ -613,7 +618,10 @@ export default function DataTable({
                       <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3">
                         {secondaryCols.map((col) => (
                           <div key={col.key} className="min-w-0">
-                            <div className="text-[11px] font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">
+                            {/* Mobil UX audit (2026-07-30): 11px → 13px —
+                                apró olvashatósági javítás, kontraszt (ink-400)
+                                változatlan, csak a betűméret nőtt. */}
+                            <div className="text-[13px] font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">
                               {col.label}
                             </div>
                             <div className="mt-0.5 truncate text-sm text-ink-700 dark:text-ink-100">

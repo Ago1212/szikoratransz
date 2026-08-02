@@ -2,18 +2,13 @@ import React, { useEffect, useState } from "react";
 import { PiBellRingingLight, PiBellSlashLight } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
+import { urlBase64ToUint8Array } from "utils/pushSubscribe.js";
 
 // R11 (fejlesztési audit, 2026-07-19): Web Push feliratkozás/leiratkozás
 // vezérlő — a service-worker.js `push`/`notificationclick` kezelője már
 // megvan, ez a hiányzó másik fele: a böngésző natív `PushManager`
 // feliratkoztatása + a kapott endpoint/kulcsok elküldése a backendnek
 // (savePushFeliratkozas/deletePushFeliratkozas, ld. pushInterface.php).
-function urlBase64ToUint8Array(base64String) {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-  const rawData = window.atob(base64);
-  return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
-}
 
 export default function PushFeliratkozas() {
   const [supported, setSupported] = useState(true);

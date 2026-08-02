@@ -44,7 +44,12 @@ const MUVELET_LABEL = {
   torles: "Törlés",
 };
 
-export default function Naplo() {
+// Mobil navigáció újratervezés (2026-07-30): a tényleges tartalom kikerült
+// egy named exportba, hogy az Elozmenyek.js "Napló" füle közvetlenül
+// újrafelhasználhassa saját PageHeader/wrapper nélkül — az önálló
+// `/admin/naplo` route (mélylink-kompatibilitás miatt megtartva) a lenti
+// default export segítségével ugyanezt csomagolja.
+export function NaploTartalom() {
   const [naplo, setNaplo] = useState([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
@@ -111,32 +116,38 @@ export default function Naplo() {
   ];
 
   return (
+    <DataTable
+      icon={PiListMagnifyingGlassLight}
+      title="Napló"
+      columns={columns}
+      rows={naplo}
+      loading={loading}
+      exportFilename="naplo"
+      mobileTitleKey="tabla"
+      emptyLabel="Még nincs naplózott módosítás"
+      fill
+      searchable
+      searchPlaceholder="Keresés entitás, leírás szerint..."
+      serverSide
+      totalRows={total}
+      page={page}
+      pageSize={PAGE_SIZE}
+      onPageChange={setPage}
+      onSearchChange={setSearch}
+      onExportAll={handleExportAll}
+    />
+  );
+}
+
+export default function Naplo() {
+  return (
     <div className="flex h-full w-full flex-col px-0 md:px-4">
       <div className="flex-shrink-0">
         <PageHeader title="Módosítási napló" eyebrow="Rendszer" />
         <p className="-mt-6 mb-4 text-sm text-ink-500 dark:text-ink-400">Teljes előzmény, lapozva</p>
       </div>
       <div className="min-h-0 flex-1">
-        <DataTable
-          icon={PiListMagnifyingGlassLight}
-          title="Napló"
-          columns={columns}
-          rows={naplo}
-          loading={loading}
-          exportFilename="naplo"
-          mobileTitleKey="tabla"
-          emptyLabel="Még nincs naplózott módosítás"
-          fill
-          searchable
-          searchPlaceholder="Keresés entitás, leírás szerint..."
-          serverSide
-          totalRows={total}
-          page={page}
-          pageSize={PAGE_SIZE}
-          onPageChange={setPage}
-          onSearchChange={setSearch}
-          onExportAll={handleExportAll}
-        />
+        <NaploTartalom />
       </div>
     </div>
   );

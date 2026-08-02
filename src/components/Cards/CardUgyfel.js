@@ -8,6 +8,7 @@ import {
   PiUserLight,
   PiEnvelopeSimpleLight,
   PiPhoneLight,
+  PiTruckLight,
   PiNoteLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
@@ -26,6 +27,10 @@ const emptyUgyfel = {
   kapcsolattarto_email: "",
   kapcsolattarto_telefon: "",
   fizetesi_hatarido_nap: "",
+  felrako_ceg: "",
+  felrako_cim: "",
+  lerako_ceg: "",
+  lerako_cim: "",
   megjegyzes: "",
 };
 
@@ -161,6 +166,33 @@ export default function CardUgyfel({ initialUgyfel }) {
                 label="Telefonszám"
                 name="kapcsolattarto_telefon"
                 value={formData.kapcsolattarto_telefon || ""}
+                onChange={handleChange}
+              />
+            </FormSection>
+
+            <FormSection title="Felrakó / Lerakó (alapértelmezett)" icon={PiTruckLight} columns={4}>
+              <FormField
+                label="Felrakó cég"
+                name="felrako_ceg"
+                value={formData.felrako_ceg || ""}
+                onChange={handleChange}
+              />
+              <FormField
+                label="Felrakó cím"
+                name="felrako_cim"
+                value={formData.felrako_cim || ""}
+                onChange={handleChange}
+              />
+              <FormField
+                label="Lerakó cég"
+                name="lerako_ceg"
+                value={formData.lerako_ceg || ""}
+                onChange={handleChange}
+              />
+              <FormField
+                label="Lerakó cím"
+                name="lerako_cim"
+                value={formData.lerako_cim || ""}
                 onChange={handleChange}
               />
             </FormSection>

@@ -28,6 +28,7 @@ const Bejelentesek = lazy(() => import("views/admin/Bejelentesek"));
 const BejelentesekForm = lazy(() => import("views/admin/BejelentesekForm"));
 const Szabadsagok = lazy(() => import("views/admin/Szabadsagok.js"));
 const Naplo = lazy(() => import("views/admin/Naplo.js"));
+const Elozmenyek = lazy(() => import("views/admin/Elozmenyek.js"));
 const Koltsegek = lazy(() => import("views/admin/Koltsegek.js"));
 const Flottakovetes = lazy(() => import("views/admin/Flottakovetes.js"));
 const Ugyfelek = lazy(() => import("views/admin/Ugyfelek.js"));
@@ -168,6 +169,11 @@ export default function Admin() {
               component={Szabadsagok}
             />
             <PrivateRoute path="/admin/naplo" exact component={Naplo} />
+            <PrivateRoute
+              path="/admin/elozmenyek"
+              exact
+              component={Elozmenyek}
+            />
             <PrivateRoute path="/admin/koltsegek" exact component={Koltsegek} />
             <PrivateRoute
               path="/admin/flottakovetes"

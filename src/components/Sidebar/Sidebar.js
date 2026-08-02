@@ -30,12 +30,16 @@ import {
   PiIdentificationCardLight,
   PiClipboardTextLight,
   PiPencilSimpleLight,
+  PiPlusLight,
+  PiListLight,
 } from "react-icons/pi";
 
 import NotificationDropdown from "components/Dropdowns/NotificationDropdown.js";
 import GlobalSearch from "components/UI/GlobalSearch.js";
 import PiaciArakPanel from "components/Sidebar/PiaciArakPanel.js";
 import NapiZonaEditorModal from "components/Sidebar/NapiZonaEditorModal.js";
+import QuickActionSheet from "components/Sidebar/QuickActionSheet.js";
+import MobileMoreDrawer from "components/Sidebar/MobileMoreDrawer.js";
 import { fetchAction } from "utils/fetchAction";
 
 const initials = (name) =>
@@ -60,11 +64,26 @@ const initials = (name) =>
 // cég saját csapata. Az Események és Felhasználók a "Rendszer" csoportba
 // került, mert mindkettő inkább alkalmi áttekintő/adminisztrációs eszköz,
 // nem napi flotta- vagy csapatmunka.
+// Mobil navigáció újratervezés (2026-07-30, ld. docs/superpowers/specs/
+// 2026-07-30-mobil-navigacio-ujratervezes-design.md): a korábbi 6 fülből
+// (Menü, Profil, Flotta, Csapat, Rendszer, Értesítések) 5 slot + FAB lett —
+// a "Menü" Kezdőlapra, a "Profil" a "Több" drawer fiók-sorába költözött, és
+// a Fuvarok (a fuvar-first munkafolyamat napi diszpécseri gerince) önálló
+// direkt linkké lépett elő, kikerülve a korábbi "Flotta" divider mögül.
 const mobileDirectLinks = [
-  { to: "/admin/dashboard", icon: PiSquaresFourLight, text: "Menü" },
-  { to: "/admin/settings", icon: PiGearLight, text: "Profil" },
+  { to: "/admin/dashboard", icon: PiSquaresFourLight, text: "Kezdőlap" },
+  { to: "/admin/fuvarok", icon: PiClipboardTextLight, text: "Fuvarok" },
 ];
 
+// A "Több" drawer (ld. MobileMoreDrawer.js) accordionja immár nincs "hány
+// fér ki egy 390px-es sávban" kényszer alatt (ez volt az egyetlen oka a
+// korábbi mobil-only Csapat+Partnerek összevonásnak és a Fuvarok-Flotta-
+// divide-nek) — a mobil csoportosítás emiatt most megegyezik a desktop
+// csoportosítással (Flotta/Csapat/Partnerek/Pénzügyek/Rendszerbeállítások).
+// Nincs többé `divider`/`action` típusú elem: a Keresés/Sötét mód a drawer
+// saját fejlécébe/fiók-sorába költözött, az Események menüpont pedig
+// teljesen törölve (tartalma már a Dashboard "Mire figyeljek ma" widgetjén
+// felszínre kerül).
 const mobileGroups = [
   {
     key: "flotta",
@@ -84,88 +103,82 @@ const mobileGroups = [
         icon: PiWrenchLight,
         text: "Karbantartások",
       },
-      { to: "/admin/koltsegek", icon: PiCoinsLight, text: "Pénzforgalom" },
+      // Önálló, standalone route (`FuvarStatisztika.js`) — NEM azonos a
+      // Fuvarok.js saját belső nézetváltójának "statisztika" fülével (ld.
+      // CLAUDE.md figyelmeztetése erre a kettősségre). Ide, a Flotta
+      // csoportba kerül, hogy ne kelljen egy külön, egyetlen elemű
+      // csoportot nyitni a drawerben a Fuvarok-lista promóciója után.
+      {
+        to: "/admin/fuvarStatisztika",
+        icon: PiChartBarLight,
+        text: "Statisztikák",
+      },
     ],
   },
-  {
-    key: "fuvarok",
-    label: "Fuvarok",
-    icon: PiClipboardTextLight,
-    items: [
-      { to: "/admin/fuvarok", icon: PiClipboardTextLight, text: "Fuvarok" },
-      { to: "/admin/fuvarStatisztika", icon: PiChartBarLight, text: "Statisztikák" },
-    ],
-  },
-  // Csapat + Partnerek EGY mobil fülbe összevonva (divider-rel elválasztva) —
-  // a deszktop sidebaron ez a két csoport külön marad (ott bőven van hely,
-  // és tartalmilag a Partnerek külső fél, nem a cég saját csapata, ld. a
-  // fájl tetején lévő komment), de a mobil alsó sáv 8 oszlopa túl zsúfolt
-  // volt (felhasználói visszajelzés + élő teszt: a feliratok csonkolódtak).
-  // Ez a mobil-only összevonás nem változtatja meg a tartalmi jelentést —
-  // csak egy fület spórol a szűkös, ~390px-es sávon.
   {
     key: "csapat",
     label: "Csapat",
     icon: PiUsersLight,
     items: [
       { to: "/admin/soforok", icon: PiUsersLight, text: "Sofőrök" },
-      {
-        to: "/admin/sofor-riport",
-        icon: PiChartBarLight,
-        text: "Sofőr-riport",
-      },
+      // A Sofőr-riport (`/admin/sofor-riport`) mostantól a Sofőrök oldal
+      // saját "Riport" füle — nincs önálló nav-bejegyzése (ld. Soforok.js).
       {
         to: "/admin/tachograf",
         icon: PiIdentificationCardLight,
         text: "Tachográf",
       },
       {
-        to: "/admin/bejelentesek",
-        icon: PiChatCircleTextLight,
-        text: "Bejelentések",
-      },
-      {
         to: "/admin/szabadsagok",
         icon: PiCalendarBlankLight,
         text: "Szabadságok",
       },
-      { type: "divider", label: "Partnerek" },
+      {
+        to: "/admin/bejelentesek",
+        icon: PiChatCircleTextLight,
+        text: "Bejelentések",
+      },
+    ],
+  },
+  {
+    key: "partnerek",
+    label: "Partnerek",
+    icon: PiBuildingsLight,
+    items: [
       { to: "/admin/ugyfelek", icon: PiBuildingsLight, text: "Ügyfelek" },
       { to: "/admin/helyszinek", icon: PiMapPinLight, text: "Helyszínek" },
     ],
   },
   {
+    key: "penzugyek",
+    label: "Pénzügyek",
+    icon: PiCoinsLight,
+    items: [
+      { to: "/admin/koltsegek", icon: PiCoinsLight, text: "Pénzforgalom" },
+      // Pénzforgalom deviza-kezelés (ld. koltsegInterface.php
+      // resolveDevizaOsszeg) — admin-only, mert a devizakód nem
+      // szlugosítható egy megjelenítendő névből (ISO 4217 kódnak kell
+      // lennie az MNB-lekérdezéshez).
+      {
+        to: "/admin/devizak",
+        icon: PiCoinsLight,
+        text: "Devizák",
+        adminOnly: true,
+      },
+    ],
+  },
+  {
     key: "rendszer",
-    label: "Rendszer",
+    label: "Rendszerbeállítások",
     icon: PiFilesLight,
     items: [
-      // UX-audit — a Ctrl+K globális keresésnek és a sötét mód kapcsolónak
-      // korábban NEM volt mobil belépési pontja (mindkettő kizárólag a
-      // desktop-only sidebar-sávban élt). `type: "action"` — nem navigáló,
-      // hanem egy komponens-szintű handlert hívó elem (ld. a render-ágat
-      // lentebb); a `mobileGroups` tömb modul-szinten, a komponensen kívül
-      // van deklarálva, ezért az ikon/felirat a sötét módnál dinamikusan,
-      // render közben dől el, nem itt van "beégetve".
-      {
-        type: "action",
-        action: "search",
-        icon: PiMagnifyingGlassLight,
-        text: "Keresés",
-      },
-      {
-        type: "action",
-        action: "darkmode",
-        icon: PiMoonLight,
-        text: "Sötét mód",
-      },
       { to: "/admin/fajlok", icon: PiFilesLight, text: "Fájlok" },
-      { to: "/admin/naplo", icon: PiListMagnifyingGlassLight, text: "Napló" },
+      // Napló + Értesítési előzmények egyesítve — ld. Elozmenyek.js.
       {
-        to: "/admin/ertesitesi-elozmenyek",
-        icon: PiBellLight,
-        text: "Értesítési előzmények",
+        to: "/admin/elozmenyek",
+        icon: PiListMagnifyingGlassLight,
+        text: "Előzmények",
       },
-      { to: "/admin/esemenyek", icon: PiCalendarBlankLight, text: "Események" },
       {
         to: "/admin/felhasznalok",
         icon: PiUsersFourLight,
@@ -189,17 +202,6 @@ const mobileGroups = [
         text: "Listák",
         adminOnly: true,
       },
-      // Pénzforgalom deviza-kezelés (ld. koltsegInterface.php
-      // resolveDevizaOsszeg) — ugyanaz az admin-only listaelemek-minta,
-      // mint a Listák, csak saját, dedikált oldalon (Devizak.js), mert a
-      // devizakód nem szlugosítható egy megjelenítendő névből (ISO 4217
-      // kódnak kell lennie az MNB-lekérdezéshez).
-      {
-        to: "/admin/devizak",
-        icon: PiCoinsLight,
-        text: "Devizák",
-        adminOnly: true,
-      },
       // A nyilvános Landing oldal ajánlatkérő/jelentkező űrlapjaiból beérkező
       // leadek listája (ld. ApiHandler ADMIN_ONLY_ACTIONS) — üzemeltetői
       // marketing-adat, nem egy adott bérlő-cég flotta-adata, ezért admin-only.
@@ -217,14 +219,17 @@ const mobileGroups = [
 // látható gyorselérési sáv) testreszabható: a felhasználó eldöntheti, mely
 // menüpontok kerüljenek bele és milyen sorrendben (ld. docs/superpowers/specs/
 // 2026-07-26-sidebar-napi-zona-testreszabas-design.md). A `PIN_REGISTRY` a
-// meglévő `mobileGroups`-ból származik (minden valódi link-elemét átveszi,
-// dividerek/action-ök nélkül), plusz 1 jelenleg csak desktopon élő elem
-// (Főmenü) kézzel hozzáfűzve — tudatosan egy harmadik, kézzel
-// karbantartott nav-forrás, ugyanaz az elfogadott drift-kockázat, mint a
-// mobil/desktop nav-taxonómia meglévő kettőssége (ld. a fájl korábbi
-// megjegyzéseit). A Devizák már létezik a mobileGroups-ban (Rendszer
-// csoport), az ő desktop kategória-besorolása (Pénzügyek) a GROUP_LABEL_OVERRIDES
-// kezeli, nem egy duplikált EXTRA_PINNABLE_ITEMS bejegyzés.
+// meglévő `mobileGroups`-ból származik (minden valódi link-elemét átveszi),
+// plusz 2, jelenleg csak desktopon élő elem kézzel hozzáfűzve — tudatosan
+// egy harmadik, kézzel karbantartott nav-forrás, ugyanaz az elfogadott
+// drift-kockázat, mint a mobil/desktop nav-taxonómia meglévő kettőssége (ld.
+// a fájl korábbi megjegyzéseit). "Főmenü" (Dashboard) a desktop saját
+// collapsible csoportjai közül egyikben sincs benne. "Fuvarok" (a
+// Fuvarok-lista) a mobil navigáció újratervezése (2026-07-30) óta önálló
+// bottom nav direkt link, nem `mobileGroups`-elem — enélkül a bejegyzés
+// nélkül elveszne a desktop napi-zóna-szerkesztőben a pin-elhetősége (a
+// desktop saját, önálló "Fuvarok" collapsible csoportja, `openGroups.fuvarok`,
+// ettől függetlenül, változatlanul megmarad).
 const EXTRA_PINNABLE_ITEMS = [
   {
     to: "/admin/dashboard",
@@ -232,38 +237,20 @@ const EXTRA_PINNABLE_ITEMS = [
     text: "Főmenü",
     group: "Áttekintés",
   },
+  {
+    to: "/admin/fuvarok",
+    icon: PiClipboardTextLight,
+    text: "Fuvarok",
+    group: "Fuvarok",
+  },
 ];
 
-// A mobil "Csapat" fül a Partnereket (Ügyfelek/Helyszínek) egy divider mögé
-// rejti a saját fülébe, és a Pénzforgalom a mobil "Flotta" fülben él — a
-// desktop taxonómia viszont ezeket külön ("Partnerek", "Pénzügyek")
-// csoportba sorolja. Ez a felülírások igazítják a napi zóna szerkesztő
-// kategória-címkéit a desktop hierarchiához, hogy ne egy mobil-only
-// csoportosítás látszódjon a picker-ben. A Devizák a mobileGroups-ban
-// a Rendszer csoportban él, de desktop kontextusban a Pénzügyek csoportba
-// tartozik (ahol a Pénzforgalom is él).
-const GROUP_LABEL_OVERRIDES = {
-  "/admin/koltsegek": "Pénzügyek",
-  "/admin/devizak": "Pénzügyek",
-};
-
 function buildPinRegistry() {
-  const fromGroups = mobileGroups.flatMap((group) => {
-    let currentLabel = group.label;
-    return group.items
-      .map((item) => {
-        if (item.type === "divider") {
-          currentLabel = item.label;
-          return null;
-        }
-        if (!item.to) return null;
-        return {
-          ...item,
-          group: GROUP_LABEL_OVERRIDES[item.to] || currentLabel,
-        };
-      })
-      .filter(Boolean);
-  });
+  const fromGroups = mobileGroups.flatMap((group) =>
+    group.items
+      .filter((item) => item.to)
+      .map((item) => ({ ...item, group: group.label })),
+  );
   return [...EXTRA_PINNABLE_ITEMS, ...fromGroups];
 }
 const PIN_REGISTRY = buildPinRegistry();
@@ -287,6 +274,37 @@ const TIPUS_LABEL = {
   furgon: "furgont",
 };
 
+// Mobil navigáció újratervezés (2026-07-30) — a bottom nav FAB-jának négy
+// gyorsművelete. A "Karbantartás rögzítése" nem egy önálló route-ra navigál
+// (nincs "/admin/karbantartasokForm" — a Karbantartasok.js az "Új
+// karbantartás" létrehozást mindig egy in-page Modal-lal oldja meg), ezért
+// router state-tel jelzi a szándékot; a Karbantartasok.js egy erre figyelő
+// `useEffect`-tel nyitja meg automatikusan a modalt (ld. a fájl saját
+// komментja).
+const quickActions = (nyitottBejelentesek, kerelmek) => [
+  { key: "uj-fuvar", to: "/admin/fuvarForm", icon: PiClipboardTextLight, text: "Új fuvar" },
+  {
+    key: "bejelentes-valasz",
+    to: "/admin/bejelentesek",
+    icon: PiChatCircleTextLight,
+    text: "Bejelentés megválaszolása",
+    badge: nyitottBejelentesek.length,
+  },
+  {
+    key: "jarmu-valtas",
+    action: "kerelmek",
+    icon: PiTruckLight,
+    text: "Jármű-váltás jóváhagyása",
+    badge: kerelmek.length,
+  },
+  {
+    key: "uj-karbantartas",
+    to: { pathname: "/admin/karbantartasok", state: { ujKarbantartas: true } },
+    icon: PiWrenchLight,
+    text: "Karbantartás rögzítése",
+  },
+];
+
 // A lista- és a hozzá tartozó "form" (létrehozás/szerkesztés) route neve nem
 // áll substring-relációban (pl. `/admin/kamionok` vs. `/admin/kamionForm`) —
 // a nyers `.includes()`-es `isActive` emiatt egyik nav-itemet sem jelölte
@@ -301,16 +319,39 @@ const FORM_ROUTE_TO_LIST_ROUTE = {
   "/admin/bejelentesForm": "/admin/bejelentesek",
   "/admin/ugyfelForm": "/admin/ugyfelek",
   "/admin/helyszinForm": "/admin/helyszinek",
+  "/admin/fuvarForm": "/admin/fuvarok",
 };
 
 export default function Sidebar({ isDark, onToggleDark }) {
-  const [openGroup, setOpenGroup] = React.useState(null);
+  const [quickActionsOpen, setQuickActionsOpen] = React.useState(false);
+  const [drawerOpen, setDrawerOpen] = React.useState(false);
   const [kerelmek, setKerelmek] = React.useState([]);
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [notifOpen, setNotifOpen] = React.useState(false);
   const [pinEditorOpen, setPinEditorOpen] = React.useState(false);
   const location = useLocation();
   const history = useHistory();
+
+  // Mobil navigáció újratervezés (2026-07-30) — long press a bottom nav
+  // "Fuvarok" ikonján közvetlenül az "Új fuvar" létrehozásra ugrik, kihagyva
+  // a FAB-lapot (ugyanaz a minta, mint egy iOS Home Screen "App Shortcut"-ja).
+  // Rövid (< 500ms) érintés a normál Link-navigációt futtatja.
+  const longPressTimerRef = React.useRef(null);
+  const longPressFiredRef = React.useRef(false);
+
+  const handleFuvarokTouchStart = () => {
+    longPressFiredRef.current = false;
+    longPressTimerRef.current = setTimeout(() => {
+      longPressFiredRef.current = true;
+      history.push("/admin/fuvarForm");
+    }, 500);
+  };
+  const handleFuvarokTouchEnd = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
 
   const isActive = (path) => {
     if (location.pathname.includes(path)) return true;
@@ -539,6 +580,14 @@ export default function Sidebar({ isDark, onToggleDark }) {
         onClick: () => handleElbiral(k.id, "elutasitva"),
       },
     ],
+    // Mobil navigáció újratervezés (2026-07-30) — csak a jármű-váltási
+    // kérelem sorokon van értelmes 2-irányú swipe (jóváhagyás/elutasítás);
+    // a bejelentés-soroknak csak egy "Megnyitás" akciójuk van, azokon nincs
+    // `swipeActions` (ld. NotificationDropdown.js `NotificationRow`).
+    swipeActions: {
+      approve: () => handleElbiral(k.id, "jovahagyva"),
+      reject: () => handleElbiral(k.id, "elutasitva"),
+    },
   }));
 
   const bejelentesNotifications = nyitottBejelentesek.map((b) => ({
@@ -1015,134 +1064,24 @@ export default function Sidebar({ isDark, onToggleDark }) {
         </div>
       </nav>
 
-      {/* Háttér — a nyitott csoport listája alatt, kattintásra bezár */}
-      {openGroup && (
-        <div
-          className="fixed inset-0 z-30 bg-ink-950/30 md:hidden"
-          onClick={() => setOpenGroup(null)}
-        />
-      )}
-
-      {/* Mobil alsó navigáció — a fő csoportok mindig lent, kompakt sávban */}
+      {/* Mobil alsó navigáció — 5 slot + FAB (mobil navigáció újratervezés,
+          2026-07-30, ld. docs/superpowers/specs/2026-07-30-mobil-navigacio-
+          ujratervezes-design.md): Kezdőlap, Fuvarok, ➕ Gyors műveletek,
+          Értesítések, Több. A korábbi csoport-fülek + bottom-sheet minta
+          teljesen megszűnt — a QuickActionSheet (FAB-lap) és a
+          MobileMoreDrawer (teljes képernyős "Több" fiók) váltja fel. */}
       <div className="fixed inset-x-0 bottom-0 z-40 md:hidden">
-        {/* Csoport lista — felfelé nyílik, a sáv fölött.
-            `overflow-y-auto` a korábbi `overflow-hidden` helyett: a
-            "Rendszer" csoport admin nézetben 6 elemet tartalmaz, ami a
-            korábbi rögzített max-h-64 (256px) magasságnál több —
-            overflow-hidden mellett ez némán LEVÁGTA a lista alját.
-            A max-h-96-ra emelt korlát a jelenlegi legnagyobb csoportot még
-            görgetés nélkül is kiadja, az overflow-y-auto pedig biztonsági
-            háló, ha egy jövőbeli bővítés miatt mégis rövidebb lenne. */}
-        <div
-          className={`overflow-y-auto rounded-t-2xl border-t border-ink-100 bg-white shadow-soft-lg transition-all duration-300 ease-fluid dark:border-ink-800 dark:bg-ink-900 ${
-            openGroup ? "max-h-96" : "max-h-0"
-          }`}
-        >
-          {mobileGroups
-            .filter((group) => group.key === openGroup)
-            .map((group) => (
-              <ul
-                key={group.key}
-                id={`mobile-group-panel-${group.key}`}
-                className="px-2 py-1.5"
-              >
-                {group.items
-                  .filter(
-                    (item) =>
-                      item.type === "divider" ||
-                      item.type === "action" ||
-                      ((!item.adminOnly || isAdmin) && hasAccess(item.to)),
-                  )
-                  .map((item, i) => {
-                    if (item.type === "divider") {
-                      return (
-                        <li
-                          key={`divider-${item.label}`}
-                          className={`px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500 ${
-                            i === 0 ? "pt-1" : "pt-3"
-                          }`}
-                        >
-                          {item.label}
-                        </li>
-                      );
-                    }
-                    if (item.type === "action") {
-                      const isDarkmode = item.action === "darkmode";
-                      const ActionIcon = isDarkmode
-                        ? isDark
-                          ? PiSunLight
-                          : PiMoonLight
-                        : item.icon;
-                      const actionLabel = isDarkmode
-                        ? isDark
-                          ? "Világos mód"
-                          : "Sötét mód"
-                        : item.text;
-                      return (
-                        <li key={`action-${item.action}`}>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setOpenGroup(null);
-                              if (item.action === "search") setSearchOpen(true);
-                              if (item.action === "darkmode") onToggleDark();
-                            }}
-                            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-[15px] font-medium text-ink-600 hover:bg-slate-100 dark:text-ink-300 dark:hover:bg-ink-800"
-                          >
-                            <ActionIcon className="h-[18px] w-[18px] flex-shrink-0" />
-                            {actionLabel}
-                          </button>
-                        </li>
-                      );
-                    }
-                    const active = isActive(item.to);
-                    return (
-                      <li key={item.to}>
-                        <Link
-                          to={item.to}
-                          aria-current={active ? "page" : undefined}
-                          className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[15px] font-medium ${
-                            active
-                              ? "bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300"
-                              : "text-ink-600 hover:bg-slate-100 dark:text-ink-300 dark:hover:bg-ink-800"
-                          }`}
-                          onClick={() => setOpenGroup(null)}
-                        >
-                          <item.icon className="h-[18px] w-[18px] flex-shrink-0" />
-                          {item.text}
-                          {item.to === "/admin/bejelentesek" &&
-                            nyitottBejelentesek.length > 0 && (
-                              <span className="ml-auto flex h-5 min-w-[20px] flex-shrink-0 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-                                {nyitottBejelentesek.length}
-                              </span>
-                            )}
-                        </Link>
-                      </li>
-                    );
-                  })}
-              </ul>
-            ))}
-        </div>
+        <QuickActionSheet
+          open={quickActionsOpen}
+          onClose={() => setQuickActionsOpen(false)}
+          actions={quickActions(nyitottBejelentesek, kerelmek)}
+          onKerelmekClick={() => setNotifOpen(true)}
+        />
 
-        {/* Fő linkek + csoport fülek + kompakt kilépés gomb — a korábbi
-            py-1.5/h-4 ikon/text-[10px] kombináció a felhasználó szerint túl
-            kicsi volt; nagyobb ikon, betűméret és érintési terület. A
-            "Csapat" fülön egy piros pont jelzi, ha van nyitott bejelentés
-            (ami a fülön belülre, a Csapat csoportba került), hogy ne kelljen
-            kinyitni a listát ahhoz, hogy lássa: van tennivaló. */}
-        {/* Egységesített fül-stílus: 2 közvetlen link + 3 csoport (Flotta,
-            Csapat+Partnerek összevonva, Rendszer) + Értesítések = 6 azonos
-            méretű/stílusú fül — a korábbi 8 (köztük egy szűk ikon-only
-            Kijelentkezés-oszlop) helyett. Az aktív fül most egy tényleges
-            háttér-jelvényt (pill) kap a puszta színváltás helyett, hogy
-            gyorsabban, egy pillantásból elváljon az inaktívaktól; az ikonok
-            kicsit nagyobbak (h-6), mert a kevesebb oszlopnak több hely jut.
-            A Kijelentkezés a Profil oldal saját tartalmi eleme lett (ld.
-            Settings.js) — a napi navigációtól elválasztva, mint a legtöbb
-            mobil appban. */}
         <nav className="flex items-stretch gap-1 border-t border-ink-100 bg-white px-1.5 pt-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))] dark:border-ink-800 dark:bg-ink-900">
           {mobileDirectLinks.map((item) => {
             const active = isActive(item.to);
+            const isFuvarok = item.to === "/admin/fuvarok";
             return (
               <Link
                 key={item.to}
@@ -1153,54 +1092,53 @@ export default function Sidebar({ isDark, onToggleDark }) {
                     ? "bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300"
                     : "text-ink-400 dark:text-ink-500"
                 }`}
-                onClick={() => setOpenGroup(null)}
+                onClick={(e) => {
+                  if (isFuvarok && longPressFiredRef.current) {
+                    e.preventDefault();
+                    longPressFiredRef.current = false;
+                    return;
+                  }
+                  setQuickActionsOpen(false);
+                }}
+                onTouchStart={isFuvarok ? handleFuvarokTouchStart : undefined}
+                onTouchEnd={isFuvarok ? handleFuvarokTouchEnd : undefined}
+                onTouchMove={isFuvarok ? handleFuvarokTouchEnd : undefined}
               >
                 <item.icon className="h-6 w-6 flex-shrink-0" />
                 <span className="w-full truncate text-center">{item.text}</span>
               </Link>
             );
           })}
-          {mobileGroups.map((group) => {
-            const active =
-              openGroup === group.key ||
-              group.items.some((item) => item.to && isActive(item.to));
-            const showBadge =
-              group.key === "csapat" && nyitottBejelentesek.length > 0;
-            return (
-              <button
-                key={group.key}
-                type="button"
-                aria-expanded={openGroup === group.key}
-                aria-controls={`mobile-group-panel-${group.key}`}
-                className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[11px] font-medium leading-none transition-colors duration-150 ${
-                  active
-                    ? "bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300"
-                    : "text-ink-400 dark:text-ink-500"
-                }`}
-                onClick={() =>
-                  setOpenGroup(openGroup === group.key ? null : group.key)
-                }
-              >
-                <span className="relative flex h-6 w-6 flex-shrink-0 items-center justify-center">
-                  <group.icon className="h-6 w-6" />
-                  {showBadge && (
-                    <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-ink-900" />
-                  )}
-                </span>
-                <span className="w-full truncate text-center">
-                  {group.label}
-                </span>
-              </button>
-            );
-          })}
+
           <button
             type="button"
+            aria-label="Gyors műveletek"
+            aria-expanded={quickActionsOpen}
+            onClick={() => setQuickActionsOpen((v) => !v)}
+            className={`relative -mt-5 flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full shadow-soft-lg transition-colors duration-150 ${
+              quickActionsOpen ? "bg-brand-700 text-white" : "bg-brand-600 text-white hover:bg-brand-700"
+            }`}
+          >
+            <PiPlusLight className="h-6 w-6" />
+            {nyitottBejelentesek.length + kerelmek.length > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white ring-2 ring-white dark:ring-ink-900">
+                {nyitottBejelentesek.length + kerelmek.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            aria-expanded={notifOpen}
             className={`relative flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[11px] font-medium leading-none transition-colors duration-150 ${
               notifOpen
                 ? "bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300"
                 : "text-ink-400 dark:text-ink-500"
             }`}
-            onClick={() => setNotifOpen(true)}
+            onClick={() => {
+              setQuickActionsOpen(false);
+              setNotifOpen(true);
+            }}
           >
             <span className="relative flex h-6 w-6 flex-shrink-0 items-center justify-center">
               <PiBellLight className="h-6 w-6" />
@@ -1210,8 +1148,42 @@ export default function Sidebar({ isDark, onToggleDark }) {
             </span>
             <span className="w-full truncate text-center">Értesítések</span>
           </button>
+
+          <button
+            type="button"
+            aria-expanded={drawerOpen}
+            className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[11px] font-medium leading-none transition-colors duration-150 ${
+              drawerOpen
+                ? "bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300"
+                : "text-ink-400 dark:text-ink-500"
+            }`}
+            onClick={() => {
+              setQuickActionsOpen(false);
+              setDrawerOpen(true);
+            }}
+          >
+            <PiListLight className="h-6 w-6" />
+            <span className="w-full truncate text-center">Több</span>
+          </button>
         </nav>
       </div>
+
+      <MobileMoreDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        onSearchOpen={() => setSearchOpen(true)}
+        pinnedItems={pinnedItems}
+        badgeByPath={badgeByPath}
+        groups={mobileGroups}
+        isAdmin={isAdmin}
+        hasAccess={hasAccess}
+        isActive={isActive}
+        user={user}
+        szerepkorNev={szerepkorNev}
+        onLogout={handleLogout}
+        isDark={isDark}
+        onToggleDark={onToggleDark}
+      />
 
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
       <NotificationDropdown

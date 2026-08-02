@@ -20,7 +20,12 @@ const JARMU_LABEL = { kamion: "Kamion", furgon: "Furgon" };
 
 const percToOraPerc = (perc) => `${Math.floor(perc / 60)}:${String(perc % 60).padStart(2, "0")}`;
 
-export default function SoforScorecard() {
+// Mobil navigáció újratervezés (2026-07-30): a tényleges tartalom (adat-
+// betöltés + táblázat) kikerült egy named exportba, hogy a Soforok.js
+// "Riport" füle közvetlenül újrafelhasználhassa saját PageHeader/wrapper
+// nélkül — az önálló `/admin/sofor-riport` route (mélylink-kompatibilitás
+// miatt megtartva) a lenti default export segítségével ugyanezt csomagolja.
+export function SoforRiportTartalom() {
   const history = useHistory();
   const [sorok, setSorok] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -119,24 +124,30 @@ export default function SoforScorecard() {
   ];
 
   return (
+    <DataTable
+      icon={PiChartBarLight}
+      title="Sofőrönkénti összesítő"
+      columns={columns}
+      rows={sorok}
+      loading={loading}
+      exportFilename="sofor-riport"
+      mobileTitleKey="nev"
+      emptyLabel="Nincs megjeleníthető sofőr-adat"
+      fill
+      searchable
+      searchPlaceholder="Keresés név szerint..."
+    />
+  );
+}
+
+export default function SoforScorecard() {
+  return (
     <div className="flex h-full w-full flex-col px-0 md:px-4">
       <div className="flex-shrink-0">
         <PageHeader eyebrow="Csapat" title="Sofőr-riport" />
       </div>
       <div className="min-h-0 flex-1">
-        <DataTable
-          icon={PiChartBarLight}
-          title="Sofőrönkénti összesítő"
-          columns={columns}
-          rows={sorok}
-          loading={loading}
-          exportFilename="sofor-riport"
-          mobileTitleKey="nev"
-          emptyLabel="Nincs megjeleníthető sofőr-adat"
-          fill
-          searchable
-          searchPlaceholder="Keresés név szerint..."
-        />
+        <SoforRiportTartalom />
       </div>
     </div>
   );

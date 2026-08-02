@@ -88,14 +88,14 @@ export default function SoforCsoportositottLista() {
       csoportok[kulcs] = { nev: f.sofor_nev || "Nincs sofőrhöz rendelve", fuvarok: [], bevetel: 0 };
     }
     csoportok[kulcs].fuvarok.push(f);
-    csoportok[kulcs].bevetel += Number(f.osszesen) || 0;
+    csoportok[kulcs].bevetel += Number(f.dij) || 0;
   });
 
   Object.values(csoportok).forEach((csoport) => {
     // Dátum szerint CSÖKKENŐ sorrend csoporton belül — a legutóbbi fuvar
-    // legyen felül. Az üres teljesites_datuma-jú sorok a lista végére
+    // legyen felül. Az üres lerakas_datuma-jú sorok a lista végére
     // esnek (üres string a legkisebb összehasonlítási érték).
-    csoport.fuvarok.sort((a, b) => (b.teljesites_datuma || "").localeCompare(a.teljesites_datuma || ""));
+    csoport.fuvarok.sort((a, b) => (b.lerakas_datuma || "").localeCompare(a.lerakas_datuma || ""));
   });
 
   const rendezettCsoportok = Object.entries(csoportok).sort(
@@ -162,11 +162,11 @@ export default function SoforCsoportositottLista() {
                   className="flex w-full flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-left text-sm hover:bg-slate-50 dark:hover:bg-ink-800"
                 >
                   <span className="text-ink-600 dark:text-ink-300">
-                    {f.teljesites_datuma || "—"} · {f.felrako || "—"} → {f.lerako || "—"}
+                    {f.lerakas_datuma || "—"} · {f.felrako_ceg || "—"} → {f.lerako_ceg || "—"}
                   </span>
                   <span className="flex items-center gap-3">
                     <span className="text-ink-500 dark:text-ink-400">
-                      {f.osszesen != null ? `${Number(f.osszesen).toLocaleString("hu-HU")} Ft` : "—"}
+                      {f.dij != null ? `${Number(f.dij).toLocaleString("hu-HU")} Ft` : "—"}
                     </span>
                     <StatusBadge tone={ALLAPOT_TONE[f.allapot] || "neutral"}>{ALLAPOT_LABEL[f.allapot] || f.allapot}</StatusBadge>
                   </span>

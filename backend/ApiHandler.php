@@ -1684,13 +1684,14 @@ class ApiHandler {
                     $kerelmezo = $this->resolveKerelmezo($request);
                     $result = $fuvarInterface->newFuvar($request, $kerelmezo['ceg_id']);
                     if ($result['success']) {
-                        $this->logAudit($kerelmezo['ceg_id'], 'fuvarok', $result['fuvar']['id'] ?? null, 'letrehozas', $request['felrako'] ?? null);
+                        $this->logAudit($kerelmezo['ceg_id'], 'fuvarok', $result['fuvar']['id'] ?? null, 'letrehozas', $request['felrako_ceg'] ?? null);
                         if (!empty($result['fuvar']['sofor_id'])) {
                             $pushInterface->sendPushSofornak(
                                 $result['fuvar']['sofor_id'],
                                 'Új fuvar érkezett',
-                                trim(($result['fuvar']['felrako'] ?? '') . ' → ' . ($result['fuvar']['lerako'] ?? '')) . ($result['fuvar']['teljesites_datuma'] ? ' · ' . $result['fuvar']['teljesites_datuma'] : ''),
-                                '/user/fuvarReszletek?id=' . $result['fuvar']['id']
+                                trim(($result['fuvar']['felrako_ceg'] ?? '') . ' → ' . ($result['fuvar']['lerako_ceg'] ?? '')) . ($result['fuvar']['lerakas_datuma'] ? ' · ' . date('Y.m.d.', strtotime($result['fuvar']['lerakas_datuma'])) : ''),
+                                '/user/fuvarReszletek?id=' . $result['fuvar']['id'],
+                                'fuvar-' . $result['fuvar']['id']
                             );
                         }
                     }
@@ -1710,14 +1711,15 @@ class ApiHandler {
 
                     $result = $fuvarInterface->updateFuvar($request, $kerelmezo['ceg_id']);
                     if ($result['success']) {
-                        $this->logAudit($kerelmezo['ceg_id'], 'fuvarok', $request['id'], 'modositas', $request['felrako'] ?? null);
+                        $this->logAudit($kerelmezo['ceg_id'], 'fuvarok', $request['id'], 'modositas', $request['felrako_ceg'] ?? null);
                         $ujSoforId = $result['fuvar']['sofor_id'] ?? null;
                         if (!empty($ujSoforId) && (string) $ujSoforId !== (string) $regiSoforIdErtek) {
                             $pushInterface->sendPushSofornak(
                                 $ujSoforId,
                                 'Új fuvar érkezett',
-                                trim(($result['fuvar']['felrako'] ?? '') . ' → ' . ($result['fuvar']['lerako'] ?? '')) . ($result['fuvar']['teljesites_datuma'] ? ' · ' . $result['fuvar']['teljesites_datuma'] : ''),
-                                '/user/fuvarReszletek?id=' . $result['fuvar']['id']
+                                trim(($result['fuvar']['felrako_ceg'] ?? '') . ' → ' . ($result['fuvar']['lerako_ceg'] ?? '')) . ($result['fuvar']['lerakas_datuma'] ? ' · ' . date('Y.m.d.', strtotime($result['fuvar']['lerakas_datuma'])) : ''),
+                                '/user/fuvarReszletek?id=' . $result['fuvar']['id'],
+                                'fuvar-' . $result['fuvar']['id']
                             );
                         }
                     }

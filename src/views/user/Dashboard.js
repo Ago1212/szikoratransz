@@ -7,9 +7,7 @@ import {
   PiVanLight,
   PiWarningCircleLight,
   PiChatCircleTextLight,
-  PiPhoneLight,
   PiCaretRightLight,
-  PiMapPinLight,
   PiClipboardTextLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
@@ -21,57 +19,13 @@ import {
 } from "utils/documentStatus.js";
 
 // A BottomNav középső FAB-ja 2026-07-28 óta Fuvarokra vezet, nem
-// Bejelentésre (ld. BottomNav.js komment) — emiatt mobilon a Bejelentés
-// EGY IDEIG semmilyen közvetlen, "új bejelentés" gombhoz vezető úton nem
-// volt elérhető (a Dashboard "Legutóbbi bejelentéseim" sora csak a
-// listára, /user/bejelentesek-re mutat, ott pedig nincs "+" gomb — élesen
-// jelentett hiba). Ezért a Bejelentés most itt, a Gyors műveletek
-// rácsban kapott helyet, a Tankolás rovására — a sofőr-oldali kézi
-// tankolás-rögzítés (`/user/tankolas`, `Tankolas.js`) explicit felhasználói
-// kérésre teljesen megszűnt (útvonal+nav-linkek törölve), mert a
-// tankolás-adatok jellemzően úgyis a MOL-kártya PDF-import admin-oldali
-// folyamatán keresztül kerülnek be (ld. CLAUDE.md "MOL üzemanyagkártya
-// PDF import"). A backend `newTankolas`/`getTankolasok` action és a
-// `tankolasok` tábla (amit az admin-oldali fogyasztás-elemzés/import is
-// használ) változatlan maradt, csak a sofőr-oldali kézi bevitel tűnt el.
-const quickActions = [
-  {
-    to: "/user/jarmu-valaszto",
-    icon: PiTruckLight,
-    label: "Kamion",
-    tone: "brand",
-  },
-  {
-    to: "/user/potkocsi-valaszto",
-    icon: PiTruckTrailerLight,
-    label: "Pótkocsi",
-    tone: "brand",
-  },
-  {
-    to: "/user/furgon-valaszto",
-    icon: PiVanLight,
-    label: "Furgon",
-    tone: "brand",
-  },
-  {
-    to: "/user/helyszinek",
-    icon: PiMapPinLight,
-    label: "Helyszínek",
-    tone: "brand",
-  },
-  {
-    to: "/user/bejelentes/uj",
-    icon: PiChatCircleTextLight,
-    label: "Bejelentés",
-    tone: "danger",
-  },
-];
-
-const TILE_TONE = {
-  brand: "bg-brand-50 text-brand-600",
-  danger: "bg-red-50 text-red-600",
-};
-
+// Bejelentésre (ld. BottomNav.js komment) — a Bejelentés emiatt egy
+// ideig a Dashboard "Gyors műveletek" rácsában kapott helyet. A rács
+// többi eleme (Kamion/Pótkocsi/Furgon/Helyszínek) redundáns volt a lenti
+// "Aktív jármű" kártyákkal és a BottomNav-val, a Diszpécser-hívás pedig
+// alig használt — explicit felhasználói kérésre a rács megszűnt, a
+// Bejelentés önálló, kiemelt gombként maradt az egyetlen "gyors
+// művelet"-ként.
 export default function UserDashboard() {
   const history = useHistory();
   const [user, setUser] = useState(null);
@@ -82,7 +36,6 @@ export default function UserDashboard() {
   const [bejelentesValaszolt, setBejelentesValaszolt] = useState(false);
   const [elbiraltJarmuValtasok, setElbiraltJarmuValtasok] = useState([]);
   const [kerelmek, setKerelmek] = useState([]);
-  const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
   const [aktivFuvarok, setAktivFuvarok] = useState([]);
 
@@ -105,7 +58,6 @@ export default function UserDashboard() {
         potkocsiRes,
         furgonRes,
         bejelentesRes,
-        adminRes,
         kerelemRes,
         elbiraltRes,
         fuvarRes,
@@ -115,7 +67,6 @@ export default function UserDashboard() {
         fetchAction("getPotkocsik", { id: userData.admin }),
         fetchAction("getFurgonok", { id: userData.admin }),
         fetchAction("getBejelentesekSofor", { sofor_id: userData.id }),
-        fetchAction("getAdminElerhetoseg", { id: userData.admin }),
         fetchAction("getSajatJarmuValtasKerelmek", { sofor_id: userData.id }),
         fetchAction("getElbiraltJarmuValtasok", { sofor_id: userData.id }),
         fetchAction("getSajatFuvarok", { sofor_id: userData.id, aktivOnly: true }),
@@ -135,7 +86,6 @@ export default function UserDashboard() {
           osszes.some((b) => b.statusz !== "uj" || b.admin_valasz),
         );
       }
-      if (adminRes?.success) setAdmin(adminRes);
       if (kerelemRes?.success) setKerelmek(kerelemRes.kerelmek || []);
       if (elbiraltRes?.success)
         setElbiraltJarmuValtasok(elbiraltRes.kerelmek || []);
@@ -176,7 +126,12 @@ export default function UserDashboard() {
     bejelentesValaszolt ||
     elbiraltJarmuValtasok.length > 0;
 
-  const firstName = (user.name || "").split(" ")[0];
+  // A sofőr nevek a magyar névsorrendet követik (vezetéknév + keresztnév,
+  // pl. "Szikora Ágoston") — a keresztnév ezért az UTOLSÓ szótöveg, nem az
+  // első (az angol névsorrenddel ellentétben). Az üdvözlésben a keresztnév
+  // a természetes, baráti forma.
+  const nevReszek = (user.name || "").trim().split(/\s+/).filter(Boolean);
+  const firstName = nevReszek[nevReszek.length - 1] || "";
 
   return (
     <div className="flex flex-col gap-4">
@@ -202,7 +157,56 @@ export default function UserDashboard() {
         </Link>
       </div>
 
-      {/* Aktív jármű */}
+      {/* Aktív fuvarjaim — a Fuvar-first munkafolyamat elsődleges napi
+          művelete (ld. docs/superpowers/specs/2026-07-28-fuvar-first-
+          workflow-design.md 6.2), ezért ez a legfelső, legnagyobb súlyú
+          kártya — a jármű-hozzárendelés (lentebb) ritkábban változik,
+          mint a napi fuvarok. */}
+      <div className="rounded-2xl border border-brand-200 bg-brand-50 p-4 shadow-soft">
+        <div className="mb-2 flex items-center justify-between">
+          <p className="font-display text-base font-bold text-brand-900">Aktív fuvarjaim</p>
+          <PiClipboardTextLight className="h-5 w-5 text-brand-500" />
+        </div>
+        {aktivFuvarok.length === 0 ? (
+          <p className="text-sm text-brand-700">Nincs aktív fuvarod.</p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {aktivFuvarok.slice(0, 3).map((f) => (
+              <Link
+                key={f.id}
+                to="/user/fuvarReszletek"
+                onClick={(e) => {
+                  // history.push state-tel gyorsabb, mint egy plain <Link>
+                  // (nincs extra getSajatFuvar lekérdezés) — ezért kézzel
+                  // navigálunk ahelyett, hogy a Link natív navigációjára
+                  // hagyatkoznánk.
+                  e.preventDefault();
+                  history.push("/user/fuvarReszletek", { data: f });
+                }}
+                className="flex items-center justify-between gap-2 rounded-xl bg-white px-3 py-2.5 text-sm"
+              >
+                <span className="min-w-0 truncate text-ink-800">
+                  {f.felrako_ceg || "—"} → {f.lerako_ceg || "—"}
+                </span>
+                <PiCaretRightLight className="h-4 w-4 flex-shrink-0 text-ink-400" />
+              </Link>
+            ))}
+            {aktivFuvarok.length > 3 && (
+              <Link
+                to="/user/fuvarok"
+                className="text-center text-xs font-semibold text-brand-700"
+              >
+                Összes fuvarod ({aktivFuvarok.length})
+              </Link>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Aktív jármű — az üres állapot szövege egységesen "Válassz"
+          minden kártyán (a fölötte lévő KAMION/PÓTKOCSI/FURGON címke már
+          jelzi, mire vonatkozik), hogy a 3 kártya sora azonos magasságú
+          maradjon, ne törjön el köztük egy csak a hosszabb szó miatt. */}
       <div className="grid grid-cols-3 gap-3">
         <Link
           to="/user/jarmu-valaszto"
@@ -223,7 +227,7 @@ export default function UserDashboard() {
             </>
           ) : (
             <p className="mt-2 text-sm font-medium text-brand-600">
-              Válassz kamiont
+              Válassz
             </p>
           )}
           {pendingKamion && (
@@ -251,7 +255,7 @@ export default function UserDashboard() {
             </>
           ) : (
             <p className="mt-2 text-sm font-medium text-brand-600">
-              Válassz pótkocsit
+              Válassz
             </p>
           )}
           {pendingPotkocsi && (
@@ -279,7 +283,7 @@ export default function UserDashboard() {
             </>
           ) : (
             <p className="mt-2 text-sm font-medium text-brand-600">
-              Válassz furgont
+              Válassz
             </p>
           )}
           {pendingFurgon && (
@@ -288,51 +292,6 @@ export default function UserDashboard() {
             </p>
           )}
         </Link>
-      </div>
-
-      {/* Aktív fuvarjaim — a Fuvar-first munkafolyamat elsődleges napi
-          művelete (ld. docs/superpowers/specs/2026-07-28-fuvar-first-
-          workflow-design.md 6.2), a korábbi "Dokumentum feltöltése" kártya
-          helyén és vizuális súlyával. */}
-      <div className="rounded-2xl border border-brand-200 bg-brand-50 p-4 shadow-soft">
-        <div className="mb-2 flex items-center justify-between">
-          <p className="font-display text-base font-bold text-brand-900">Aktív fuvarjaim</p>
-          <PiClipboardTextLight className="h-5 w-5 text-brand-500" />
-        </div>
-        {aktivFuvarok.length === 0 ? (
-          <p className="text-sm text-brand-700">Nincs aktív fuvarod.</p>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {aktivFuvarok.slice(0, 3).map((f) => (
-              <Link
-                key={f.id}
-                to="/user/fuvarReszletek"
-                onClick={(e) => {
-                  // history.push state-tel gyorsabb, mint egy plain <Link>
-                  // (nincs extra getSajatFuvar lekérdezés) — ezért kézzel
-                  // navigálunk ahelyett, hogy a Link natív navigációjára
-                  // hagyatkoznánk.
-                  e.preventDefault();
-                  history.push("/user/fuvarReszletek", { data: f });
-                }}
-                className="flex items-center justify-between gap-2 rounded-xl bg-white px-3 py-2.5 text-sm"
-              >
-                <span className="min-w-0 truncate text-ink-800">
-                  {f.felrako || "—"} → {f.lerako || "—"}
-                </span>
-                <PiCaretRightLight className="h-4 w-4 flex-shrink-0 text-ink-400" />
-              </Link>
-            ))}
-            {aktivFuvarok.length > 3 && (
-              <Link
-                to="/user/fuvarok"
-                className="text-center text-xs font-semibold text-brand-700"
-              >
-                Összes fuvarod ({aktivFuvarok.length})
-              </Link>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Fontos értesítések */}
@@ -354,48 +313,26 @@ export default function UserDashboard() {
         </Link>
       )}
 
-      {/* Gyors műveletek */}
-      <div>
-        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">
-          Gyors műveletek
-        </h2>
-        <div className="grid grid-cols-3 gap-3">
-          {quickActions.map((action) => (
-            <Link
-              key={action.to}
-              to={action.to}
-              className="flex flex-col items-center gap-2 rounded-2xl border border-ink-100 bg-white py-4 text-center shadow-soft"
-            >
-              <span
-                className={`flex h-10 w-10 items-center justify-center rounded-full ${TILE_TONE[action.tone]}`}
-              >
-                <action.icon className="h-5 w-5" />
-              </span>
-              <span className="text-xs font-semibold text-ink-700">
-                {action.label}
-              </span>
-            </Link>
-          ))}
-          {admin?.phone ? (
-            <a
-              href={`tel:${admin.phone}`}
-              className="flex flex-col items-center gap-2 rounded-2xl border border-ink-100 bg-white py-4 text-center shadow-soft"
-            >
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-                <PiPhoneLight className="h-5 w-5" />
-              </span>
-              <span className="text-xs font-semibold text-ink-700">
-                Diszpécser
-              </span>
-            </a>
-          ) : null}
-        </div>
-      </div>
+      {/* Bejelentés — egyetlen megmaradt "gyors művelet" a korábbi rács
+          helyén (ld. a fájl tetejei komment). Tudatosan piros-tónusú
+          háttér (nem sima fehér, mint a lenti "Legutóbbi bejelentéseim"
+          sor) — ez egy LÉTREHOZÓ művelet, nem egy meglévő lista
+          megnyitása, a vizuális megkülönböztetés ezt jelzi. */}
+      <Link
+        to="/user/bejelentes/uj"
+        className="flex items-center gap-3 rounded-2xl border border-red-100 bg-red-50/60 px-4 py-3.5 shadow-soft"
+      >
+        <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
+          <PiChatCircleTextLight className="h-5 w-5" />
+        </span>
+        <span className="flex-1 text-sm font-semibold text-ink-800">
+          Új bejelentés
+        </span>
+        <PiCaretRightLight className="h-4 w-4 flex-shrink-0 text-red-400" />
+      </Link>
 
-      {/* Legutóbbi bejelentéseim — a tényleges "új bejelentés" belépési
-          pont a fenti Gyors műveletek rácsban van; ez itt csak a saját
-          korábbi bejelentések listájára (/user/bejelentesek) mutat,
-          egyetlen összegző sorként. */}
+      {/* Legutóbbi bejelentéseim — csak a saját korábbi bejelentések
+          listájára (/user/bejelentesek) mutat, egyetlen összegző sorként. */}
       <Link
         to="/user/bejelentesek"
         className="flex items-center justify-between rounded-2xl border border-ink-100 bg-white px-4 py-3 shadow-soft"
