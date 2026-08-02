@@ -1,11 +1,11 @@
 import React from "react";
-import { useLocation } from "react-router-dom";
 import CardUgyfel from "components/Cards/CardUgyfel.js";
 import AdminBreadcrumb from "components/UI/AdminBreadcrumb.js";
+import Spinner from "components/UI/Spinner.js";
+import useDeepLinkRecord from "utils/useDeepLinkRecord.js";
 
 export default function UgyfelForm() {
-  const location = useLocation();
-  const data = location.state?.data;
+  const { data, loading } = useDeepLinkRecord("getUgyfel", "ugyfel");
 
   return (
     <div className="flex flex-wrap">
@@ -16,7 +16,7 @@ export default function UgyfelForm() {
           listPath="/admin/ugyfelek"
           current={data?.nev || "Új ügyfél"}
         />
-        <CardUgyfel initialUgyfel={data} />
+        {loading ? <Spinner /> : <CardUgyfel initialUgyfel={data} />}
       </div>
     </div>
   );

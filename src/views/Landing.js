@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 import Footer from "components/Footers/Footer.js";
 import { fetchAction } from "utils/fetchAction";
 import HungaryMapBackground from "components/UI/HungaryMapBackground.js";
+import EuropeMapBackground from "components/UI/EuropeMapBackground.js";
 import QuoteForm from "components/Landing/QuoteForm.js";
 import LanguageSwitcher from "components/Landing/LanguageSwitcher.js";
 import {
@@ -425,7 +426,7 @@ export default function Landing() {
                 }
               }
             `}</style>
-            <HungaryMapBackground />
+            {locale === "en" ? <EuropeMapBackground /> : <HungaryMapBackground />}
           </div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">

@@ -1,14 +1,14 @@
 import React from "react";
-import { useLocation } from "react-router-dom";
 
 // components
 
 import CardKamion from "components/Cards/CardKamion";
 import AdminBreadcrumb from "components/UI/AdminBreadcrumb.js";
+import Spinner from "components/UI/Spinner.js";
+import useDeepLinkRecord from "utils/useDeepLinkRecord.js";
 
 export default function KamionForm() {
-  const location = useLocation();
-  const data = location.state?.data;
+  const { data, loading } = useDeepLinkRecord("getKamion", "kamion");
 
   return (
     <>
@@ -20,7 +20,7 @@ export default function KamionForm() {
             listPath="/admin/kamionok"
             current={data?.rendszam || "Új kamion"}
           />
-          <CardKamion initialKamion ={data}/>
+          {loading ? <Spinner /> : <CardKamion initialKamion={data} />}
         </div>
       </div>
     </>

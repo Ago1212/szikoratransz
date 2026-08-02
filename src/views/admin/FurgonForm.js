@@ -1,14 +1,14 @@
 import React from "react";
-import { useLocation } from "react-router-dom";
 
 // components
 
 import CardFurgon from "components/Cards/CardFurgon";
 import AdminBreadcrumb from "components/UI/AdminBreadcrumb.js";
+import Spinner from "components/UI/Spinner.js";
+import useDeepLinkRecord from "utils/useDeepLinkRecord.js";
 
 export default function FurgonForm() {
-  const location = useLocation();
-  const data = location.state?.data;
+  const { data, loading } = useDeepLinkRecord("getFurgon", "furgon");
 
   return (
     <>
@@ -20,7 +20,7 @@ export default function FurgonForm() {
             listPath="/admin/furgonok"
             current={data?.rendszam || "Új furgon"}
           />
-          <CardFurgon initialFurgon={data} />
+          {loading ? <Spinner /> : <CardFurgon initialFurgon={data} />}
         </div>
       </div>
     </>

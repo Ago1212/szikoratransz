@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useHistory, useLocation } from "react-router-dom";
+import { useHistory } from "react-router-dom";
 import {
   PiClipboardTextLight,
   PiArrowLeftLight,
@@ -19,6 +19,8 @@ import PageCard from "components/UI/PageCard.js";
 import SaveButton from "components/UI/SaveButton.js";
 import StatusBadge from "components/UI/StatusBadge.js";
 import Modal from "components/UI/Modal.js";
+import Spinner from "components/UI/Spinner.js";
+import useDeepLinkRecord from "utils/useDeepLinkRecord.js";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
 
@@ -102,11 +104,29 @@ const UJ_MEGBIZO_URES = {
 };
 
 export default function FuvarForm() {
+  // A globális keresésből (`?id=`) érkező mélylink esetén a teljes fuvar-
+  // rekordot aszinkron kell lekérni — a belső form-komponens csak ezután
+  // mountol, hogy a `formData` useState-je (lentebb) ne üres kezdőértékkel
+  // fagyjon be (ld. useDeepLinkRecord.js komment, ugyanaz a gotcha, mint a
+  // Kamion/Potkocsi/stb. Card-komponenseknél).
+  const { data: deepLinkData, loading: deepLinkLoading } = useDeepLinkRecord("getFuvar", "fuvar");
+
+  if (deepLinkLoading) {
+    return (
+      <div className="flex flex-col gap-4 pb-2">
+        <AdminBreadcrumb group="Fuvarok" listLabel="Fuvarok" listPath="/admin/fuvarok" current="Fuvar betöltése…" />
+        <Spinner />
+      </div>
+    );
+  }
+
+  return <FuvarFormInner initialData={deepLinkData || {}} />;
+}
+
+function FuvarFormInner({ initialData }) {
   const history = useHistory();
-  const location = useLocation();
   const user = JSON.parse(localStorage.getItem("user"));
 
-  const initialData = location.state?.data || {};
   const isNew = !initialData?.id;
 
   const [formData, setFormData] = useState({ ...emptyFuvar, ...initialData });

@@ -1,13 +1,13 @@
 import CardSoforok from "components/Cards/sofor/CardSofor";
 import React from "react";
-import { useLocation } from "react-router-dom";
 import AdminBreadcrumb from "components/UI/AdminBreadcrumb.js";
+import Spinner from "components/UI/Spinner.js";
+import useDeepLinkRecord from "utils/useDeepLinkRecord.js";
 
 // components
 
 export default function SoforForm() {
-  const location = useLocation();
-  const data = location.state?.data;
+  const { data, loading } = useDeepLinkRecord("getSofor", "sofor");
   return (
     <>
       <div className="flex flex-wrap">
@@ -18,7 +18,7 @@ export default function SoforForm() {
             listPath="/admin/soforok"
             current={data?.name || "Új sofőr"}
           />
-          <CardSoforok initSofor={data} />
+          {loading ? <Spinner /> : <CardSoforok initSofor={data} />}
         </div>
       </div>
     </>
