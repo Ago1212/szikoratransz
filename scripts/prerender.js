@@ -165,7 +165,18 @@ async function main() {
         const page = await browser.newPage();
         const url = `http://localhost:${PORT}${route}`;
         console.log(`Renderelés: ${url}`);
-        await page.goto(url, { waitUntil: "networkidle" });
+        // "networkidle", NEM "load" — 2026-08-17 óta a Cloudflare Turnstile
+        // widget (ld. src/components/UI/Turnstile.js, a Kapcsolat-szekciós
+        // formokon) folyamatos háttér-hálózati aktivitást végez, ami miatt a
+        // "networkidle" állapot SOSEM állt be — minden Turnstile-t tartalmazó
+        // route (gyakorlatilag mind, az /adatvedelem kivételével) garantáltan
+        // a teljes 30s timeoutot elfogyasztotta, ellehetetlenítve a teljes
+        // előrenderelést. A React app tartalma (cím, szolgáltatások, GYIK,
+        // referenciák) statikus adatból szinkron renderelődik, nem függ
+        // semmilyen aszinkron fetch lezárulásától, ezért a "load" esemény
+        // (a fő JS bundle lefutása után tüzel, ld. CRA `defer` scriptje)
+        // elég a teljes tartalom megjelenéséhez.
+        await page.goto(url, { waitUntil: "load" });
         // A React app-nak idő kell, amíg a Reveal-animációk elindulnak és a
         // DOM végleges állapotba kerül.
         await page.waitForTimeout(1000);

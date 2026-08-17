@@ -1,12 +1,16 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 
-// Cloudflare hivatalos, mindig sikeres TESZT site key — csak fejlesztéshez,
-// amíg nincs valós Turnstile site kulcs (dash.cloudflare.com → Turnstile,
-// a szikora-transz.hu domainhez regisztrálva). ÉLES ELŐTT CSERÉLENDŐ egy
-// valódi site key-re, egyébként a widget mindenkinél automatikusan
-// sikeresnek fog látszani, valódi bot-védelem nélkül.
-const TEST_SITE_KEY = "1x00000000000000000000AA";
-const SITE_KEY = process.env.REACT_APP_TURNSTILE_SITE_KEY || TEST_SITE_KEY;
+// Valódi, a szikora-transz.hu domainhez regisztrált Turnstile site key
+// (dash.cloudflare.com → Turnstile) — nem titok, ezért hardcode-olva, ugyanaz
+// a minta, mint az `authHash` a `fetchAction.js`-ben. Szándékosan NEM
+// build-time env-változóból (`REACT_APP_...`) jön: az egy könnyen elfelejthető
+// extra lépés lenne éles build előtt (CRA az ilyen env-változókat build-time
+// inline-olja, egy szerver-oldali `.env`-módosítás a már lefordított
+// bundle-ön nem változtat) — élesben pont ez okozta, hogy a widget a
+// Cloudflare "Csak tesztelésre" figyelmeztetését mutatta a secret key
+// frissítése UTÁN is, mert a site key még mindig a teszt-kulcs volt a
+// bundle-ben.
+const SITE_KEY = "0x4AAAAAAESvs0BzwB0dWm3P";
 
 let scriptLoadingPromise = null;
 function loadTurnstileScript() {
