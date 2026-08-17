@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { PiEnvelopeLight, PiClockLight } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { useTranslation, localizePath } from "i18n/index.js";
+import Turnstile from "components/UI/Turnstile.js";
 
 // A `composeMessage()` admin felé menő szabad szöveg-blokkja MINDIG magyarul
 // megy ki, függetlenül a látogató által választott UI-nyelvtől (ld. a design
@@ -116,6 +117,8 @@ export default function QuoteForm({ title, subtitle }) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState({ success: null, message: "" });
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileRef = useRef(null);
 
   const handleChange = (e) => {
     clearInvalid(e);
@@ -152,7 +155,13 @@ export default function QuoteForm({ title, subtitle }) {
       email: form.email,
       phone: form.phone,
       message: composeMessage(),
+      turnstileToken,
     });
+
+    // A Turnstile-token egyszer használatos — sikeres és sikertelen
+    // beküldés után is friss tokent kell kérni a következő próbálkozáshoz.
+    turnstileRef.current?.reset();
+    setTurnstileToken("");
 
     if (result && result.success) {
       setSubmitStatus({
@@ -359,9 +368,13 @@ export default function QuoteForm({ title, subtitle }) {
             </span>
           </label>
 
+          <div className="mt-6">
+            <Turnstile ref={turnstileRef} onVerify={setTurnstileToken} />
+          </div>
+
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || !turnstileToken}
             className="w-full mt-6 px-6 py-4 bg-[#1E3AA8] hover:bg-[#172E86] text-white font-[Overpass] font-bold uppercase tracking-wide text-sm rounded-xl transition duration-300 disabled:opacity-50"
           >
             {isSubmitting ? (

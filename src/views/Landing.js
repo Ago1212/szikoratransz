@@ -13,6 +13,7 @@ import HungaryMapBackground from "components/UI/HungaryMapBackground.js";
 import EuropeMapBackground from "components/UI/EuropeMapBackground.js";
 import QuoteForm from "components/Landing/QuoteForm.js";
 import LanguageSwitcher from "components/Landing/LanguageSwitcher.js";
+import Turnstile from "components/UI/Turnstile.js";
 import {
   FEATURES,
   PROCESS_STEPS,
@@ -163,6 +164,8 @@ export default function Landing() {
     success: null,
     message: "",
   });
+  const [applicationTurnstileToken, setApplicationTurnstileToken] = useState("");
+  const applicationTurnstileRef = useRef(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState(0);
 
@@ -184,7 +187,12 @@ export default function Landing() {
       phone: applicationForm.phone,
       email: applicationForm.email,
       message: applicationForm.message,
+      turnstileToken: applicationTurnstileToken,
     });
+
+    // Ld. QuoteForm.js hasonló komment — a token egyszer használatos.
+    applicationTurnstileRef.current?.reset();
+    setApplicationTurnstileToken("");
 
     if (result && result.success) {
       setSubmitStatus({
@@ -1006,9 +1014,13 @@ export default function Landing() {
                       </div>
                     </div>
 
+                    <div className="mt-6">
+                      <Turnstile ref={applicationTurnstileRef} onVerify={setApplicationTurnstileToken} />
+                    </div>
+
                     <button
                       type="submit"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || !applicationTurnstileToken}
                       className="w-full mt-6 px-6 py-3 border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-600 hover:text-white font-[Overpass] font-bold uppercase tracking-wide text-sm rounded-xl transition duration-300 disabled:opacity-50"
                     >
                       {isSubmitting ? (

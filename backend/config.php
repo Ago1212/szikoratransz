@@ -38,4 +38,9 @@ $apiConfig = [
     "vapidPublicKey" => envOrDefault('VAPID_PUBLIC_KEY', 'BLxK4NgcXrsGf-fQ8oTFpHwky02KfZNu7wULx4VYeqwwkzdhu1pD8bxYyP7OFIXg9KdMIqlhULutonS1V2qUgs4'),
     "vapidPrivateKeyPem" => str_replace('\n', "\n", envOrDefault('VAPID_PRIVATE_KEY_PEM', "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgDjyKDGHpQmF42BYi\nnRzd51XKDnjX+/JbPl8beSWiVdWhRANCAAS8SuDYHF67Bn/n0PKExaR8JMtNin2T\nbu8FC8eFWHqsMJM3YbtaQ/G8WMj+zhSF4PSnTCKpYVC7raJ0tVdqlILO\n-----END PRIVATE KEY-----\n")),
     "vapidSubject" => envOrDefault('VAPID_SUBJECT', 'mailto:sziago12@gmail.com'),
+    // Cloudflare Turnstile bot-védelem (ajánlatkérés/jelentkezés publikus
+    // formok) — a Cloudflare hivatalos, mindig sikeres TESZT secret key-jére
+    // esik vissza, amíg nincs valós site+secret kulcspár (dash.cloudflare.com
+    // → Turnstile). Ld. `src/components/UI/Turnstile.js` a site key oldalán.
+    "turnstileSecretKey" => envOrDefault('TURNSTILE_SECRET_KEY', '1x0000000000000000000000000000000AA'),
 ];

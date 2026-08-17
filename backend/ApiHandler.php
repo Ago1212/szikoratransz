@@ -448,8 +448,8 @@ class ApiHandler {
             'deleteEgyediHatarido' => ['id', 'ceg_id'],
             'createEgyediHatarido' => ['id', 'datum', 'leiras'],
 
-            'sendAjanlatkeres' => ['name', 'email', 'phone', 'message'],
-            'sendJelentkezes' => ['name', 'email', 'phone', 'message'],
+            'sendAjanlatkeres' => ['name', 'email', 'phone', 'message', 'turnstileToken'],
+            'sendJelentkezes' => ['name', 'email', 'phone', 'message', 'turnstileToken'],
         ];
     }
 
@@ -1983,10 +1983,18 @@ class ApiHandler {
                     echo json_encode($this->getEsemenyek($this->resolveSajatCegId($request)));
                     return;
                 case 'sendAjanlatkeres':
+                    if (!$this->verifyTurnstile($request['turnstileToken'])) {
+                        echo json_encode(['success' => false, 'message' => 'A captcha-ellenőrzés sikertelen volt, próbáld újra.']);
+                        return;
+                    }
                     $this->saveAjanlatkeres('ajanlatkeres', $request['name'], $request['email'], $request['phone'], $request['message']);
                     echo json_encode($emailInterface->sendAjanlatkeres($request['name'], $request['email'], $request['phone'], $request['message']));
                     return;
                 case 'sendJelentkezes':
+                    if (!$this->verifyTurnstile($request['turnstileToken'])) {
+                        echo json_encode(['success' => false, 'message' => 'A captcha-ellenőrzés sikertelen volt, próbáld újra.']);
+                        return;
+                    }
                     $this->saveAjanlatkeres('jelentkezes', $request['name'], $request['email'], $request['phone'], $request['message']);
                     echo json_encode($emailInterface->sendJelentkezes($request['name'], $request['email'], $request['phone'], $request['message']));
                     return;
@@ -2938,6 +2946,37 @@ class ApiHandler {
     // hogy legyen egy követhető lead-lista. Szándékosan nem dobunk kivételt
     // hibánál: az e-mail küldés (a form eredeti, elsődleges funkciója) akkor
     // is menjen tovább, ha a mentés valamiért nem sikerülne.
+    // Cloudflare Turnstile szerver-oldali ellenőrzése az ajánlatkérés/
+    // jelentkezés publikus formoknál (ld. src/components/UI/Turnstile.js).
+    // Fail-closed: bármilyen hálózati/válasz-hiba is elutasításnak számít,
+    // sosem enged át egy nem ellenőrizhető tokent.
+    private function verifyTurnstile($token) {
+        if (!is_string($token) || $token === '') {
+            return false;
+        }
+        global $apiConfig;
+        $ch = curl_init('https://challenges.cloudflare.com/turnstile/v0/siteverify');
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => http_build_query([
+                'secret' => $apiConfig['turnstileSecretKey'],
+                'response' => $token,
+            ]),
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 10,
+        ]);
+        $valasz = curl_exec($ch);
+        $curlHiba = curl_error($ch);
+        curl_close($ch);
+
+        if ($valasz === false || $curlHiba) {
+            error_log('Turnstile ellenőrzés sikertelen (curl): ' . $curlHiba);
+            return false;
+        }
+        $adat = json_decode($valasz, true);
+        return is_array($adat) && !empty($adat['success']);
+    }
+
     private function saveAjanlatkeres($tipus, $nev, $email, $telefon, $uzenet) {
         try {
             $query = "INSERT INTO ajanlatkeresek (tipus, nev, email, telefon, uzenet) VALUES (:tipus, :nev, :email, :telefon, :uzenet)";
