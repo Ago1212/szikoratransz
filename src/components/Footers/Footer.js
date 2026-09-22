@@ -47,7 +47,7 @@ export default function Footer() {
 
           {/* 2 — Szolgáltatásaink (site-szintű belső link minden long-tail oldalra) */}
           <div>
-            <span className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-[#2F4DE0]">
+            <span className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-white/80">
               {t("footer.servicesHeading")}
             </span>
             <ul className="mt-4 space-y-3 text-sm text-white/70">
@@ -66,7 +66,7 @@ export default function Footer() {
 
           {/* 3 — Cég / fontos oldalak */}
           <div>
-            <span className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-[#2F4DE0]">
+            <span className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-white/80">
               {t("footer.companyHeading")}
             </span>
             <ul className="mt-4 space-y-3 text-sm text-white/70">
@@ -123,7 +123,7 @@ export default function Footer() {
 
           {/* 4 — Kapcsolat + CTA */}
           <div>
-            <span className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-[#2F4DE0]">
+            <span className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-white/80">
               {t("footer.contactHeading")}
             </span>
             <ul className="mt-4 space-y-4 text-sm text-white/70">

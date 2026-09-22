@@ -1,6 +1,7 @@
 import React from "react";
 import { PiGlobeLight } from "react-icons/pi";
 import ServicePage from "components/Landing/ServicePage.js";
+import ContentCard from "components/Landing/ContentCard.js";
 import { pickFaq } from "data/landingContent.js";
 import { useTranslation } from "i18n/index.js";
 
@@ -26,11 +27,8 @@ export default function NemzetkoziFuvarozas() {
       )}
       testimonialNames={["Tóth Andrea", "Nagy Péter", "Molnár Eszter"]}
     >
-      <section className="py-10 border-t border-[#23262B]/10">
-        <h2 className="font-[Overpass] font-extrabold text-2xl text-[#23262B] mb-6">
-          {t("pages.nemzetkozi.section.heading")}
-        </h2>
-        <div className="space-y-4 text-[#23262B]/70 leading-relaxed max-w-2xl">
+      <ContentCard heading={t("pages.nemzetkozi.section.heading")} accent="#0F766E" icon={PiGlobeLight}>
+        <div className="space-y-4 text-[#23262B]/80 leading-relaxed max-w-2xl">
           {locale === "en" ? (
             <>
               <p>
@@ -109,7 +107,7 @@ export default function NemzetkoziFuvarozas() {
             </>
           )}
         </div>
-      </section>
+      </ContentCard>
     </ServicePage>
   );
 }

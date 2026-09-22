@@ -14,6 +14,8 @@ import EuropeMapBackground from "components/UI/EuropeMapBackground.js";
 import QuoteForm from "components/Landing/QuoteForm.js";
 import LanguageSwitcher from "components/Landing/LanguageSwitcher.js";
 import Turnstile from "components/UI/Turnstile.js";
+import RouteDivider from "components/Landing/RouteDivider.js";
+import { Reveal } from "components/Landing/Reveal.js";
 import {
   FEATURES,
   PROCESS_STEPS,
@@ -47,90 +49,6 @@ import {
 //             használjuk, mert a #2F4DE0 önmagában ~2:1 kontrasztarányú
 //             a #2E3239/#23262B hátterekhez képest — a #7C93FF ~4.6:1-et ad)
 // ---------------------------------------------------------------------------
-
-function RouteDivider({ dark = false }) {
-  return (
-    <div className="relative max-w-5xl mx-auto px-4 py-2">
-      <div
-        className={`absolute left-4 right-4 top-1/2 border-t-2 border-dashed ${
-          dark ? "border-white/10" : "border-[#23262B]/10"
-        }`}
-      ></div>
-      <div className="relative flex justify-center">
-        <div
-          className={`w-10 h-10 rounded-full flex items-center justify-center border ${
-            dark
-              ? "bg-[#23262B] border-white/10"
-              : "bg-[#F2F3F5] border-[#23262B]/10"
-          }`}
-        >
-          <PiTruckLight className="text-xs text-[#1E3AA8]" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Egyszerű, függőségmentes "felbukkanó" animáció — akkor jelenik meg egy elem,
-// amikor görgetés közben a képernyőre kerül. A `prefers-reduced-motion`
-// beállítást tiszteletben tartja.
-function Reveal({ children, delay = 0, className = "", variant = "fade" }) {
-  const ref = useRef(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    if (
-      typeof window !== "undefined" &&
-      window.matchMedia &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      setVisible(true);
-      return;
-    }
-
-    const node = ref.current;
-    if (!node) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setVisible(true);
-            observer.disconnect();
-          }
-        });
-      },
-      { threshold: 0.15 },
-    );
-
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
-
-  // "pop" variant hozzáad egy finom scale + blur átmenetet is — a hero
-  // kiemelt elemeinek (pl. ajánlatkérő kártya) szánva, hogy erősebb
-  // belépő hatást adjon, mint az egyszerű fade+translate.
-  const hidden =
-    variant === "pop"
-      ? "opacity-0 translate-y-6 scale-[0.96] blur-sm"
-      : "opacity-0 translate-y-6";
-  const shown =
-    variant === "pop"
-      ? "opacity-100 translate-y-0 scale-100 blur-0"
-      : "opacity-100 translate-y-0";
-
-  return (
-    <div
-      ref={ref}
-      style={{ transitionDelay: `${delay}ms` }}
-      className={`transition-all duration-700 ease-out ${
-        visible ? shown : hidden
-      } ${className}`}
-    >
-      {children}
-    </div>
-  );
-}
 
 // Stabil objektum-referencia a Landing route hreflang-alternatíváihoz —
 // statikus (nem függ propoktól/state-től), ezért modul-szinten, nem

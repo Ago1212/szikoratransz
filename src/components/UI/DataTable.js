@@ -666,8 +666,23 @@ export default function DataTable({
             )}
           </div>
 
-          {/* Asztali nézet — táblázat */}
-          <div className="relative">
+          {/* Asztali nézet — táblázat.
+              `fill` módban ennek a wrappernek IS meg kell kapnia a `min-h-0
+              flex-1` párt, nem csak a belső görgető divnek — enélkül ez a
+              `relative` div (mint sima, nem nyújtott flex-elem) a szülő
+              `flex-col` konténerben a tartalmának megfelelő (a táblázat
+              TELJES) magasságra nő, a belső görgető div `flex-1`-je pedig
+              nem tud mit nyújtani egy nem-nyújtott szülőben. Emellett ennek
+              a wrappernek magának is `flex flex-col`-nak kell lennie: a
+              `min-h-0 flex-1` osztály a BELSŐ görgető divEN csak akkor
+              nyújtja azt ki a rendelkezésre álló magasságra, ha a közvetlen
+              szülője (ez a div) maga is flex-konténer — enélkül a belső div
+              sima blokk-elemként a tartalmának (a teljes táblázatnak)
+              megfelelő magasságra nő, figyelmen kívül hagyva a szülő
+              tényleges (kisebb) magasságát, és mivel a szülő `overflow`-ja
+              `visible` marad, ez a túlcsordulás a KÜLSŐ, `overflow-hidden`
+              DataTable-gyökérnél vágódik le csendben, görgetés nélkül. */}
+          <div className={`relative flex flex-col ${bodyFillClass}`}>
           <div
             ref={scrollContainerRef}
             onScroll={updateScrollShadow}

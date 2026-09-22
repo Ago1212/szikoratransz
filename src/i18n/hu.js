@@ -279,6 +279,9 @@ export const landing = {
 export const servicePage = {
   backLink: "← Vissza a főoldalra",
   ctaButton: "Ingyenes ajánlatot kérek",
+  callPrefix: "vagy hívjon közvetlenül:",
+  whyUsEyebrow: "Miért minket",
+  whyUsTitle: "Amiben számíthat ránk",
   testimonialsTitle: "Amit partnereink mondanak rólunk",
   testimonialsDisclaimer: "",
   faqTitle: "Gyakran ismételt kérdések",

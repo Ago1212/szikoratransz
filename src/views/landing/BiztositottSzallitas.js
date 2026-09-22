@@ -1,6 +1,7 @@
 import React from "react";
 import { PiShieldCheckLight } from "react-icons/pi";
 import ServicePage from "components/Landing/ServicePage.js";
+import ContentCard from "components/Landing/ContentCard.js";
 import { pickFaq } from "data/landingContent.js";
 import { useTranslation } from "i18n/index.js";
 
@@ -26,10 +27,7 @@ export default function BiztositottSzallitas() {
       )}
       testimonialNames={["Szabó Katalin", "Tóth Andrea", "Molnár Eszter"]}
     >
-      <section className="py-10 border-t border-[#23262B]/10">
-        <h2 className="font-[Overpass] font-extrabold text-2xl text-[#23262B] mb-6">
-          {t("pages.biztositott.section.heading")}
-        </h2>
+      <ContentCard heading={t("pages.biztositott.section.heading")} accent="#6D28D9" icon={PiShieldCheckLight}>
         <ol className="space-y-4 mb-5">
           {steps.map((item, i) => (
             <li key={item.step} className="flex items-start gap-4">
@@ -46,7 +44,7 @@ export default function BiztositottSzallitas() {
             </li>
           ))}
         </ol>
-        <div className="space-y-4 text-[#23262B]/70 leading-relaxed max-w-2xl">
+        <div className="space-y-4 text-[#23262B]/80 leading-relaxed max-w-2xl">
           {locale === "en" ? (
             <>
               <p>
@@ -91,7 +89,7 @@ export default function BiztositottSzallitas() {
             </>
           )}
         </div>
-      </section>
+      </ContentCard>
     </ServicePage>
   );
 }

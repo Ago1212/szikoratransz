@@ -249,6 +249,24 @@ class KarbantartasInterface {
                     return ['success' => false, 'message' => 'Hiba történt a karbantartás hozzáadása során.'];
                 }
             } else {
+                // Tulajdonjog/létezés ellenőrzése MAGA az UPDATE előtt — nem
+                // az UPDATE `rowCount()`-jából derül ki. MySQL a `rowCount()`-ot
+                // a TÉNYLEGESEN MEGVÁLTOZOTT sorok számaként adja vissza, nem a
+                // WHERE-nek megfelelő sorokéként — ha a mentett adat megegyezik
+                // a meglévővel (a felhasználó módosítás nélkül nyomja meg a
+                // Mentés gombot), a rowCount 0, holott a sor létezik és a
+                // frissítés sikeres volt. Enélkül a Mentés gomb módosítás
+                // nélkül hibásan "nem található" választ adott, és a modal
+                // nyitva maradt.
+                $checkQuery = "SELECT id FROM kamion_karbantartars WHERE id = :id AND admin = :admin_scope AND torolt = 'N'";
+                $checkStmt = $this->db->prepare($checkQuery);
+                $checkStmt->bindParam(':id', $id, PDO::PARAM_INT);
+                $checkStmt->bindValue(':admin_scope', $admin);
+                $checkStmt->execute();
+                if (!$checkStmt->fetch()) {
+                    return ['success' => false, 'message' => 'A karbantartás nem található, vagy nem a te céged tulajdona.'];
+                }
+
                 // Frissítési lekérdezés — az `admin = :admin_scope` feltétel
                 // nélkül egy idegen cég karbantartási rekordja is
                 // módosítható lett volna, ha valaki eltalálja/tallózza az
@@ -271,23 +289,18 @@ class KarbantartasInterface {
                 // Lekérdezés végrehajtása
                 $stmt->execute();
 
-                // Ellenőrzés, hogy történt-e frissítés
-                if ($stmt->rowCount() > 0) {
-                    if (!empty($kovetkezo_karbantartas) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $kovetkezo_karbantartas)) {
-                        $nextQuery = "INSERT INTO kamion_karbantartars (kamion_id, admin, datum, log, torolt, km_oraallas, elvegezte)
-                                  VALUES (:kamion_id, :admin, :datum, :log, 'N', NULL, NULL)";
-                        $nextStmt = $this->db->prepare($nextQuery);
-                        $nextStmt->bindParam(':kamion_id', $kamion_id);
-                        $nextStmt->bindParam(':admin', $admin);
-                        $nextStmt->bindParam(':datum', $kovetkezo_karbantartas);
-                        $nextStmt->bindParam(':log', $log);
-                        $nextStmt->execute();
-                    }
-
-                    return ['success' => true, 'message' => 'A karbantartás sikeresen frissítve.'];
-                } else {
-                    return ['success' => false, 'message' => 'A karbantartás nem található, vagy nem a te céged tulajdona.'];
+                if (!empty($kovetkezo_karbantartas) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $kovetkezo_karbantartas)) {
+                    $nextQuery = "INSERT INTO kamion_karbantartars (kamion_id, admin, datum, log, torolt, km_oraallas, elvegezte)
+                              VALUES (:kamion_id, :admin, :datum, :log, 'N', NULL, NULL)";
+                    $nextStmt = $this->db->prepare($nextQuery);
+                    $nextStmt->bindParam(':kamion_id', $kamion_id);
+                    $nextStmt->bindParam(':admin', $admin);
+                    $nextStmt->bindParam(':datum', $kovetkezo_karbantartas);
+                    $nextStmt->bindParam(':log', $log);
+                    $nextStmt->execute();
                 }
+
+                return ['success' => true, 'message' => 'A karbantartás sikeresen frissítve.'];
             }
         } catch (Exception $e) {
             // Hibakezelés
@@ -378,6 +391,18 @@ class KarbantartasInterface {
                     return ['success' => false, 'message' => 'Hiba történt a karbantartás hozzáadása során.'];
                 }
             } else {
+                // Tulajdonjog/létezés ellenőrzése MAGA az UPDATE előtt — ld. a
+                // kamion-ágon lévő részletes indoklást (`rowCount()` 0 lehet
+                // egy sikeres, de tartalmilag változatlan UPDATE-nél is).
+                $checkQuery = "SELECT id FROM potkocsi_karbantartars WHERE id = :id AND admin = :admin_scope AND torolt = 'N'";
+                $checkStmt = $this->db->prepare($checkQuery);
+                $checkStmt->bindParam(':id', $id, PDO::PARAM_INT);
+                $checkStmt->bindValue(':admin_scope', $admin);
+                $checkStmt->execute();
+                if (!$checkStmt->fetch()) {
+                    return ['success' => false, 'message' => 'A karbantartás nem található, vagy nem a te céged tulajdona.'];
+                }
+
                 // Frissítési lekérdezés — `$admin` mindig a hívó által
                 // szerver-oldalon feloldott ceg_id (ld. kamion-ág komment).
                 $query = "UPDATE potkocsi_karbantartars SET datum = :datum, log = :log, km_oraallas = :km_oraallas, elvegezte = :elvegezte, koltseg = :koltseg WHERE id = :id AND admin = :admin_scope AND torolt = 'N'";
@@ -397,23 +422,18 @@ class KarbantartasInterface {
                 // Lekérdezés végrehajtása
                 $stmt->execute();
 
-                // Ellenőrzés, hogy történt-e frissítés
-                if ($stmt->rowCount() > 0) {
-                    if (!empty($kovetkezo_karbantartas) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $kovetkezo_karbantartas)) {
-                        $nextQuery = "INSERT INTO potkocsi_karbantartars (potkocsi_id, admin, datum, log, torolt, km_oraallas, elvegezte)
-                                  VALUES (:potkocsi_id, :admin, :datum, :log, 'N', NULL, NULL)";
-                        $nextStmt = $this->db->prepare($nextQuery);
-                        $nextStmt->bindParam(':potkocsi_id', $potkocsi_id);
-                        $nextStmt->bindParam(':admin', $admin);
-                        $nextStmt->bindParam(':datum', $kovetkezo_karbantartas);
-                        $nextStmt->bindParam(':log', $log);
-                        $nextStmt->execute();
-                    }
-
-                    return ['success' => true, 'message' => 'A karbantartás sikeresen frissítve.'];
-                } else {
-                    return ['success' => false, 'message' => 'A karbantartás nem található, vagy nem a te céged tulajdona.'];
+                if (!empty($kovetkezo_karbantartas) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $kovetkezo_karbantartas)) {
+                    $nextQuery = "INSERT INTO potkocsi_karbantartars (potkocsi_id, admin, datum, log, torolt, km_oraallas, elvegezte)
+                              VALUES (:potkocsi_id, :admin, :datum, :log, 'N', NULL, NULL)";
+                    $nextStmt = $this->db->prepare($nextQuery);
+                    $nextStmt->bindParam(':potkocsi_id', $potkocsi_id);
+                    $nextStmt->bindParam(':admin', $admin);
+                    $nextStmt->bindParam(':datum', $kovetkezo_karbantartas);
+                    $nextStmt->bindParam(':log', $log);
+                    $nextStmt->execute();
                 }
+
+                return ['success' => true, 'message' => 'A karbantartás sikeresen frissítve.'];
             }
         } catch (Exception $e) {
             // Hibakezelés
@@ -502,6 +522,18 @@ class KarbantartasInterface {
                     return ['success' => false, 'message' => 'Hiba történt a karbantartás hozzáadása során.'];
                 }
             } else {
+                // Tulajdonjog/létezés ellenőrzése MAGA az UPDATE előtt — ld. a
+                // kamion-ágon lévő részletes indoklást (`rowCount()` 0 lehet
+                // egy sikeres, de tartalmilag változatlan UPDATE-nél is).
+                $checkQuery = "SELECT id FROM furgon_karbantartars WHERE id = :id AND admin = :admin_scope AND torolt = 'N'";
+                $checkStmt = $this->db->prepare($checkQuery);
+                $checkStmt->bindParam(':id', $id, PDO::PARAM_INT);
+                $checkStmt->bindValue(':admin_scope', $admin);
+                $checkStmt->execute();
+                if (!$checkStmt->fetch()) {
+                    return ['success' => false, 'message' => 'A karbantartás nem található, vagy nem a te céged tulajdona.'];
+                }
+
                 // Frissítési lekérdezés — `$admin` mindig a hívó által
                 // szerver-oldalon feloldott ceg_id (ld. kamion-ág komment).
                 $query = "UPDATE furgon_karbantartars SET datum = :datum, log = :log, km_oraallas = :km_oraallas, elvegezte = :elvegezte, koltseg = :koltseg WHERE id = :id AND admin = :admin_scope AND torolt = 'N'";
@@ -521,23 +553,18 @@ class KarbantartasInterface {
                 // Lekérdezés végrehajtása
                 $stmt->execute();
 
-                // Ellenőrzés, hogy történt-e frissítés
-                if ($stmt->rowCount() > 0) {
-                    if (!empty($kovetkezo_karbantartas) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $kovetkezo_karbantartas)) {
-                        $nextQuery = "INSERT INTO furgon_karbantartars (furgon_id, admin, datum, log, torolt, km_oraallas, elvegezte)
-                                  VALUES (:furgon_id, :admin, :datum, :log, 'N', NULL, NULL)";
-                        $nextStmt = $this->db->prepare($nextQuery);
-                        $nextStmt->bindParam(':furgon_id', $furgon_id);
-                        $nextStmt->bindParam(':admin', $admin);
-                        $nextStmt->bindParam(':datum', $kovetkezo_karbantartas);
-                        $nextStmt->bindParam(':log', $log);
-                        $nextStmt->execute();
-                    }
-
-                    return ['success' => true, 'message' => 'A karbantartás sikeresen frissítve.'];
-                } else {
-                    return ['success' => false, 'message' => 'A karbantartás nem található, vagy nem a te céged tulajdona.'];
+                if (!empty($kovetkezo_karbantartas) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $kovetkezo_karbantartas)) {
+                    $nextQuery = "INSERT INTO furgon_karbantartars (furgon_id, admin, datum, log, torolt, km_oraallas, elvegezte)
+                              VALUES (:furgon_id, :admin, :datum, :log, 'N', NULL, NULL)";
+                    $nextStmt = $this->db->prepare($nextQuery);
+                    $nextStmt->bindParam(':furgon_id', $furgon_id);
+                    $nextStmt->bindParam(':admin', $admin);
+                    $nextStmt->bindParam(':datum', $kovetkezo_karbantartas);
+                    $nextStmt->bindParam(':log', $log);
+                    $nextStmt->execute();
                 }
+
+                return ['success' => true, 'message' => 'A karbantartás sikeresen frissítve.'];
             }
         } catch (Exception $e) {
             // Hibakezelés

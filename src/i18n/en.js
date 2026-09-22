@@ -276,6 +276,9 @@ export const landing = {
 export const servicePage = {
   backLink: "← Back to homepage",
   ctaButton: "Request a Free Quote",
+  callPrefix: "or call us directly:",
+  whyUsEyebrow: "Why choose us",
+  whyUsTitle: "What you can count on",
   testimonialsTitle: "What our partners say about us",
   testimonialsDisclaimer: "",
   faqTitle: "Frequently Asked Questions",

@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { PiTruckLight } from "react-icons/pi";
 import ServicePage from "components/Landing/ServicePage.js";
+import ContentCard from "components/Landing/ContentCard.js";
 import { pickFaq } from "data/landingContent.js";
 import { useTranslation, localizePath } from "i18n/index.js";
 
@@ -22,11 +23,8 @@ export default function BelfoldiFuvarozas() {
       testimonialNames={["Nagy Péter", "Szabó Katalin", "Farkas Zoltán"]}
       areaServed={["HU"]}
     >
-      <section className="py-10 border-t border-[#23262B]/10">
-        <h2 className="font-[Overpass] font-extrabold text-2xl text-[#23262B] mb-6">
-          {t("pages.belfoldi.section.heading")}
-        </h2>
-        <div className="space-y-4 text-[#23262B]/70 leading-relaxed max-w-2xl">
+      <ContentCard heading={t("pages.belfoldi.section.heading")} accent="#1E3AA8" icon={PiTruckLight}>
+        <div className="space-y-4 text-[#23262B]/80 leading-relaxed max-w-2xl">
           {locale === "en" ? (
             <>
               <p>
@@ -88,7 +86,7 @@ export default function BelfoldiFuvarozas() {
             </>
           )}
         </div>
-      </section>
+      </ContentCard>
     </ServicePage>
   );
 }

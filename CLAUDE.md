@@ -522,3 +522,295 @@ Egy gyanús (szaúdi telefonszámú, generikus nevű) beérkezett ajánlatkéré
 - For any UI/frontend change, verify it by actually running it (`npm start` and/or `php8.2 -S localhost:8001` as needed, opening it in a browser, screenshotting/clicking through the changed flow) before reporting the task done — don't rely on code review or lint alone.
 - Do this without asking for permission first. Starting a local dev server / PHP built-in server on this machine is low-risk and reversible — just start it and verify.
 - After changing any Tailwind class usage, rebuild `tailwind.css` (see the `build:tailwind` note above) before verifying in the browser, otherwise new classes won't be present yet.
+
+## `DataTable.js` `fill` mode — desktop table scroll gotcha (2026-09-21)
+
+The desktop `<table>` wrapper inside `DataTable.js` needs to be a flex
+container itself (`relative flex flex-col ${bodyFillClass}`), not just carry
+`min-h-0 flex-1` — otherwise the inner scroll div (the one with `ref=
+{scrollContainerRef}` and `overflow-auto`) sizes to its own CONTENT height
+(the full table) instead of stretching to the space its parent actually has,
+because `min-h-0`/`flex-1` on a child only do anything when the immediate
+parent is itself `display:flex`. Symptom (hit on Karbantartasok.js, but this
+is a shared component so it affected every `fill`-mode list page): no
+scrollbar appears anywhere, the table just silently gets clipped at the
+bottom by the DataTable root's own `overflow-hidden` — not a partial/wrong
+scroll, no scroll at all. If a future refactor of this wrapper div drops
+either the `flex flex-col` or the `min-h-0 flex-1` on the two nested divs,
+this regresses silently (no console error, no visual glitch until the list
+has enough rows to overflow) — verify with `scrollHeight > clientHeight` on
+the actual `overflow-auto` div, not just visually, since a short test list
+won't reveal it.
+
+## MySQL `rowCount() === 0` ≠ "row not found" — recurring backend correctness gotcha
+
+Several `update*` methods (found and fixed in `karbantartasokInterface.php`'s
+`updateKamionKarbantartas`/`updateFurgonKarbantartas`/`updatePotkocsiKarbantartas`,
+2026-09-21) used to treat a PDO `UPDATE ... WHERE id = :id AND admin =
+:admin_scope`'s `rowCount() === 0` as "the row doesn't exist / isn't yours" and
+returned `success: false`. This is wrong: MySQL's `rowCount()` counts rows
+whose data actually CHANGED, not rows the `WHERE` clause matched — if the
+caller submits a form with no actual edits (e.g. presses "Mentés" without
+changing anything), the UPDATE succeeds but changes 0 columns, so `rowCount()`
+is 0 even though the row exists and belongs to the caller. The frontend then
+saw `success: false` and kept the edit modal open, which read as "Save is
+silently broken." **Fix pattern**: run a separate `SELECT id FROM ... WHERE
+id = :id AND admin = :admin_scope AND torolt = 'N'` existence/ownership check
+*before* the UPDATE, and treat the UPDATE's own `execute()` as unconditionally
+successful once that check passes — don't gate success on `rowCount()`
+afterwards. **If a similar "click Save, nothing happens" report comes in for
+any other domain module's `update*` method, check this exact pattern first**
+— it's easy to have been copy-pasted along with the rest of the per-domain
+CRUD boilerplate (kamion/potkocsi/furgon/soforok/etc. all originated from
+copying each other).
+
+## Long-tail szolgáltatás-oldalak (ServicePage.js) — vizuális redesign a főoldal motívumaival (2026-09-21)
+
+A 6 `src/views/landing/*.js` oldal közös sablonja (`components/Landing/
+ServicePage.js`) korábban jóval visszafogottabb volt, mint a `Landing.js`
+főoldal — sok látogató közvetlenül ezekre az oldalakra érkezik keresőből,
+és a stílusbeli eltérés rontotta a cég-benyomást. A redesign a főoldal
+tényleges vizuális nyelvét hozta át, NEM egy új dizájnt talált ki:
+
+- **`components/Landing/RouteDivider.js`** és **`components/Landing/
+  Reveal.js`** — korábban mindkettő csak a `Landing.js`-en belül, modul-
+  szintű (nem exportált) függvényként létezett. Kiemelve önálló, exportált
+  komponensekbe, hogy a `ServicePage.js` (és bármely jövőbeli landing-szerű
+  oldal) újrahasználhassa — a `Landing.js` ugyanezeket importálja most,
+  viselkedése változatlan.
+- A `ServicePage.js` hero szekciója a `<main>` (`max-w-5xl`) elé, önálló
+  teljes szélességű `<section>`-né lett kiemelve — ugyanaz a szerkezeti
+  minta, mint a `Landing.js` hero-jánál —, hogy a `HungaryMapBackground`/
+  `EuropeMapBackground` (a főoldal signature motívuma) a teljes viewport-
+  szélességet kitölthesse, ne csak a szűk olvasási oszlopot. A korábbi,
+  oldalankénti nagyméretű halvány ikon megmaradt, rétegezve a térkép fölé.
+- "Miért minket" bullets és a referencia-kártyák a `Landing.js` FEATURES-
+  kártyáival egyező, hover-lift-es (`hover:shadow-xl hover:-translate-y-1`),
+  `Reveal`-lel animált kártyákra váltottak (korábban sima ikon+szöveg sor/
+  border volt).
+- Két `RouteDivider` (szaggatott vonal + kamion-ikonos medál) került be:
+  a bullets/egyedi-tartalom határán és a GYIK/ajánlatkérés határán.
+- A CTA-gombok kaptak egy önálló (`.svcpage-cta-shimmer`, `prefers-reduced-
+  motion`-t tiszteletben tartó) fénycsíkos hover-animációt, a `Landing.js`
+  hero CTA-jának mintájára, de saját, ütközésmentes class-névvel.
+- A nav `sticky top-0 z-50` lett (korábban a dokumentum normál folyásában
+  görgött el) — a `Landing.js` fix navjához hasonló, tartósan elérhető
+  "vissza a főoldalra"/nyelvváltó sáv.
+- **A `Footer.js` szekció-címkéinek (Szolgáltatásaink/Cég/Kapcsolat) színe
+  `text-[#2F4DE0]`-ről `text-white/80`-ra változott** — a korábbi élénkkék
+  szín a sötét (`#2E3239`) háttéren rosszul olvasható volt (visszajelzés
+  alapján javítva, nem auditált kontraszt-mérésből).
+
+Élőben, Playwright-tal, a helyi dev-szerveren (`npm start` + `php8.2 -S
+localhost:8001`) ellenőrizve mindkét érintett oldaltípus: a
+`/belfoldi-fuvarozas-arajanlat` long-tail oldal (hero-térkép, route-divider-
+ek, kártyák, footer-szín) és maga a `Landing.js` főoldal (a Reveal/
+RouteDivider kiemelés nem okozott regressziót).
+
+**Folytatás, még aznap — hero-újratervezés (a fenti verzió túl visszafogottnak bizonyult)**:
+felhasználói visszajelzés szerint a fenti első kör hero-ja még mindig
+"csúnya", és a szolgáltatásonkénti nagy háttér-ikon (`opacity: 0.07`)
+gyakorlatilag láthatatlan volt ("nem is jelennek meg a kamionok"). A hero
+emiatt egy **két hasábos** elrendezésre váltott (`grid lg:grid-cols-
+[1.1fr_0.9fr]`, ugyanaz az arány, mint a `Landing.js` hero-jáé): bal oldalt
+nagyobb (`text-6xl`) címsor + telefonos másodlagos CTA (`servicePage.
+callPrefix`, hardcode-olt `+36 30 811 5776`, ugyanaz a szám, mint a
+`Footer.js`/`QuoteForm.js`-ben), jobb oldalt egy **erős kontrasztú, sötét
+jelvény-kártya** (`linear-gradient(150deg, #23262B, #17191D)`) a
+szolgáltatás `Icon`-jával TELJES opacitáson, nagy méretben (`text-[160px]`
+desktopon), oldalankénti `accent`-színű felső csíkkal/izzással — ugyanaz a
+márka-nyelv, mint a `Landing.js` sötét ajánlatkérő-kártyájáé, csak
+oldalanként a saját accent-színben (a 6 oldal accent-je: kék/lila/
+smaragdzöld/borostyán/türkiz/pink, ld. az egyes `src/views/landing/*.js`
+fájlok `accent` propját). Új segédfüggvény: `ServicePage.js`-en belüli,
+NEM exportált `shade(hex, percent)` (a kártya gradiens-csíkjához/alsó
+felirat-színéhez világosít/sötétít egy accent hexet).
+
+A "Miért minket" bullets-szekció korábban — egyedül az oldalon — nem
+kapott saját eyebrow+cím párost, csak egyenesen a kártyarács indult; most
+kapott (`servicePage.whyUsEyebrow`/`whyUsTitle`, új i18n kulcsok
+`src/i18n/hu.js`/`en.js`-ben). A bullets-kártyák hover-je is oldalankénti
+accent-színt kapott (`onMouseEnter`/`onMouseLeave`-vel írt inline
+`borderColor`, mert Tailwind statikus class-osztályai nem tudnak futásidejű
+JS-propból jövő tetszőleges színt kifejezni — ez az egyetlen hely a
+fájlban, ahol JS-alapú hover-szín szükséges, a többi hover Tailwind
+`hover:`-osztály marad).
+
+Mind a 6 szolgáltatás-oldal (eltérő accent-szín), a mobil nézet (390px) és
+az angol (`/en/...`) változat élőben, Playwright-tal ellenőrizve — a
+jelvény-kártya, a telefon-CTA és az új "Why choose us" cím mindenhol
+helyesen jelenik meg, fordítva is.
+
+**Harmadik kör, ugyanaznap — a jelvény-kártya tartalommal töltése + kontraszt/térköz finomítás**:
+felhasználói UX-review a fenti verzióra: a sötét kártya a nagy, középre
+helyezett ikonhoz képest túl üresnek hatott, a leíró bekezdés/eyebrow-jelvény
+halvány volt, a hero és a "Miért minket" szekció között kevés volt a
+térköz. Mind javítva:
+- A jelvény-kártya elrendezése megváltozott: a szolgáltatás-ikon most
+  **háttér-motívumként**, nagyban, a jobb alsó sarokba vágva jelenik meg
+  (`absolute -bottom-10 -right-10 text-[240px] opacity-[0.08]`), az
+  előtérben pedig VALÓS tartalom van — ikon-jelvény + `eyebrow`, a
+  szolgáltatás neve (`currentServiceLabel`, a már meglévő SERVICE_PAGES/i18n
+  lookupból, nincs új szöveg), és a `bullets` prop első 3 elemének rövid
+  checklistája (csak a `title`, nem a teljes leírás). **Szándékosan nem
+  kitalált adat** (pl. biztosítási összeghatár) került bele — a felhasználó
+  ezt is felajánlotta alternatívaként, de a projekt "no fake data"
+  konvenciója miatt a már létező, fordított `bullets`-tartalom újrahasznosítása
+  volt a helyes választás.
+- Intro bekezdés `text-[#23262B]/75` → `/85`; az eyebrow-jelvény `text-xs`
+  (12px, normál súly) → `text-[13px] font-bold`, sötétebb szövegszín
+  (`shade(accent, -8)`) a jobb kontrasztért.
+  Új szabály, ha ez a minta újra előjön: `font-[Overpass_Mono] font-bold`
+  együtt IDE-ben "cssConflict" figyelmeztetést ad (mindkettő `font-`
+  Tailwind-prefixű), ez ÁLPOZITÍV — a kettő ténylegesen különböző CSS
+  tulajdonságot állít (font-family vs. font-weight), ugyanez a pár már
+  korábban is bevett minta a `Landing.js`-ben, biztonságosan figyelmen
+  kívül hagyható.
+- Hero alsó paddingje (`pb-16 md:pb-24` → `pb-20 md:pb-28`) és az ALATTA lévő
+  öt szekció mindegyikének (`Miért minket` már korábban `py-14` volt,
+  Referenciák/GYIK/Ajánlatkérés/Egyéb szolgáltatások korábban `py-10` volt)
+  egységesen `py-14`-re bővült — konzisztens, nagyvonalúbb függőleges ritmus
+  az egész oldalon.
+- **A "logó nem vezet vissza a főoldalra" visszajelzés téves volt** — élőben,
+  Playwright-tal rákattintva a logóra ténylegesen navigál `/`-re (a kód már
+  korábban is `<Link to={localizePath("/", locale)}>`-ba csomagolta) — nem
+  igényelt kódmódosítást, csak megerősítést.
+
+Mind a 6 szolgáltatás-oldal (a 6 eltérő accent-szín, beleértve az eltérő
+sziluettű ikonokat is, pl. villám/konfetti a nagy háttér-motívumként) és a
+mobil nézet élőben, Playwright-tal újra ellenőrizve a változtatások után.
+
+**Negyedik kör, ugyanaznap — a sötét gradiens-kártya lecserélése valódi
+kamion-fotóra + "Rólunk" szekció**: felhasználói visszajelzés szerint a
+jobb oldali sötét, gradienses+glow-buborékos jelvény-kártya "nagyon AI-os
+hatást keltett" — ez pontosan a `frontend-design` skill által nevesített
+egyik generikus AI-alapértelmezés (sötét háttér + egyetlen élénk
+accent-szín, dekoratív blur-körökkel). Cserélve a cég saját, valódi
+kamion-fotóira, amik már korábban is léteztek és be voltak vezetve a
+`Landing.js`-en, csak a `ServicePage.js` sablon nem használta őket:
+- **Hero jobb oszlop**: `/kamion-orszagut-szikora-transz.jpg` (a "SZIKORA
+  TRANSZ" felirat jól látszik a fülkén) — a szintetikus gradiens-háttér
+  helyett a valódi fotóra oldalanként az `accent` szín finom átlós
+  tintként kerül (`linear-gradient(140deg, ${accent}66, transparent 55%)`),
+  plusz egy fekete felfutás alulra (`from-black/85 via-black/15`) a
+  ráhelyezett fehér szöveg olvashatóságáért — ugyanaz a minta, mint a
+  `Landing.js` "Miért válasszon minket" képaláírásos kártyájáé.
+- **Új "Rólunk" szekció** (a "Miért minket" kártyák és az oldal-specifikus
+  `children` között): felhasználói kérésre ("legyen pár mondat megint a
+  csapatról") — a MÁR LÉTEZŐ, jóváhagyott `landing.about.*` fordítás
+  (cégtörténet 2 bekezdésben + "Karbantartott flotta"/"Tapasztalt sofőrök"
+  tiles) újrahasznosítva, ugyanazzal a `t("landing.about.*")` kulcs-
+  struktúrával, mint a `Landing.js`-en. **Szándékosan nem új, kitalált
+  csapat-szöveg** — a projekt korábbi SEO-audit köre (ld. "SEO audit
+  javítások" feljebb) kifejezetten óva intett attól, hogy névvel jelölt
+  csapattag-bemutatkozást találjunk ki valós adat nélkül; a meglévő,
+  már publikált cégtörténet-szöveg újrafelhasználása ütközésmentes ezzel a
+  szabállyal. Fotó: `/kamionflotta-szikora-transz.jpg` (a MÁSIK valódi
+  céges kép, hogy ne ismétlődjön ugyanaz a fotó kétszer egy oldalon belül).
+  Mobilon a kép a szöveg ALÁ kerül (`order-2 lg:order-1` a képen, `order-1
+  lg:order-2` a szövegen) — ugyanaz a minta, mint a `Landing.js` "Rólunk"
+  szekciójáé.
+- Mindkét fotó (`kamion-orszagut-szikora-transz.*`, `kamionflotta-szikora-
+  transz.*`) már korábban is a `public/` gyökerében élt, `.jpg`+`.webp`
+  párban — nem került be új kép-asset.
+
+Több accent-színnel (kék/pink) és mobil nézetben is élőben ellenőrizve
+Playwright-tal — a fotó-hero és a Rólunk szekció mindenhol helyesen
+jelenik meg, angolul (`/en/...`) is.
+
+**Ötödik kör, ugyanaznap — a kamion-fotó vágásának pontosítása + a szöveg
+leválasztása a fotóról, egységes kártya-magasság**: két egymást követő
+finomítás:
+1. A hero jobb oszlopa eredetileg egy `min-h`-val (nem a fotó arányával)
+   méretezett dobozban jelent meg — mivel a doboz aránya nem egyezett a
+   forrás-fotó (`kamion-orszagut-szikora-transz.jpg`) tényleges 1200×900
+   (4:3) arányával, az `object-cover` levágta a kamion elejét. Fix: a fotó
+   konténere `aspect-[4/3]`-ra váltott (pontosan a forrás-fotó aránya) —
+   egyező arány mellett az `object-cover` semmit nem vág le.
+2. A szöveg (eyebrow+ikon, szolgáltatásnév, 2 checklist-pont) korábban a
+   fotóra RÁÚSZTATVA jelent meg (`absolute` overlay + fekete felfutás-
+   gradiens a fotó alján) — visszajelzés: ez vizuálisan "belenyúlt" a
+   kamionba. Fix: a szöveg egy KÜLÖN, a fotó ALATTI sötét panelre (`#23262B`
+   → `#17191D` gradiens) került, rögzített `min-h`-val (`min-h-[196px]
+   md:min-h-[212px]`) és `justify-center`-rel — így mind a 6 oldal kártyája
+   PONTOSAN azonos teljes magasságú (élőben mérve: 406.8×517.1px 1440px
+   viewport-on, oldaltól függetlenül), a rövidebb/hosszabb szolgáltatásnév
+   vagy checklist-szöveg nem befolyásolja a kártya méretét, csak a panelen
+   belüli függőleges elhelyezést. Ha ez a kártya valaha újra módosul: a
+   `min-h`-t a panel LEGHOSSZABB várható tartalmához (2 checklist-sor +
+   hosszabb szolgáltatásnév) kell igazítani, egy kis tartalék-térrel, NEM a
+   ténylegesen megjelenő tartalomhoz — ez tartja egységesnek a 6 oldal
+   kártyáját.
+
+Élőben, Playwright-tal, `getBoundingClientRect()`-tel megmérve két eltérő
+tartalmú oldalon (rövid "Egyedi árajánlat" vs. hosszabb "Nemzetközi
+fuvarozás, teljes körű vámügyintézéssel") — a kártya mérete bájtra pontosan
+egyezik. Mobilon is ellenőrizve, a teljes kamion látszik, a szöveg nem lóg
+bele a fotóba.
+
+**Hatodik kör, ugyanaznap — grid-szélesség bug (Rendezvényszállítás kártya
+kisebb volt) + szöveg vissza a fotóra, de csak a jobb oldalára**:
+1. **Grid `min-w-0` bug**: a hero `grid lg:grid-cols-[1.1fr_0.9fr]` bal
+   oszlop-diveje nem kapott `min-w-0`-t — egy `fr` track alapból nem megy a
+   tartalma min-content szélessége alá, és a "Rendezvényszállítás" (a 6 oldal
+   közül az egyetlen egybeírt, kötőjelezhetetlen, ~20 karakteres összetett
+   szó a `h1`-ben) min-content szélessége szélesebb volt, mint amennyit az
+   `1.1fr` adott volna — ez ELVETTE a helyet a jobb oldali `0.9fr` kártya-
+   oszloptól, láthatóan kisebbé téve azt EZEN az egy oldalon. Fix: `min-w-0`
+   mindkét grid-oszlopon (a `min-w-0` jobb oldalon csak védelemből van, a
+   tényleges hibát a bal oldali hiányzó `min-w-0` okozta). **Általános
+   tanulság, ha egy jövőbeli grid-alapú két-oszlopos elrendezésnél egy
+   ADOTT tartalom (nem minden) esetén tér el váratlanul egy testvér-oszlop
+   mérete**: elsőként ellenőrizd, van-e a `fr`-track-es oszlopokon
+   `min-w-0` — enélkül egy hosszú, törhetetlen szó/token csendben
+   szétfeszítheti a saját track-jét a testvér track rovására, `overflow`
+   vagy konzol-hiba nélkül.
+2. **Szöveg vissza a fotóra, csak jobbra**: a felhasználó visszajelzése
+   szerint az előző (ötödik) kör "fotó + külön alsó panel" megoldása
+   túlzás volt — jobban tetszett, amikor a szöveg magán a fotón volt, csak
+   ne takarja ki magát a kamiont. Fix: a szöveg visszakerült a fotóra, de
+   `absolute inset-y-0 right-0 w-[62%]` — csak a fotó JOBB ~62%-ára (ahol a
+   pótkocsi ponyvája van, vizuálisan "üresebb" terület), a fülke (bal
+   oldal, a "SZIKORA TRANSZ" felirattal) mindig szabadon marad. A sötétítő
+   elmosás is csak erre a jobb sávra korlátozódik
+   (`linear-gradient(90deg, transparent 0%, rgba(10,12,16,.55) 32%,
+   rgba(10,12,16,.92) 100%)`), nem a teljes fotóra. A külön alsó panel
+   (ötödik kör) megszűnt — a kártya megint egyetlen `aspect-[4/3]` fotó,
+   nincs plusz sötét sáv alatta, így a kamion arányosan NAGYOBB helyet
+   foglal a kártyán, mint amikor a fotó csak a kártya ~59%-át tette ki.
+
+Élőben, Playwright `getBoundingClientRect()`-tel megerősítve: a
+Rendezvényszállítás és a Belföldi fuvarozás kártyája most PONTOSAN
+egyező méretű (406.8×305.1px 1440px viewport-on) — a grid-bug előtt ez
+eltért. Mobilon is ellenőrizve.
+
+**Hetedik kör, ugyanaznap — `ContentCard.js`: az oldalspecifikus
+mélyebb-magyarázat szekció kártyásítása mind a 6 oldalon**: a `children`-be
+átadott, oldalspecifikus "elmélyülő" tartalom (pl. "Hogyan alakul ki a
+belföldi fuvar ára?", "Hogyan zajlik a kárrendezés lépésről lépésre?")
+eddig egy sima `<h2>` + plain `<p>`-bekezdések voltak, semmilyen kártya-
+kerettel — visszajelzés: "nagyon nyers". Új, megosztott komponens:
+**`components/Landing/ContentCard.js`** (`heading`/`accent`/`icon` props +
+`children`) — fehér kártya (`rounded-2xl border shadow-sm`), bal oldali
+accent-színű gradiens-csík, jobb felső sarokban egy nagyon halvány
+(`opacity: 0.06`), nagyméretű ikon-vízjel (ugyanaz az ikon, amit az adott
+oldal hero-ja is használ — pl. `PiLightningLight` az Expresszen), a
+`heading` fölötte. **A komponens szándékosan NEM ír elő fix belső
+struktúrát** — csak a kártya-keretet/fejlécet adja, a tényleges tartalmat
+(bekezdések VAGY, mint a Biztosított szállítás oldalon, egy számozott
+`<ol>` lista + utána bekezdések) a hívó oldal adja `children`-ként
+változtatás nélkül. Mind a 6 `src/views/landing/*.js` fájl frissült: a
+korábbi `<section className="py-10 border-t ..."><h2>...</h2><div
+className="space-y-4 text-[#23262B]/70 ...">...</div></section>` mintát
+`<ContentCard heading={...} accent="..." icon={...}>...</ContentCard>`-ra
+cserélve (a `<section>`/`<h2>` a komponensbe költözött, a belső
+`<div>`/`<ol>`/`<p>` tartalom változatlan maradt, csak a szövegszín `/70`
+→ `/80`-ra nőtt a jobb kontraszt kedvéért, ugyanaz a korábbi kör
+elvárása). Mellékhatásként a szekció `py-10` → `py-14`-re bővült, így ez a
+blokk is illeszkedik a lap többi részének (ld. ötödik kör) nagyvonalúbb
+függőleges ritmusához.
+
+Két oldalon (Expressz — sima bekezdések, Biztosított — számozott lista +
+bekezdések) élőben, Playwright-tal ellenőrizve desktopon és mobilon is —
+mindkettő jól néz ki a kártyás kereten belül, a numbered-list-es változat
+sem tört el.

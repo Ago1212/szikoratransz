@@ -12,6 +12,7 @@ import {
   PiUploadSimpleLight,
   PiFileLight,
   PiWrenchLight,
+  PiPaperclipLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { downloadFileAction } from "utils/downloadFileAction";
@@ -438,6 +439,24 @@ const Karbantartasok = () => {
       render: (row) => (row.koltseg ? formatHuf(row.koltseg) : "—"),
     },
     {
+      key: "fajlok",
+      label: "Fájl",
+      render: (row) => {
+        const count = files[row.id]?.length || 0;
+        return count > 0 ? (
+          <span
+            className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-1 text-xs font-semibold text-brand-700 dark:bg-brand-950/40 dark:text-brand-300"
+            title={`${count} fájl csatolva`}
+          >
+            <PiPaperclipLight className="h-3.5 w-3.5" />
+            {count}
+          </span>
+        ) : (
+          <span className="text-ink-300 dark:text-ink-600">—</span>
+        );
+      },
+    },
+    {
       key: "status",
       label: "Státusz",
       render: (row) => {
@@ -502,6 +521,11 @@ const Karbantartasok = () => {
       key: "koltseg",
       label: "Költség",
       exportValue: (row) => (row.koltseg ? formatHuf(row.koltseg) : ""),
+    },
+    {
+      key: "fajlok",
+      label: "Fájlok száma",
+      exportValue: (row) => files[row.id]?.length || 0,
     },
     { key: "kovetkezo_karbantartas", label: "Következő karbantartás dátuma" },
     {

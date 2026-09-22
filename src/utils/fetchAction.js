@@ -21,7 +21,7 @@ export const fetchAction = async (action, payload) => {
   //const modulename = "https://szikora-transz.hu/backend/api.php"; //http://localhost:8000/api.php
   const modulename =
     process.env.NODE_ENV === "development"
-      ? "http://localhost:8001/api.php"
+      ? "http://localhost:8000/api.php"
       : "https://szikora-transz.hu/backend/api.php";
 
   try {
@@ -45,7 +45,10 @@ export const fetchAction = async (action, payload) => {
     // `{success: false, ...}`-ként (az utóbbi minta csak az egyes akciók
     // saját, belső try/catch-eiből származik) — mindkét alakot figyelnünk
     // kell, különben a lejárt-munkamenet felismerés némán sosem sülne el.
-    if (result?.message === SESSION_EXPIRED_MESSAGE && (result?.error === true || result?.success === false)) {
+    if (
+      result?.message === SESSION_EXPIRED_MESSAGE &&
+      (result?.error === true || result?.success === false)
+    ) {
       handleExpiredSession();
     }
     return result;
