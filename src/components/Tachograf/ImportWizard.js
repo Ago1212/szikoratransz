@@ -172,7 +172,7 @@ export default function ImportWizard({ open, onClose, soforok, onApplied }) {
                 ? "bg-brand-600 text-white"
                 : lepes > i + 1
                 ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300"
-                : "bg-slate-100 text-ink-400 dark:bg-ink-800 dark:text-ink-500"
+                : "bg-slate-100 text-ink-400 dark:bg-ink-800 dark:text-ink-300"
             }`}
           >
             {i + 1} · {label}
@@ -182,7 +182,7 @@ export default function ImportWizard({ open, onClose, soforok, onApplied }) {
 
       {lepes === 1 && (
         <div className="space-y-4">
-          <p className="text-sm text-ink-500 dark:text-ink-400">
+          <p className="text-sm text-ink-500 dark:text-ink-300">
             Töltsd fel a sofőrkártya-letöltés (.ddd) fájl(oka)t — egyszerre több sofőr kártyája is kiválasztható.
             A feltöltés még nem menti el az adatokat — előbb egy előnézetet mutatunk, amit jóváhagyás után lehet alkalmazni.
           </p>
@@ -205,12 +205,12 @@ export default function ImportWizard({ open, onClose, soforok, onApplied }) {
 
           {digests.map((d, index) => (
             <div key={d.fajlnev + index} className="space-y-3 rounded-2xl border border-ink-100 p-4 dark:border-ink-700">
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">{d.fajlnev}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-300">{d.fajlnev}</p>
               <div className="rounded-xl bg-slate-50 p-3 text-sm dark:bg-ink-800">
                 <p className="font-semibold text-brand-900 dark:text-ink-50">
                   {d.kartyabirtokos.holderSurname} {d.kartyabirtokos.holderFirstNames}
                 </p>
-                <p className="text-ink-500 dark:text-ink-400">Kártyaszám: {d.kartyabirtokos.cardNumber}</p>
+                <p className="text-ink-500 dark:text-ink-300">Kártyaszám: {d.kartyabirtokos.cardNumber}</p>
               </div>
 
               <div className="flex flex-wrap items-end gap-3">
@@ -284,7 +284,7 @@ export default function ImportWizard({ open, onClose, soforok, onApplied }) {
               így görgetni kellett hozzá. `sticky bottom-0` a modal scroll-
               konténerének aljához rögzíti, mindig látható marad. */}
           <div className="sticky bottom-0 -mx-6 flex justify-end gap-2 border-t border-ink-100 bg-white px-6 py-3 dark:border-ink-800 dark:bg-ink-900">
-            <button type="button" onClick={handleBezaras} className="rounded-xl px-4 py-2 text-sm font-semibold text-ink-500 hover:bg-slate-100 dark:text-ink-400 dark:hover:bg-ink-800">
+            <button type="button" onClick={handleBezaras} className="rounded-xl px-4 py-2 text-sm font-semibold text-ink-500 hover:bg-slate-100 dark:text-ink-300 dark:hover:bg-ink-800">
               Mégsem
             </button>
             <SaveButton onClick={handleAlkalmazas} isSaving={alkalmazasLoading} label="Import alkalmazása" savingLabel="Alkalmazás..." />
@@ -298,7 +298,7 @@ export default function ImportWizard({ open, onClose, soforok, onApplied }) {
           <p className="text-lg font-semibold text-brand-900 dark:text-ink-50">
             {eredmeny.importalt} nap importálva
           </p>
-          <p className="text-sm text-ink-500 dark:text-ink-400">{eredmeny.kihagyva} nap már korábban rögzítve volt.</p>
+          <p className="text-sm text-ink-500 dark:text-ink-300">{eredmeny.kihagyva} nap már korábban rögzítve volt.</p>
           <button
             type="button"
             onClick={handleBezaras}

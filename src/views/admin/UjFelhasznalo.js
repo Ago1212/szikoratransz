@@ -81,7 +81,7 @@ export default function UjFelhasznalo() {
       <button
         type="button"
         onClick={() => (selectedRole ? setSelectedRole(null) : history.push("/admin/felhasznalok"))}
-        className="mb-4 inline-flex w-fit items-center gap-1.5 text-sm font-medium text-ink-500 transition-colors duration-200 ease-fluid hover:text-brand-700 dark:text-ink-400 dark:hover:text-brand-300"
+        className="mb-4 inline-flex w-fit items-center gap-1.5 text-sm font-medium text-ink-500 transition-colors duration-200 ease-fluid hover:text-brand-700 dark:text-ink-300 dark:hover:text-brand-300"
       >
         <PiArrowLeftLight className="h-4 w-4" />
         {selectedRole ? "Vissza a szerepkör-választáshoz" : "Vissza a felhasználókhoz"}
@@ -108,7 +108,7 @@ export default function UjFelhasznalo() {
                     </span>
                     <span>
                       <span className="block text-sm font-semibold text-ink-900 dark:text-ink-50">{role.nev}</span>
-                      <span className="block text-xs text-ink-500 dark:text-ink-400">
+                      <span className="block text-xs text-ink-500 dark:text-ink-300">
                         {role.kulcs === "admin"
                           ? "Teljes hozzáférés minden menüponthoz."
                           : "A pontos hozzáférése a Jogosultságok oldalon állítható be."}
@@ -127,7 +127,7 @@ export default function UjFelhasznalo() {
                 </span>
                 <span>
                   <span className="block text-sm font-semibold text-ink-900 dark:text-ink-50">Sofőr</span>
-                  <span className="block text-xs text-ink-500 dark:text-ink-400">
+                  <span className="block text-xs text-ink-500 dark:text-ink-300">
                     Saját mobil felület — jármű-hozzárendelés, bejelentések, dokumentum-lejáratok. A
                     meglévő sofőr-felvevő űrlapra visz tovább.
                   </span>
@@ -168,7 +168,7 @@ export default function UjFelhasznalo() {
                   className="md:col-span-2"
                 />
               </FormSection>
-              <p className="flex items-center gap-1.5 text-xs text-ink-500 dark:text-ink-400">
+              <p className="flex items-center gap-1.5 text-xs text-ink-500 dark:text-ink-300">
                 <PiCheckCircleFill className="h-4 w-4 text-emerald-500" />
                 A szerepkör bármikor módosítható a Felhasználók listáján.
               </p>

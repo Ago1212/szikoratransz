@@ -19,7 +19,7 @@ export default function PrimaryButton({
 }) {
   const variantClass =
     variant === "ghost"
-      ? "text-ink-500 hover:bg-slate-100 hover:text-ink-800 dark:text-ink-400 dark:hover:bg-ink-800 dark:hover:text-ink-100"
+      ? "text-ink-500 hover:bg-slate-100 hover:text-ink-800 dark:text-ink-300 dark:hover:bg-ink-800 dark:hover:text-ink-100"
       : "bg-brand-600 text-white shadow-soft hover:bg-brand-700";
 
   return (

@@ -109,7 +109,7 @@ export default function JarmuLista({ rows, kivalasztott, onSelect }) {
           folyásába illeszkedik, mint minden más mobil kártyalista. */}
       <div className="md:hidden">
         {rendezettSorok.length === 0 ? (
-          <p className="px-4 py-8 text-center text-sm text-ink-400 dark:text-ink-500">
+          <p className="px-4 py-8 text-center text-sm text-ink-400 dark:text-ink-300">
             Nincs a szűrésnek megfelelő jármű.
           </p>
         ) : (
@@ -127,13 +127,13 @@ export default function JarmuLista({ rows, kivalasztott, onSelect }) {
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="flex items-center gap-1.5 font-semibold text-brand-900 dark:text-ink-50">
-                    <JarmuIkon jarmu={p} className="h-4 w-4 flex-shrink-0 text-ink-400 dark:text-ink-500" />
+                    <JarmuIkon jarmu={p} className="h-4 w-4 flex-shrink-0 text-ink-400 dark:text-ink-300" />
                     {p.rendszam}
                   </span>
                   <StatusBadge tone={p._allapot.tone}>{p._allapot.label}</StatusBadge>
                 </div>
-                <span className="truncate text-xs text-ink-500 dark:text-ink-400">{p.cim || "—"}</span>
-                <div className="flex items-center justify-between text-[11px] text-ink-400 dark:text-ink-500">
+                <span className="truncate text-xs text-ink-500 dark:text-ink-300">{p.cim || "—"}</span>
+                <div className="flex items-center justify-between text-[11px] text-ink-400 dark:text-ink-300">
                   <span>{p.sebesseg}</span>
                   <span>{p.megtettUtMa != null ? `${formatKm(p.megtettUtMa)} km ma` : "—"}</span>
                   <span>{p._relativIdo}</span>
@@ -155,7 +155,7 @@ export default function JarmuLista({ rows, kivalasztott, onSelect }) {
               {OSZLOPOK.map((col) => (
                 <th
                   key={col.kulcs}
-                  className={`sticky top-0 z-10 whitespace-nowrap border-b border-ink-100 bg-white px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-ink-400 dark:border-ink-800 dark:bg-ink-900 dark:text-ink-500 ${col.thClass}`}
+                  className={`sticky top-0 z-10 whitespace-nowrap border-b border-ink-100 bg-white px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-ink-400 dark:border-ink-800 dark:bg-ink-900 dark:text-ink-300 ${col.thClass}`}
                 >
                   <button
                     type="button"
@@ -177,7 +177,7 @@ export default function JarmuLista({ rows, kivalasztott, onSelect }) {
           <tbody>
             {rendezettSorok.length === 0 ? (
               <tr>
-                <td colSpan={OSZLOPOK.length} className="px-4 py-8 text-center text-sm text-ink-400 dark:text-ink-500">
+                <td colSpan={OSZLOPOK.length} className="px-4 py-8 text-center text-sm text-ink-400 dark:text-ink-300">
                   Nincs a szűrésnek megfelelő jármű.
                 </td>
               </tr>
@@ -197,7 +197,7 @@ export default function JarmuLista({ rows, kivalasztott, onSelect }) {
                 >
                   <td className="whitespace-nowrap px-3 py-2.5 font-semibold text-brand-900 dark:text-ink-50">
                     <span className="flex items-center gap-1.5">
-                      <JarmuIkon jarmu={p} className="h-4 w-4 flex-shrink-0 text-ink-400 dark:text-ink-500" />
+                      <JarmuIkon jarmu={p} className="h-4 w-4 flex-shrink-0 text-ink-400 dark:text-ink-300" />
                       <span className="truncate">{p.rendszam}</span>
                     </span>
                   </td>
@@ -210,7 +210,7 @@ export default function JarmuLista({ rows, kivalasztott, onSelect }) {
                   <td className="whitespace-nowrap px-3 py-2.5 tabular-nums text-ink-600 dark:text-ink-300">
                     {p.megtettUtMa != null ? `${formatKm(p.megtettUtMa)} km` : "—"}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2.5 text-ink-500 dark:text-ink-400">
+                  <td className="whitespace-nowrap px-3 py-2.5 text-ink-500 dark:text-ink-300">
                     <span title={p.idopont}>{p._relativIdo}</span>
                   </td>
                 </tr>

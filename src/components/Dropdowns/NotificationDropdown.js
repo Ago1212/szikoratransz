@@ -53,7 +53,7 @@ function NotificationRow({ n, onDismiss }) {
       )}
       <div className="min-w-0 flex-1 bg-inherit" style={{ transform: `translateX(${dragX}px)` }}>
         <p className="text-sm text-ink-700 dark:text-ink-100">{n.text}</p>
-        {n.meta && <p className="mt-0.5 text-xs text-ink-400 dark:text-ink-500">{n.meta}</p>}
+        {n.meta && <p className="mt-0.5 text-xs text-ink-400 dark:text-ink-300">{n.meta}</p>}
         {n.actions?.length > 0 && (
           <div className="mt-2 flex gap-2">
             {n.actions.map((action, ai) => (
@@ -128,7 +128,7 @@ export default function NotificationDropdown({ notifications = [], open, onClose
               <button
                 type="button"
                 onClick={() => onDismissAll(notifications.map((n) => n.id))}
-                className="rounded-lg px-2 py-1 text-xs font-semibold text-ink-400 hover:bg-slate-100 hover:text-ink-700 dark:text-ink-500 dark:hover:bg-ink-800 dark:hover:text-ink-100"
+                className="rounded-lg px-2 py-1 text-xs font-semibold text-ink-400 hover:bg-slate-100 hover:text-ink-700 dark:text-ink-300 dark:hover:bg-ink-800 dark:hover:text-ink-100"
               >
                 Összes törlése
               </button>
@@ -137,7 +137,7 @@ export default function NotificationDropdown({ notifications = [], open, onClose
               ref={closeButtonRef}
               type="button"
               onClick={onClose}
-              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-slate-100 hover:text-ink-700 dark:text-ink-500 dark:hover:bg-ink-800 dark:hover:text-ink-100"
+              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-slate-100 hover:text-ink-700 dark:text-ink-300 dark:hover:bg-ink-800 dark:hover:text-ink-100"
               aria-label="Bezárás"
             >
               <PiXLight className="h-4 w-4" />
@@ -148,7 +148,7 @@ export default function NotificationDropdown({ notifications = [], open, onClose
         {notifications.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
             <PiCheckCircleLight className="h-7 w-7 text-ink-300 dark:text-ink-700" />
-            <p className="text-sm text-ink-400 dark:text-ink-500">
+            <p className="text-sm text-ink-400 dark:text-ink-300">
               Nincs új értesítésed. Minden naprakész.
             </p>
           </div>

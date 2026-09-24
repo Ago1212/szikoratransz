@@ -57,7 +57,7 @@ export default function FormField({
           id={fieldId}
         />
       ) : as === "info" ? (
-        <div className={`${inputClass} cursor-default bg-slate-100 text-ink-500 dark:bg-ink-800 dark:text-ink-400 ${inputClassName}`}>
+        <div className={`${inputClass} cursor-default bg-slate-100 text-ink-500 dark:bg-ink-800 dark:text-ink-300 ${inputClassName}`}>
           {inputProps.value || "-"}
         </div>
       ) : type === "date" ? (
@@ -116,7 +116,7 @@ export function FormSection({ id, title, icon: Icon, columns = 2, mobileColumns 
   return (
     <div id={id} className={`scroll-mt-4 ${className}`}>
       {title && (
-        <h4 className="mb-2.5 flex items-center gap-1.5 border-b border-ink-100 pb-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-ink-400 dark:border-ink-800 dark:text-ink-500">
+        <h4 className="mb-2.5 flex items-center gap-1.5 border-b border-ink-100 pb-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-ink-400 dark:border-ink-800 dark:text-ink-300">
           {Icon && <Icon className="h-3.5 w-3.5" />}
           {title}
         </h4>

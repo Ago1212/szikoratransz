@@ -71,7 +71,7 @@ function KpiDelta({ current, previous, higherIsBetter = true }) {
   if (previous === null || previous === undefined || previous === 0) return null;
   const valtozas = ((current - previous) / Math.abs(previous)) * 100;
   if (Math.abs(valtozas) < 0.5) {
-    return <span className="text-ink-400 dark:text-ink-500">Nincs érdemi változás</span>;
+    return <span className="text-ink-400 dark:text-ink-300">Nincs érdemi változás</span>;
   }
   const nott = valtozas > 0;
   const jo = nott === higherIsBetter;
@@ -234,7 +234,7 @@ function ImportMenu({ navUjSzam, onNav, navTitle, onBank, onMol }) {
               }}
               className="flex w-full items-center gap-2 px-3.5 py-2.5 text-left text-xs font-semibold text-ink-600 hover:bg-slate-50 dark:text-ink-300 dark:hover:bg-ink-800"
             >
-              <item.icon className="h-4 w-4 flex-shrink-0 text-ink-400 dark:text-ink-500" />
+              <item.icon className="h-4 w-4 flex-shrink-0 text-ink-400 dark:text-ink-300" />
               <span className="flex-1">{item.label}</span>
               {item.badge > 0 && (
                 <span className="flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
@@ -263,9 +263,9 @@ function ImportMenu({ navUjSzam, onNav, navTitle, onBank, onMol }) {
 function CategoryChip({ icon: Icon, label, value, dotClass }) {
   return (
     <div className="flex w-full flex-col gap-1 rounded-xl border border-ink-100 bg-white px-3 py-2.5 text-left shadow-soft dark:border-ink-800 dark:bg-ink-900">
-      <span className="flex items-center gap-1.5 text-xs font-semibold text-ink-500 dark:text-ink-400">
+      <span className="flex items-center gap-1.5 text-xs font-semibold text-ink-500 dark:text-ink-300">
         <span className={`h-2 w-2 flex-shrink-0 rounded-full ${dotClass}`} />
-        {Icon && <Icon className="h-3.5 w-3.5 flex-shrink-0 text-ink-400 dark:text-ink-500" />}
+        {Icon && <Icon className="h-3.5 w-3.5 flex-shrink-0 text-ink-400 dark:text-ink-300" />}
         <span className="truncate">{label}</span>
       </span>
       <span className="text-sm font-bold tabular-nums text-brand-900 dark:text-ink-50">{formatHuf(value)}</span>
@@ -388,12 +388,12 @@ function CashflowChart({ havi, isAdmin }) {
 // becslés — sosem mutatunk hamis pontosságot hiányos adatból számolva.
 function PerKmErtek({ ertek, lefedettseg }) {
   if (ertek === null || ertek === undefined) {
-    return <span className="text-ink-400 dark:text-ink-500">—</span>;
+    return <span className="text-ink-400 dark:text-ink-300">—</span>;
   }
   const hianyos = lefedettseg !== null && lefedettseg !== undefined && lefedettseg < 100;
   return (
     <span
-      className={hianyos ? "text-ink-500 dark:text-ink-400" : undefined}
+      className={hianyos ? "text-ink-500 dark:text-ink-300" : undefined}
       title={
         hianyos
           ? `A km-adat csak ${lefedettseg}%-ban áll rendelkezésre ebben az időszakban — a mutató becslés.`
@@ -446,7 +446,7 @@ function PeriodControl({ filter, onPreset, onFieldChange, displayedYear, onChang
             className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors duration-150 ${
               activePreset === p.key
                 ? "bg-white text-brand-700 shadow-soft dark:bg-ink-700 dark:text-brand-300"
-                : "text-ink-500 hover:text-ink-700 dark:text-ink-400 dark:hover:text-ink-100"
+                : "text-ink-500 hover:text-ink-700 dark:text-ink-300 dark:hover:text-ink-100"
             }`}
           >
             {p.label}
@@ -461,7 +461,7 @@ function PeriodControl({ filter, onPreset, onFieldChange, displayedYear, onChang
           type="button"
           onClick={() => document.getElementById("datumTol")?.focus()}
           className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors duration-150 ${
-            !activePreset ? "bg-white text-brand-700 shadow-soft dark:bg-ink-700 dark:text-brand-300" : "text-ink-400 hover:text-ink-700 dark:text-ink-500 dark:hover:text-ink-100"
+            !activePreset ? "bg-white text-brand-700 shadow-soft dark:bg-ink-700 dark:text-brand-300" : "text-ink-400 hover:text-ink-700 dark:text-ink-300 dark:hover:text-ink-100"
           }`}
         >
           Egyedi
@@ -487,7 +487,7 @@ function PeriodControl({ filter, onPreset, onFieldChange, displayedYear, onChang
         <button
           type="button"
           onClick={() => onChangeYear(-1)}
-          className="flex h-7 w-7 items-center justify-center rounded-md text-ink-500 transition-colors duration-150 hover:bg-white hover:text-brand-600 dark:text-ink-400 dark:hover:bg-ink-700 dark:hover:text-brand-300"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-ink-500 transition-colors duration-150 hover:bg-white hover:text-brand-600 dark:text-ink-300 dark:hover:bg-ink-700 dark:hover:text-brand-300"
           aria-label="Előző év (teljes évre ugrás)"
           title="Előző teljes évre ugrás"
         >
@@ -499,7 +499,7 @@ function PeriodControl({ filter, onPreset, onFieldChange, displayedYear, onChang
         <button
           type="button"
           onClick={() => onChangeYear(1)}
-          className="flex h-7 w-7 items-center justify-center rounded-md text-ink-500 transition-colors duration-150 hover:bg-white hover:text-brand-600 dark:text-ink-400 dark:hover:bg-ink-700 dark:hover:text-brand-300"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-ink-500 transition-colors duration-150 hover:bg-white hover:text-brand-600 dark:text-ink-300 dark:hover:bg-ink-700 dark:hover:text-brand-300"
           aria-label="Következő év (teljes évre ugrás)"
           title="Következő teljes évre ugrás"
         >
@@ -1292,11 +1292,11 @@ export default function Koltsegek() {
       render: (row) => (
         <span className="flex items-center gap-2">
           {row.tipus === "kamion" ? (
-            <PiTruckLight className="h-4 w-4 flex-shrink-0 text-ink-400 dark:text-ink-500" />
+            <PiTruckLight className="h-4 w-4 flex-shrink-0 text-ink-400 dark:text-ink-300" />
           ) : row.tipus === "furgon" ? (
-            <PiVanLight className="h-4 w-4 flex-shrink-0 text-ink-400 dark:text-ink-500" />
+            <PiVanLight className="h-4 w-4 flex-shrink-0 text-ink-400 dark:text-ink-300" />
           ) : (
-            <PiTruckTrailerLight className="h-4 w-4 flex-shrink-0 text-ink-400 dark:text-ink-500" />
+            <PiTruckTrailerLight className="h-4 w-4 flex-shrink-0 text-ink-400 dark:text-ink-300" />
           )}
           {row.rendszam}
         </span>
@@ -1452,18 +1452,18 @@ export default function Koltsegek() {
             {formatHuf(row.osszeg)}
             {row.bank_parositva === "I" && (
               <PiCheckCircleLight
-                className="h-3.5 w-3.5 flex-shrink-0 text-ink-400 dark:text-ink-500"
+                className="h-3.5 w-3.5 flex-shrink-0 text-ink-400 dark:text-ink-300"
                 title="Bank-igazolva — valós banki tranzakcióval párosítva"
               />
             )}
           </span>
           {row.deviza && row.deviza !== "HUF" && row.eredeti_osszeg && (
-            <span className="block text-xs font-normal text-ink-400 dark:text-ink-500">
+            <span className="block text-xs font-normal text-ink-400 dark:text-ink-300">
               {formatDeviza(row.eredeti_osszeg, row.deviza)}
             </span>
           )}
           {row.netto_osszeg && (
-            <span className="block text-xs font-normal text-ink-400 dark:text-ink-500">
+            <span className="block text-xs font-normal text-ink-400 dark:text-ink-300">
               nettó: {formatHuf(row.netto_osszeg)}
             </span>
           )}
@@ -1522,7 +1522,7 @@ export default function Koltsegek() {
       render: (row) =>
         row.forras === "tankolas" ? (
           <span
-            className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ink-400 dark:bg-ink-800 dark:text-ink-500"
+            className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ink-400 dark:bg-ink-800 dark:text-ink-300"
             title="Ez a sor a MOL tankolás-importból származik — a Tankolás modulban szerkeszthető, itt nem"
           >
             Tankolás
@@ -1751,7 +1751,7 @@ export default function Koltsegek() {
                     className={`flex flex-shrink-0 items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors duration-150 ${
                       activeTab === t.key
                         ? "bg-white text-brand-700 shadow-soft dark:bg-ink-700 dark:text-brand-300"
-                        : "text-ink-500 hover:text-ink-700 dark:text-ink-400 dark:hover:text-ink-100"
+                        : "text-ink-500 hover:text-ink-700 dark:text-ink-300 dark:hover:text-ink-100"
                     }`}
                   >
                     <t.icon className="h-4 w-4" />
@@ -1809,7 +1809,7 @@ export default function Koltsegek() {
                       className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors duration-150 ${
                         iranySzuro === opt.key
                           ? "bg-white text-brand-700 shadow-soft dark:bg-ink-700 dark:text-brand-300"
-                          : "text-ink-500 hover:text-ink-700 dark:text-ink-400 dark:hover:text-ink-100"
+                          : "text-ink-500 hover:text-ink-700 dark:text-ink-300 dark:hover:text-ink-100"
                       }`}
                     >
                       {opt.label}
@@ -1908,7 +1908,7 @@ export default function Koltsegek() {
           {activeTab === "chart" && (
             <div className="rounded-3xl bg-white p-4 shadow-soft ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800 sm:p-6">
               {adat.havi.length === 0 ? (
-                <p className="py-16 text-center text-sm text-ink-400 dark:text-ink-500">
+                <p className="py-16 text-center text-sm text-ink-400 dark:text-ink-300">
                   Nincs megjeleníthető adat ebben az időszakban.
                 </p>
               ) : (
@@ -1950,7 +1950,7 @@ export default function Koltsegek() {
                 className={`rounded-lg px-4 py-1.5 text-xs font-semibold transition-colors duration-150 ${
                   ujTetel.irany === opt.key
                     ? "bg-white text-brand-700 shadow-soft dark:bg-ink-700 dark:text-brand-300"
-                    : "text-ink-500 hover:text-ink-700 dark:text-ink-400 dark:hover:text-ink-100"
+                    : "text-ink-500 hover:text-ink-700 dark:text-ink-300 dark:hover:text-ink-100"
                 }`}
               >
                 {opt.label}
@@ -1996,7 +1996,7 @@ export default function Koltsegek() {
             )}
           </FormSection>
           {ujTetel.deviza && ujTetel.deviza !== "HUF" && (
-            <p className="-mt-2 text-xs text-ink-400 dark:text-ink-500">
+            <p className="-mt-2 text-xs text-ink-400 dark:text-ink-300">
               A forint-egyenérték a rögzítés pillanatában érvényes MNB-árfolyamon, automatikusan
               számítódik.
             </p>
@@ -2123,7 +2123,7 @@ export default function Koltsegek() {
                 setEditingTetelId(null);
                 setUjTetel(emptyEgyebTetel());
               }}
-              className="rounded-xl px-4 py-2 text-sm font-medium text-ink-500 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-800 dark:text-ink-400 dark:hover:bg-ink-800 dark:hover:text-ink-100"
+              className="rounded-xl px-4 py-2 text-sm font-medium text-ink-500 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-800 dark:text-ink-300 dark:hover:bg-ink-800 dark:hover:text-ink-100"
             >
               Mégse
             </button>
@@ -2145,7 +2145,7 @@ export default function Koltsegek() {
         maxWidth="max-w-5xl"
       >
         {!navVanBeallitva ? (
-          <p className="text-sm text-ink-500 dark:text-ink-400">
+          <p className="text-sm text-ink-500 dark:text-ink-300">
             A NAV Online Számla kapcsolat még nincs beállítva ehhez a céghez. Állítsd be a{" "}
             <span className="font-semibold text-ink-700 dark:text-ink-200">Beállítások</span> oldalon (technikai
             felhasználó adatai), utána itt lekérdezhetők a számlák.
@@ -2180,13 +2180,13 @@ export default function Koltsegek() {
             {navLekerdezve && (
               <>
                 {navTetelek.length === 0 ? (
-                  <p className="py-6 text-center text-sm text-ink-400 dark:text-ink-500">
+                  <p className="py-6 text-center text-sm text-ink-400 dark:text-ink-300">
                     Nincs számla a NAV-nál ebben az időszakban.
                   </p>
                 ) : (
                   <div className="max-h-96 overflow-auto rounded-xl border border-ink-100 dark:border-ink-800">
                     <table className="w-full min-w-[900px] text-sm">
-                      <thead className="sticky top-0 bg-slate-50 text-xs uppercase text-ink-400 dark:bg-ink-800 dark:text-ink-500">
+                      <thead className="sticky top-0 bg-slate-50 text-xs uppercase text-ink-400 dark:bg-ink-800 dark:text-ink-300">
                         <tr>
                           <th className="px-3 py-2 text-left"> </th>
                           <th className="px-3 py-2 text-left">Számlaszám</th>
@@ -2224,14 +2224,14 @@ export default function Koltsegek() {
                                 {t.irany === "bevetel" ? "Bevétel" : "Kiadás"}
                               </span>
                             </td>
-                            <td className="px-3 py-2 text-ink-500 dark:text-ink-400">{t.datum}</td>
-                            <td className="px-3 py-2 text-ink-500 dark:text-ink-400">{t.teljesites_datum || "—"}</td>
-                            <td className="px-3 py-2 text-ink-500 dark:text-ink-400">{t.fizetesi_hatarido || "—"}</td>
-                            <td className="px-3 py-2 text-ink-500 dark:text-ink-400">{t.partner_nev || "—"}</td>
+                            <td className="px-3 py-2 text-ink-500 dark:text-ink-300">{t.datum}</td>
+                            <td className="px-3 py-2 text-ink-500 dark:text-ink-300">{t.teljesites_datum || "—"}</td>
+                            <td className="px-3 py-2 text-ink-500 dark:text-ink-300">{t.fizetesi_hatarido || "—"}</td>
+                            <td className="px-3 py-2 text-ink-500 dark:text-ink-300">{t.partner_nev || "—"}</td>
                             <td className="px-3 py-2 text-right tabular-nums text-ink-700 dark:text-ink-200">
                               {t.osszeg_huf !== null ? formatHuf(t.osszeg_huf) : "—"}
                               {t.penznem && t.penznem !== "HUF" && (
-                                <span className="ml-1 text-xs text-ink-400 dark:text-ink-500">({t.penznem})</span>
+                                <span className="ml-1 text-xs text-ink-400 dark:text-ink-300">({t.penznem})</span>
                               )}
                             </td>
                             <td className="px-3 py-2">
@@ -2248,10 +2248,10 @@ export default function Koltsegek() {
                                   <option value="biztositas">Biztosítás</option>
                                 </select>
                               ) : (
-                                <span className="text-ink-400 dark:text-ink-500">—</span>
+                                <span className="text-ink-400 dark:text-ink-300">—</span>
                               )}
                             </td>
-                            <td className="px-3 py-2 text-xs text-ink-400 dark:text-ink-500">
+                            <td className="px-3 py-2 text-xs text-ink-400 dark:text-ink-300">
                               {t.mar_importalva
                                 ? "Már importálva"
                                 : t.mol_tankolasbol_fedve
@@ -2271,7 +2271,7 @@ export default function Koltsegek() {
                   <button
                     type="button"
                     onClick={() => setNavModalOpen(false)}
-                    className="rounded-xl px-4 py-2 text-sm font-medium text-ink-500 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-800 dark:text-ink-400 dark:hover:bg-ink-800 dark:hover:text-ink-100"
+                    className="rounded-xl px-4 py-2 text-sm font-medium text-ink-500 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-800 dark:text-ink-300 dark:hover:bg-ink-800 dark:hover:text-ink-100"
                   >
                     Mégse
                   </button>
@@ -2301,7 +2301,7 @@ export default function Koltsegek() {
         <div className="space-y-4">
           {!bankElemezve && (
             <>
-              <p className="text-sm text-ink-500 dark:text-ink-400">
+              <p className="text-sm text-ink-500 dark:text-ink-300">
                 Töltsd fel a bankod CSV-exportját — a rendszer megjelöli a hozzá kiválasztott
                 oszlopok alapján a már rögzített tételekkel valószínűleg egyező sorokat, a többit
                 pedig új tételként ajánlja fel. Semmi nem kerül be a Pénzforgalomba, amíg a
@@ -2377,7 +2377,7 @@ export default function Koltsegek() {
           {bankElemezve && (
             <>
               {(bankMarFeldolgozottSorSzam > 0 || bankKihagyottSorSzam > 0) && (
-                <p className="text-xs text-ink-400 dark:text-ink-500">
+                <p className="text-xs text-ink-400 dark:text-ink-300">
                   {bankMarFeldolgozottSorSzam > 0 &&
                     `${bankMarFeldolgozottSorSzam} sor egy korábbi importból már fel van dolgozva, ezért nem jelenik meg újra. `}
                   {bankKihagyottSorSzam > 0 && `${bankKihagyottSorSzam} sort nem sikerült értelmezni (hiányos dátum/összeg).`}
@@ -2385,13 +2385,13 @@ export default function Koltsegek() {
               )}
 
               {bankSorok.length === 0 ? (
-                <p className="py-6 text-center text-sm text-ink-400 dark:text-ink-500">
+                <p className="py-6 text-center text-sm text-ink-400 dark:text-ink-300">
                   Nincs feldolgozható, még ismeretlen sor ebben a fájlban.
                 </p>
               ) : (
                 <div className="max-h-96 overflow-y-auto rounded-xl border border-ink-100 dark:border-ink-800">
                   <table className="w-full text-sm">
-                    <thead className="sticky top-0 bg-slate-50 text-xs uppercase text-ink-400 dark:bg-ink-800 dark:text-ink-500">
+                    <thead className="sticky top-0 bg-slate-50 text-xs uppercase text-ink-400 dark:bg-ink-800 dark:text-ink-300">
                       <tr>
                         <th className="px-3 py-2 text-left">Dátum</th>
                         <th className="px-3 py-2 text-right">Összeg</th>
@@ -2402,7 +2402,7 @@ export default function Koltsegek() {
                     <tbody>
                       {bankSorok.map((s) => (
                         <tr key={s.hash} className="border-t border-ink-100 align-top dark:border-ink-800">
-                          <td className="px-3 py-2 text-ink-500 dark:text-ink-400">{s.datum}</td>
+                          <td className="px-3 py-2 text-ink-500 dark:text-ink-300">{s.datum}</td>
                           <td
                             className={`px-3 py-2 text-right tabular-nums font-medium ${
                               s.osszeg >= 0 ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300"
@@ -2410,7 +2410,7 @@ export default function Koltsegek() {
                           >
                             {formatHuf(s.osszeg)}
                           </td>
-                          <td className="max-w-xs truncate px-3 py-2 text-ink-500 dark:text-ink-400" title={s.kozlemeny}>
+                          <td className="max-w-xs truncate px-3 py-2 text-ink-500 dark:text-ink-300" title={s.kozlemeny}>
                             {s.kozlemeny || "—"}
                           </td>
                           <td className="px-3 py-2">
@@ -2475,7 +2475,7 @@ export default function Koltsegek() {
                 <button
                   type="button"
                   onClick={() => setBankModalOpen(false)}
-                  className="rounded-xl px-4 py-2 text-sm font-medium text-ink-500 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-800 dark:text-ink-400 dark:hover:bg-ink-800 dark:hover:text-ink-100"
+                  className="rounded-xl px-4 py-2 text-sm font-medium text-ink-500 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-800 dark:text-ink-300 dark:hover:bg-ink-800 dark:hover:text-ink-100"
                 >
                   Mégse
                 </button>
@@ -2504,7 +2504,7 @@ export default function Koltsegek() {
         <div className="space-y-4">
           {!molElemezve && (
             <>
-              <p className="text-sm text-ink-500 dark:text-ink-400">
+              <p className="text-sm text-ink-500 dark:text-ink-300">
                 Töltsd fel a MOL "Számla melléklet" PDF-jét (a tranzakció-szintű részletezőt, nem
                 magát a számlát) — a rendszer kártyaszám/rendszám szerint bontja tankolásokra, és a
                 rendszám alapján megpróbálja beazonosítani a jármüvet. Semmi nem kerül be a
@@ -2529,20 +2529,20 @@ export default function Koltsegek() {
           {molElemezve && (
             <>
               {molKihagyottSorSzam > 0 && (
-                <p className="text-xs text-ink-400 dark:text-ink-500">
+                <p className="text-xs text-ink-400 dark:text-ink-300">
                   {molKihagyottSorSzam} sort nem sikerült értelmezni vagy nem üzemanyag-tétel volt
                   (pl. éves kártyadíj).
                 </p>
               )}
 
               {molSorok.length === 0 ? (
-                <p className="py-6 text-center text-sm text-ink-400 dark:text-ink-500">
+                <p className="py-6 text-center text-sm text-ink-400 dark:text-ink-300">
                   Nincs feldolgozható tankolási tétel ebben a fájlban.
                 </p>
               ) : (
                 <div className="max-h-96 overflow-y-auto rounded-xl border border-ink-100 dark:border-ink-800">
                   <table className="w-full text-sm">
-                    <thead className="sticky top-0 bg-slate-50 text-xs uppercase text-ink-400 dark:bg-ink-800 dark:text-ink-500">
+                    <thead className="sticky top-0 bg-slate-50 text-xs uppercase text-ink-400 dark:bg-ink-800 dark:text-ink-300">
                       <tr>
                         <th className="px-3 py-2 text-left">Dátum</th>
                         <th className="px-3 py-2 text-left">Rendszám</th>
@@ -2555,7 +2555,7 @@ export default function Koltsegek() {
                     <tbody>
                       {molSorok.map((s) => (
                         <tr key={s.molSlipId} className="border-t border-ink-100 align-top dark:border-ink-800">
-                          <td className="whitespace-nowrap px-3 py-2 text-ink-500 dark:text-ink-400">{s.datum}</td>
+                          <td className="whitespace-nowrap px-3 py-2 text-ink-500 dark:text-ink-300">{s.datum}</td>
                           <td className="whitespace-nowrap px-3 py-2 font-medium text-ink-700 dark:text-ink-200">
                             {s.rendszamNyers || "—"}
                           </td>
@@ -2565,7 +2565,7 @@ export default function Koltsegek() {
                                 <PiCheckCircleLight className="h-4 w-4" /> Már importálva
                               </span>
                             ) : s.jarmuId ? (
-                              <span className="text-xs text-ink-500 dark:text-ink-400">
+                              <span className="text-xs text-ink-500 dark:text-ink-300">
                                 {s.jarmuTipus === "kamion"
                                   ? kamionok.find((k) => String(k.id) === String(s.jarmuId))?.rendszam
                                   : furgonok.find((f) => String(f.id) === String(s.jarmuId))?.rendszam}{" "}
@@ -2591,7 +2591,7 @@ export default function Koltsegek() {
                               </select>
                             )}
                           </td>
-                          <td className="px-3 py-2 text-right tabular-nums text-ink-500 dark:text-ink-400">
+                          <td className="px-3 py-2 text-right tabular-nums text-ink-500 dark:text-ink-300">
                             {s.liter?.toLocaleString("hu-HU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
                           <td className="px-3 py-2 text-right tabular-nums font-medium text-ink-700 dark:text-ink-200">
@@ -2617,7 +2617,7 @@ export default function Koltsegek() {
                 <button
                   type="button"
                   onClick={() => setMolModalOpen(false)}
-                  className="rounded-xl px-4 py-2 text-sm font-medium text-ink-500 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-800 dark:text-ink-400 dark:hover:bg-ink-800 dark:hover:text-ink-100"
+                  className="rounded-xl px-4 py-2 text-sm font-medium text-ink-500 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-800 dark:text-ink-300 dark:hover:bg-ink-800 dark:hover:text-ink-100"
                 >
                   Mégse
                 </button>

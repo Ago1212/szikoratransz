@@ -62,7 +62,7 @@ export default function KanbanBoard({ fuvarok, onAllapotChange, onFuvarClick }) 
               dragOverKulcs === oszlop.key ? "bg-brand-50 dark:bg-brand-950/30" : "bg-slate-50 dark:bg-ink-800/50"
             }`}
           >
-            <p className="mb-2 flex items-center justify-between px-1 text-xs font-bold uppercase tracking-wide text-ink-500 dark:text-ink-400">
+            <p className="mb-2 flex items-center justify-between px-1 text-xs font-bold uppercase tracking-wide text-ink-500 dark:text-ink-300">
               {oszlop.label}
               <span className="rounded-full bg-white px-2 py-0.5 text-[10px] dark:bg-ink-900">{idevalok.length}</span>
             </p>

@@ -84,7 +84,7 @@ export default function Ajanlatkeresek() {
       render: (row) => (
         <div className="whitespace-normal">
           <div>{row.email}</div>
-          {row.telefon && <div className="text-ink-400 dark:text-ink-500">{row.telefon}</div>}
+          {row.telefon && <div className="text-ink-400 dark:text-ink-300">{row.telefon}</div>}
         </div>
       ),
       exportValue: (row) => [row.email, row.telefon].filter(Boolean).join(" · "),
@@ -160,17 +160,17 @@ export default function Ajanlatkeresek() {
               <StatusBadge tone={TIPUS_TONE[reszletSor.tipus] || "neutral"}>
                 {TIPUS_LABEL[reszletSor.tipus] || reszletSor.tipus}
               </StatusBadge>
-              <span className="text-ink-400 dark:text-ink-500">
+              <span className="text-ink-400 dark:text-ink-300">
                 {new Date(reszletSor.beerkezett).toLocaleString("hu-HU")}
               </span>
             </div>
             <div>
-              <div className="text-xs font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">Elérhetőség</div>
+              <div className="text-xs font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-300">Elérhetőség</div>
               <div className="mt-1 text-ink-900 dark:text-ink-50">{reszletSor.email}</div>
               {reszletSor.telefon && <div className="text-ink-600 dark:text-ink-300">{reszletSor.telefon}</div>}
             </div>
             <div>
-              <div className="text-xs font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">Üzenet</div>
+              <div className="text-xs font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-300">Üzenet</div>
               <p className="mt-1 whitespace-pre-wrap text-ink-900 dark:text-ink-50">{reszletSor.uzenet || "—"}</p>
             </div>
           </div>

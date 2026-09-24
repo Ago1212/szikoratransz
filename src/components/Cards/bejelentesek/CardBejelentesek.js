@@ -213,7 +213,7 @@ export default function CardBejelentesek({ initBejelentesek }) {
       <button
         type="button"
         onClick={() => history.push("/admin/bejelentesek")}
-        className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-ink-500 transition-colors duration-200 ease-fluid hover:text-brand-700 dark:text-ink-400 dark:hover:text-brand-300"
+        className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-ink-500 transition-colors duration-200 ease-fluid hover:text-brand-700 dark:text-ink-300 dark:hover:text-brand-300"
       >
         <PiArrowLeftLight className="h-4 w-4" />
         Vissza a bejelentésekhez
@@ -320,11 +320,11 @@ export default function CardBejelentesek({ initBejelentesek }) {
               <FormSection title="Üzenetek" columns={1}>
                 <div className="flex flex-col gap-3 rounded-xl border border-ink-100 bg-slate-50 p-3 dark:border-ink-800 dark:bg-ink-800">
                   {isLoadingMessages ? (
-                    <p className="py-4 text-center text-sm text-ink-400 dark:text-ink-500">Betöltés...</p>
+                    <p className="py-4 text-center text-sm text-ink-400 dark:text-ink-300">Betöltés...</p>
                   ) : uzenetek.length === 0 ? (
                     <div className="flex flex-col items-center gap-1.5 py-6 text-center">
                       <PiChatCircleTextLight className="h-6 w-6 text-ink-300 dark:text-ink-600" />
-                      <p className="text-sm text-ink-400 dark:text-ink-500">
+                      <p className="text-sm text-ink-400 dark:text-ink-300">
                         Még nincs üzenet ehhez a bejelentéshez.
                       </p>
                     </div>
@@ -339,7 +339,7 @@ export default function CardBejelentesek({ initBejelentesek }) {
                               : "self-start bg-white text-ink-700 shadow-soft dark:bg-ink-900 dark:text-ink-100"
                           }`}
                         >
-                          <p className={`mb-0.5 text-xs font-semibold ${u.szerzo_tipus === "admin" ? "text-brand-100" : "text-ink-400 dark:text-ink-500"}`}>
+                          <p className={`mb-0.5 text-xs font-semibold ${u.szerzo_tipus === "admin" ? "text-brand-100" : "text-ink-400 dark:text-ink-300"}`}>
                             {u.szerzo_nev} · {(u.letrehozva || "").slice(0, 16).replace("T", " ")}
                           </p>
                           <p className="whitespace-pre-wrap">{u.szoveg}</p>
@@ -424,7 +424,7 @@ export default function CardBejelentesek({ initBejelentesek }) {
                 ) : (
                   <div className="flex items-start gap-2.5 rounded-xl border border-ink-100 bg-slate-50 p-4 dark:border-ink-800 dark:bg-ink-800">
                     <PiInfoLight className="mt-0.5 h-5 w-5 flex-shrink-0 text-ink-300 dark:text-ink-600" />
-                    <p className="text-sm text-ink-400 dark:text-ink-400">
+                    <p className="text-sm text-ink-400 dark:text-ink-300">
                       Nincs kamion megadva a bejelentésnél — karbantartás csak kamionhoz rendelt bejelentésből generálható.
                     </p>
                   </div>
@@ -463,7 +463,7 @@ export default function CardBejelentesek({ initBejelentesek }) {
                         <button
                           type="button"
                           onClick={() => handleFileDelete(file.sorszam)}
-                          className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-ink-400 transition-colors duration-200 hover:bg-red-50 hover:text-red-600 dark:text-ink-500 dark:hover:bg-red-950/50 dark:hover:text-red-300"
+                          className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-ink-400 transition-colors duration-200 hover:bg-red-50 hover:text-red-600 dark:text-ink-300 dark:hover:bg-red-950/50 dark:hover:text-red-300"
                         >
                           <PiTrashLight className="h-3.5 w-3.5" />
                         </button>

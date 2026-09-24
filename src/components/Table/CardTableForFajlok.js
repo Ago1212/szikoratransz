@@ -196,13 +196,13 @@ export default function CardTableForFajlok({ id, tabla }) {
     {
       key: "filesize",
       label: "Méret",
-      className: "text-ink-500 dark:text-ink-400",
+      className: "text-ink-500 dark:text-ink-300",
       render: (row) => formatFileSize(row.filesize),
     },
     {
       key: "feltoltve",
       label: "Feltöltve",
-      className: "text-ink-500 dark:text-ink-400",
+      className: "text-ink-500 dark:text-ink-300",
       render: (row) => formatDate(row.feltoltve),
     },
     {
@@ -257,7 +257,7 @@ export default function CardTableForFajlok({ id, tabla }) {
         },
       ]}
       emptyState={
-        <div className="p-10 text-center text-ink-400 dark:text-ink-500">
+        <div className="p-10 text-center text-ink-400 dark:text-ink-300">
           <PiFileLight className="mx-auto h-10 w-10 text-ink-300 dark:text-ink-700" />
           <p className="mt-2 text-sm">Nincsenek feltöltött fájlok</p>
         </div>

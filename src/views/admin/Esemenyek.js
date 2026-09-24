@@ -15,7 +15,7 @@ export default function Esemenyek() {
           miközben az oldal ténylegesen csak az egyedi, kézzel felvitt határidőket
           listázza — az automatikusan számolt események a Dashboard naptárában,
           ill. a jármű/sofőr saját adatlapján szerkeszthetők. */}
-      <p className="-mt-8 mb-6 max-w-2xl text-sm text-ink-500 dark:text-ink-400">
+      <p className="-mt-8 mb-6 max-w-2xl text-sm text-ink-500 dark:text-ink-300">
         Egyéni, egyszeri határidők (pl. egy adott ügyintézés napja) — a jogsi/műszaki/biztosítási
         lejáratok automatikusan, a jármű vagy sofőr adatlapján szerkeszthetők, azok itt nem jelennek meg.
       </p>

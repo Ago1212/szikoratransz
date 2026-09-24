@@ -18,9 +18,9 @@ import { formatKm } from "utils/gpsmartHelpers.js";
 function Mezo({ icon: Icon, label, value }) {
   return (
     <div className="flex items-start gap-2.5 rounded-xl bg-slate-50 p-3 dark:bg-ink-800">
-      <Icon className="mt-0.5 h-4 w-4 flex-shrink-0 text-ink-400 dark:text-ink-500" />
+      <Icon className="mt-0.5 h-4 w-4 flex-shrink-0 text-ink-400 dark:text-ink-300" />
       <div className="min-w-0">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-300">
           {label}
         </p>
         <p className="truncate text-sm font-semibold text-ink-800 dark:text-ink-100">{value}</p>
@@ -49,7 +49,7 @@ export default function JarmuReszletek({
   const tartalom = !jarmu ? (
     <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 py-12 text-center">
       <PiTruckLight className="h-8 w-8 text-ink-200 dark:text-ink-700" />
-      <p className="text-sm text-ink-400 dark:text-ink-500">
+      <p className="text-sm text-ink-400 dark:text-ink-300">
         Válassz egy járművet a listából vagy a térképről a részletekhez.
       </p>
     </div>

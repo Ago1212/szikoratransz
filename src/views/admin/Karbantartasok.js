@@ -390,7 +390,7 @@ const Karbantartasok = () => {
             <button
               type="button"
               onClick={() => handleFileDelete(file.sorszam, tipus, karbantartasId)}
-              className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-ink-400 transition-colors duration-200 hover:bg-red-50 hover:text-red-600 dark:text-ink-500 dark:hover:bg-red-950/50 dark:hover:text-red-300"
+              className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-ink-400 transition-colors duration-200 hover:bg-red-50 hover:text-red-600 dark:text-ink-300 dark:hover:bg-red-950/50 dark:hover:text-red-300"
             >
               <PiTrashLight className="h-3.5 w-3.5" />
             </button>
@@ -552,7 +552,7 @@ const Karbantartasok = () => {
               className={`relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border transition-colors duration-200 md:hidden ${
                 filtersOpen
                   ? "border-brand-200 bg-brand-50 text-brand-600 dark:border-brand-800 dark:bg-brand-950/40 dark:text-brand-300"
-                  : "border-ink-200 bg-white text-ink-500 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-400"
+                  : "border-ink-200 bg-white text-ink-500 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-300"
               }`}
               title="Szűrők"
             >
@@ -573,7 +573,7 @@ const Karbantartasok = () => {
 
       {osszesKoltseg > 0 && (
         <div className="mb-4 flex flex-shrink-0 items-center gap-2 rounded-2xl border border-ink-100 bg-white px-4 py-3 text-sm dark:border-ink-800 dark:bg-ink-900">
-          <span className="font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">
+          <span className="font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-300">
             Szűrt összes költség
           </span>
           <span className="font-display text-base font-bold text-brand-900 dark:text-ink-50">
@@ -618,7 +618,7 @@ const Karbantartasok = () => {
         >
           <PiFunnelLight className="h-4 w-4 text-brand-500" />
           <h2 className="text-sm font-semibold uppercase tracking-wide">Szűrők</h2>
-          <span className="ml-auto text-ink-400 dark:text-ink-500">
+          <span className="ml-auto text-ink-400 dark:text-ink-300">
             {filtersOpen ? <PiCaretUpLight /> : <PiCaretDownLight />}
           </span>
         </button>
@@ -913,7 +913,7 @@ const Karbantartasok = () => {
             <button
               type="button"
               onClick={closeDialog}
-              className="rounded-xl px-4 py-2 text-sm font-medium text-ink-500 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-800 dark:text-ink-400 dark:hover:bg-ink-800 dark:hover:text-ink-100"
+              className="rounded-xl px-4 py-2 text-sm font-medium text-ink-500 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-800 dark:text-ink-300 dark:hover:bg-ink-800 dark:hover:text-ink-100"
             >
               Mégse
             </button>

@@ -18,7 +18,7 @@ export default function AdminBreadcrumb({ group, listLabel, listPath, current })
       <PiCaretRightLight className="h-3 w-3 flex-shrink-0 text-ink-300 dark:text-ink-600" />
       <Link
         to={listPath}
-        className="font-medium text-ink-500 transition-colors duration-200 hover:text-brand-700 dark:text-ink-400 dark:hover:text-brand-300"
+        className="font-medium text-ink-500 transition-colors duration-200 hover:text-brand-700 dark:text-ink-300 dark:hover:text-brand-300"
       >
         {listLabel}
       </Link>

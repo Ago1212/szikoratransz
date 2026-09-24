@@ -110,7 +110,7 @@ export default function SoforCsoportositottLista() {
         <button
           type="button"
           onClick={() => lepHetet(-1)}
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-500 hover:bg-slate-100 dark:text-ink-400 dark:hover:bg-ink-800"
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-500 hover:bg-slate-100 dark:text-ink-300 dark:hover:bg-ink-800"
           aria-label="Előző hét"
         >
           <PiCaretLeftLight className="h-4 w-4" />
@@ -130,7 +130,7 @@ export default function SoforCsoportositottLista() {
         <button
           type="button"
           onClick={() => lepHetet(1)}
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-500 hover:bg-slate-100 dark:text-ink-400 dark:hover:bg-ink-800"
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-500 hover:bg-slate-100 dark:text-ink-300 dark:hover:bg-ink-800"
           aria-label="Következő hét"
         >
           <PiCaretRightLight className="h-4 w-4" />
@@ -157,11 +157,11 @@ export default function SoforCsoportositottLista() {
             <div className="flex items-center justify-between border-b border-ink-100 px-4 py-3 dark:border-ink-800">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-semibold text-brand-900 dark:text-ink-50">{csoport.nev}</h3>
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-ink-500 dark:bg-ink-800 dark:text-ink-400">
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-ink-500 dark:bg-ink-800 dark:text-ink-300">
                   {csoport.fuvarok.length} fuvar
                 </span>
               </div>
-              <span className="text-xs font-semibold text-ink-500 dark:text-ink-400">
+              <span className="text-xs font-semibold text-ink-500 dark:text-ink-300">
                 {csoport.bevetel.toLocaleString("hu-HU")} Ft
               </span>
             </div>
@@ -178,7 +178,7 @@ export default function SoforCsoportositottLista() {
                     {f.felrako_ceg || f.lerako_ceg ? `${f.felrako_ceg || "—"} → ${f.lerako_ceg || "—"}` : "Nincs útvonal megadva"}
                   </span>
                   <span className="flex items-center gap-3">
-                    <span className="text-ink-500 dark:text-ink-400">
+                    <span className="text-ink-500 dark:text-ink-300">
                       {f.dij != null ? `${Number(f.dij).toLocaleString("hu-HU")} Ft` : "—"}
                     </span>
                     <StatusBadge tone={ALLAPOT_TONE[f.allapot] || "neutral"}>{ALLAPOT_LABEL[f.allapot] || f.allapot}</StatusBadge>

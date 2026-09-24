@@ -5400,19 +5400,9 @@ h1,
   color: rgb(154 156 161 / var(--tw-text-opacity, 1));
 }
 
-.dark\:text-ink-400:is(.dark *) {
-  --tw-text-opacity: 1;
-  color: rgb(107 109 115 / var(--tw-text-opacity, 1));
-}
-
 .dark\:text-ink-50:is(.dark *) {
   --tw-text-opacity: 1;
   color: rgb(244 244 245 / var(--tw-text-opacity, 1));
-}
-
-.dark\:text-ink-500:is(.dark *) {
-  --tw-text-opacity: 1;
-  color: rgb(74 76 82 / var(--tw-text-opacity, 1));
 }
 
 .dark\:text-ink-600:is(.dark *) {

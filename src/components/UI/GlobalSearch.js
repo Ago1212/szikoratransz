@@ -117,7 +117,7 @@ export default function GlobalSearch({ open, onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2.5 border-b border-ink-100 px-4 py-3.5 focus-within:ring-2 focus-within:ring-inset focus-within:ring-brand-300 dark:border-ink-800">
-          <PiMagnifyingGlassLight className="h-5 w-5 flex-shrink-0 text-ink-400 dark:text-ink-500" />
+          <PiMagnifyingGlassLight className="h-5 w-5 flex-shrink-0 text-ink-400 dark:text-ink-300" />
           <input
             ref={inputRef}
             value={q}
@@ -129,7 +129,7 @@ export default function GlobalSearch({ open, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-slate-100 hover:text-ink-700 dark:text-ink-500 dark:hover:bg-ink-800 dark:hover:text-ink-100"
+            className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-slate-100 hover:text-ink-700 dark:text-ink-300 dark:hover:bg-ink-800 dark:hover:text-ink-100"
             aria-label="Bezárás"
           >
             <PiXLight className="h-4 w-4" />
@@ -138,7 +138,7 @@ export default function GlobalSearch({ open, onClose }) {
 
         <div className="max-h-[50vh] overflow-y-auto">
           {q.trim().length >= 2 && !loading && talalatok.length === 0 && (
-            <p className="px-4 py-6 text-center text-sm text-ink-400 dark:text-ink-500">Nincs találat.</p>
+            <p className="px-4 py-6 text-center text-sm text-ink-400 dark:text-ink-300">Nincs találat.</p>
           )}
           {talalatok.map((item) => {
             const Icon = TIPUS_ICON[item.tipus] || PiMagnifyingGlassLight;
@@ -154,7 +154,7 @@ export default function GlobalSearch({ open, onClose }) {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-semibold text-ink-900 dark:text-ink-50">{item.cim}</span>
-                  <span className="block truncate text-xs text-ink-400 dark:text-ink-500">{item.alcim}</span>
+                  <span className="block truncate text-xs text-ink-400 dark:text-ink-300">{item.alcim}</span>
                 </span>
               </button>
             );

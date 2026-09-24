@@ -253,7 +253,7 @@ export default function Tachograf() {
             className={`rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors ${
               forras === "sofor"
                 ? "bg-white text-brand-900 shadow-soft dark:bg-ink-900 dark:text-ink-50"
-                : "text-ink-400 hover:text-ink-600 dark:text-ink-500"
+                : "text-ink-400 hover:text-ink-600 dark:text-ink-300"
             }`}
           >
             Sofőrkártya
@@ -264,7 +264,7 @@ export default function Tachograf() {
             className={`rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors ${
               forras === "jarmu"
                 ? "bg-white text-brand-900 shadow-soft dark:bg-ink-900 dark:text-ink-50"
-                : "text-ink-400 hover:text-ink-600 dark:text-ink-500"
+                : "text-ink-400 hover:text-ink-600 dark:text-ink-300"
             }`}
           >
             Jármű-egység
@@ -281,7 +281,7 @@ export default function Tachograf() {
             className={`whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-semibold transition-colors duration-150 ${
               aktivFul === f.key
                 ? "border-brand-600 text-brand-700 dark:border-brand-400 dark:text-brand-300"
-                : "border-transparent text-ink-400 hover:text-ink-600 dark:text-ink-500 dark:hover:text-ink-300"
+                : "border-transparent text-ink-400 hover:text-ink-600 dark:text-ink-300 dark:hover:text-ink-300"
             }`}
           >
             {f.label}
@@ -316,7 +316,7 @@ export default function Tachograf() {
             <div className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft dark:border-ink-800 dark:bg-ink-900 xl:col-span-2">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <h3 className="font-display text-base font-semibold text-brand-900 dark:text-ink-50">Vezetési idő, elmúlt 4 hét</h3>
-                <div className="flex flex-shrink-0 items-center gap-1.5 text-[11px] text-ink-400 dark:text-ink-500">
+                <div className="flex flex-shrink-0 items-center gap-1.5 text-[11px] text-ink-400 dark:text-ink-300">
                   <span>Kevesebb</span>
                   {SZINTEK.map((sz) => (
                     <span key={sz.cls} className={`h-2.5 w-2.5 flex-shrink-0 rounded-[3px] ${sz.cls}`} />

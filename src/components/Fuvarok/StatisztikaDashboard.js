@@ -38,12 +38,12 @@ function Szekcio({ cim, icon: Icon, oszlopok, sorok, ures }) {
         {cim}
       </h3>
       {sorok.length === 0 ? (
-        <p className="text-sm text-ink-400 dark:text-ink-500">{ures}</p>
+        <p className="text-sm text-ink-400 dark:text-ink-300">{ures}</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs uppercase tracking-wide text-ink-400 dark:text-ink-500">
+              <tr className="text-left text-xs uppercase tracking-wide text-ink-400 dark:text-ink-300">
                 {oszlopok.map((o) => (
                   <th key={o.key} className={`px-2 py-1.5 ${o.align === "right" ? "text-right" : ""}`}>
                     {o.label}
@@ -89,10 +89,10 @@ export default function StatisztikaDashboard() {
   }, [load]);
 
   if (loading) {
-    return <p className="py-6 text-center text-sm text-ink-400 dark:text-ink-500">Betöltés...</p>;
+    return <p className="py-6 text-center text-sm text-ink-400 dark:text-ink-300">Betöltés...</p>;
   }
   if (!adatok) {
-    return <p className="py-6 text-center text-sm text-ink-400 dark:text-ink-500">A statisztikák betöltése sikertelen.</p>;
+    return <p className="py-6 text-center text-sm text-ink-400 dark:text-ink-300">A statisztikák betöltése sikertelen.</p>;
   }
 
   const p = adatok.penzugyiDashboard;
@@ -132,7 +132,7 @@ export default function StatisztikaDashboard() {
 
       {adatok.fuvarozasiProfit.honap && (
         <div>
-          <p className="mb-2 text-xs text-ink-400 dark:text-ink-500">
+          <p className="mb-2 text-xs text-ink-400 dark:text-ink-300">
             Fuvarozási profit ({haviCimke(adatok.fuvarozasiProfit.honap)}) — csak a
             fuvarokból számított bevétel/kiadás, nem egyezik meg a Pénzforgalom fő Nettó
             eredményével.

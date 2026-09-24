@@ -88,12 +88,12 @@ export default function SoforDrawer({ soforId, soforNev, soforok, onClose }) {
     <Modal open={!!soforId} onClose={onClose} title={`Sofőr — ${soforNev || ""}`} maxWidth="max-w-3xl">
       <div className="space-y-5">
         <div>
-          <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">Vezetési idő, elmúlt 4 hét</h4>
+          <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-300">Vezetési idő, elmúlt 4 hét</h4>
           <Heatmap sorok={sorok} napokSzama={28} />
         </div>
 
         <div>
-          <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">Napi napló</h4>
+          <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-300">Napi napló</h4>
           <DataTable
             columns={columns}
             rows={sorok}
@@ -106,7 +106,7 @@ export default function SoforDrawer({ soforId, soforNev, soforok, onClose }) {
 
         {esemenyek.length > 0 && (
           <div>
-            <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">Események / hibák</h4>
+            <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-300">Események / hibák</h4>
             <ul className="space-y-1 text-sm">
               {esemenyek.map((e) => (
                 <li key={e.id} className="text-ink-600 dark:text-ink-300">{e.kezdet} — {e.tipus}</li>
@@ -123,7 +123,7 @@ export default function SoforDrawer({ soforId, soforNev, soforok, onClose }) {
       <Modal open={!!atparositasSor} onClose={() => setAtparositasSor(null)} title="Napló-bejegyzés átpárosítása" maxWidth="max-w-md">
         {atparositasSor && (
           <div className="space-y-4">
-            <p className="text-sm text-ink-500 dark:text-ink-400">
+            <p className="text-sm text-ink-500 dark:text-ink-300">
               A {atparositasSor.datum} napi bejegyzés jelenleg <b>{soforNev}</b> sofőrhöz van rendelve.
             </p>
             <FormField label="Új sofőr" as="select" required value={ujSoforId} onChange={(e) => setUjSoforId(e.target.value)}>
@@ -133,7 +133,7 @@ export default function SoforDrawer({ soforId, soforNev, soforok, onClose }) {
               ))}
             </FormField>
             <div className="flex justify-end gap-2">
-              <button type="button" onClick={() => setAtparositasSor(null)} className="rounded-xl px-4 py-2 text-sm font-semibold text-ink-500 hover:bg-slate-100 dark:text-ink-400 dark:hover:bg-ink-800">
+              <button type="button" onClick={() => setAtparositasSor(null)} className="rounded-xl px-4 py-2 text-sm font-semibold text-ink-500 hover:bg-slate-100 dark:text-ink-300 dark:hover:bg-ink-800">
                 Mégsem
               </button>
               <button

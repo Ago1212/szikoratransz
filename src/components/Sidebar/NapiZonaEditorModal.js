@@ -85,11 +85,11 @@ export default function NapiZonaEditorModal({
     >
       <div className="space-y-5">
         <div>
-          <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-ink-400 dark:text-ink-500">
+          <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-ink-400 dark:text-ink-300">
             Kitűzve ({pinnedItems.length}/{maxItems})
           </h4>
           {pinnedItems.length === 0 ? (
-            <p className="text-sm text-ink-400 dark:text-ink-500">
+            <p className="text-sm text-ink-400 dark:text-ink-300">
               Nincs kitűzött menüpont — adj hozzá az alábbi listából.
             </p>
           ) : (
@@ -99,7 +99,7 @@ export default function NapiZonaEditorModal({
                   key={item.to}
                   className="flex items-center gap-2 rounded-xl border border-ink-100 px-3 py-2 dark:border-ink-800"
                 >
-                  <item.icon className="h-4 w-4 flex-shrink-0 text-ink-400 dark:text-ink-500" />
+                  <item.icon className="h-4 w-4 flex-shrink-0 text-ink-400 dark:text-ink-300" />
                   <span className="flex-1 truncate text-sm text-ink-700 dark:text-ink-100">
                     {item.text}
                   </span>
@@ -108,7 +108,7 @@ export default function NapiZonaEditorModal({
                     onClick={() => move(index, -1)}
                     disabled={index === 0}
                     aria-label={`${item.text} feljebb`}
-                    className={`flex h-7 w-7 items-center justify-center rounded-lg text-ink-400 dark:text-ink-500 ${
+                    className={`flex h-7 w-7 items-center justify-center rounded-lg text-ink-400 dark:text-ink-300 ${
                       index === 0
                         ? "opacity-40"
                         : "hover:bg-slate-100 dark:hover:bg-ink-800"
@@ -121,7 +121,7 @@ export default function NapiZonaEditorModal({
                     onClick={() => move(index, 1)}
                     disabled={index === pinnedItems.length - 1}
                     aria-label={`${item.text} lejjebb`}
-                    className={`flex h-7 w-7 items-center justify-center rounded-lg text-ink-400 dark:text-ink-500 ${
+                    className={`flex h-7 w-7 items-center justify-center rounded-lg text-ink-400 dark:text-ink-300 ${
                       index === pinnedItems.length - 1
                         ? "opacity-40"
                         : "hover:bg-slate-100 dark:hover:bg-ink-800"
@@ -144,7 +144,7 @@ export default function NapiZonaEditorModal({
         </div>
 
         <div>
-          <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-ink-400 dark:text-ink-500">
+          <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-ink-400 dark:text-ink-300">
             Hozzáadható menüpontok
           </h4>
           {atLimit && (
@@ -156,7 +156,7 @@ export default function NapiZonaEditorModal({
           <div className="space-y-3">
             {groupedAvailable.map((group) => (
               <div key={group.label}>
-                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">
+                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-300">
                   {group.label}
                 </p>
                 <ul className="space-y-1">
@@ -165,7 +165,7 @@ export default function NapiZonaEditorModal({
                       key={item.to}
                       className="flex items-center gap-2 rounded-xl px-3 py-2 hover:bg-slate-50 dark:hover:bg-ink-800"
                     >
-                      <item.icon className="h-4 w-4 flex-shrink-0 text-ink-400 dark:text-ink-500" />
+                      <item.icon className="h-4 w-4 flex-shrink-0 text-ink-400 dark:text-ink-300" />
                       <span className="flex-1 truncate text-sm text-ink-700 dark:text-ink-100">
                         {item.text}
                       </span>
@@ -193,7 +193,7 @@ export default function NapiZonaEditorModal({
               </div>
             ))}
             {groupedAvailable.length === 0 && (
-              <p className="text-sm text-ink-400 dark:text-ink-500">
+              <p className="text-sm text-ink-400 dark:text-ink-300">
                 Minden elérhető menüpont ki van tűzve.
               </p>
             )}
@@ -204,7 +204,7 @@ export default function NapiZonaEditorModal({
           <button
             type="button"
             onClick={handleReset}
-            className="text-sm font-medium text-ink-500 hover:text-ink-700 dark:text-ink-400 dark:hover:text-ink-100"
+            className="text-sm font-medium text-ink-500 hover:text-ink-700 dark:text-ink-300 dark:hover:text-ink-100"
           >
             Alapértelmezett visszaállítása
           </button>

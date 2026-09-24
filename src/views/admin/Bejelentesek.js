@@ -122,7 +122,7 @@ export default function Bejelentesek() {
               filtersOpen ? "" : "hidden md:block"
             }`}
           >
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-300">
               Szűrés kamionra (opcionális)
             </h3>
             <select

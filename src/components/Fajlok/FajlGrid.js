@@ -130,7 +130,7 @@ function FajlKartya({ file, kijelolve, onToggleSelect, onOpenPreview, onDelete, 
           {file.filename}
         </p>
       )}
-      <p className="mt-0.5 text-[11px] text-ink-400 dark:text-ink-500">
+      <p className="mt-0.5 text-[11px] text-ink-400 dark:text-ink-300">
         {info.label} · {formatFileSize(file.filesize)}
       </p>
 
@@ -139,7 +139,7 @@ function FajlKartya({ file, kijelolve, onToggleSelect, onOpenPreview, onDelete, 
           type="button"
           onClick={() => onOpenPreview(file)}
           title="Előnézet"
-          className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-500 hover:bg-slate-100 hover:text-brand-600 dark:text-ink-400 dark:hover:bg-ink-800"
+          className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-500 hover:bg-slate-100 hover:text-brand-600 dark:text-ink-300 dark:hover:bg-ink-800"
         >
           <PiEyeLight className="h-4 w-4" />
         </button>
@@ -147,7 +147,7 @@ function FajlKartya({ file, kijelolve, onToggleSelect, onOpenPreview, onDelete, 
           type="button"
           onClick={() => downloadFileAction(file.sorszam, file.filename).catch(() => toast.error("A fájl letöltése sikertelen."))}
           title="Letöltés"
-          className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-500 hover:bg-slate-100 hover:text-brand-600 dark:text-ink-400 dark:hover:bg-ink-800"
+          className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-500 hover:bg-slate-100 hover:text-brand-600 dark:text-ink-300 dark:hover:bg-ink-800"
         >
           <PiDownloadSimpleLight className="h-4 w-4" />
         </button>
@@ -155,7 +155,7 @@ function FajlKartya({ file, kijelolve, onToggleSelect, onOpenPreview, onDelete, 
           type="button"
           onClick={() => setSzerkesztes(true)}
           title="Átnevezés"
-          className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-500 hover:bg-slate-100 hover:text-brand-600 dark:text-ink-400 dark:hover:bg-ink-800"
+          className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-500 hover:bg-slate-100 hover:text-brand-600 dark:text-ink-300 dark:hover:bg-ink-800"
         >
           <PiPencilSimpleLight className="h-4 w-4" />
         </button>
@@ -163,7 +163,7 @@ function FajlKartya({ file, kijelolve, onToggleSelect, onOpenPreview, onDelete, 
           type="button"
           onClick={() => onDelete(file.sorszam)}
           title="Törlés"
-          className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-500 hover:bg-red-50 hover:text-red-600 dark:text-ink-400 dark:hover:bg-red-950/40"
+          className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-500 hover:bg-red-50 hover:text-red-600 dark:text-ink-300 dark:hover:bg-red-950/40"
         >
           <PiTrashLight className="h-4 w-4" />
         </button>

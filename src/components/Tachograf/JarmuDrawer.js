@@ -76,7 +76,7 @@ export default function JarmuDrawer({ jarmuTipus, jarmuId, rendszam, onClose }) 
             {(reszletSor.kartya_referenciak_json || []).map((k, i) => (
               <li key={i} className="rounded-xl border border-ink-100 p-3 dark:border-ink-700">
                 <p className="font-semibold text-brand-900 dark:text-ink-50">{k.nev}</p>
-                <p className="text-xs text-ink-400 dark:text-ink-500">Kártyaszám: {k.kartyaszam}</p>
+                <p className="text-xs text-ink-400 dark:text-ink-300">Kártyaszám: {k.kartyaszam}</p>
                 <p className="mt-1 text-ink-600 dark:text-ink-300">
                   Behelyezve: {k.behelyezve || "—"} ({k.kmBehelyezeskor != null ? `${k.kmBehelyezeskor.toLocaleString("hu-HU")} km` : "—"})
                 </p>

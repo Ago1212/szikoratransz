@@ -270,7 +270,7 @@ export default function FlottaTerkep({
 
       {ervenyesPoziciok.length === 0 && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <p className="rounded-xl bg-white/90 px-4 py-2 text-sm text-ink-400 shadow-soft dark:bg-ink-900/90 dark:text-ink-500">
+          <p className="rounded-xl bg-white/90 px-4 py-2 text-sm text-ink-400 shadow-soft dark:bg-ink-900/90 dark:text-ink-300">
             Nincs megjeleníthető pozíció.
           </p>
         </div>

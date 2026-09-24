@@ -269,7 +269,7 @@ export default function CardSettings() {
               onChange={handleInputChange}
             />
           </FormSection>
-          <p className="-mt-2 text-xs text-ink-400 dark:text-ink-500">
+          <p className="-mt-2 text-xs text-ink-400 dark:text-ink-300">
             A szerepkör itt csak megtekinthető — módosítani a Felhasználók listáján lehet.
           </p>
 
@@ -412,7 +412,7 @@ export default function CardSettings() {
                   placeholder={navVanBeallitva ? "•••• (mentve — hagyd üresen, ha nem változik)" : ""}
                 />
               </FormSection>
-              <p className="-mt-1 mb-3 text-xs text-ink-400 dark:text-ink-500">
+              <p className="-mt-1 mb-3 text-xs text-ink-400 dark:text-ink-300">
                 {navVanBeallitva
                   ? "A kapcsolat be van állítva — a Pénzforgalom oldalon lekérdezheted a NAV-tól a számlákat."
                   : "A technikai felhasználó adatait a NAV Online Számla portálján kell előbb létrehozni."}
@@ -456,7 +456,7 @@ export default function CardSettings() {
                   placeholder="a GPSmart oldal linkjében szereplő UserID"
                 />
               </FormSection>
-              <p className="-mt-1 mb-3 text-xs text-ink-400 dark:text-ink-500">
+              <p className="-mt-1 mb-3 text-xs text-ink-400 dark:text-ink-300">
                 {gpsmartVanBeallitva
                   ? "A kapcsolat be van állítva — a Flottakövetés menüpontban megjelennek a kamionok pillanatnyi pozíciói."
                   : "Ugyanazok a belépési adatok, amikkel a flottanavigacio.gpsmart.eu oldalra szoktatok bejelentkezni."}

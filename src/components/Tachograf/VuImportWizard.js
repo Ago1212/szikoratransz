@@ -173,7 +173,7 @@ export default function VuImportWizard({ open, onClose, jarmuAttekintes, onAppli
                 ? "bg-brand-600 text-white"
                 : lepes > i + 1
                 ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300"
-                : "bg-slate-100 text-ink-400 dark:bg-ink-800 dark:text-ink-500"
+                : "bg-slate-100 text-ink-400 dark:bg-ink-800 dark:text-ink-300"
             }`}
           >
             {i + 1} · {label}
@@ -183,7 +183,7 @@ export default function VuImportWizard({ open, onClose, jarmuAttekintes, onAppli
 
       {lepes === 1 && (
         <div className="space-y-4">
-          <p className="text-sm text-ink-500 dark:text-ink-400">
+          <p className="text-sm text-ink-500 dark:text-ink-300">
             Töltsd fel a jármű-egység letöltés (.ddd) fájl(oka)t — egyszerre több jármű letöltése is kiválasztható.
             A feltöltés még nem menti el az adatokat — előbb egy előnézetet mutatunk, amit jóváhagyás után lehet alkalmazni.
           </p>
@@ -206,10 +206,10 @@ export default function VuImportWizard({ open, onClose, jarmuAttekintes, onAppli
 
           {digests.map((d, index) => (
             <div key={d.fajlnev + index} className="space-y-3 rounded-2xl border border-ink-100 p-4 dark:border-ink-700">
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">{d.fajlnev}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-300">{d.fajlnev}</p>
               <div className="rounded-xl bg-slate-50 p-3 text-sm dark:bg-ink-800">
                 <p className="font-semibold text-brand-900 dark:text-ink-50">{d.jarmuAzonosito.rendszam}</p>
-                <p className="text-ink-500 dark:text-ink-400">VIN: {d.jarmuAzonosito.vin}</p>
+                <p className="text-ink-500 dark:text-ink-300">VIN: {d.jarmuAzonosito.vin}</p>
               </div>
 
               <div className="flex flex-wrap items-end gap-3">
@@ -278,7 +278,7 @@ export default function VuImportWizard({ open, onClose, jarmuAttekintes, onAppli
           ))}
 
           <div className="flex justify-end gap-2">
-            <button type="button" onClick={handleBezaras} className="rounded-xl px-4 py-2 text-sm font-semibold text-ink-500 hover:bg-slate-100 dark:text-ink-400 dark:hover:bg-ink-800">
+            <button type="button" onClick={handleBezaras} className="rounded-xl px-4 py-2 text-sm font-semibold text-ink-500 hover:bg-slate-100 dark:text-ink-300 dark:hover:bg-ink-800">
               Mégsem
             </button>
             <SaveButton onClick={handleAlkalmazas} isSaving={alkalmazasLoading} label="Import alkalmazása" savingLabel="Alkalmazás..." />
@@ -290,7 +290,7 @@ export default function VuImportWizard({ open, onClose, jarmuAttekintes, onAppli
         <div className="space-y-4 text-center">
           <PiCheckCircleLight className="mx-auto h-10 w-10 text-emerald-500" />
           <p className="text-lg font-semibold text-brand-900 dark:text-ink-50">{eredmeny.importalt} nap importálva</p>
-          <p className="text-sm text-ink-500 dark:text-ink-400">{eredmeny.kihagyva} nap már korábban rögzítve volt.</p>
+          <p className="text-sm text-ink-500 dark:text-ink-300">{eredmeny.kihagyva} nap már korábban rögzítve volt.</p>
           <button
             type="button"
             onClick={handleBezaras}

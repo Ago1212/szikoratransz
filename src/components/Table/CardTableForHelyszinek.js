@@ -33,7 +33,7 @@ const CardTable = ({ helyszinek = [], loading, total, page, pageSize, onPageChan
       label: "Megjegyzések",
       render: (row) =>
         row.megjegyzesek_szama > 0 ? (
-          <span className="inline-flex items-center gap-1 text-ink-500 dark:text-ink-400">
+          <span className="inline-flex items-center gap-1 text-ink-500 dark:text-ink-300">
             <PiChatCircleTextLight className="h-3.5 w-3.5 flex-shrink-0" />
             {row.megjegyzesek_szama}
           </span>

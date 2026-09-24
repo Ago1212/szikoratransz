@@ -178,7 +178,7 @@ export default function Felhasznalok() {
                 </span>
               )}
               {row.tipus === "csapattag" && row.isSelf && (
-                <span className="rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-bold text-ink-500 dark:bg-ink-800 dark:text-ink-400">Te</span>
+                <span className="rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-bold text-ink-500 dark:bg-ink-800 dark:text-ink-300">Te</span>
               )}
               {row.tipus === "sofor" && (
                 <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
@@ -221,7 +221,7 @@ export default function Felhasznalok() {
           {row.tipus === "csapattag" ? (
             row.isRoot ? (
               <span
-                className="w-32 flex-shrink-0 truncate rounded-lg bg-ink-50 px-3 py-1.5 text-center text-xs font-semibold text-ink-500 dark:bg-ink-800 dark:text-ink-400"
+                className="w-32 flex-shrink-0 truncate rounded-lg bg-ink-50 px-3 py-1.5 text-center text-xs font-semibold text-ink-500 dark:bg-ink-800 dark:text-ink-300"
                 title="A cégtulajdonos szerepköre fixen adminisztrátor, nem módosítható."
               >
                 Adminisztrátor
@@ -243,7 +243,7 @@ export default function Felhasznalok() {
               </FormField>
             )
           ) : (
-            <span className="text-xs text-ink-400 dark:text-ink-500">—</span>
+            <span className="text-xs text-ink-400 dark:text-ink-300">—</span>
           )}
         </div>
       ),
@@ -295,7 +295,7 @@ export default function Felhasznalok() {
         }
       />
 
-      <p className="-mt-4 mb-6 max-w-2xl text-sm text-ink-500 dark:text-ink-400">
+      <p className="-mt-4 mb-6 max-w-2xl text-sm text-ink-500 dark:text-ink-300">
         Minden ember egy helyen, aki hozzáfér a rendszerhez — csapattagok (teljes admin-hozzáférés) és
         sofőrök (saját mobil felület) együtt.
       </p>
@@ -307,7 +307,7 @@ export default function Felhasznalok() {
             type="button"
             onClick={() => setFilter(f.key)}
             className={`flex-shrink-0 rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors duration-150 ${
-              filter === f.key ? "bg-brand-600 text-white" : "bg-white text-ink-500 border border-ink-100 dark:bg-ink-900 dark:text-ink-400 dark:border-ink-800"
+              filter === f.key ? "bg-brand-600 text-white" : "bg-white text-ink-500 border border-ink-100 dark:bg-ink-900 dark:text-ink-300 dark:border-ink-800"
             }`}
           >
             {f.label}

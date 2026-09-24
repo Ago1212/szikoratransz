@@ -17,13 +17,13 @@ export default function FuvarKanbanCard({ fuvar, onDragStart, onClick }) {
       <p className="mb-1 font-semibold text-ink-700 dark:text-ink-200">
         {vanUtvonal ? `${fuvar.felrako_ceg || "—"} → ${fuvar.lerako_ceg || "—"}` : "Nincs útvonal megadva"}
       </p>
-      <p className="text-ink-500 dark:text-ink-400">
+      <p className="text-ink-500 dark:text-ink-300">
         {fuvar.megbizo_nev || "—"}
       </p>
-      <p className="mt-0.5 text-ink-400 dark:text-ink-500">
+      <p className="mt-0.5 text-ink-400 dark:text-ink-300">
         {fuvar.sofor_nev || "Nincs sofőrhöz rendelve"}
       </p>
-      <div className="mt-2 flex items-center justify-between text-ink-400 dark:text-ink-500">
+      <div className="mt-2 flex items-center justify-between text-ink-400 dark:text-ink-300">
         <span>{formatFuvarDatum(fuvar.lerakas_datuma) || "—"}</span>
         <span>{jarmu}</span>
       </div>

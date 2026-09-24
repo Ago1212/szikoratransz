@@ -30,7 +30,7 @@ export default function Elozmenyek() {
               className={`flex flex-shrink-0 items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors duration-150 ${
                 activeTab === t.key
                   ? "bg-white text-brand-700 shadow-soft dark:bg-ink-700 dark:text-brand-300"
-                  : "text-ink-500 hover:text-ink-700 dark:text-ink-400 dark:hover:text-ink-100"
+                  : "text-ink-500 hover:text-ink-700 dark:text-ink-300 dark:hover:text-ink-100"
               }`}
             >
               <t.icon className="h-4 w-4" />

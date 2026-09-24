@@ -96,7 +96,7 @@ export default function PushFeliratkozas({ sofor = false }) {
 
   if (!supported) {
     return (
-      <div className="flex items-center gap-2.5 rounded-xl border border-ink-100 bg-slate-50 p-4 text-sm text-ink-400 dark:border-ink-800 dark:bg-ink-800 dark:text-ink-500">
+      <div className="flex items-center gap-2.5 rounded-xl border border-ink-100 bg-slate-50 p-4 text-sm text-ink-400 dark:border-ink-800 dark:bg-ink-800 dark:text-ink-300">
         <PiBellSlashLight className="h-5 w-5 flex-shrink-0" />
         Ez a böngésző nem támogatja a push-értesítéseket.
       </div>
@@ -109,7 +109,7 @@ export default function PushFeliratkozas({ sofor = false }) {
         <PiBellRingingLight className="mt-0.5 h-5 w-5 flex-shrink-0 text-brand-600 dark:text-brand-300" />
         <div>
           <p className="text-sm font-semibold text-ink-800 dark:text-ink-100">Push-értesítések</p>
-          <p className="text-xs text-ink-400 dark:text-ink-500">
+          <p className="text-xs text-ink-400 dark:text-ink-300">
             {subscribed
               ? sofor
                 ? "Ezen az eszközön be vannak kapcsolva — új fuvarnál azonnal értesítést kapsz."
@@ -126,7 +126,7 @@ export default function PushFeliratkozas({ sofor = false }) {
         disabled={busy}
         className={`flex flex-shrink-0 items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wide shadow-soft transition-colors duration-200 disabled:cursor-wait disabled:opacity-60 ${
           subscribed
-            ? "border border-ink-200 bg-white text-ink-500 hover:bg-red-50 hover:text-red-600 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-400 dark:hover:bg-red-950/50 dark:hover:text-red-300"
+            ? "border border-ink-200 bg-white text-ink-500 hover:bg-red-50 hover:text-red-600 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-300 dark:hover:bg-red-950/50 dark:hover:text-red-300"
             : "bg-brand-600 text-white hover:bg-brand-700"
         }`}
       >

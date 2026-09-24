@@ -74,7 +74,7 @@ export default function CardStats({
           >
             {statTitle}
           </p>
-          <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">
+          <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-300">
             {statSubtitle}
           </p>
           {statCaption && (
@@ -85,7 +85,7 @@ export default function CardStats({
             // jelvénynél, a `title` HTML attribútum nem tudna mit kezdeni
             // egy React-elemmel).
             <p
-              className="truncate text-xs text-ink-500 dark:text-ink-400"
+              className="truncate text-xs text-ink-500 dark:text-ink-300"
               title={typeof statCaption === "string" ? statCaption : undefined}
             >
               {statCaption}
@@ -106,7 +106,7 @@ export default function CardStats({
       <div className="rounded-[calc(1rem-0.25rem)] bg-white p-3 dark:bg-ink-900 sm:rounded-[calc(1.5rem-0.375rem)] sm:p-4">
         <div className="flex items-center justify-between gap-2 sm:items-start sm:gap-3">
           <div className="min-w-0">
-            <h5 className="text-[9px] font-semibold uppercase tracking-[0.1em] text-ink-400 dark:text-ink-500 sm:text-[11px] sm:tracking-[0.12em]">
+            <h5 className="text-[9px] font-semibold uppercase tracking-[0.1em] text-ink-400 dark:text-ink-300 sm:text-[11px] sm:tracking-[0.12em]">
               {statSubtitle}
             </h5>
             <span
@@ -124,7 +124,7 @@ export default function CardStats({
           )}
         </div>
         {statDescripiron && (
-          <p className="mt-2 text-xs text-ink-400 dark:text-ink-500 sm:mt-4">{statDescripiron}</p>
+          <p className="mt-2 text-xs text-ink-400 dark:text-ink-300 sm:mt-4">{statDescripiron}</p>
         )}
       </div>
     </div>

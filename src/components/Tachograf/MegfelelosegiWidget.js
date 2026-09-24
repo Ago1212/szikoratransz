@@ -24,7 +24,7 @@ export function rendezettSorok(sorok) {
 // alacsonyabb sormagasságával).
 export default function MegfelelosegiWidget({ sorok, onSoforClick }) {
   if (!sorok || sorok.length === 0) {
-    return <p className="text-sm text-ink-400 dark:text-ink-500">Nincs még rögzített sofőr.</p>;
+    return <p className="text-sm text-ink-400 dark:text-ink-300">Nincs még rögzített sofőr.</p>;
   }
 
   return (
@@ -35,7 +35,7 @@ export default function MegfelelosegiWidget({ sorok, onSoforClick }) {
           <li key={s.sofor_id} className="flex h-14 items-center justify-between gap-3">
             <button type="button" onClick={() => onSoforClick(s.sofor_id)} className="min-w-0 text-left">
               <p className="truncate text-sm font-semibold text-brand-900 hover:underline dark:text-ink-50">{s.nev}</p>
-              <p className="text-xs text-ink-400 dark:text-ink-500">
+              <p className="text-xs text-ink-400 dark:text-ink-300">
                 {s.utolsoDatum ? `utolsó letöltés: ${s.utolsoDatum} · ${s.napokOta} napja` : "még nincs letöltött kártya-adat"}
               </p>
             </button>

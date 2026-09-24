@@ -49,7 +49,7 @@ function PenzugyiAllapotCard({ className, cashflow, varhato, varhatoLoading, isA
       className={`group rounded-3xl bg-white p-5 text-left shadow-soft ring-1 ring-ink-100 transition-all duration-300 ease-fluid hover:-translate-y-0.5 hover:shadow-soft-lg dark:bg-ink-900 dark:ring-ink-800 sm:p-6 ${className}`}
     >
       <div className="flex items-start justify-between gap-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">
+        <p className="text-xs font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-300">
           Nettó eredmény (e havi)
         </p>
         <span className="hidden flex-shrink-0 items-center gap-1 text-xs font-semibold text-brand-600 group-hover:underline dark:text-brand-400 sm:flex">
@@ -64,11 +64,11 @@ function PenzugyiAllapotCard({ className, cashflow, varhato, varhatoLoading, isA
         {formatHuf(cashflow.netto)}
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm">
-        <span className="flex items-center gap-1.5 text-ink-500 dark:text-ink-400">
+        <span className="flex items-center gap-1.5 text-ink-500 dark:text-ink-300">
           <PiTrendUpLight className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           Bevétel <span className="font-semibold tabular-nums text-ink-800 dark:text-ink-100">{formatHuf(cashflow.bevetel)}</span>
         </span>
-        <span className="flex items-center gap-1.5 text-ink-500 dark:text-ink-400">
+        <span className="flex items-center gap-1.5 text-ink-500 dark:text-ink-300">
           <PiCoinsLight className="h-4 w-4 text-red-600 dark:text-red-400" />
           Kiadás <span className="font-semibold tabular-nums text-ink-800 dark:text-ink-100">{formatHuf(cashflow.kiadas)}</span>
         </span>
@@ -76,7 +76,7 @@ function PenzugyiAllapotCard({ className, cashflow, varhato, varhatoLoading, isA
 
       {!varhatoLoading && (
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-ink-100 pt-3 dark:border-ink-800">
-          <span className="text-xs font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">
+          <span className="text-xs font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-300">
             Várható eredmény (jövő hónap, becslés)
           </span>
           <span
@@ -156,7 +156,7 @@ function MireFigyeljekMaCard({
   const toneClass = (napok) => {
     if (napok < 0) return { dot: "bg-red-500", label: "text-red-700 dark:text-red-300", bg: "bg-red-50 dark:bg-red-950/40" };
     if (napok <= 7) return { dot: "bg-amber-500", label: "text-amber-700 dark:text-amber-300", bg: "bg-amber-50 dark:bg-amber-950/40" };
-    return { dot: "bg-ink-300 dark:bg-ink-600", label: "text-ink-500 dark:text-ink-400", bg: "bg-slate-50 dark:bg-ink-800" };
+    return { dot: "bg-ink-300 dark:bg-ink-600", label: "text-ink-500 dark:text-ink-300", bg: "bg-slate-50 dark:bg-ink-800" };
   };
 
   return (
@@ -187,7 +187,7 @@ function MireFigyeljekMaCard({
         {nincsSemmi ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 py-10 text-center">
             <PiCalendarCheckLight className="h-8 w-8 text-ink-300 dark:text-ink-600" />
-            <p className="text-sm text-ink-400 dark:text-ink-500">
+            <p className="text-sm text-ink-400 dark:text-ink-300">
               Nincs tennivaló és nincs közelgő határidő a következő 30 napban.
             </p>
           </div>
@@ -203,7 +203,7 @@ function MireFigyeljekMaCard({
                         <span className="font-semibold">{k.sofor_nev || "Egy sofőr"}</span> másik{" "}
                         {JARMU_TIPUS_LABEL[k.tipus] || "járművet"} kér:{" "}
                         <span className="font-semibold">{k.jarmu_rendszam || "?"}</span>
-                        {k.indoklas && <span className="block text-xs text-ink-400 dark:text-ink-500">{k.indoklas}</span>}
+                        {k.indoklas && <span className="block text-xs text-ink-400 dark:text-ink-300">{k.indoklas}</span>}
                       </p>
                     </div>
                     <div className="flex flex-shrink-0 items-center gap-2 self-end sm:self-auto">
@@ -233,7 +233,7 @@ function MireFigyeljekMaCard({
                       <p className="min-w-0 text-sm text-ink-700 dark:text-ink-100">
                         <span className="font-semibold">{b.sofor_nev || "Egy sofőr"}</span> bejelentést tett:{" "}
                         <span className="font-semibold">{b.cim || "Bejelentés"}</span>
-                        {b.kamion_rendszam && <span className="block text-xs text-ink-400 dark:text-ink-500">{b.kamion_rendszam}</span>}
+                        {b.kamion_rendszam && <span className="block text-xs text-ink-400 dark:text-ink-300">{b.kamion_rendszam}</span>}
                       </p>
                     </div>
                     <button
@@ -251,7 +251,7 @@ function MireFigyeljekMaCard({
                       <PiEnvelopeSimpleLight className="mt-0.5 h-4 w-4 flex-shrink-0 text-brand-500 dark:text-brand-400" />
                       <p className="min-w-0 text-sm text-ink-700 dark:text-ink-100">
                         <span className="font-semibold">{a.nev}</span> ajánlatot kért
-                        {a.telefon && <span className="block text-xs text-ink-400 dark:text-ink-500">{a.telefon}</span>}
+                        {a.telefon && <span className="block text-xs text-ink-400 dark:text-ink-300">{a.telefon}</span>}
                       </p>
                     </div>
                     <div className="flex flex-shrink-0 items-center gap-2 self-end sm:self-auto">
@@ -279,7 +279,7 @@ function MireFigyeljekMaCard({
                       <p className="min-w-0 text-sm text-ink-700 dark:text-ink-100">
                         <span className="font-semibold">{t.nev}</span>{" "}
                         {t.statusz === "lejart" ? "kártya-letöltése lejárt" : "kártya-letöltése esedékes"}
-                        <span className="block text-xs text-ink-400 dark:text-ink-500">
+                        <span className="block text-xs text-ink-400 dark:text-ink-300">
                           {t.utolsoDatum ? `utolsó letöltés: ${t.utolsoDatum} · ${t.napokOta} napja` : "még nincs adat"}
                         </span>
                       </p>
@@ -337,7 +337,7 @@ function FlottakovetesGyorslink({ onClick, className = "" }) {
       </span>
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-semibold text-brand-900 dark:text-ink-50">Élő flottakövetés</span>
-        <span className="block text-xs text-ink-400 dark:text-ink-500">Hol vannak most a járműveim?</span>
+        <span className="block text-xs text-ink-400 dark:text-ink-300">Hol vannak most a járműveim?</span>
       </span>
       <PiArrowRightLight className="h-4 w-4 flex-shrink-0 text-ink-300 group-hover:text-brand-600 dark:text-ink-600 dark:group-hover:text-brand-300" />
     </button>
@@ -360,9 +360,9 @@ function FlottaOsszesitoStrip({ className, items, onNavigate }) {
           onClick={() => onNavigate(item.path)}
           className="flex flex-1 items-center justify-center gap-2 px-3 py-3 transition-colors duration-150 hover:bg-slate-50 dark:hover:bg-ink-800 sm:justify-start sm:px-5"
         >
-          <item.icon className="h-4 w-4 flex-shrink-0 text-ink-400 dark:text-ink-500" />
+          <item.icon className="h-4 w-4 flex-shrink-0 text-ink-400 dark:text-ink-300" />
           <span className="font-display text-sm font-bold tabular-nums text-ink-700 dark:text-ink-100">{item.value}</span>
-          <span className="hidden text-xs font-medium text-ink-400 dark:text-ink-500 sm:inline">{item.title}</span>
+          <span className="hidden text-xs font-medium text-ink-400 dark:text-ink-300 sm:inline">{item.title}</span>
         </button>
       ))}
     </div>

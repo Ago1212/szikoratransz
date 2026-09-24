@@ -49,7 +49,7 @@ export default function SoforHeatmapLista({ soforok, napiSorok }) {
   }, [napiSorok]);
 
   if (!soforok || soforok.length === 0) {
-    return <p className="text-sm text-ink-400 dark:text-ink-500">Nincs még rögzített sofőr.</p>;
+    return <p className="text-sm text-ink-400 dark:text-ink-300">Nincs még rögzített sofőr.</p>;
   }
 
   const gridTemplateRows = [

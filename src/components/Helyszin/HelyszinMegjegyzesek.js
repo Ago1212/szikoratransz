@@ -86,9 +86,9 @@ export default function HelyszinMegjegyzesek({ helyszinId, szerzoTipus, szerzoId
       </div>
 
       {loading ? (
-        <p className="text-sm text-ink-400 dark:text-ink-500">Betöltés...</p>
+        <p className="text-sm text-ink-400 dark:text-ink-300">Betöltés...</p>
       ) : megjegyzesek.length === 0 ? (
-        <p className="rounded-xl bg-slate-50 px-4 py-4 text-center text-sm text-ink-400 dark:bg-ink-800 dark:text-ink-500">
+        <p className="rounded-xl bg-slate-50 px-4 py-4 text-center text-sm text-ink-400 dark:bg-ink-800 dark:text-ink-300">
           Még nincs megjegyzés ehhez a helyszínhez.
         </p>
       ) : (
@@ -98,7 +98,7 @@ export default function HelyszinMegjegyzesek({ helyszinId, szerzoTipus, szerzoId
               <div className="mb-1.5 flex items-center justify-between gap-2">
                 <span className="text-xs font-bold text-ink-700 dark:text-ink-100">{m.szerzo_nev}</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] text-ink-400 dark:text-ink-500">{formatDate(m.letrehozva)}</span>
+                  <span className="text-[11px] text-ink-400 dark:text-ink-300">{formatDate(m.letrehozva)}</span>
                   {String(m.szerzo_id) === String(szerzoId) && m.szerzo_tipus === szerzoTipus && (
                     <button
                       type="button"

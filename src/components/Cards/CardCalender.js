@@ -185,7 +185,7 @@ export default function CustomCalendar({ onEventsChange }) {
               {moment(selectedDate).format("YYYY. MMMM D. (dddd)")}
             </h4>
             {dayEvents.length === 0 ? (
-              <p className="rounded-xl bg-slate-50 px-3 py-4 text-center text-sm text-ink-400 dark:bg-ink-800 dark:text-ink-500">
+              <p className="rounded-xl bg-slate-50 px-3 py-4 text-center text-sm text-ink-400 dark:bg-ink-800 dark:text-ink-300">
                 Nincs esemény ezen a napon.
               </p>
             ) : (

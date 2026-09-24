@@ -21,7 +21,7 @@ export const KATEGORIA_INFO = {
   video: { label: "Videó", icon: PiFilmSlateLight, szin: "text-pink-600 dark:text-pink-400", bg: "bg-pink-50 dark:bg-pink-950/40", badgeBg: "bg-pink-500" },
   hang: { label: "Hangfájl", icon: PiSpeakerHighLight, szin: "text-sky-600 dark:text-sky-400", bg: "bg-sky-50 dark:bg-sky-950/40", badgeBg: "bg-sky-500" },
   tomoritett: { label: "Tömörített", icon: PiArchiveLight, szin: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-950/40", badgeBg: "bg-orange-500" },
-  egyeb: { label: "Egyéb", icon: PiFileLight, szin: "text-ink-500 dark:text-ink-400", bg: "bg-ink-100 dark:bg-ink-800", badgeBg: "bg-ink-400 dark:bg-ink-600" },
+  egyeb: { label: "Egyéb", icon: PiFileLight, szin: "text-ink-500 dark:text-ink-300", bg: "bg-ink-100 dark:bg-ink-800", badgeBg: "bg-ink-400 dark:bg-ink-600" },
 };
 
 export const kategoriaInfo = (kulcs) => KATEGORIA_INFO[kulcs] || KATEGORIA_INFO.egyeb;

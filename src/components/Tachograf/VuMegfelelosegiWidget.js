@@ -14,7 +14,7 @@ const STATUSZ_SORREND = { lejart: 0, esedekes: 1, nincs_adat: 2, rendben: 3 };
 
 export default function VuMegfelelosegiWidget({ sorok, onJarmuClick }) {
   if (!sorok || sorok.length === 0) {
-    return <p className="text-sm text-ink-400 dark:text-ink-500">Nincs még rögzített jármű.</p>;
+    return <p className="text-sm text-ink-400 dark:text-ink-300">Nincs még rögzített jármű.</p>;
   }
   const rendezett = [...sorok].sort((a, b) => STATUSZ_SORREND[a.statusz] - STATUSZ_SORREND[b.statusz]);
 
@@ -26,7 +26,7 @@ export default function VuMegfelelosegiWidget({ sorok, onJarmuClick }) {
           <li key={`${s.jarmu_tipus}:${s.jarmu_id}`} className="flex items-center justify-between gap-3 py-2.5">
             <button type="button" onClick={() => onJarmuClick(s.jarmu_tipus, s.jarmu_id)} className="min-w-0 text-left">
               <p className="truncate text-sm font-semibold text-brand-900 hover:underline dark:text-ink-50">{s.rendszam}</p>
-              <p className="text-xs text-ink-400 dark:text-ink-500">
+              <p className="text-xs text-ink-400 dark:text-ink-300">
                 {s.utolsoDatum ? `utolsó letöltés: ${s.utolsoDatum} · ${s.napokOta} napja` : "még nincs letöltött jármű-egység adat"}
               </p>
             </button>

@@ -389,7 +389,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
             onBlur={() => handleCurrencyBlur("kot_biz_dij")}
           />
           {!editKotBizDij && (
-            <span className="pointer-events-none absolute right-3 top-[38px] text-sm text-ink-400 dark:text-ink-500">
+            <span className="pointer-events-none absolute right-3 top-[38px] text-sm text-ink-400 dark:text-ink-300">
               Ft
             </span>
           )}
@@ -451,7 +451,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
             onBlur={() => handleCurrencyBlur("kaszko_dij")}
           />
           {!editKaszkoDij && (
-            <span className="pointer-events-none absolute right-3 top-[38px] text-sm text-ink-400 dark:text-ink-500">
+            <span className="pointer-events-none absolute right-3 top-[38px] text-sm text-ink-400 dark:text-ink-300">
               Ft
             </span>
           )}

@@ -197,34 +197,34 @@ export default function Fajlok() {
       key: "fajl_kategoria",
       label: "Típus",
       sortable: true,
-      className: "text-ink-500 dark:text-ink-400",
+      className: "text-ink-500 dark:text-ink-300",
       render: (row) => kategoriaInfo(row.fajl_kategoria).label,
     },
     {
       key: "filesize",
       label: "Méret",
       sortable: true,
-      className: "text-ink-500 dark:text-ink-400",
+      className: "text-ink-500 dark:text-ink-300",
       render: (row) => formatFileSize(row.filesize),
     },
     {
       key: "feltoltve",
       label: "Feltöltve",
       sortable: true,
-      className: "text-ink-500 dark:text-ink-400",
+      className: "text-ink-500 dark:text-ink-300",
       render: (row) => formatDate(row.feltoltve),
     },
     {
       key: "feltolto_nev",
       label: "Feltöltő",
-      className: "text-ink-500 dark:text-ink-400",
+      className: "text-ink-500 dark:text-ink-300",
       render: (row) => row.feltolto_nev || (row.tabla?.endsWith("_import") ? "Rendszer" : "Ismeretlen"),
       mobileHidden: true,
     },
     {
       key: "tabla",
       label: "Modul",
-      className: "text-ink-500 dark:text-ink-400",
+      className: "text-ink-500 dark:text-ink-300",
       render: (row) => MODUL_LABEL[row.tabla] || row.tabla,
       mobileHidden: true,
     },
@@ -259,7 +259,7 @@ export default function Fajlok() {
                 onClick={() => valtVezet("grid")}
                 title="Rács nézet"
                 className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors duration-150 ${
-                  viewMode === "grid" ? "bg-brand-600 text-white" : "text-ink-500 hover:bg-slate-100 dark:text-ink-400 dark:hover:bg-ink-800"
+                  viewMode === "grid" ? "bg-brand-600 text-white" : "text-ink-500 hover:bg-slate-100 dark:text-ink-300 dark:hover:bg-ink-800"
                 }`}
               >
                 <PiGridFourLight className="h-4 w-4" />
@@ -269,7 +269,7 @@ export default function Fajlok() {
                 onClick={() => valtVezet("table")}
                 title="Táblázat nézet"
                 className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors duration-150 ${
-                  viewMode === "table" ? "bg-brand-600 text-white" : "text-ink-500 hover:bg-slate-100 dark:text-ink-400 dark:hover:bg-ink-800"
+                  viewMode === "table" ? "bg-brand-600 text-white" : "text-ink-500 hover:bg-slate-100 dark:text-ink-300 dark:hover:bg-ink-800"
                 }`}
               >
                 <PiListLight className="h-4 w-4" />
@@ -336,7 +336,7 @@ export default function Fajlok() {
           <button type="button" onClick={bulkTorles} className="flex items-center gap-1.5 text-sm font-medium text-red-600 hover:underline dark:text-red-400">
             <PiTrashLight className="h-4 w-4" /> Törlés
           </button>
-          <button type="button" onClick={() => setSelectedIds(new Set())} className="ml-auto text-xs text-ink-400 hover:underline dark:text-ink-500">
+          <button type="button" onClick={() => setSelectedIds(new Set())} className="ml-auto text-xs text-ink-400 hover:underline dark:text-ink-300">
             Kijelölés megszüntetése
           </button>
         </div>
@@ -358,7 +358,7 @@ export default function Fajlok() {
                   <div className="rounded-2xl border border-ink-100 bg-white p-10 dark:border-ink-800 dark:bg-ink-900">
                     <div className="mx-auto max-w-md text-center">
                       <PiUploadSimpleLight className="mx-auto mb-3 h-10 w-10 text-ink-300 dark:text-ink-700" />
-                      <p className="mb-4 text-sm text-ink-500 dark:text-ink-400">
+                      <p className="mb-4 text-sm text-ink-500 dark:text-ink-300">
                         {search || kategoria || ezAHet ? "Nincs a szűrésnek megfelelő fájl." : "Még nincs feltöltött fájl."}
                       </p>
                     </div>
@@ -377,7 +377,7 @@ export default function Fajlok() {
                 így 20 fájl felett a többi elérhetetlen maradt. Ugyanaz a
                 sáv-elrendezés/stílus, mint a DataTable.js belső lapozójáé. */}
             {!loading && total > 0 && (
-              <div className="flex flex-shrink-0 items-center justify-between gap-3 border-t border-ink-100 py-2.5 pl-4 pr-20 text-xs text-ink-500 dark:border-ink-800 dark:text-ink-400 sm:pl-6 md:pr-6">
+              <div className="flex flex-shrink-0 items-center justify-between gap-3 border-t border-ink-100 py-2.5 pl-4 pr-20 text-xs text-ink-500 dark:border-ink-800 dark:text-ink-300 sm:pl-6 md:pr-6">
                 <span className="tabular-nums">
                   {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} / {total}
                 </span>
@@ -386,7 +386,7 @@ export default function Fajlok() {
                     type="button"
                     disabled={page <= 1}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-ink-200 text-ink-500 transition-colors duration-150 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-ink-700 dark:text-ink-400 dark:hover:bg-ink-800"
+                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-ink-200 text-ink-500 transition-colors duration-150 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-ink-700 dark:text-ink-300 dark:hover:bg-ink-800"
                     aria-label="Előző oldal"
                   >
                     <PiCaretLeftLight className="h-3.5 w-3.5" />
@@ -398,7 +398,7 @@ export default function Fajlok() {
                     type="button"
                     disabled={page >= Math.max(1, Math.ceil(total / PAGE_SIZE))}
                     onClick={() => setPage((p) => p + 1)}
-                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-ink-200 text-ink-500 transition-colors duration-150 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-ink-700 dark:text-ink-400 dark:hover:bg-ink-800"
+                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-ink-200 text-ink-500 transition-colors duration-150 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-ink-700 dark:text-ink-300 dark:hover:bg-ink-800"
                     aria-label="Következő oldal"
                   >
                     <PiCaretRightLight className="h-3.5 w-3.5" />
@@ -458,7 +458,7 @@ export default function Fajlok() {
               },
             ]}
             emptyState={
-              <div className="p-10 text-center text-ink-400 dark:text-ink-500">
+              <div className="p-10 text-center text-ink-400 dark:text-ink-300">
                 <PiFileLight className="mx-auto h-10 w-10 text-ink-300 dark:text-ink-700" />
                 <p className="mt-2 text-sm">Nincsenek feltöltött fájlok</p>
               </div>

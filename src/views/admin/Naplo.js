@@ -144,7 +144,7 @@ export default function Naplo() {
     <div className="flex h-full w-full flex-col px-0 md:px-4">
       <div className="flex-shrink-0">
         <PageHeader title="Módosítási napló" eyebrow="Rendszer" />
-        <p className="-mt-6 mb-4 text-sm text-ink-500 dark:text-ink-400">Teljes előzmény, lapozva</p>
+        <p className="-mt-6 mb-4 text-sm text-ink-500 dark:text-ink-300">Teljes előzmény, lapozva</p>
       </div>
       <div className="min-h-0 flex-1">
         <NaploTartalom />

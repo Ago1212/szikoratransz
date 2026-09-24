@@ -427,7 +427,7 @@ function FuvarFormInner({ initialData }) {
                     onClick={() => setUjMegbizoNyitva(true)}
                     title="Új megbízó felvétele"
                     aria-label="Új megbízó felvétele"
-                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-ink-200 text-ink-500 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 dark:border-ink-700 dark:text-ink-400 dark:hover:bg-ink-800"
+                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-ink-200 text-ink-500 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 dark:border-ink-700 dark:text-ink-300 dark:hover:bg-ink-800"
                   >
                     <PiPlusLight className="h-4 w-4" />
                   </button>
@@ -621,7 +621,7 @@ function FuvarFormInner({ initialData }) {
           <button
             type="button"
             onClick={() => history.push("/admin/fuvarok")}
-            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink-500 transition-colors hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 dark:text-ink-400 dark:hover:bg-ink-800"
+            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink-500 transition-colors hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 dark:text-ink-300 dark:hover:bg-ink-800"
           >
             <PiArrowLeftLight className="h-4 w-4" />
             Vissza
@@ -713,7 +713,7 @@ function FuvarFormInner({ initialData }) {
             <button
               type="button"
               onClick={() => setUjMegbizoNyitva(false)}
-              className="rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink-500 transition-colors hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 dark:text-ink-400 dark:hover:bg-ink-800"
+              className="rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink-500 transition-colors hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 dark:text-ink-300 dark:hover:bg-ink-800"
             >
               Mégse
             </button>
@@ -757,7 +757,7 @@ function FuvarFormInner({ initialData }) {
           <button
             type="button"
             onClick={() => setUtvonalValasztoNyitva(false)}
-            className="rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink-500 transition-colors hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 dark:text-ink-400 dark:hover:bg-ink-800"
+            className="rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink-500 transition-colors hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 dark:text-ink-300 dark:hover:bg-ink-800"
           >
             Mégse (új útvonal)
           </button>

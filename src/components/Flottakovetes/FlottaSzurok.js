@@ -55,7 +55,7 @@ export default function FlottaSzurok({
               className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors duration-150 ${
                 statuszSzuro === opt.kulcs
                   ? "bg-white text-brand-700 shadow-soft dark:bg-ink-700 dark:text-brand-300"
-                  : "text-ink-500 hover:text-ink-700 dark:text-ink-400 dark:hover:text-ink-100"
+                  : "text-ink-500 hover:text-ink-700 dark:text-ink-300 dark:hover:text-ink-100"
               }`}
             >
               {opt.dotClass && (
@@ -65,7 +65,7 @@ export default function FlottaSzurok({
             </button>
           ))}
         </div>
-        <span className="whitespace-nowrap text-xs text-ink-400 dark:text-ink-500">
+        <span className="whitespace-nowrap text-xs text-ink-400 dark:text-ink-300">
           {talalatSzam} találat
         </span>
       </div>

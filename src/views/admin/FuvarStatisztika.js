@@ -59,7 +59,7 @@ function StatisztikaFilterBar({ filter, onPreset, onFieldChange, soforok }) {
             className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors duration-150 ${
               activePreset === p.key
                 ? "bg-white text-brand-700 shadow-soft dark:bg-ink-700 dark:text-brand-300"
-                : "text-ink-500 hover:text-ink-700 dark:text-ink-400 dark:hover:text-ink-100"
+                : "text-ink-500 hover:text-ink-700 dark:text-ink-300 dark:hover:text-ink-100"
             }`}
           >
             {p.label}
@@ -69,14 +69,14 @@ function StatisztikaFilterBar({ filter, onPreset, onFieldChange, soforok }) {
           type="button"
           onClick={() => document.getElementById("statisztikaDatumTol")?.focus()}
           className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors duration-150 ${
-            !activePreset ? "bg-white text-brand-700 shadow-soft dark:bg-ink-700 dark:text-brand-300" : "text-ink-400 hover:text-ink-700 dark:text-ink-500 dark:hover:text-ink-100"
+            !activePreset ? "bg-white text-brand-700 shadow-soft dark:bg-ink-700 dark:text-brand-300" : "text-ink-400 hover:text-ink-700 dark:text-ink-300 dark:hover:text-ink-100"
           }`}
         >
           Egyedi
         </button>
       </div>
 
-      <label className="text-xs font-semibold text-ink-500 dark:text-ink-400">
+      <label className="text-xs font-semibold text-ink-500 dark:text-ink-300">
         Dátumtól
         <input
           id="statisztikaDatumTol"
@@ -87,7 +87,7 @@ function StatisztikaFilterBar({ filter, onPreset, onFieldChange, soforok }) {
           className="mt-1 block rounded-lg border border-ink-200 bg-white px-2 py-1.5 text-sm text-ink-700 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-200"
         />
       </label>
-      <label className="text-xs font-semibold text-ink-500 dark:text-ink-400">
+      <label className="text-xs font-semibold text-ink-500 dark:text-ink-300">
         Dátumig
         <input
           type="date"
@@ -98,7 +98,7 @@ function StatisztikaFilterBar({ filter, onPreset, onFieldChange, soforok }) {
         />
       </label>
 
-      <label className="text-xs font-semibold text-ink-500 dark:text-ink-400">
+      <label className="text-xs font-semibold text-ink-500 dark:text-ink-300">
         Sofőr
         <select
           name="soforId"
@@ -115,7 +115,7 @@ function StatisztikaFilterBar({ filter, onPreset, onFieldChange, soforok }) {
         </select>
       </label>
 
-      <label className="text-xs font-semibold text-ink-500 dark:text-ink-400">
+      <label className="text-xs font-semibold text-ink-500 dark:text-ink-300">
         Fuvar állapota
         <select
           name="fuvarAllapot"
@@ -131,7 +131,7 @@ function StatisztikaFilterBar({ filter, onPreset, onFieldChange, soforok }) {
         </select>
       </label>
 
-      <label className="text-xs font-semibold text-ink-500 dark:text-ink-400">
+      <label className="text-xs font-semibold text-ink-500 dark:text-ink-300">
         Dokumentum
         <select
           name="dokumentumSzuro"
@@ -210,7 +210,7 @@ function TrendChart({ trend, granularitas, onGranularitasChange }) {
               type="button"
               onClick={() => onGranularitasChange(g)}
               className={`rounded-md px-2 py-1 text-[11px] font-bold uppercase tracking-wide ${
-                granularitas === g ? "bg-white text-brand-700 shadow-soft dark:bg-ink-700 dark:text-brand-300" : "text-ink-500 dark:text-ink-400"
+                granularitas === g ? "bg-white text-brand-700 shadow-soft dark:bg-ink-700 dark:text-brand-300" : "text-ink-500 dark:text-ink-300"
               }`}
             >
               {g === "nap" ? "Nap" : g === "het" ? "Hét" : "Hónap"}

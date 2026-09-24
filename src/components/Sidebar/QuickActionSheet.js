@@ -16,7 +16,7 @@ export default function QuickActionSheet({ open, actions, onClose, onKerelmekCli
       }`}
     >
       <ul className="px-2 py-1.5">
-        <li className="px-3 pb-1.5 pt-1 text-[11px] font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">
+        <li className="px-3 pb-1.5 pt-1 text-[11px] font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-300">
           Gyors művelet
         </li>
         {actions.map((a) => (

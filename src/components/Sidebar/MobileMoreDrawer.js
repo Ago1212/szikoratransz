@@ -129,7 +129,7 @@ export default function MobileMoreDrawer({
                 aria-expanded={isOpen}
                 className="flex min-h-11 w-full items-center justify-between rounded-xl px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-ink-800"
               >
-                <span className="text-xs font-bold uppercase tracking-[0.1em] text-ink-500 dark:text-ink-400">
+                <span className="text-xs font-bold uppercase tracking-[0.1em] text-ink-500 dark:text-ink-300">
                   {label}
                 </span>
                 <PiCaretDownLight
@@ -179,9 +179,9 @@ export default function MobileMoreDrawer({
             <span className="block truncate text-sm font-semibold text-brand-900 dark:text-ink-50">
               {user?.name || user?.nev || "Fiók"}
             </span>
-            <span className="block truncate text-xs text-ink-400 dark:text-ink-500">{szerepkorNev}</span>
+            <span className="block truncate text-xs text-ink-400 dark:text-ink-300">{szerepkorNev}</span>
           </span>
-          <PiGearLight className="h-4 w-4 flex-shrink-0 text-ink-300 dark:text-ink-500" />
+          <PiGearLight className="h-4 w-4 flex-shrink-0 text-ink-300 dark:text-ink-300" />
         </Link>
         <button
           type="button"

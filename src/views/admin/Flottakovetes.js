@@ -229,7 +229,7 @@ export default function Flottakovetes() {
           vanBeallitva && (
             <div className="flex items-center gap-3">
               {frissitve && (
-                <span className="text-xs text-ink-400 dark:text-ink-500">
+                <span className="text-xs text-ink-400 dark:text-ink-300">
                   Frissítve: {frissitve.toLocaleTimeString("hu-HU")}
                 </span>
               )}
@@ -254,7 +254,7 @@ export default function Flottakovetes() {
           )
         }
       />
-      <p className="-mt-3 max-w-2xl text-sm text-ink-500 dark:text-ink-400">
+      <p className="-mt-3 max-w-2xl text-sm text-ink-500 dark:text-ink-300">
         A kamionok és furgonok pillanatnyi pozíciója a GPSmart flottakövető
         rendszerből, percenként automatikusan frissítve.
       </p>
@@ -267,7 +267,7 @@ export default function Flottakovetes() {
       ) : !vanBeallitva ? (
         <div className="flex flex-col items-center gap-3 rounded-3xl bg-white p-10 text-center shadow-soft ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800">
           <PiMapTrifoldLight className="h-10 w-10 text-ink-200 dark:text-ink-700" />
-          <p className="max-w-md text-sm text-ink-500 dark:text-ink-400">
+          <p className="max-w-md text-sm text-ink-500 dark:text-ink-300">
             A GPSmart flottakövetés kapcsolat még nincs beállítva ehhez a
             céghez. Állítsd be a{" "}
             <button

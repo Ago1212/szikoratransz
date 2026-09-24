@@ -692,7 +692,7 @@ export default function Sidebar({ isDark, onToggleDark }) {
             className={`h-[18px] w-[18px] flex-shrink-0 ${
               active
                 ? "text-brand-600 dark:text-brand-300"
-                : "text-ink-400 group-hover:text-ink-600 dark:text-ink-400 dark:group-hover:text-ink-100"
+                : "text-ink-400 group-hover:text-ink-600 dark:text-ink-300 dark:group-hover:text-ink-100"
             }`}
           />
           {text}
@@ -720,11 +720,11 @@ export default function Sidebar({ isDark, onToggleDark }) {
       aria-expanded={open}
       className="group mt-1 flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-left transition-colors duration-200 hover:bg-slate-100 dark:hover:bg-ink-800"
     >
-      <span className="text-xs font-bold uppercase tracking-[0.1em] text-ink-500 group-hover:text-ink-800 dark:text-ink-400 dark:group-hover:text-ink-50">
+      <span className="text-xs font-bold uppercase tracking-[0.1em] text-ink-500 group-hover:text-ink-800 dark:text-ink-300 dark:group-hover:text-ink-50">
         {label}
       </span>
       <PiCaretDownLight
-        className={`h-3.5 w-3.5 flex-shrink-0 text-ink-400 transition-all duration-200 group-hover:text-brand-600 dark:text-ink-500 dark:group-hover:text-brand-400 ${open ? "" : "-rotate-90"}`}
+        className={`h-3.5 w-3.5 flex-shrink-0 text-ink-400 transition-all duration-200 group-hover:text-brand-600 dark:text-ink-300 dark:group-hover:text-brand-400 ${open ? "" : "-rotate-90"}`}
       />
     </button>
   );
@@ -745,7 +745,7 @@ export default function Sidebar({ isDark, onToggleDark }) {
             <button
               type="button"
               onClick={onToggleDark}
-              className="relative flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-ink-400 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-700 dark:text-ink-400 dark:hover:bg-ink-800 dark:hover:text-ink-50"
+              className="relative flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-ink-400 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-700 dark:text-ink-300 dark:hover:bg-ink-800 dark:hover:text-ink-50"
               title={isDark ? "Világos mód" : "Sötét mód"}
               aria-label={
                 isDark ? "Világos mód bekapcsolása" : "Sötét mód bekapcsolása"
@@ -760,7 +760,7 @@ export default function Sidebar({ isDark, onToggleDark }) {
             <button
               type="button"
               onClick={() => setNotifOpen(true)}
-              className="relative flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-ink-400 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-700 dark:text-ink-400 dark:hover:bg-ink-800 dark:hover:text-ink-50"
+              className="relative flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-ink-400 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-700 dark:text-ink-300 dark:hover:bg-ink-800 dark:hover:text-ink-50"
               title="Értesítések"
               aria-label="Értesítések"
             >
@@ -1020,11 +1020,11 @@ export default function Sidebar({ isDark, onToggleDark }) {
           <button
             type="button"
             onClick={() => setSearchOpen(true)}
-            className="flex w-full items-center gap-2 rounded-xl border border-ink-100 bg-slate-50 px-3 py-2 text-left text-ink-400 transition-colors duration-200 hover:border-brand-200 hover:bg-white dark:border-ink-700 dark:bg-ink-800 dark:hover:border-brand-700 dark:hover:bg-ink-800"
+            className="flex w-full items-center gap-2 rounded-xl border border-ink-100 bg-slate-50 px-3 py-2 text-left text-ink-400 transition-colors dark:text-ink-300 duration-200 hover:border-brand-200 hover:bg-white dark:border-ink-700 dark:bg-ink-800 dark:hover:border-brand-700 dark:hover:bg-ink-800"
           >
             <PiMagnifyingGlassLight className="h-4 w-4 flex-shrink-0" />
             <span className="flex-1 truncate text-sm">Keresés</span>
-            <span className="flex-shrink-0 rounded-md border border-ink-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-ink-400 dark:border-ink-600 dark:bg-ink-900 dark:text-ink-400">
+            <span className="flex-shrink-0 rounded-md border border-ink-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-ink-400 dark:border-ink-600 dark:bg-ink-900 dark:text-ink-300">
               Ctrl+K
             </span>
           </button>
@@ -1048,11 +1048,11 @@ export default function Sidebar({ isDark, onToggleDark }) {
               <span className="block truncate text-sm font-semibold leading-tight text-brand-900 dark:text-ink-50">
                 {user?.name || user?.nev || "Fiók"}
               </span>
-              <span className="block truncate text-xs leading-tight text-ink-400 dark:text-ink-500">
+              <span className="block truncate text-xs leading-tight text-ink-400 dark:text-ink-300">
                 {szerepkorNev}
               </span>
             </span>
-            <PiGearLight className="h-4 w-4 flex-shrink-0 text-ink-300 transition-colors duration-200 group-hover:text-ink-500 dark:text-ink-500 dark:group-hover:text-ink-300" />
+            <PiGearLight className="h-4 w-4 flex-shrink-0 text-ink-300 transition-colors duration-200 group-hover:text-ink-500 dark:text-ink-300 dark:group-hover:text-ink-300" />
           </Link>
           <button
             onClick={handleLogout}
@@ -1090,7 +1090,7 @@ export default function Sidebar({ isDark, onToggleDark }) {
                 className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[11px] font-medium leading-none transition-colors duration-150 ${
                   active
                     ? "bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300"
-                    : "text-ink-400 dark:text-ink-500"
+                    : "text-ink-400 dark:text-ink-300"
                 }`}
                 onClick={(e) => {
                   if (isFuvarok && longPressFiredRef.current) {
@@ -1133,7 +1133,7 @@ export default function Sidebar({ isDark, onToggleDark }) {
             className={`relative flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[11px] font-medium leading-none transition-colors duration-150 ${
               notifOpen
                 ? "bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300"
-                : "text-ink-400 dark:text-ink-500"
+                : "text-ink-400 dark:text-ink-300"
             }`}
             onClick={() => {
               setQuickActionsOpen(false);
@@ -1155,7 +1155,7 @@ export default function Sidebar({ isDark, onToggleDark }) {
             className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[11px] font-medium leading-none transition-colors duration-150 ${
               drawerOpen
                 ? "bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300"
-                : "text-ink-400 dark:text-ink-500"
+                : "text-ink-400 dark:text-ink-300"
             }`}
             onClick={() => {
               setQuickActionsOpen(false);

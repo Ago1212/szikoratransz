@@ -108,7 +108,7 @@ export default function PiaciArakPanel() {
           aria-expanded={open}
           className="group flex w-full items-center justify-between px-2.5 py-2 text-left transition-colors duration-200 hover:bg-slate-100 dark:hover:bg-ink-800"
         >
-          <span className="text-[11px] font-medium text-ink-400 group-hover:text-ink-600 dark:text-ink-500 dark:group-hover:text-ink-300">
+          <span className="text-[11px] font-medium text-ink-400 group-hover:text-ink-600 dark:text-ink-300 dark:group-hover:text-ink-300">
             Piaci árak
           </span>
           <PiCaretDownLight
@@ -135,12 +135,12 @@ export default function PiaciArakPanel() {
                 .join(" · ");
               return (
                 <div key={t.kulcs} title={tooltip} className="flex items-center justify-between gap-2 py-1">
-                  <span className="truncate text-xs text-ink-500 dark:text-ink-400">{t.cimke}</span>
+                  <span className="truncate text-xs text-ink-500 dark:text-ink-300">{t.cimke}</span>
                   <span className="flex flex-shrink-0 items-baseline gap-1">
                     <span className={`text-xs font-semibold tabular-nums ${ertekSzin}`}>
                       {formatSzam(t.ertek, t.egyseg === "Ft/l" ? 0 : 2)}
                     </span>
-                    <span className="text-[10px] text-ink-400 dark:text-ink-500">{t.egyseg}</span>
+                    <span className="text-[10px] text-ink-400 dark:text-ink-300">{t.egyseg}</span>
                   </span>
                 </div>
               );

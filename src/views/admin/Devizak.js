@@ -88,7 +88,7 @@ export default function Devizak() {
     <div className="mx-auto w-full max-w-3xl">
       <PageHeader eyebrow="Pénzügyek" title="Devizák" />
 
-      <p className="-mt-4 mb-6 max-w-2xl text-sm text-ink-500 dark:text-ink-400">
+      <p className="-mt-4 mb-6 max-w-2xl text-sm text-ink-500 dark:text-ink-300">
         Itt kezelheted, mely devizák választhatók a Pénzforgalom tétel-felviteli űrlapján. A
         HUF (forint) mindig elérhető, alapértelmezett bázisdeviza. Devizás tétel rögzítésekor a
         rendszer az MNB aznapi hivatalos árfolyamán számítja át forintra az összeget.
@@ -111,12 +111,12 @@ export default function Devizak() {
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-ink-900 dark:text-ink-50">
                     {elem.kulcs}
-                    <span className="ml-2 font-normal text-ink-500 dark:text-ink-400">{elem.nev}</span>
+                    <span className="ml-2 font-normal text-ink-500 dark:text-ink-300">{elem.nev}</span>
                   </p>
                 </div>
                 {elem.vedett === "I" ? (
                   <span
-                    className="flex flex-shrink-0 items-center gap-1.5 rounded-full bg-ink-50 px-3 py-1 text-[11px] font-bold text-ink-400 dark:bg-ink-800 dark:text-ink-500"
+                    className="flex flex-shrink-0 items-center gap-1.5 rounded-full bg-ink-50 px-3 py-1 text-[11px] font-bold text-ink-400 dark:bg-ink-800 dark:text-ink-300"
                     title="Alapértelmezett bázisdeviza, nem törölhető."
                   >
                     <PiLockSimpleLight className="h-3.5 w-3.5" />
@@ -126,7 +126,7 @@ export default function Devizak() {
                   <button
                     type="button"
                     onClick={() => handleDelete(elem)}
-                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-red-50 hover:text-red-600 dark:text-ink-500 dark:hover:bg-red-950/50 dark:hover:text-red-300"
+                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-red-50 hover:text-red-600 dark:text-ink-300 dark:hover:bg-red-950/50 dark:hover:text-red-300"
                     aria-label="Törlés"
                   >
                     <PiTrashLight className="h-5 w-5" />
@@ -168,7 +168,7 @@ export default function Devizak() {
                       setUjKod("");
                       setUjNev("");
                     }}
-                    className="flex-shrink-0 px-1 text-xs font-semibold text-ink-400 hover:text-ink-700 dark:text-ink-500 dark:hover:text-ink-100"
+                    className="flex-shrink-0 px-1 text-xs font-semibold text-ink-400 hover:text-ink-700 dark:text-ink-300 dark:hover:text-ink-100"
                   >
                     Mégse
                   </button>

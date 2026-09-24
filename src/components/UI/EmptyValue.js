@@ -5,5 +5,5 @@ import React from "react";
 // első pillantásra hiányos/hibás rekordnak tűnt, nem szándékosan üresnek.
 // Dőlt, halványabb stílus egyértelműsíti, hogy ez egy tudatos üres állapot.
 export default function EmptyValue({ children = "Nincs megadva" }) {
-  return <span className="italic text-ink-400 dark:text-ink-500">{children}</span>;
+  return <span className="italic text-ink-400 dark:text-ink-300">{children}</span>;
 }

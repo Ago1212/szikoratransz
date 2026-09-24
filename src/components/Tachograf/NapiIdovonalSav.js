@@ -17,7 +17,7 @@ const oraPerc = (perc) => `${String(Math.floor(perc / 60)).padStart(2, "0")}:${S
 
 export default function NapiIdovonalSav({ valtozasok }) {
   if (!valtozasok || valtozasok.length === 0) {
-    return <p className="text-sm text-ink-400 dark:text-ink-500">Nincs rögzített állapotváltás erre a napra.</p>;
+    return <p className="text-sm text-ink-400 dark:text-ink-300">Nincs rögzített állapotváltás erre a napra.</p>;
   }
 
   const rendezett = [...valtozasok].sort((a, b) => a.perc - b.perc);
@@ -42,7 +42,7 @@ export default function NapiIdovonalSav({ valtozasok }) {
           />
         ))}
       </div>
-      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-500 dark:text-ink-400">
+      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-500 dark:text-ink-300">
         {Object.entries(TEVEKENYSEG_LABEL).map(([key, label]) => (
           <span key={key} className="flex items-center gap-1.5">
             <span className={`inline-block h-2.5 w-2.5 rounded-sm ${TONE_COLOR[key]}`} />

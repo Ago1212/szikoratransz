@@ -93,7 +93,7 @@ export default function FajlUploadZone({ admin, id, tabla, onUploadSuccess, comp
         <p className={`text-center font-medium text-ink-700 dark:text-ink-200 ${compact ? "text-xs" : "text-sm"}`}>
           {compact ? "Húzd ide a fájlokat, vagy kattints a feltöltéshez" : "Húzd ide a fájlokat feltöltéshez"}
         </p>
-        {!compact && <p className="text-xs text-ink-400 dark:text-ink-500">vagy kattints a tallózáshoz — egyszerre több fájl is</p>}
+        {!compact && <p className="text-xs text-ink-400 dark:text-ink-300">vagy kattints a tallózáshoz — egyszerre több fájl is</p>}
         <input
           ref={inputRef}
           type="file"
@@ -132,7 +132,7 @@ export default function FajlUploadZone({ admin, id, tabla, onUploadSuccess, comp
                   type="button"
                   onClick={() => ujra(tetel.kulcs)}
                   title="Újra"
-                  className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-ink-500 hover:bg-slate-100 hover:text-brand-600 dark:text-ink-400 dark:hover:bg-ink-800"
+                  className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-ink-500 hover:bg-slate-100 hover:text-brand-600 dark:text-ink-300 dark:hover:bg-ink-800"
                 >
                   <PiArrowClockwiseLight className="h-4 w-4" />
                 </button>
@@ -141,7 +141,7 @@ export default function FajlUploadZone({ admin, id, tabla, onUploadSuccess, comp
                 type="button"
                 onClick={() => eltavolitas(tetel.kulcs)}
                 title="Eltávolítás a sorból"
-                className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-ink-400 hover:bg-slate-100 hover:text-ink-600 dark:text-ink-500 dark:hover:bg-ink-800"
+                className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-ink-400 hover:bg-slate-100 hover:text-ink-600 dark:text-ink-300 dark:hover:bg-ink-800"
               >
                 <PiXLight className="h-4 w-4" />
               </button>

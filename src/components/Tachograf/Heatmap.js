@@ -63,7 +63,7 @@ export default function Heatmap({ sorok, napokSzama = 28, showLegend = true }) {
         ))}
       </div>
       {showLegend && (
-        <div className="mt-2.5 flex flex-nowrap items-center gap-1.5 text-[11px] text-ink-400 dark:text-ink-500">
+        <div className="mt-2.5 flex flex-nowrap items-center gap-1.5 text-[11px] text-ink-400 dark:text-ink-300">
           <span>Kevesebb</span>
           {SZINTEK.map((sz) => (
             <span key={sz.cls} className={`h-2.5 w-2.5 flex-shrink-0 rounded-[3px] ${sz.cls}`} />

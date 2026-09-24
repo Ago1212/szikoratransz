@@ -39,17 +39,17 @@ function Lista({ cim, tone, tetelek, onMegnyitas, renderMasodikSor }) {
             <span className="min-w-0 truncate text-ink-700 dark:text-ink-200">
               {t.utvonal}
               {t.megbizoNev && (
-                <span className="text-ink-400 dark:text-ink-500">
+                <span className="text-ink-400 dark:text-ink-300">
                   {" "}
                   — {t.megbizoNev}
                 </span>
               )}
-              <span className="text-ink-400 dark:text-ink-500">
+              <span className="text-ink-400 dark:text-ink-300">
                 {" "}
                 · {forint(t.osszesen)}
               </span>
               {renderMasodikSor && (
-                <span className="text-ink-400 dark:text-ink-500">
+                <span className="text-ink-400 dark:text-ink-300">
                   {" "}
                   · {renderMasodikSor(t)}
                 </span>

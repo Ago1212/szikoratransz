@@ -39,7 +39,7 @@ function ElonezetTartalom({ file, dataUrl, mime, loading, hasonloFajlok, onValas
         ) : (
           <div className="flex flex-col items-center gap-3 py-10 text-center">
             <FileTypeIcon file={file} className="h-24 w-[72px]" />
-            <p className="text-xs text-ink-400 dark:text-ink-500">Nincs előnézet ehhez a fájltípushoz.</p>
+            <p className="text-xs text-ink-400 dark:text-ink-300">Nincs előnézet ehhez a fájltípushoz.</p>
           </div>
         )}
       </div>
@@ -73,7 +73,7 @@ function ElonezetTartalom({ file, dataUrl, mime, loading, hasonloFajlok, onValas
         {file.cimkek && (
           <div className="flex flex-wrap gap-1.5">
             {file.cimkek.split(",").map((c) => c.trim()).filter(Boolean).map((c) => (
-              <span key={c} className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-ink-500 dark:bg-ink-800 dark:text-ink-400">
+              <span key={c} className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-ink-500 dark:bg-ink-800 dark:text-ink-300">
                 {c}
               </span>
             ))}
@@ -83,7 +83,7 @@ function ElonezetTartalom({ file, dataUrl, mime, loading, hasonloFajlok, onValas
 
       {hasonloFajlok.length > 0 && (
         <div className="mt-6 flex-1">
-          <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-500">
+          <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-400 dark:text-ink-300">
             <PiStackLight className="h-3.5 w-3.5" />
             Hasonló fájlok
           </h4>
@@ -96,7 +96,7 @@ function ElonezetTartalom({ file, dataUrl, mime, loading, hasonloFajlok, onValas
                   className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-ink-600 hover:bg-slate-100 dark:text-ink-300 dark:hover:bg-ink-800"
                 >
                   <span className="truncate">{f.filename}</span>
-                  <span className="flex-shrink-0 text-ink-400 dark:text-ink-500">{formatFileSize(f.filesize)}</span>
+                  <span className="flex-shrink-0 text-ink-400 dark:text-ink-300">{formatFileSize(f.filesize)}</span>
                 </button>
               </li>
             ))}
@@ -159,7 +159,7 @@ export default function FajlPreviewPanel({ file, onClose, onValasztFajlt }) {
       <div className="fixed inset-0 z-50 flex flex-col bg-white dark:bg-ink-950" role="dialog" aria-modal="true" aria-label={file.filename}>
         <div className="flex flex-shrink-0 items-center justify-between border-b border-ink-100 px-4 py-3 dark:border-ink-800">
           <p className="truncate text-sm font-semibold text-brand-900 dark:text-ink-50">{file.filename}</p>
-          <button type="button" onClick={onClose} className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-ink-500 hover:bg-slate-100 dark:text-ink-400 dark:hover:bg-ink-800">
+          <button type="button" onClick={onClose} className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-ink-500 hover:bg-slate-100 dark:text-ink-300 dark:hover:bg-ink-800">
             <PiXLight className="h-5 w-5" />
           </button>
         </div>
@@ -179,7 +179,7 @@ export default function FajlPreviewPanel({ file, onClose, onValasztFajlt }) {
       >
         <div className="mb-4 flex items-center justify-between">
           <p className="truncate pr-2 text-sm font-semibold text-brand-900 dark:text-ink-50">{file.filename}</p>
-          <button type="button" onClick={onClose} className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-ink-500 hover:bg-slate-100 dark:text-ink-400 dark:hover:bg-ink-800">
+          <button type="button" onClick={onClose} className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-ink-500 hover:bg-slate-100 dark:text-ink-300 dark:hover:bg-ink-800">
             <PiXLight className="h-5 w-5" />
           </button>
         </div>
