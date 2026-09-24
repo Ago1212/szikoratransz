@@ -60,12 +60,16 @@ class PushInterface {
         return ['success' => true];
     }
 
-    public function vanFeliratkozva($felhasznaloTipus, $felhasznaloId) {
+    public function vanFeliratkozva($felhasznaloTipus, $felhasznaloId, $endpoint = null) {
         $stmt = $this->db->prepare(
             'SELECT COUNT(*) FROM push_feliratkozasok WHERE felhasznalo_tipus = :felhasznalo_tipus AND felhasznalo_id = :felhasznalo_id'
+            . ($endpoint !== null ? ' AND endpoint = :endpoint' : '')
         );
         $stmt->bindValue(':felhasznalo_tipus', $felhasznaloTipus);
         $stmt->bindValue(':felhasznalo_id', $felhasznaloId);
+        if ($endpoint !== null) {
+            $stmt->bindValue(':endpoint', $endpoint);
+        }
         $stmt->execute();
         return ['success' => true, 'van' => (int) $stmt->fetchColumn() > 0];
     }

@@ -70,10 +70,38 @@ class HelyszinInterface {
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
             $szamok[$row['helyszin_id']] = (int) $row['db'];
         }
+        $utolsok = [];
+        $stmt = $this->db->prepare(
+            "SELECT helyszin_id, szoveg, letrehozva FROM helyszin_megjegyzesek
+             WHERE torolt <> 'I' AND helyszin_id IN ($placeholders) ORDER BY letrehozva ASC"
+        );
+        $stmt->execute($ids);
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $utolsok[$row['helyszin_id']] = $row['szoveg'];
+        }
+        $fajlSzamok = [];
+        $stmt = $this->db->prepare(
+            "SELECT rowid, COUNT(*) AS db FROM fajlok
+             WHERE tabla = 'helyszin' AND torolt <> 'I' AND rowid IN ($placeholders) GROUP BY rowid"
+        );
+        $stmt->execute($ids);
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $fajlSzamok[$row['rowid']] = (int) $row['db'];
+        }
         foreach ($helyszinek as &$h) {
             $h['megjegyzesek_szama'] = $szamok[$h['id']] ?? 0;
+            $h['utolso_megjegyzes'] = $utolsok[$h['id']] ?? null;
+            $h['fajlok_szama'] = $fajlSzamok[$h['id']] ?? 0;
         }
         return $helyszinek;
+    }
+
+    private function helyAdatok($data) {
+        $cim = trim((string) ($data['cim'] ?? ''));
+        $lat = $data['lat'] ?? null;
+        $lng = $data['lng'] ?? null;
+        $ervenyes = is_numeric($lat) && is_numeric($lng) && abs((float) $lat) <= 90 && abs((float) $lng) <= 180;
+        return [$cim === '' ? null : mb_substr($cim, 0, 255), $ervenyes ? round((float) $lat, 6) : null, $ervenyes ? round((float) $lng, 6) : null];
     }
 
     public function getHelyszin($id, $ceg_id) {
@@ -95,14 +123,18 @@ class HelyszinInterface {
 
     public function newHelyszin($data, $ceg_id) {
         try {
-            $query = "INSERT INTO helyszinek (admin, nev) VALUES (:admin, :nev)";
+            [$cim, $lat, $lng] = $this->helyAdatok($data);
+            $query = "INSERT INTO helyszinek (admin, nev, cim, lat, lng) VALUES (:admin, :nev, :cim, :lat, :lng)";
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(':admin', $ceg_id);
             $stmt->bindValue(':nev', $data['nev']);
+            $stmt->bindValue(':cim', $cim);
+            $stmt->bindValue(':lat', $lat);
+            $stmt->bindValue(':lng', $lng);
             $stmt->execute();
 
             $newId = $this->db->lastInsertId();
-            return ['success' => true, 'message' => 'Helyszín rögzítve.', 'helyszin' => ['id' => $newId, 'nev' => $data['nev']]];
+            return ['success' => true, 'message' => 'Helyszín rögzítve.', 'helyszin' => ['id' => $newId, 'nev' => $data['nev'], 'cim' => $cim, 'lat' => $lat, 'lng' => $lng]];
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
@@ -110,16 +142,30 @@ class HelyszinInterface {
 
     public function saveHelyszinData($data, $ceg_id) {
         try {
-            $query = "UPDATE helyszinek SET nev = :nev WHERE id = :id AND admin = :ceg_id";
-            $stmt = $this->db->prepare($query);
-            $stmt->bindValue(':id', $data['id']);
-            $stmt->bindValue(':nev', $data['nev']);
-            $stmt->bindValue(':ceg_id', $ceg_id);
-            $stmt->execute();
-
-            if ($stmt->rowCount() === 0) {
+            $letezik = $this->db->prepare("SELECT id FROM helyszinek WHERE id = :id AND admin = :ceg_id AND torolt <> 'I'");
+            $letezik->bindValue(':id', $data['id']);
+            $letezik->bindValue(':ceg_id', $ceg_id);
+            $letezik->execute();
+            if (!$letezik->fetch()) {
                 return ['success' => false, 'message' => 'A helyszín nem található, vagy nem a te céged tulajdona.'];
             }
+
+            $mezok = ['nev = :nev'];
+            $ertekek = [':id' => $data['id'], ':nev' => $data['nev'], ':ceg_id' => $ceg_id];
+            if (array_key_exists('cim', $data) || array_key_exists('lat', $data) || array_key_exists('lng', $data)) {
+                [$cim, $lat, $lng] = $this->helyAdatok($data);
+                $mezok[] = 'cim = :cim';
+                $mezok[] = 'lat = :lat';
+                $mezok[] = 'lng = :lng';
+                $ertekek[':cim'] = $cim;
+                $ertekek[':lat'] = $lat;
+                $ertekek[':lng'] = $lng;
+            }
+            $stmt = $this->db->prepare("UPDATE helyszinek SET " . implode(', ', $mezok) . " WHERE id = :id AND admin = :ceg_id");
+            foreach ($ertekek as $kulcs => $ertek) {
+                $stmt->bindValue($kulcs, $ertek);
+            }
+            $stmt->execute();
 
             return ['success' => true, 'message' => 'Mentés sikeres.'];
         } catch (Exception $e) {

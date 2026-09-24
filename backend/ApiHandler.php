@@ -608,6 +608,29 @@ class ApiHandler {
     // "saját ceg_id" feloldás, ami MINDKÉT munkamenet-típusnál a valódi,
     // szerver-oldali hovatartozást adja vissza, sosem a kliens által
     // küldött `admin`/`ceg_id` mezőt.
+    private function marFeltoltottFuvarDokumentum($cegId, $fuvarId, $tipus, $base64) {
+        $tartalom = base64_decode((string) $base64, true);
+        if ($tartalom === false || $tartalom === '') {
+            return false;
+        }
+        $stmt = $this->db->prepare(
+            "SELECT hely FROM fajlok WHERE admin = :ceg_id AND tabla = 'fuvar' AND rowid = :rowid AND cimkek = :tipus
+             AND filesize = :meret AND torolt <> 'I' AND feltoltve > NOW() - INTERVAL 1 DAY"
+        );
+        $stmt->bindValue(':ceg_id', $cegId);
+        $stmt->bindValue(':rowid', $fuvarId);
+        $stmt->bindValue(':tipus', $tipus);
+        $stmt->bindValue(':meret', strlen($tartalom));
+        $stmt->execute();
+        $hash = md5($tartalom);
+        foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $hely) {
+            if (is_file($hely) && md5_file($hely) === $hash) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private function ellenorizSoforFajlTabla(array $request, $tabla, $rowid, bool $iras): void {
         $session = $this->requireValidSession($request);
         if ($session['felhasznalo_tipus'] !== 'sofor') {
@@ -1624,7 +1647,7 @@ class ApiHandler {
                 case 'getPushStatusz':
                     global $apiConfig;
                     $session = $this->requireValidSession($request);
-                    $statusz = $pushInterface->vanFeliratkozva($session['felhasznalo_tipus'], $session['felhasznalo_id']);
+                    $statusz = $pushInterface->vanFeliratkozva($session['felhasznalo_tipus'], $session['felhasznalo_id'], $request['endpoint'] ?? null);
                     $statusz['vapidPublicKey'] = $apiConfig['vapidPublicKey'];
                     echo json_encode($statusz);
                     return;
@@ -1878,6 +1901,10 @@ class ApiHandler {
                     $fuvarJavaslat = $fuvarInterface->getSajatFuvar($request['fuvarId'], $soforId, $cegId);
                     if (!$fuvarJavaslat['success']) {
                         echo json_encode(['success' => false, 'message' => 'A fuvar nem található.']);
+                        return;
+                    }
+                    if ($this->marFeltoltottFuvarDokumentum($cegId, $request['fuvarId'], $tipus, $request['file'] ?? '')) {
+                        echo json_encode(['success' => true, 'message' => 'A fájl már fel van töltve.', 'duplikalt' => true]);
                         return;
                     }
                     [$feltoltoTipus, $feltoltoId, $feltoltoNev] = $this->resolveFeltolto($request);
@@ -2725,7 +2752,7 @@ class ApiHandler {
             $stmt->execute();
         }
 
-        return ['success' => false, 'message' => 'Login failed. Incorrect email or password.'];
+        return ['success' => false, 'message' => 'Hibás e-mail cím vagy jelszó.'];
     }
 
     // A korábbi session_start()/session_unset() vestigiális volt — sehol
