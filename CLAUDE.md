@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Szikora Transz flottakezelő (fleet management) system: a React admin/driver UI on top of a plain PHP (no framework) REST-ish API, backed by MySQL/MariaDB via PDO. Built on the Notus React (Creative Tim) Tailwind admin template — most of `src/components`, `src/assets`, `src/layouts` are template scaffolding, not app-specific code.
 
-Domain modules (mirrored across frontend views, backend interfaces, and API actions): kamion (trucks), potkocsi (trailers), furgon (vans — self-propelled, full parity with kamion; see "Furgon (van)" below), soforok (drivers), karbantartasok (maintenance records), bejelentesek (incident reports — list/create/edit/delete backend is real, but the in-report message thread is still frontend-only fake data, see "Database schema" below), files, email, esemenyek/egyediHataridok (calendar events / custom deadlines — computed on the fly, no dedicated table).
+Domain modules (mirrored across frontend views, backend interfaces, and API actions): kamion (trucks), potkocsi (trailers), furgon (vans — self-propelled, full parity with kamion; see "Furgon (van)" below), soforok (drivers), karbantartasok (maintenance records), bejelentesek (incident reports — fully real backend, including the in-report message thread), files, email, esemenyek/egyediHataridok (calendar events / custom deadlines — computed on the fly, no dedicated table).
 
 ## Commands
 
@@ -39,7 +39,7 @@ All API calls funnel through two helpers in `src/utils/`:
 - `fetchAction(action, payload)` — POSTs `{ authHash, action, ...payload }` as JSON to `api.php` and returns the parsed JSON response `{ success, ... }`.
 - `downloadFileAction(id, filename)` — same pattern, but decodes a base64 file from the response and triggers a browser download.
 
-The API base URL and `authHash` are hardcoded client-side constants in each of these files (dev: `http://localhost:8001/api.php`, prod: `https://szikora-transz.hu/backend/api.php`). **Note the dev port mismatch**: `todo.txt` documents running the PHP server on port 8000, but the frontend code points at port 8001 — start PHP accordingly (`php8.2 -S localhost:8001`) or update both `src/utils/*.js` files if changing this.
+The API base URL and `authHash` are hardcoded client-side constants in each of these files (dev: `http://localhost:8000/api.php` — `fetchAction.js`, `downloadFileAction.js`, `fajlUploadXhr.js` mind egyezően, prod: `https://szikora-transz.hu/backend/api.php`). Start PHP with `cd backend && php8.2 -S localhost:8000` (2026-09-24 óta mindhárom kliens-oldali URL 8000-re mutat; ha változtatod, mindhármat együtt kell).
 
 ### Backend API dispatch
 Single entrypoint `backend/api.php` decodes the JSON POST body and delegates everything to `ApiHandler` (`backend/ApiHandler.php`). `ApiHandler`:
@@ -71,6 +71,18 @@ Every admin-facing action that mutates or reads scoped data resolves identity **
 - The backend session itself was **not** changed (still a fixed 30-day expiry from login, no sliding/refresh-on-activity logic, no cleanup cron for stale rows) — the mobile "keeps asking to log in" complaint was fully explained by the client-side storage choice, not the server-side expiry window, so that was left alone rather than widened speculatively.
 - Verified locally end-to-end (not just read the code): inserted a real row into the local `sessions` table for `admin.id=1`, drove it through Playwright — direct navigation to `/admin/dashboard` with only `localStorage` populated stays authenticated, `/auth/login` auto-redirects away when already authenticated, and a **brand-new browser context** (`storageState` carrying over only `localStorage`, simulating a killed-and-relaunched mobile app process) still lands on `/admin/dashboard` without hitting the login form — this is the actual scenario that was broken before.
 
+### Dátum-string képzés a frontenden: `helyiDatum()`, soha `toISOString().slice(0, 10)` (2026-09-24)
+A `toISOString()` UTC-ben formáz — egy helyi éjfélre állított `Date` (pl. `new Date(ev, ho, 1)`) CEST-ben az ELŐZŐ napot adja, a "ma" pedig 00:00–02:00 között tegnap. Ez okozta, hogy a Dashboard "Nettó eredmény (e havi)" az előző hónap utolsó napját is beszámolta, és ezért eltért a Pénzforgalom "Ez a hónap" számától. Minden `YYYY-MM-DD` képzés a `src/utils/helyiDatum.js`-t használja.
+
+### Karbantartás-mellékletek: `fajlok_szama` + `karbantartas_jarmu_tipus` (2026-09-24)
+`getKarbantartasok` soronként `fajlok_szama`-t ad vissza (egyetlen `GROUP BY` lekérdezés) — a lista többé nem kér soronként `getFiles`-t, a teljes fájllista csak szerkesztésre nyitáskor töltődik. A kamion/pótkocsi/furgon karbantartások három KÜLÖN táblában, saját auto-incrementtel élnek, ezért a `fajlok` sor a `rowid` mellett `karbantartas_jarmu_tipus`-t is tárol (`sql/46.sql`, a meglévő sorok a létező karbantartás-táblából besorolva; két árva, egyik táblában sem létező `rowid=41` sor NULL maradt és már nem jelenik meg). `getFiles`/`fileUpload` `tabla:"karbantartasok"` esetén `jarmuTipus` paramétert vár — enélkül egy azonos id-jú kamion- és furgon-karbantartás egymás mellékleteit látná. A frontend a fájl-state-et `${tipus}:${id}` kulccsal tárolja.
+
+### Lejárat-emlékeztető cron: push is (2026-09-24)
+`cron/lejarat_emlekezteto.php` az admin e-mail mellett push-t is küld (ugyanazzal a napi `lejarat_emlekezteto_log` de-dup-pal), és a SOFŐRÖK is kapnak push-t a saját okmányaikról (személyi/jogsi/GKI/ADR) 30/7/1/0 nappal a lejárat előtt — de-dup: `sofor_lejarat_ertesites_log` (`sofor_id`+`mezo`+`lejarat`+`merfoldko` PK, `INSERT IGNORE`), tehát egy újrafuttatás vagy egy kimaradt nap sem küld duplán, egy módosított lejárati dátum viszont újra jogosít. **Éles teszthez**: a script valódi e-mailt küld minden adminnak — helyben úgy teszteld, hogy előtte a mai napra minden admin-ra beszúrsz egy `lejarat_emlekezteto_log` sort, utána töröld.
+
+### Fájl-actionök sofőr-munkamenettel (2026-09-24)
+A fájl-actionök `resolveSajatCegId()`-t használnak (admin ÉS sofőr), ami csak céget szűr, szerepkört nem — emiatt egy sofőr korábban `getFiles tabla:"admin"`-nal a teljes céges fájlállományt lekérhette/törölhette. Most: `getFiles`/`fileUpload` sofőrnél csak `helyszin` (ill. feltöltésnél a saját `bejelentesek` sora) táblát enged (`ellenorizSoforFajlTabla()`), `downloadFile` sofőrnél csak helyszín-, saját feltöltésű, saját fuvar-/bejelentés-/sofor-fájlt (`ellenorizSoforFajlLetoltes()`), a `deleteFile`/`renameFile`/`updateFajlCimkek`/`downloadFilesZip`/`getFajlStatisztika`/`getHasonloFajlok` pedig `resolveKerelmezo()`-val admin-only. Új sofőr-oldali fájl-felhasználásnál ezt a két ellenőrzőt kell bővíteni.
+
 ### Security/logic audit és fixek (2026-07-19) — összefoglaló, teljes jegyzőkönyv: `CLAUDE-history.md`
 Egy teljes adversarial review után minden domain-interfész (kamion/potkocsi/furgon/soforok/bejelentesek/szabadsag/helyszin/karbantartasok/tankolas/files) áttért a fenti "resolve server-side" mintára — korábban csak `ugyfelInterface.php`/`csapatInterface.php`/`koltsegInterface.php`/`jarmuValtasInterface.php` tette ezt helyesen; ha egy régebbi kódrészletben client-submitted `id`/`ceg_id`/`admin`/`sofor_id` mezőt látsz közvetlenül SQL-be kötve, az valószínűleg egy azóta javított minta maradványa. Azóta is élő konvenciók ebből a körből: `backend/cron/*.php` mind `PHP_SAPI !== 'cli'` guard mögött fut (webrootön élnek, saját auth nélkül); `koltsegInterface.php` elutasít egy tételt, ha egynél több jármű-FK-t (`kamion_id`/`potkocsi_id`/`furgon_id`) kap egyszerre; a `requestPasswordReset` 3 kérés/15perc rate-limitre van állítva (mindig `success:true`-t ad, account-enumeration elkerülésére); a session-lejárat SQL-oldali `(lejarat < NOW())`-on fut, nem PHP `strtotime()`-on (ld. "PHP/MySQL timezone mismatch" lentebb). **Nyitott, tudatosan nem javított tétel**: a `navEncryptionKey` (`config.php`) ugyanabban a committolt fájlban él, mint amit véd — rotálása minden tenant NAV/GPSmart hitelesítőjének újra-bekérését igényelné, ezért egy jövőbeli koordinált rotáció+újratitkosítás vár rá.
 
@@ -94,7 +106,7 @@ Inspected directly via `information_schema` (local DB, see "Local dev environmen
   - `fajlok` — generic polymorphic attachments table: `tabla` enum (`kamion`/`potkocsi`/`furgon`/`sofor`/`egyeb`/`admin`/`karbantartasok`) + `rowid` (indexed) says which row in which domain table the file belongs to. This is what `getFiles`/`fileUpload`/`deleteFile` actually use.
   - `kamion_fajlok` / `potkocsi_fajlok` — an older, differently-shaped per-domain file table (`session_id`/`client_id`/`fh` columns), currently **0 rows in both** — looks superseded by the generic `fajlok` table above; don't build new file-upload features against these.
   - `egyedi_hataridok` — custom one-off deadlines (`admin`, `leiras`, `datum`).
-  - **`bejelentesek` (incident reports) IS a real table with a real CRUD backend** (`backend/interface/bejelentesekInterface.php`: `getBejelentesek`/`newBejelentes`/`saveBejelentesData`/`deleteBejelentes`/`generateKarbantartasFromBejelentes`, all real `SELECT`/`INSERT`/`UPDATE` against the table) — an earlier version of this doc claimed the whole feature was fake/stub scaffolding; that was true once but is no longer accurate for the list/create/edit/delete part. What's still genuinely fake: the `getMessages`/`sendMessage` actions the frontend chat/message-thread UI (`CardBejelentesek.js`) calls **don't exist anywhere in `ApiHandler::getActions()`/`process()`** — only the in-report message THREAD is frontend-only scaffolding with no backing data.
+  - **`bejelentesek` (incident reports) IS a real table with a real CRUD backend** (`backend/interface/bejelentesekInterface.php`: `getBejelentesek`/`newBejelentes`/`saveBejelentesData`/`deleteBejelentes`/`generateKarbantartasFromBejelentes`, all real `SELECT`/`INSERT`/`UPDATE` against the table) — an earlier version of this doc claimed the whole feature was fake/stub scaffolding; that was true once but is no longer accurate for the list/create/edit/delete part. The in-report message thread (`getMessages`/`sendMessage`, `bejelentes_uzenetek` table) is real as well since 2026-07-20 — see the "Teendők akció-központ" section.
 - **The event calendar has no dedicated table.** `ApiHandler::getEsemenyek()` computes the feed on every request by scanning expiry-date columns across `user` (jogsi/szemelyi/gki/adr lejárat), `kamion`/`potkocsi` (műszaki/poroltó/adr/tachográf/emelőhátfal/kötélzet/kaszkó lejárat, plus insurance payment schedules run through `calculateNextPaymentDate()`), then appending `egyedi_hataridok` rows and `kamion_karbantartars`/`potkocsi_karbantartars` maintenance dates — all merged into one flat array. There's nothing to migrate/query directly for "events"; to add a new event source, add another block to `getEsemenyek()`.
 
 ### PHP/MySQL timezone mismatch (general gotcha)
@@ -295,7 +307,7 @@ Egy 67 tételes fejlesztési-audit artifactból egy 20 elemes köteg valósult m
 
 ## Teendők akció-központ, sofőr–admin üzenetküldés, bankszámla-kivonat import (2026-07-20) — összefoglaló, teljes jegyzőkönyv: `CLAUDE-history.md`
 - **Teendők akció-központ** (Dashboard) — `ApiHandler::getTeendok()` a meglévő jármű-váltás/nyitott-bejelentés/ajánlatkérés forrásokat fésüli össze egy `TeendokCard`-ba (csak akkor jelenik meg, ha van ténylegesen nyitott tétel), inline jóváhagyás/elutasítás/megnyitás akciókkal.
-- **Valódi sofőr–admin üzenetküldés** — `bejelentes_uzenetek` tábla + `bejelentesekInterface::getMessages()`/`sendMessage()` pótolja a korábban dokumentáltan csak frontend-mock üzenetfolyamot. A szerzőt mindig a szerver-oldalon feloldott munkamenet tölti ki, sosem kliens-mező. Sofőr→admin irányban push-értesítés megy (`pushInterface::sendPushAdminnak()`), admin→sofőr irányban nincs (nincs driver-oldali push-infra).
+- **Valódi sofőr–admin üzenetküldés** — `bejelentes_uzenetek` tábla + `bejelentesekInterface::getMessages()`/`sendMessage()` pótolja a korábban dokumentáltan csak frontend-mock üzenetfolyamot. A szerzőt mindig a szerver-oldalon feloldott munkamenet tölti ki, sosem kliens-mező. Sofőr→admin irányban push-értesítés megy (`pushInterface::sendPushAdminnak()`), admin→sofőr irányban 2026-09-24 óta szintén (`ApiHandler::ertesitSofort()`: admin üzenet a bejelentéshez, bejelentés `statusz`/`admin_valasz` változása — `ertesitBejelentesValtozasrol()` előtte/utána összevetéssel, változatlan mentésnél nem küld —, jármű-váltási kérelem elbírálása).
 - **Bank-import** (`backend/interface/bankImportInterface.php`) — "digest, admin dönt" kétlépéses minta (`elemezCsv()`/`alkalmaz()`), nincs egyetlen felismert banki CSV-formátum, az admin kézzel rendeli hozzá az oszlopokat. De-duplikáció: `bank_import_tetelek` (`admin`+`tetel_hash` UNIQUE). `egyeb_koltsegek.bank_parositva` jelzi a banki igazoltságot.
 - **`Modal.js` portolás + dark-mode fix**: a desktop ág mostantól `ReactDOM.createPortal`-lal `document.body`-ra portol (a korábbi, saját komponensfán belüli renderelés egy széles modalnál a Sidebar alá/fölé keveredett a layout fixed-wrapperje miatt) — ez **minden** meglévő `Modal`-hívást érint. Portolás után a `dark` osztály öröklése megszakadt (ugyanaz a hibaosztály, mint a `ToastContainer`-nél), ezért a `Modal.js` maga hívja a `useDarkMode()`-ot.
 
@@ -660,12 +672,16 @@ térköz. Mind javítva:
 - Intro bekezdés `text-[#23262B]/75` → `/85`; az eyebrow-jelvény `text-xs`
   (12px, normál súly) → `text-[13px] font-bold`, sötétebb szövegszín
   (`shade(accent, -8)`) a jobb kontrasztért.
-  Új szabály, ha ez a minta újra előjön: `font-[Overpass_Mono] font-bold`
-  együtt IDE-ben "cssConflict" figyelmeztetést ad (mindkettő `font-`
-  Tailwind-prefixű), ez ÁLPOZITÍV — a kettő ténylegesen különböző CSS
-  tulajdonságot állít (font-family vs. font-weight), ugyanez a pár már
-  korábban is bevett minta a `Landing.js`-ben, biztonságosan figyelmen
-  kívül hagyható.
+  **Javítva 2026-09-24 — az itt korábban "álpozitívnak" minősített
+  "cssConflict" figyelmeztetés VALÓDI hiba volt**: a Tailwind a
+  `font-[Overpass_Mono]` arbitrary-értéket `font-weight: Overpass Mono`-ra
+  (érvénytelen CSS) fordította, így a mono betű sosem jelent meg, a
+  `font-[Overpass]` pedig fallback-stack nélkül `font-family: Overpass`-t
+  adott (hideg cache + `display=optional` mellett Times-szerű serif).
+  Minden előfordulás `font-mono`/`font-display` tokenre cserélve
+  (`tailwind.config.js` `fontFamily`, fallback-stackkel). **Betűtípushoz
+  soha ne használj `font-[...]` arbitrary-értéket, mindig a config
+  tokeneket.**
 - Hero alsó paddingje (`pb-16 md:pb-24` → `pb-20 md:pb-28`) és az ALATTA lévő
   öt szekció mindegyikének (`Miért minket` már korábban `py-14` volt,
   Referenciák/GYIK/Ajánlatkérés/Egyéb szolgáltatások korábban `py-10` volt)
