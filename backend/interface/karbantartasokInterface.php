@@ -31,7 +31,7 @@ class KarbantartasInterface {
         return $sorok;
     }
 
-    public function getKarbantartasok($id, $kamion_id, $potkocsi_id, $datumTol, $datumIg, $elvegezte, $search = null, $page = null, $pageSize = null, $furgon_id = null) {
+    public function getKarbantartasok($id, $kamion_id, $potkocsi_id, $datumTol, $datumIg, $elvegezte, $search = null, $page = null, $pageSize = null, $furgon_id = null, $allapot = null) {
         $filter = [
             'kamion_id' => $kamion_id,
             'potkocsi_id' => $potkocsi_id,
@@ -144,6 +144,11 @@ class KarbantartasInterface {
                 $params[':search'] = '%' . $search . '%';
                 $params[':search_rendszam'] = '%' . $search . '%';
             }
+
+            $allapotFeltetel = ['elvegzett' => ' AND datum < CURDATE()', 'tervezett' => ' AND datum >= CURDATE()'][$allapot] ?? '';
+            $kamionQuery .= $allapotFeltetel;
+            $potkocsiQuery .= $allapotFeltetel;
+            $furgonQuery .= $allapotFeltetel;
 
             // UNION a három lekérdezés között
             $query = "$kamionQuery UNION ALL $potkocsiQuery UNION ALL $furgonQuery ORDER BY datum DESC";

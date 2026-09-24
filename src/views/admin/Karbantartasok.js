@@ -23,6 +23,7 @@ import Modal from "components/UI/Modal.js";
 import FormField, { FormSection } from "components/UI/FormField.js";
 import StatusBadge from "components/UI/StatusBadge.js";
 import { confirmDialog } from "utils/confirm.js";
+import { helyiDatum } from "utils/helyiDatum";
 
 const emptyKarbantartas = (adminId) => ({
   admin: adminId,
@@ -46,6 +47,12 @@ const formatHuf = (value) =>
 
 const PAGE_SIZE = 15;
 
+const ALLAPOT_OPCIOK = [
+  { key: "elvegzett", label: "Elvégzett" },
+  { key: "tervezett", label: "Tervezett" },
+  { key: "osszes", label: "Összes" },
+];
+
 const Karbantartasok = () => {
   const location = useLocation();
   const history = useHistory();
@@ -64,6 +71,7 @@ const Karbantartasok = () => {
     datumIg: "",
     elvegezte: "",
   });
+  const [allapot, setAllapot] = useState("elvegzett");
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -202,6 +210,7 @@ const Karbantartasok = () => {
         ...filter,
         kerelmezo_id: user.id,
         search: search || undefined,
+        allapot,
         page,
         pageSize: PAGE_SIZE,
       });
@@ -216,7 +225,7 @@ const Karbantartasok = () => {
     };
     fetchKarbantartasok();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter, user.ceg_id, page, search]);
+  }, [filter, user.ceg_id, page, search, allapot]);
 
   const handleExportAll = useCallback(async () => {
     const result = await fetchAction("getKarbantartasok", {
@@ -224,10 +233,11 @@ const Karbantartasok = () => {
       ...filter,
       kerelmezo_id: user.id,
       search: search || undefined,
+      allapot,
     });
     return result?.success ? result.karbantartasok || [] : [];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter, user.ceg_id, search]);
+  }, [filter, user.ceg_id, search, allapot]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -352,8 +362,7 @@ const Karbantartasok = () => {
   const getKarbTipus = (row) => (row.potkocsi_id ? "potkocsi" : row.furgon_id ? "furgon" : "kamion");
 
   const getStatus = (karb) => {
-    const today = new Date().toISOString().split("T")[0];
-    if (karb.datum < today)
+    if (karb.datum < helyiDatum())
       return { text: "Kész", className: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300" };
     return { text: "Tervezett", className: "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300" };
   };
@@ -567,6 +576,29 @@ const Karbantartasok = () => {
             </button>
           }
         />
+      </div>
+
+      <div className="mb-4 flex flex-shrink-0">
+        <div className="flex items-center gap-1 rounded-xl bg-slate-100 p-1 dark:bg-ink-800" role="group" aria-label="Karbantartás állapota">
+          {ALLAPOT_OPCIOK.map((o) => (
+            <button
+              key={o.key}
+              type="button"
+              aria-pressed={allapot === o.key}
+              onClick={() => {
+                setAllapot(o.key);
+                setPage(1);
+              }}
+              className={`min-h-9 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors duration-150 ${
+                allapot === o.key
+                  ? "bg-white text-brand-700 shadow-soft dark:bg-ink-700 dark:text-brand-300"
+                  : "text-ink-500 hover:text-ink-700 dark:text-ink-300 dark:hover:text-ink-100"
+              }`}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {osszesKoltseg > 0 && (

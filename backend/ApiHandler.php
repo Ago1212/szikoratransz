@@ -1002,7 +1002,7 @@ class ApiHandler {
                     return;
                 case 'getKarbantartasok':
                     $kerelmezo = $this->resolveKerelmezo($request);
-                    echo json_encode($karbantartasInterface->getKarbantartasok($kerelmezo['ceg_id'], $request['kamion_id'], $request['potkocsi_id'], $request['datumTol'], $request['datumIg'], $request['elvegezte'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['furgon_id']));
+                    echo json_encode($karbantartasInterface->getKarbantartasok($kerelmezo['ceg_id'], $request['kamion_id'], $request['potkocsi_id'], $request['datumTol'], $request['datumIg'], $request['elvegezte'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $request['furgon_id'], $request['allapot'] ?? null));
                     return;
                 case 'getKmAlapuKarbantartasEsedekesseg':
                     echo json_encode($karbantartasInterface->getKmAlapuEsedekesseg($this->resolveKerelmezo($request)['ceg_id']));
