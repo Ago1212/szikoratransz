@@ -1,13 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useHistory } from "react-router-dom";
-import { PiCameraLight, PiFilePdfLight, PiTrashLight, PiScalesLight, PiStackLight, PiImagesLight, PiCloudArrowUpLight, PiMapPinLight, PiPhoneLight, PiNotePencilLight, PiCaretRightLight, PiWifiSlashLight } from "react-icons/pi";
+import { PiCameraLight, PiFilePdfLight, PiTrashLight, PiScalesLight, PiStackLight, PiImagesLight, PiInfoLight, PiMapTrifoldLight, PiPackageLight, PiTruckLight, PiTruckTrailerLight, PiBuildingsLight, PiCloudArrowUpLight, PiMapPinLight, PiPhoneLight, PiNotePencilLight, PiCaretRightLight, PiWifiSlashLight } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
 import { confirmDialog } from "utils/confirm.js";
 import MobileHeader from "components/UI/MobileHeader.js";
 import StatusBadge from "components/UI/StatusBadge.js";
-import StatChip from "components/UI/StatChip.js";
-import NoteCard from "components/UI/NoteCard.js";
 import { RouteCardSkeleton } from "components/UI/Skeleton.js";
 import RouteTimelineCard from "components/Fuvarok/RouteTimelineCard.js";
 import { sorElemei, feliratkozasSorValtozasra, sorUritese } from "utils/feltoltesiSor.js";
@@ -192,7 +190,7 @@ function HelyInfo({ hely, cegNev, cim }) {
   return (
     <Link
       to={`/user/helyszinek?${params.toString()}`}
-      className="mt-2 flex min-h-11 w-fit items-center gap-1.5 rounded-xl px-2 text-sm font-semibold text-brand-600 active:bg-brand-50"
+      className="-ml-2 mt-1 flex min-h-11 w-fit items-center gap-1.5 rounded-xl px-2 text-sm font-medium text-ink-500 active:bg-slate-100"
     >
       <PiNotePencilLight className="h-4 w-4" />
       Jegyzet ehhez a helyhez
@@ -306,6 +304,20 @@ export default function FuvarReszletek() {
   const megbizoTeljesCim = [fuvar.megbizo_irsz, fuvar.megbizo_varos, fuvar.megbizo_cim].filter(Boolean).join(", ");
   const utvonaltervEleheto = Boolean(felrakoTeljesCim && lerakoTeljesCim);
 
+  const jarmuRendszam = fuvar.kamion_rendszam || fuvar.furgon_rendszam;
+  const adatSorok = [
+    fuvar.aru_megnevezese && { cimke: "Áru", icon: PiPackageLight, ertek: fuvar.aru_megnevezese },
+    fuvar.tomeg_tonna != null && fuvar.tomeg_tonna !== "" && {
+      cimke: "Tömeg",
+      icon: PiScalesLight,
+      ertek: `${Number(fuvar.tomeg_tonna).toLocaleString("hu-HU")} t`,
+    },
+    fuvar.raklapszam != null && fuvar.raklapszam !== "" && { cimke: "Raklap", icon: PiStackLight, ertek: `${fuvar.raklapszam} db` },
+    jarmuRendszam && { cimke: fuvar.furgon_rendszam && !fuvar.kamion_rendszam ? "Furgon" : "Kamion", icon: PiTruckLight, ertek: jarmuRendszam },
+    fuvar.potkocsi_rendszam && { cimke: "Pótkocsi", icon: PiTruckTrailerLight, ertek: fuvar.potkocsi_rendszam },
+    fuvar.megbizo_nev && { cimke: "Megbízó", icon: PiBuildingsLight, ertek: fuvar.megbizo_nev, al: megbizoTeljesCim || null },
+  ].filter(Boolean);
+
   const handleUtvonalterv = () => {
     window.open(
       `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(felrakoTeljesCim)}&destination=${encodeURIComponent(lerakoTeljesCim)}`,
@@ -337,23 +349,57 @@ export default function FuvarReszletek() {
         felrako={{ ceg: fuvar.felrako_ceg, cim: fuvar.felrako_cim, datum: fuvar.felrakas_datuma }}
         lerako={{ ceg: fuvar.lerako_ceg, cim: fuvar.lerako_cim, datum: fuvar.lerakas_datuma }}
         tavolsagKm={fuvar.tavolsag_km}
-        aru={fuvar.aru_megnevezese}
-        megbizoNev={fuvar.megbizo_nev}
-        megbizoCim={megbizoTeljesCim}
-        onUtvonalterv={handleUtvonalterv}
-        eleheto={utvonaltervEleheto}
         felrakoExtra={<HelyInfo hely={helyKeresese(helyszinek, fuvar.felrako_ceg)} cegNev={fuvar.felrako_ceg} cim={fuvar.felrako_cim} />}
         lerakoExtra={<HelyInfo hely={helyKeresese(helyszinek, fuvar.lerako_ceg)} cegNev={fuvar.lerako_ceg} cim={fuvar.lerako_cim} />}
       />
 
-      {diszpecser?.phone && (
-        <a
-          href={`tel:${diszpecser.phone.replace(/[^\d+]/g, "")}`}
-          className="flex min-h-[3.25rem] items-center justify-center gap-2 rounded-xl border border-ink-200 bg-white text-base font-semibold text-ink-800 active:bg-slate-50"
+      {fuvar.megjegyzes && (
+        <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4" aria-label="Tudnivalók">
+          <h2 className="mb-1 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-800">
+            <PiInfoLight className="h-4 w-4" /> Tudnivalók a fuvarhoz
+          </h2>
+          <p className="whitespace-pre-wrap text-base leading-relaxed text-ink-900">{fuvar.megjegyzes}</p>
+        </section>
+      )}
+
+      <div className={`grid gap-2 ${diszpecser?.phone ? "grid-cols-2" : "grid-cols-1"}`}>
+        <button
+          type="button"
+          onClick={handleUtvonalterv}
+          disabled={!utvonaltervEleheto}
+          className="flex min-h-[3.5rem] items-center justify-center gap-2 rounded-2xl bg-brand-600 text-base font-semibold text-white active:bg-brand-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-ink-500"
         >
-          <PiPhoneLight className="h-5 w-5 text-brand-600" />
-          Diszpécser hívása
-        </a>
+          <PiMapTrifoldLight className="h-6 w-6" />
+          {utvonaltervEleheto ? "Útvonal" : "Nincs cím"}
+        </button>
+        {diszpecser?.phone && (
+          <a
+            href={`tel:${diszpecser.phone.replace(/[^\d+]/g, "")}`}
+            className="flex min-h-[3.5rem] items-center justify-center gap-2 rounded-2xl border border-ink-200 bg-white text-base font-semibold text-ink-800 active:bg-slate-50"
+          >
+            <PiPhoneLight className="h-6 w-6 text-brand-600" />
+            Diszpécser
+          </a>
+        )}
+      </div>
+
+      {adatSorok.length > 0 && (
+        <section className="rounded-2xl border border-ink-100 bg-white px-4 py-1 shadow-soft" aria-label="Rakomány és jármű">
+          <dl className="divide-y divide-ink-100">
+            {adatSorok.map((sor) => (
+              <div key={sor.cimke} className="flex gap-3 py-3">
+                <dt className="flex w-28 flex-shrink-0 items-center gap-1.5 text-sm text-ink-500">
+                  <sor.icon className="h-4 w-4 flex-shrink-0" />
+                  {sor.cimke}
+                </dt>
+                <dd className="min-w-0 flex-1 break-words text-base font-semibold text-ink-900">
+                  {sor.ertek}
+                  {sor.al && <span className="block text-sm font-normal text-ink-500">{sor.al}</span>}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
       )}
 
       <FeltoltoSzekcio
@@ -377,12 +423,6 @@ export default function FuvarReszletek() {
         onDeleted={loadFajlok}
       />
 
-      <div className="flex flex-wrap items-center gap-2">
-        <StatChip icon={PiScalesLight} value={fuvar.tomeg_tonna != null ? `${fuvar.tomeg_tonna} t` : null} label="Tömeg" />
-        <StatChip icon={PiStackLight} value={fuvar.raklapszam ?? null} label="Raklap" />
-      </div>
-
-      <NoteCard text={fuvar.megjegyzes} />
     </div>
   );
 }

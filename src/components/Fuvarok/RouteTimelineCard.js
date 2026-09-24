@@ -48,27 +48,29 @@ export default function RouteTimelineCard({ felrako, lerako, tavolsagKm, aru, me
       </div>
       <Vegpont label="Lerakás" tone="lerako" adat={lerako} extra={lerakoExtra} />
 
-      <div className="mt-4 flex items-center gap-3 border-t border-ink-100 pt-4">
-        {aru && (
-          <div className="flex min-w-0 items-center gap-2">
-            <PiPackageLight className="h-4 w-4 flex-shrink-0 text-ink-400" />
-            <p className="truncate text-sm text-ink-700">
-              <span className="text-ink-500">Áru: </span>
-              {aru}
-            </p>
-          </div>
-        )}
-        <button
-          type="button"
-          onClick={onUtvonalterv}
-          disabled={!eleheto}
-          aria-label="Útvonaltervezés indítása"
-          className="ml-auto flex h-11 flex-shrink-0 items-center justify-center gap-1.5 rounded-full bg-brand-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-ink-400"
-        >
-          <PiMapTrifoldLight className="h-5 w-5" />
-          Útvonal
-        </button>
-      </div>
+      {(aru || onUtvonalterv) && (
+        <div className="mt-4 flex items-center gap-3 border-t border-ink-100 pt-4">
+          {aru && (
+            <div className="flex min-w-0 items-center gap-2">
+              <PiPackageLight className="h-4 w-4 flex-shrink-0 text-ink-400" />
+              <p className="truncate text-sm text-ink-700">
+                <span className="text-ink-500">Áru: </span>
+                {aru}
+              </p>
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={onUtvonalterv}
+            disabled={!eleheto}
+            aria-label="Útvonaltervezés indítása"
+            className="ml-auto flex h-11 flex-shrink-0 items-center justify-center gap-1.5 rounded-full bg-brand-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-ink-400"
+          >
+            <PiMapTrifoldLight className="h-5 w-5" />
+            Útvonal
+          </button>
+        </div>
+      )}
     </div>
   );
 }
