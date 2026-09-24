@@ -41,6 +41,7 @@ import NapiZonaEditorModal from "components/Sidebar/NapiZonaEditorModal.js";
 import QuickActionSheet from "components/Sidebar/QuickActionSheet.js";
 import MobileMoreDrawer from "components/Sidebar/MobileMoreDrawer.js";
 import { fetchAction } from "utils/fetchAction";
+import { kijelentkezes } from "utils/kijelentkezes";
 
 const initials = (name) =>
   (name || "")
@@ -645,13 +646,7 @@ export default function Sidebar({ isDark, onToggleDark }) {
   };
 
   const handleLogout = async () => {
-    const result = await fetchAction("logoutUser", { id: user?.id });
-    localStorage.removeItem("user");
-    localStorage.removeItem("sessionToken");
-    if (!result?.success) {
-      // Session already gone client-side regardless of server response.
-      console.warn(result?.message || "Logout request failed.");
-    }
+    await kijelentkezes();
     history.push("/");
   };
 

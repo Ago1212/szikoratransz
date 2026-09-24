@@ -24,13 +24,18 @@ export default function PushFeliratkozas({ sofor = false }) {
       return;
     }
     const user = JSON.parse(localStorage.getItem("user") || "null");
-    fetchAction("getPushStatusz", { kerelmezo_id: user?.id })
-      .then((result) => {
-        if (result?.success) {
-          setSubscribed(!!result.van);
-          setVapidPublicKey(result.vapidPublicKey);
-        }
-      })
+    const helyiFeliratkozas = navigator.serviceWorker.ready
+      .then((registration) => registration.pushManager.getSubscription())
+      .catch(() => null);
+    Promise.race([helyiFeliratkozas, new Promise((resolve) => setTimeout(() => resolve(null), 3000))])
+      .then((subscription) =>
+        fetchAction("getPushStatusz", { kerelmezo_id: user?.id, endpoint: subscription?.endpoint || "" }).then((result) => {
+          if (result?.success) {
+            setSubscribed(Boolean(subscription) && !!result.van && Notification.permission === "granted");
+            setVapidPublicKey(result.vapidPublicKey);
+          }
+        }),
+      )
       .finally(() => setLoading(false));
   }, []);
 
@@ -39,7 +44,11 @@ export default function PushFeliratkozas({ sofor = false }) {
     try {
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
-        toast.error("Az értesítési engedély megadása nélkül nem lehet push-t küldeni.");
+        toast.error(
+          permission === "denied"
+            ? "Az értesítések le vannak tiltva. Engedélyezd a telefon beállításaiban (Beállítások → Értesítések, vagy a böngészőben a lakat ikon → Értesítések), majd próbáld újra."
+            : "Az értesítési engedély megadása nélkül nem lehet push-t küldeni.",
+        );
         return;
       }
       const registration = await navigator.serviceWorker.ready;
@@ -124,7 +133,7 @@ export default function PushFeliratkozas({ sofor = false }) {
         type="button"
         onClick={subscribed ? handleDisable : handleEnable}
         disabled={busy}
-        className={`flex flex-shrink-0 items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wide shadow-soft transition-colors duration-200 disabled:cursor-wait disabled:opacity-60 ${
+        className={`flex min-h-11 flex-shrink-0 items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wide shadow-soft transition-colors duration-200 disabled:cursor-wait disabled:opacity-60 ${
           subscribed
             ? "border border-ink-200 bg-white text-ink-500 hover:bg-red-50 hover:text-red-600 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-300 dark:hover:bg-red-950/50 dark:hover:text-red-300"
             : "bg-brand-600 text-white hover:bg-brand-700"

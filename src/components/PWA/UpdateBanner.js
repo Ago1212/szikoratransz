@@ -36,9 +36,12 @@ export default function UpdateBanner() {
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-[9999] flex justify-center px-4 pb-4 pointer-events-none"
-      style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}
+      className="update-banner fixed inset-x-0 bottom-0 z-[9999] flex justify-center px-4 pointer-events-none"
     >
+      <style>{`
+        .update-banner { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
+        @media (min-width: 768px) { .update-banner { padding-bottom: 1rem; } }
+      `}</style>
       <div className="pointer-events-auto flex items-center gap-4 rounded-2xl border border-white/10 bg-[#23262B] px-5 py-3 shadow-soft-lg text-white">
         <span className="text-sm font-medium">Új verzió érhető el.</span>
         <button

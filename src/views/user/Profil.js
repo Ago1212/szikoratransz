@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useHistory } from "react-router-dom";
 import {
   PiTruckLight,
@@ -14,6 +14,7 @@ import {
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
+import { confirmDialog } from "utils/confirm.js";
 import MobileHeader from "components/UI/MobileHeader.js";
 import FormField, { FormSection } from "components/UI/FormField.js";
 import StatusBadge from "components/UI/StatusBadge.js";
@@ -27,6 +28,7 @@ import {
   getDocumentTone,
   daysUntil,
 } from "utils/documentStatus.js";
+import { kijelentkezes } from "utils/kijelentkezes";
 
 const initials = (name) =>
   (name || "")
@@ -44,6 +46,7 @@ export default function Profil() {
   const [potkocsi, setPotkocsi] = useState(null);
   const [furgon, setFurgon] = useState(null);
   const [saving, setSaving] = useState(false);
+  const modositvaRef = useRef(false);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -52,6 +55,16 @@ export default function Profil() {
       return;
     }
     setForm(user);
+    fetchAction("getSajatSofor", { id: user.id }).then((result) => {
+      if (!result?.success || !result.user || modositvaRef.current) return;
+      const friss = { ...user, ...result.user };
+      setForm(friss);
+      try {
+        localStorage.setItem("user", JSON.stringify(friss));
+      } catch (e) {
+        // localStorage nem elérhető
+      }
+    });
 
     if (user.kamion) {
       fetchAction("getKamionok", { id: user.admin }).then((result) => {
@@ -89,6 +102,7 @@ export default function Profil() {
   }, [history]);
 
   const handleChange = (e) => {
+    modositvaRef.current = true;
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
@@ -127,9 +141,8 @@ export default function Profil() {
   };
 
   const handleLogout = async () => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    await fetchAction("logoutUser", { id: user?.id });
-    localStorage.removeItem("user");
+    if (!(await confirmDialog("Biztosan kijelentkezel? Ezen a telefonon utána nem kapsz értesítést az új fuvarokról.", { confirmLabel: "Kijelentkezés" }))) return;
+    await kijelentkezes();
     history.push("/auth/login");
   };
 
@@ -219,11 +232,11 @@ export default function Profil() {
           title="Felhasználó adatok"
           icon={PiIdentificationCardLight}
           columns={2}
-          mobileColumns={2}
         >
           <FormField
             label="Név"
             name="name"
+            autoComplete="name"
             value={form.name || ""}
             onChange={handleChange}
           />
@@ -232,6 +245,7 @@ export default function Profil() {
             type="email"
             label="Email cím"
             name="email"
+            autoComplete="email"
             value={form.email || ""}
             onChange={handleChange}
           />
@@ -240,6 +254,7 @@ export default function Profil() {
             type="tel"
             label="Telefonszám"
             name="phone"
+            autoComplete="tel"
             value={form.phone || ""}
             onChange={handleChange}
           />
@@ -258,6 +273,7 @@ export default function Profil() {
             icon={PiMapPinLight}
             label="Város"
             name="varos"
+            autoComplete="address-level2"
             value={form.varos || ""}
             onChange={handleChange}
           />
@@ -265,12 +281,14 @@ export default function Profil() {
             label="Irányítószám"
             inputMode="numeric"
             name="irsz"
+            autoComplete="postal-code"
             value={form.irsz || ""}
             onChange={handleChange}
           />
           <FormField
             label="Levelezési cím"
             name="cim"
+            autoComplete="street-address"
             value={form.cim || ""}
             onChange={handleChange}
             className="md:col-span-2"

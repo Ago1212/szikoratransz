@@ -7,6 +7,7 @@ import {
   bufToB64url,
   setWebauthnEmail,
   clearWebauthnEmail,
+  getWebauthnEmail,
   webauthnTamogatott,
 } from "utils/webauthn.js";
 
@@ -26,7 +27,7 @@ export default function WebAuthnRegisztracio() {
       return;
     }
     fetchAction("getWebauthnStatusz", { kerelmezo_id: user?.id })
-      .then((result) => setRegisztralva(!!result?.van))
+      .then((result) => setRegisztralva(!!result?.van && Boolean(getWebauthnEmail())))
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -90,6 +91,8 @@ export default function WebAuthnRegisztracio() {
         clearWebauthnEmail();
         setRegisztralva(false);
         toast.success("Gyors-bejelentkezés kikapcsolva.");
+      } else {
+        toast.error(eredmeny?.message || "A kikapcsolás sikertelen.");
       }
     } finally {
       setBusy(false);
@@ -115,7 +118,7 @@ export default function WebAuthnRegisztracio() {
         type="button"
         onClick={regisztralva ? handleLetiltas : handleRegisztracio}
         disabled={busy}
-        className={`flex flex-shrink-0 items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wide shadow-soft transition-colors duration-200 disabled:cursor-wait disabled:opacity-60 ${
+        className={`flex min-h-11 flex-shrink-0 items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wide shadow-soft transition-colors duration-200 disabled:cursor-wait disabled:opacity-60 ${
           regisztralva
             ? "border border-ink-200 bg-white text-ink-500 hover:bg-red-50 hover:text-red-600 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-300"
             : "bg-brand-600 text-white hover:bg-brand-700"

@@ -1,7 +1,8 @@
 import React from "react";
 import { PiMapPinFill, PiPackageLight, PiMapTrifoldLight, PiBuildingsLight } from "react-icons/pi";
+import { formatDatumRovid } from "utils/formatDatum";
 
-function Vegpont({ label, tone, adat }) {
+function Vegpont({ label, tone, adat, extra }) {
   const toneClasses = tone === "felrako" ? "bg-brand-100 text-brand-600" : "bg-emerald-100 text-emerald-600";
   return (
     <div className="flex gap-3">
@@ -10,11 +11,12 @@ function Vegpont({ label, tone, adat }) {
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">{label}</p>
-          <p className="flex-shrink-0 text-xs font-semibold text-ink-600">{adat.datum || "—"}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">{label}</p>
+          <p className="flex-shrink-0 text-sm font-semibold text-ink-700">{formatDatumRovid(adat.datum) || "Nincs dátum"}</p>
         </div>
-        <p className="mt-0.5 text-base font-bold text-ink-900">{adat.ceg || "—"}</p>
-        {adat.cim && <p className="text-xs text-ink-400">{adat.cim}</p>}
+        <p className="mt-0.5 text-base font-bold text-ink-900">{adat.ceg || "Nincs megadva"}</p>
+        {adat.cim && <p className="text-sm text-ink-500">{adat.cim}</p>}
+        {extra}
       </div>
     </div>
   );
@@ -26,7 +28,7 @@ function Vegpont({ label, tone, adat }) {
 // alján az áru megnevezése (bal) és a navigációs gomb (jobbra igazítva).
 // A `felrako`/`lerako` prop alakja: { ceg, cim, datum } — mindhárom mező
 // hiányozhat, "—"-ra esik vissza, sosem generálunk kitalált adatot.
-export default function RouteTimelineCard({ felrako, lerako, tavolsagKm, aru, megbizoNev, megbizoCim, onUtvonalterv, eleheto }) {
+export default function RouteTimelineCard({ felrako, lerako, tavolsagKm, aru, megbizoNev, megbizoCim, onUtvonalterv, eleheto, felrakoExtra, lerakoExtra }) {
   return (
     <div className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft">
       {megbizoNev && (
@@ -38,19 +40,22 @@ export default function RouteTimelineCard({ felrako, lerako, tavolsagKm, aru, me
           </span>
         </div>
       )}
-      <Vegpont label="Felrakás" tone="felrako" adat={felrako} />
+      <Vegpont label="Felrakás" tone="felrako" adat={felrako} extra={felrakoExtra} />
       <div className="ml-[18px] flex h-10 items-center border-l-2 border-dashed border-ink-200 pl-5">
         {tavolsagKm ? (
-          <span className="rounded-full bg-slate-50 px-3 py-1 text-xs font-bold text-ink-600">{tavolsagKm} km</span>
+          <span className="rounded-full bg-slate-50 px-3 py-1 text-xs font-bold text-ink-600">{Number(tavolsagKm).toLocaleString("hu-HU")} km</span>
         ) : null}
       </div>
-      <Vegpont label="Lerakás" tone="lerako" adat={lerako} />
+      <Vegpont label="Lerakás" tone="lerako" adat={lerako} extra={lerakoExtra} />
 
       <div className="mt-4 flex items-center gap-3 border-t border-ink-100 pt-4">
         {aru && (
           <div className="flex min-w-0 items-center gap-2">
             <PiPackageLight className="h-4 w-4 flex-shrink-0 text-ink-400" />
-            <p className="truncate text-sm text-ink-700">{aru}</p>
+            <p className="truncate text-sm text-ink-700">
+              <span className="text-ink-500">Áru: </span>
+              {aru}
+            </p>
           </div>
         )}
         <button

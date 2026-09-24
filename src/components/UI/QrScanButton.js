@@ -65,12 +65,14 @@ export default function QrScanButton({ onResult, label = "QR" }) {
     }
   };
 
+  if (typeof window === "undefined" || !("BarcodeDetector" in window)) return null;
+
   return (
     <>
       <button
         type="button"
         onClick={start}
-        className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600"
+        className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600"
         aria-label="QR-kód beolvasása"
       >
         <PiQrCodeLight className="h-5 w-5" />

@@ -1,359 +1,384 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useHistory } from "react-router-dom";
 import {
   PiBellLight,
   PiTruckLight,
-  PiTruckTrailerLight,
-  PiVanLight,
   PiWarningCircleLight,
   PiChatCircleTextLight,
   PiCaretRightLight,
   PiClipboardTextLight,
+  PiMapTrifoldLight,
+  PiCameraLight,
+  PiPhoneLight,
+  PiCheckCircleLight,
+  PiXCircleLight,
+  PiWifiSlashLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
-import Spinner from "components/UI/Spinner.js";
-import {
-  DOCUMENT_FIELDS,
-  getDocumentStatus,
-  daysUntil,
-} from "utils/documentStatus.js";
-import { formatFuvarDatum } from "utils/formatDatum";
+import { useSajatErtesitesek, latottErtesitesek } from "utils/useSajatErtesitesek.js";
+import { kovetkezoFuvar, fuvarKezdoDatum, utvonalUrl } from "utils/fuvarIdo";
+import { formatDatumRovid, napokMaihoz } from "utils/formatDatum";
+import { fuvarDokumentumokFeltoltese } from "utils/fuvarDokumentumFeltoltes.js";
+import { offlineCimke } from "utils/soforCache";
 
-// A BottomNav középső FAB-ja 2026-07-28 óta Fuvarokra vezet, nem
-// Bejelentésre (ld. BottomNav.js komment) — a Bejelentés emiatt egy
-// ideig a Dashboard "Gyors műveletek" rácsában kapott helyet. A rács
-// többi eleme (Kamion/Pótkocsi/Furgon/Helyszínek) redundáns volt a lenti
-// "Aktív jármű" kártyákkal és a BottomNav-val, a Diszpécser-hívás pedig
-// alig használt — explicit felhasználói kérésre a rács megszűnt, a
-// Bejelentés önálló, kiemelt gombként maradt az egyetlen "gyors
-// művelet"-ként.
+const NAP_NEVEK = ["vasárnap", "hétfő", "kedd", "szerda", "csütörtök", "péntek", "szombat"];
+const HONAP_NEVEK = ["január", "február", "március", "április", "május", "június", "július", "augusztus", "szeptember", "október", "november", "december"];
+
+function DashboardVaz() {
+  const blokk = "animate-pulse rounded bg-slate-200 motion-reduce:animate-none";
+  return (
+    <div className="flex flex-col gap-4" aria-busy="true" aria-label="Betöltés">
+      <div className={`h-10 w-40 ${blokk}`} />
+      <div className="rounded-3xl bg-white p-5 shadow-soft">
+        <div className={`h-4 w-24 ${blokk}`} />
+        <div className={`mt-3 h-6 w-3/4 ${blokk}`} />
+        <div className={`mt-2 h-4 w-1/2 ${blokk}`} />
+        <div className="mt-5 grid grid-cols-2 gap-2">
+          <div className={`h-14 ${blokk}`} />
+          <div className={`h-14 ${blokk}`} />
+        </div>
+      </div>
+      <div className={`h-16 rounded-2xl ${blokk}`} />
+    </div>
+  );
+}
+
+function KovetkezoFuvarKartya({ fuvar, tobbiSzam, diszpecser, onOpen, onFeltoltve }) {
+  const [feltoltes, setFeltoltes] = useState(false);
+  const kezdo = fuvarKezdoDatum(fuvar);
+  const napok = napokMaihoz(kezdo);
+  const url = utvonalUrl(fuvar);
+  const jarmu = fuvar.kamion_rendszam || fuvar.furgon_rendszam;
+  const cimke =
+    napok === null ? "Következő fuvar" : napok < 0 ? "Folyamatban lévő fuvar" : napok === 0 ? "Mai fuvar" : napok === 1 ? "Holnapi fuvar" : "Következő fuvar";
+
+  const handleFoto = async (e) => {
+    const fajlok = Array.from(e.target.files || []);
+    e.target.value = "";
+    if (fajlok.length === 0) return;
+    setFeltoltes(true);
+    try {
+      const { sikeres, sorba } = await fuvarDokumentumokFeltoltese(fuvar.id, "menetlevel", fajlok);
+      if (sikeres > 0 || sorba > 0) onFeltoltve();
+    } finally {
+      setFeltoltes(false);
+    }
+  };
+
+  return (
+    <section className="rounded-3xl border border-brand-200 bg-white p-4 shadow-soft" aria-label={cimke}>
+      <button type="button" onClick={() => onOpen(fuvar)} className="block w-full text-left">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs font-bold uppercase tracking-wider text-brand-600">{cimke}</span>
+          {kezdo && (
+            <span
+              className={`rounded-full px-2.5 py-1 text-sm font-bold ${
+                napok === 0 ? "bg-brand-600 text-white" : napok < 0 ? "bg-amber-100 text-amber-800" : "bg-brand-50 text-brand-700"
+              }`}
+            >
+              {kezdo === fuvar.felrakas_datuma ? "Felrakás" : "Lerakás"}: {formatDatumRovid(kezdo)}
+            </span>
+          )}
+        </div>
+        <p className="mt-2 text-lg font-bold leading-snug text-ink-900">
+          {fuvar.felrako_ceg || "—"} → {fuvar.lerako_ceg || "—"}
+        </p>
+        {(fuvar.felrako_cim || fuvar.lerako_cim) && (
+          <p className="mt-0.5 truncate text-sm text-ink-500">{[fuvar.felrako_cim, fuvar.lerako_cim].filter(Boolean).join(" → ")}</p>
+        )}
+        <p className="mt-1 flex items-center justify-between gap-2 text-sm text-ink-600">
+          <span className="truncate">{[jarmu, fuvar.megbizo_nev].filter(Boolean).join(" · ") || "Részletek"}</span>
+          <span className="flex flex-shrink-0 items-center font-semibold text-brand-600">
+            Részletek <PiCaretRightLight className="h-4 w-4" />
+          </span>
+        </p>
+      </button>
+
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        {url ? (
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex min-h-[3.5rem] items-center justify-center gap-2 rounded-2xl bg-brand-600 text-base font-semibold text-white active:bg-brand-700"
+          >
+            <PiMapTrifoldLight className="h-6 w-6" /> Útvonal
+          </a>
+        ) : (
+          <span className="flex min-h-[3.5rem] items-center justify-center rounded-2xl bg-slate-100 px-2 text-center text-sm text-ink-500">
+            Nincs cím az útvonalhoz
+          </span>
+        )}
+        <label
+          className={`flex min-h-[3.5rem] cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-brand-200 bg-brand-50 text-base font-semibold text-brand-700 active:bg-brand-100 ${
+            feltoltes ? "pointer-events-none opacity-70" : ""
+          }`}
+        >
+          {feltoltes ? (
+            <span className="h-5 w-5 animate-spin rounded-full border-2 border-brand-200 border-t-brand-600" />
+          ) : (
+            <PiCameraLight className="h-6 w-6" />
+          )}
+          {feltoltes ? "Feltöltés…" : "Menetlevél"}
+          <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFoto} disabled={feltoltes} />
+        </label>
+      </div>
+      {diszpecser?.phone && (
+        <a
+          href={`tel:${diszpecser.phone.replace(/[^\d+]/g, "")}`}
+          className="mt-2 flex min-h-11 items-center justify-center gap-2 rounded-2xl text-sm font-semibold text-ink-700 active:bg-slate-100"
+        >
+          <PiPhoneLight className="h-5 w-5 text-brand-600" /> Diszpécser hívása
+        </a>
+      )}
+      {tobbiSzam > 0 && (
+        <Link
+          to="/user/fuvarok"
+          className="mt-1 flex min-h-11 items-center justify-center gap-1 border-t border-ink-100 pt-2 text-sm font-semibold text-brand-700"
+        >
+          +{tobbiSzam} további aktív fuvar <PiCaretRightLight className="h-4 w-4" />
+        </Link>
+      )}
+    </section>
+  );
+}
+
+function TeendoSor({ to, icon: Icon, tone, cim, leiras }) {
+  const tonusok = {
+    danger: "bg-red-50 text-red-600",
+    warning: "bg-amber-50 text-amber-600",
+    info: "bg-brand-50 text-brand-600",
+    success: "bg-emerald-50 text-emerald-600",
+  };
+  return (
+    <Link to={to} className="flex min-h-[3.5rem] items-center gap-3 px-4 py-2.5 active:bg-slate-50">
+      <span className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${tonusok[tone]}`}>
+        <Icon className="h-5 w-5" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-semibold text-ink-900">{cim}</span>
+        {leiras && <span className="block truncate text-sm text-ink-500">{leiras}</span>}
+      </span>
+      <PiCaretRightLight className="h-4 w-4 flex-shrink-0 text-ink-400" />
+    </Link>
+  );
+}
+
 export default function UserDashboard() {
   const history = useHistory();
-  const [user, setUser] = useState(null);
-  const [kamionok, setKamionok] = useState([]);
-  const [potkocsik, setPotkocsik] = useState([]);
-  const [furgonok, setFurgonok] = useState([]);
-  const [sajatBejelentesek, setSajatBejelentesek] = useState([]);
-  const [bejelentesValaszolt, setBejelentesValaszolt] = useState(false);
-  const [elbiraltJarmuValtasok, setElbiraltJarmuValtasok] = useState([]);
+  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("user") || "null"));
+  const [jarmuvek, setJarmuvek] = useState({ kamion: null, potkocsi: null, furgon: null });
   const [kerelmek, setKerelmek] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [aktivFuvarok, setAktivFuvarok] = useState([]);
+  const [diszpecser, setDiszpecser] = useState(null);
+  const utolsoFrissites = useRef(Date.now());
+  const { lejaratok, fuvarok, bejelentesValaszok, jarmuValtasok, ujSzam, loading, offlineIdo, frissit } = useSajatErtesitesek();
+
+  const jarmuvekBetoltese = useCallback(async () => {
+    const userData = JSON.parse(localStorage.getItem("user") || "null");
+    if (!userData) return;
+    const [freshRes, kamionRes, potkocsiRes, furgonRes, kerelemRes] = await Promise.all([
+      fetchAction("getSajatSofor", { id: userData.id }),
+      fetchAction("getKamionok", { id: userData.admin }),
+      fetchAction("getPotkocsik", { id: userData.admin }),
+      fetchAction("getFurgonok", { id: userData.admin }),
+      fetchAction("getSajatJarmuValtasKerelmek", { sofor_id: userData.id }),
+    ]);
+    const friss = freshRes?.success && freshRes.user ? { ...userData, ...freshRes.user } : userData;
+    if (freshRes?.success && freshRes.user) {
+      try {
+        localStorage.setItem("user", JSON.stringify(friss));
+      } catch (e) {
+        // localStorage nem elérhető
+      }
+      setUser(friss);
+    }
+    setJarmuvek({
+      kamion: (kamionRes?.kamionok || []).find((k) => String(k.id) === String(friss.kamion)) || null,
+      potkocsi: (potkocsiRes?.potkocsik || []).find((p) => String(p.id) === String(friss.aktiv_potkocsi)) || null,
+      furgon: (furgonRes?.furgonok || []).find((f) => String(f.id) === String(friss.furgon)) || null,
+    });
+    if (kerelemRes?.success) setKerelmek(kerelemRes.kerelmek || []);
+  }, []);
 
   useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem("user"));
-    if (!userData) {
+    if (!user) {
       history.push("/auth/login");
       return;
     }
-    setUser(userData);
+    jarmuvekBetoltese();
+    fetchAction("getAdminElerhetoseg", { id: user.admin }).then((result) => {
+      if (result?.success && result.phone) setDiszpecser({ name: result.name, phone: result.phone });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    const load = async () => {
-      // A localStorage-ban tárolt `user` a bejelentkezéskori állapot —
-      // ha időközben az admin jóváhagyott egy jármű-váltási kérést, ez
-      // frissíti a kamion/aktiv_potkocsi mezőket anélkül, hogy ki kellene
-      // jelentkezni.
-      const [
-        freshRes,
-        kamionRes,
-        potkocsiRes,
-        furgonRes,
-        bejelentesRes,
-        kerelemRes,
-        elbiraltRes,
-        fuvarRes,
-      ] = await Promise.all([
-        fetchAction("getSajatSofor", { id: userData.id }),
-        fetchAction("getKamionok", { id: userData.admin }),
-        fetchAction("getPotkocsik", { id: userData.admin }),
-        fetchAction("getFurgonok", { id: userData.admin }),
-        fetchAction("getBejelentesekSofor", { sofor_id: userData.id }),
-        fetchAction("getSajatJarmuValtasKerelmek", { sofor_id: userData.id }),
-        fetchAction("getElbiraltJarmuValtasok", { sofor_id: userData.id }),
-        fetchAction("getSajatFuvarok", { sofor_id: userData.id, aktivOnly: true }),
-      ]);
-      if (freshRes?.success && freshRes.user) {
-        const merged = { ...userData, ...freshRes.user };
-        localStorage.setItem("user", JSON.stringify(merged));
-        setUser(merged);
-      }
-      if (kamionRes?.success) setKamionok(kamionRes.kamionok || []);
-      if (potkocsiRes?.success) setPotkocsik(potkocsiRes.potkocsik || []);
-      if (furgonRes?.success) setFurgonok(furgonRes.furgonok || []);
-      if (bejelentesRes?.success) {
-        const osszes = bejelentesRes.bejelentesek || [];
-        setSajatBejelentesek(osszes.slice(0, 3));
-        setBejelentesValaszolt(
-          osszes.some((b) => b.statusz !== "uj" || b.admin_valasz),
-        );
-      }
-      if (kerelemRes?.success) setKerelmek(kerelemRes.kerelmek || []);
-      if (elbiraltRes?.success)
-        setElbiraltJarmuValtasok(elbiraltRes.kerelmek || []);
-      if (fuvarRes?.success) setAktivFuvarok(fuvarRes.fuvarok || []);
-      setLoading(false);
+  useEffect(() => {
+    const lathatosag = () => {
+      if (document.visibilityState !== "visible" || Date.now() - utolsoFrissites.current < 60000) return;
+      utolsoFrissites.current = Date.now();
+      frissit();
+      jarmuvekBetoltese();
     };
-    load();
-  }, [history]);
+    document.addEventListener("visibilitychange", lathatosag);
+    return () => document.removeEventListener("visibilitychange", lathatosag);
+  }, [frissit, jarmuvekBetoltese]);
 
-  if (loading || !user) {
-    return <Spinner wrapperClassName="flex justify-center py-24" />;
-  }
+  if (!user) return null;
+  if (loading) return <DashboardVaz />;
 
-  const aktivKamion = kamionok.find(
-    (k) => String(k.id) === String(user.kamion),
-  );
-  const aktivPotkocsi = potkocsik.find(
-    (p) => String(p.id) === String(user.aktiv_potkocsi),
-  );
-  const aktivFurgon = furgonok.find(
-    (f) => String(f.id) === String(user.furgon),
-  );
-  const pendingKamion = kerelmek.find((k) => k.tipus === "kamion");
-  const pendingPotkocsi = kerelmek.find((k) => k.tipus === "potkocsi");
-  const pendingFurgon = kerelmek.find((k) => k.tipus === "furgon");
+  const kovetkezo = kovetkezoFuvar(fuvarok);
+  const latott = latottErtesitesek(user.id);
+  const ujValaszok = bejelentesValaszok.filter((b) => !latott.has(`bej-${b.id}-${b.statusz}-${b.admin_valasz ? 1 : 0}`));
+  const ujDontesek = jarmuValtasok.filter((k) => !latott.has(`jv-${k.id}`));
 
-  const lejaroDokumentumok = DOCUMENT_FIELDS.map((field) => ({
-    ...field,
-    days: daysUntil(user[field.key]),
-    status: getDocumentStatus(user[field.key]),
-  })).filter((d) => d.status === "expired" || d.status === "warning");
-
-  // A haranG korábban csak a lejáró dokumentumokat jelezte — most a
-  // megválaszolt bejelentéseket és az elbírált jármű-váltási kérelmeket is,
-  // ugyanúgy, mint az Ertesitesek.js oldal (ld. useSajatErtesitesek.js).
-  const vanErtesitesJelzes =
-    lejaroDokumentumok.length > 0 ||
-    bejelentesValaszolt ||
-    elbiraltJarmuValtasok.length > 0;
-
-  // A sofőr nevek a magyar névsorrendet követik (vezetéknév + keresztnév,
-  // pl. "Szikora Ágoston") — a keresztnév ezért az UTOLSÓ szótöveg, nem az
-  // első (az angol névsorrenddel ellentétben). Az üdvözlésben a keresztnév
-  // a természetes, baráti forma.
   const nevReszek = (user.name || "").trim().split(/\s+/).filter(Boolean);
   const firstName = nevReszek[nevReszek.length - 1] || "";
+  const ma = new Date();
+
+  const jarmuSzoveg = [
+    jarmuvek.kamion?.rendszam,
+    jarmuvek.potkocsi?.rendszam && `pótkocsi ${jarmuvek.potkocsi.rendszam}`,
+    jarmuvek.furgon?.rendszam && `furgon ${jarmuvek.furgon.rendszam}`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  const openFuvar = (f) => history.push(`/user/fuvarReszletek?id=${f.id}`, { data: f });
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Üdvözlés + értesítés */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
-            Szia,
+          <p className="text-sm font-medium text-ink-500">
+            {NAP_NEVEK[ma.getDay()]}, {HONAP_NEVEK[ma.getMonth()]} {ma.getDate()}.
           </p>
-          <h1 className="font-display text-xl font-bold text-brand-900">
-            {firstName || user.name}
-          </h1>
+          <h1 className="font-display text-2xl font-bold text-brand-900">Szia, {firstName || user.name}!</h1>
         </div>
         <Link
           to="/user/ertesitesek"
-          className="relative flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink-500 shadow-soft md:hidden"
-          aria-label="Értesítések"
+          className="relative flex h-12 w-12 items-center justify-center rounded-full bg-white text-ink-600 shadow-soft md:hidden"
+          aria-label={ujSzam > 0 ? `Értesítések (${ujSzam} új)` : "Értesítések"}
         >
-          <PiBellLight className="h-5 w-5" />
-          {vanErtesitesJelzes && (
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
+          <PiBellLight className="h-6 w-6" />
+          {ujSzam > 0 && (
+            <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold text-white">
+              {ujSzam > 9 ? "9+" : ujSzam}
+            </span>
           )}
         </Link>
       </div>
 
-      {/* Aktív fuvarjaim — a Fuvar-first munkafolyamat elsődleges napi
-          művelete (ld. docs/superpowers/specs/2026-07-28-fuvar-first-
-          workflow-design.md 6.2), ezért ez a legfelső, legnagyobb súlyú
-          kártya — a jármű-hozzárendelés (lentebb) ritkábban változik,
-          mint a napi fuvarok. */}
-      <div className="rounded-2xl border border-brand-200 bg-brand-50 p-4 shadow-soft">
-        <div className="mb-2 flex items-center justify-between">
-          <p className="font-display text-base font-bold text-brand-900">Aktív fuvarjaim</p>
-          <PiClipboardTextLight className="h-5 w-5 text-brand-500" />
-        </div>
-        {aktivFuvarok.length === 0 ? (
-          <p className="text-sm text-brand-700">Nincs aktív fuvarod.</p>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {aktivFuvarok.slice(0, 3).map((f) => (
-              <Link
-                key={f.id}
-                to="/user/fuvarReszletek"
-                onClick={(e) => {
-                  // history.push state-tel gyorsabb, mint egy plain <Link>
-                  // (nincs extra getSajatFuvar lekérdezés) — ezért kézzel
-                  // navigálunk ahelyett, hogy a Link natív navigációjára
-                  // hagyatkoznánk.
-                  e.preventDefault();
-                  history.push("/user/fuvarReszletek", { data: f });
-                }}
-                className="flex items-center justify-between gap-2 rounded-xl bg-white px-3 py-2.5 text-sm"
-              >
-                <span className="min-w-0">
-                  <span className="block truncate text-ink-800">
-                    {f.felrako_ceg || "—"} → {f.lerako_ceg || "—"}
-                  </span>
-                  <span className="block truncate text-xs text-ink-500">
-                    {[formatFuvarDatum(f.felrakas_datuma) || formatFuvarDatum(f.lerakas_datuma), f.megbizo_nev]
-                      .filter(Boolean)
-                      .join(" · ") || "Nincs dátum megadva"}
-                  </span>
-                </span>
-                <PiCaretRightLight className="h-4 w-4 flex-shrink-0 text-ink-400" />
-              </Link>
+      {offlineIdo && (
+        <p className="flex items-center gap-2 rounded-xl bg-ink-800 px-3 py-2 text-sm text-white">
+          <PiWifiSlashLight className="h-4 w-4 flex-shrink-0" />
+          {offlineCimke(offlineIdo)}
+        </p>
+      )}
+
+      {kovetkezo ? (
+        <KovetkezoFuvarKartya
+          fuvar={kovetkezo}
+          tobbiSzam={fuvarok.length - 1}
+          diszpecser={diszpecser}
+          onOpen={openFuvar}
+          onFeltoltve={frissit}
+        />
+      ) : (
+        <section className="flex flex-col items-center gap-2 rounded-3xl border border-ink-100 bg-white p-6 text-center shadow-soft">
+          <PiClipboardTextLight className="h-9 w-9 text-ink-400" />
+          <p className="text-base font-semibold text-ink-800">Nincs aktív fuvarod</p>
+          <p className="text-sm text-ink-500">Ha a diszpécser kioszt egy fuvart, itt jelenik meg, és értesítést kapsz róla.</p>
+          {diszpecser?.phone && (
+            <a
+              href={`tel:${diszpecser.phone.replace(/[^\d+]/g, "")}`}
+              className="mt-1 flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-brand-700 active:bg-brand-50"
+            >
+              <PiPhoneLight className="h-5 w-5" /> Diszpécser hívása
+            </a>
+          )}
+        </section>
+      )}
+
+      {(lejaratok.length > 0 || ujValaszok.length > 0 || ujDontesek.length > 0) && (
+        <section aria-label="Teendők">
+          <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-ink-500">Teendők</h2>
+          <div className="divide-y divide-ink-100 overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-soft">
+            {lejaratok.map((d) => (
+              <TeendoSor
+                key={d.key}
+                to="/user/profil"
+                icon={PiWarningCircleLight}
+                tone={d.status === "expired" ? "danger" : "warning"}
+                cim={`${d.label} ${d.status === "expired" ? "lejárt" : d.days === 0 ? "ma lejár" : `${d.days} nap múlva lejár`}`}
+                leiras={d.status === "expired" ? "Intézd a pótlását, és frissítsd a profilodban" : "Frissítsd a profilodban, ha megújítottad"}
+              />
             ))}
-            {aktivFuvarok.length > 3 && (
-              <Link
-                to="/user/fuvarok"
-                className="text-center text-xs font-semibold text-brand-700"
-              >
-                Összes fuvarod ({aktivFuvarok.length})
-              </Link>
-            )}
+            {ujValaszok.map((b) => (
+              <TeendoSor
+                key={b.id}
+                to="/user/bejelentesek"
+                icon={PiChatCircleTextLight}
+                tone="info"
+                cim={b.admin_valasz ? `Válasz érkezett: ${b.cim}` : `Bejelentésed: ${b.statusz === "lezart" ? "lezárva" : "folyamatban"}`}
+                leiras={b.admin_valasz || null}
+              />
+            ))}
+            {ujDontesek.map((k) => (
+              <TeendoSor
+                key={k.id}
+                to="/user/ertesitesek"
+                icon={k.allapot === "jovahagyva" ? PiCheckCircleLight : PiXCircleLight}
+                tone={k.allapot === "jovahagyva" ? "success" : "danger"}
+                cim={`Járműváltás ${k.allapot === "jovahagyva" ? "jóváhagyva" : "elutasítva"}`}
+                leiras={k.jarmu_rendszam || null}
+              />
+            ))}
           </div>
-        )}
-      </div>
+        </section>
+      )}
 
-      {/* Aktív jármű — az üres állapot szövege egységesen "Válassz"
-          minden kártyán (a fölötte lévő KAMION/PÓTKOCSI/FURGON címke már
-          jelzi, mire vonatkozik), hogy a 3 kártya sora azonos magasságú
-          maradjon, ne törjön el köztük egy csak a hosszabb szó miatt. */}
-      <div className="grid grid-cols-3 gap-3">
-        <Link
-          to="/user/jarmu-valaszto"
-          className="rounded-2xl border border-ink-100 bg-white p-4 shadow-soft"
-        >
-          <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-400">
-            <PiTruckLight className="h-4 w-4" />
-            Kamion
-          </div>
-          {aktivKamion ? (
-            <>
-              <p className="mt-1.5 font-display text-lg font-bold text-brand-900">
-                {aktivKamion.rendszam}
-              </p>
-              <p className="truncate text-xs text-ink-500">
-                {aktivKamion.tipus || "—"}
-              </p>
-            </>
-          ) : (
-            <p className="mt-2 text-sm font-medium text-brand-600">
-              Válassz
-            </p>
+      <Link
+        to="/user/jarmu-valaszto"
+        className="flex min-h-[3.5rem] items-center gap-3 rounded-2xl border border-ink-100 bg-white px-4 py-3 shadow-soft active:bg-slate-50"
+      >
+        <PiTruckLight className="h-6 w-6 flex-shrink-0 text-ink-500" />
+        <span className="min-w-0 flex-1">
+          <span className="block text-xs font-semibold uppercase tracking-wide text-ink-500">Járműved</span>
+          <span className="block truncate text-base font-semibold text-ink-900">{jarmuSzoveg || "Nincs kiválasztva"}</span>
+          {kerelmek.length > 0 && (
+            <span className="block truncate text-sm font-semibold text-amber-700">
+              Jóváhagyásra vár: {kerelmek.map((k) => k.jarmu_rendszam).filter(Boolean).join(", ")}
+            </span>
           )}
-          {pendingKamion && (
-            <p className="mt-1.5 text-[11px] font-semibold text-amber-600">
-              Vár jóváhagyásra
-            </p>
-          )}
-        </Link>
+        </span>
+        <span className="flex flex-shrink-0 items-center text-sm font-semibold text-brand-600">
+          Csere <PiCaretRightLight className="h-4 w-4" />
+        </span>
+      </Link>
+
+      <div className="grid grid-cols-2 gap-2">
         <Link
           to="/user/potkocsi-valaszto"
-          className="rounded-2xl border border-ink-100 bg-white p-4 shadow-soft"
+          className="flex min-h-11 items-center justify-center rounded-xl bg-white px-3 text-sm font-semibold text-ink-700 shadow-soft ring-1 ring-ink-100"
         >
-          <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-400">
-            <PiTruckTrailerLight className="h-4 w-4" />
-            Pótkocsi
-          </div>
-          {aktivPotkocsi ? (
-            <>
-              <p className="mt-1.5 font-display text-lg font-bold text-brand-900">
-                {aktivPotkocsi.rendszam}
-              </p>
-              <p className="truncate text-xs text-ink-500">
-                {aktivPotkocsi.tipus || "—"}
-              </p>
-            </>
-          ) : (
-            <p className="mt-2 text-sm font-medium text-brand-600">
-              Válassz
-            </p>
-          )}
-          {pendingPotkocsi && (
-            <p className="mt-1.5 text-[11px] font-semibold text-amber-600">
-              Vár jóváhagyásra
-            </p>
-          )}
+          Pótkocsi csere
         </Link>
         <Link
           to="/user/furgon-valaszto"
-          className="rounded-2xl border border-ink-100 bg-white p-4 shadow-soft"
+          className="flex min-h-11 items-center justify-center rounded-xl bg-white px-3 text-sm font-semibold text-ink-700 shadow-soft ring-1 ring-ink-100"
         >
-          <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-400">
-            <PiVanLight className="h-4 w-4" />
-            Furgon
-          </div>
-          {aktivFurgon ? (
-            <>
-              <p className="mt-1.5 font-display text-lg font-bold text-brand-900">
-                {aktivFurgon.rendszam}
-              </p>
-              <p className="truncate text-xs text-ink-500">
-                {aktivFurgon.tipus || "—"}
-              </p>
-            </>
-          ) : (
-            <p className="mt-2 text-sm font-medium text-brand-600">
-              Válassz
-            </p>
-          )}
-          {pendingFurgon && (
-            <p className="mt-1.5 text-[11px] font-semibold text-amber-600">
-              Vár jóváhagyásra
-            </p>
-          )}
+          Furgon csere
         </Link>
       </div>
 
-      {/* Fontos értesítések */}
-      {lejaroDokumentumok.length > 0 && (
-        <Link
-          to="/user/ertesitesek"
-          className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3"
-        >
-          <PiWarningCircleLight className="h-5 w-5 flex-shrink-0 text-amber-600" />
-          <p className="flex-1 text-sm text-amber-800">
-            {lejaroDokumentumok[0].label}{" "}
-            {lejaroDokumentumok[0].days < 0
-              ? "lejárt"
-              : `${lejaroDokumentumok[0].days} nap múlva lejár`}
-            {lejaroDokumentumok.length > 1 &&
-              ` (+${lejaroDokumentumok.length - 1} további)`}
-          </p>
-          <PiCaretRightLight className="h-4 w-4 flex-shrink-0 text-amber-500" />
-        </Link>
-      )}
-
-      {/* Bejelentés — egyetlen megmaradt "gyors művelet" a korábbi rács
-          helyén (ld. a fájl tetejei komment). Tudatosan piros-tónusú
-          háttér (nem sima fehér, mint a lenti "Legutóbbi bejelentéseim"
-          sor) — ez egy LÉTREHOZÓ művelet, nem egy meglévő lista
-          megnyitása, a vizuális megkülönböztetés ezt jelzi. */}
-      <Link
-        to="/user/bejelentes/uj"
-        className="flex items-center gap-3 rounded-2xl border border-red-100 bg-red-50/60 px-4 py-3.5 shadow-soft"
-      >
-        <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
-          <PiChatCircleTextLight className="h-5 w-5" />
-        </span>
-        <span className="flex-1 text-sm font-semibold text-ink-800">
-          Új bejelentés
-        </span>
-        <PiCaretRightLight className="h-4 w-4 flex-shrink-0 text-red-400" />
-      </Link>
-
-      {/* Legutóbbi bejelentéseim — csak a saját korábbi bejelentések
-          listájára (/user/bejelentesek) mutat, egyetlen összegző sorként. */}
       <Link
         to="/user/bejelentesek"
-        className="flex items-center justify-between rounded-2xl border border-ink-100 bg-white px-4 py-3 shadow-soft"
+        className="flex min-h-[3.25rem] items-center justify-between rounded-2xl border border-ink-100 bg-white px-4 shadow-soft active:bg-slate-50"
       >
-        <span className="text-sm text-ink-500">
-          {sajatBejelentesek.length === 0
-            ? "Nincs bejelentésed"
-            : `${sajatBejelentesek.length} legutóbbi bejelentésed`}
+        <span className="flex items-center gap-2 text-sm font-semibold text-ink-700">
+          <PiChatCircleTextLight className="h-5 w-5 text-ink-500" /> Bejelentéseim
         </span>
-        <span className="flex items-center gap-1 text-xs font-semibold text-brand-600">
-          Megnyitás
-          <PiCaretRightLight className="h-4 w-4" />
-        </span>
+        <PiCaretRightLight className="h-4 w-4 text-ink-400" />
       </Link>
     </div>
   );

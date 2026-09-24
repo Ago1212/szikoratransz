@@ -7,7 +7,7 @@ import { PiSignOutLight } from "react-icons/pi";
 import CardSettings from "components/Cards/CardSettings.js";
 import PushFeliratkozas from "components/UI/PushFeliratkozas.js";
 import PageHeader from "components/UI/PageHeader.js";
-import { fetchAction } from "utils/fetchAction";
+import { kijelentkezes } from "utils/kijelentkezes";
 
 export default function Settings() {
   const history = useHistory();
@@ -19,13 +19,7 @@ export default function Settings() {
   // ugyanúgy, ahogy a legtöbb mobil appban a kijelentkezés a fiók/profil
   // képernyő része, nem egy örökké kint lévő navigációs fül.
   const handleLogout = async () => {
-    const user = JSON.parse(localStorage.getItem("user") || "null");
-    const result = await fetchAction("logoutUser", { id: user?.id });
-    localStorage.removeItem("user");
-    localStorage.removeItem("sessionToken");
-    if (!result?.success) {
-      console.warn(result?.message || "Logout request failed.");
-    }
+    await kijelentkezes();
     history.push("/");
   };
 

@@ -38,6 +38,13 @@ function parseValue(value) {
 
 // Egyedi, márka-stílusú naptár-legördülő — a natív <input type="date">
 // leeső naptárát a böngésző/OS rajzolja, azt nem lehet stílushoz igazítani.
+const EV_LISTA = (() => {
+  const most = new Date().getFullYear();
+  const lista = [];
+  for (let ev = most + 15; ev >= 1940; ev -= 1) lista.push(ev);
+  return lista;
+})();
+
 export default function DatePicker({
   value,
   onChange,
@@ -45,7 +52,7 @@ export default function DatePicker({
   id,
   required,
   disabled,
-  placeholder = "Válasszon dátumot",
+  placeholder = "Válassz dátumot",
   className = "",
 }) {
   const [open, setOpen] = useState(false);
@@ -146,7 +153,7 @@ export default function DatePicker({
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        className="flex min-h-11 w-full items-center gap-2 rounded-lg border border-ink-100 bg-slate-50 px-3 py-2 text-left text-sm text-brand-900 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300 disabled:cursor-not-allowed disabled:opacity-60 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-50 dark:focus:border-brand-500"
+        className="flex min-h-11 w-full items-center gap-2 rounded-lg border border-ink-100 bg-slate-50 px-3 py-2 text-left text-base text-brand-900 md:text-sm transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300 disabled:cursor-not-allowed disabled:opacity-60 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-50 dark:focus:border-brand-500"
       >
         <PiCalendarBlankLight className="h-3.5 w-3.5 flex-shrink-0 text-ink-400 dark:text-ink-300" />
         <span className={`truncate ${selected ? "" : "text-ink-400 dark:text-ink-300"}`}>
@@ -166,16 +173,41 @@ export default function DatePicker({
               <button
                 type="button"
                 onClick={() => setViewMonth((m) => subMonths(m, 1))}
+                aria-label="Előző hónap"
                 className="flex h-11 w-11 items-center justify-center rounded-lg text-ink-400 transition-colors duration-150 hover:bg-slate-100 hover:text-ink-700 dark:hover:bg-ink-800 dark:hover:text-ink-100"
               >
                 <PiCaretLeftLight className="h-4 w-4" />
               </button>
-              <span className="text-sm font-semibold capitalize text-brand-900 dark:text-ink-50">
-                {format(viewMonth, "yyyy. MMMM", { locale: hu })}
-              </span>
+              <div className="flex items-center gap-1">
+                <select
+                  aria-label="Év"
+                  value={viewMonth.getFullYear()}
+                  onChange={(e) => setViewMonth(new Date(Number(e.target.value), viewMonth.getMonth(), 1))}
+                  className="min-h-11 rounded-lg border-0 bg-slate-50 py-1 pl-2 pr-7 text-sm font-semibold text-brand-900 focus:ring-2 focus:ring-brand-300 dark:bg-ink-800 dark:text-ink-50"
+                >
+                  {EV_LISTA.map((ev) => (
+                    <option key={ev} value={ev}>
+                      {ev}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  aria-label="Hónap"
+                  value={viewMonth.getMonth()}
+                  onChange={(e) => setViewMonth(new Date(viewMonth.getFullYear(), Number(e.target.value), 1))}
+                  className="min-h-11 rounded-lg border-0 bg-slate-50 py-1 pl-2 pr-7 text-sm font-semibold capitalize text-brand-900 focus:ring-2 focus:ring-brand-300 dark:bg-ink-800 dark:text-ink-50"
+                >
+                  {Array.from({ length: 12 }).map((_, i) => (
+                    <option key={i} value={i}>
+                      {format(new Date(2020, i, 1), "LLLL", { locale: hu })}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <button
                 type="button"
                 onClick={() => setViewMonth((m) => addMonths(m, 1))}
+                aria-label="Következő hónap"
                 className="flex h-11 w-11 items-center justify-center rounded-lg text-ink-400 transition-colors duration-150 hover:bg-slate-100 hover:text-ink-700 dark:hover:bg-ink-800 dark:hover:text-ink-100"
               >
                 <PiCaretRightLight className="h-4 w-4" />

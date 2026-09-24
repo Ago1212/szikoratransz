@@ -173,8 +173,17 @@ export default function Bejelentkezes() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
   const history = useHistory();
+  const keresoParams = new URLSearchParams(window.location.search);
+  const [error, setError] = useState(
+    keresoParams.get("lejart") ? "A munkameneted lejárt, jelentkezz be újra. Utána visszaviszünk oda, ahol jártál." : "",
+  );
+  const visszaUtvonal = keresoParams.get("vissza");
+  const celUtvonal = (user) => {
+    const alap = user.is_admin ? "/admin/dashboard" : "/user/dashboard";
+    const elotag = user.is_admin ? "/admin/" : "/user/";
+    return visszaUtvonal && visszaUtvonal.startsWith(elotag) ? visszaUtvonal : alap;
+  };
   // Csak a `lg` töréspont alatt (ugyanott, ahol a brandingoszlop is
   // eltűnt eredetileg) váltunk a teljes képernyős, sötét, egykártyás
   // mobil nézetre — laptopon/desktopon az eredeti kétoszlopos, világos
@@ -221,11 +230,7 @@ export default function Bejelentkezes() {
         localStorage.setItem("user", JSON.stringify(result.user));
         localStorage.setItem("sessionToken", result.token);
 
-        if (result.user.is_admin) {
-          history.push("/admin/dashboard");
-        } else {
-          history.push("/user/dashboard");
-        }
+        history.push(celUtvonal(result.user));
       } else {
         setError(result.message || "Hibás email vagy jelszó!");
       }
@@ -253,7 +258,7 @@ export default function Bejelentkezes() {
   const handleWebauthnSuccess = (result) => {
     localStorage.setItem("user", JSON.stringify(result.user));
     localStorage.setItem("sessionToken", result.token);
-    history.push(result.user.is_admin ? "/admin/dashboard" : "/user/dashboard");
+    history.push(celUtvonal(result.user));
   };
   const handleWebauthnError = (message) => setError(message);
 
@@ -314,7 +319,8 @@ export default function Bejelentkezes() {
           <input
             type="password"
             id="password"
-            placeholder="••••••••"
+            autoComplete="current-password"
+            placeholder="Jelszó"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}

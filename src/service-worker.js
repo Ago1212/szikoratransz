@@ -103,7 +103,7 @@ self.addEventListener("push", (event) => {
       tag: data.tag || undefined,
       renotify: Boolean(data.tag),
       actions: [{ action: "megnyitas", title: "Megnyitás" }],
-      data: { url: data.url || "/admin/dashboard" },
+      data: { url: data.url || "/" },
     })
   );
 });
@@ -113,7 +113,7 @@ self.addEventListener("push", (event) => {
 // nyit egy újat a push payload `url`-jére.
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = event.notification.data?.url || "/admin/dashboard";
+  const url = event.notification.data?.url || "/";
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {

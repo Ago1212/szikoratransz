@@ -70,14 +70,14 @@ export default function HelyszinMegjegyzesek({ helyszinId, szerzoTipus, szerzoId
           onChange={(e) => setSzoveg(e.target.value)}
           placeholder="Új megjegyzés hozzáfűzése (pl. bejárati útvonal, rakodási tudnivaló)..."
           rows={3}
-          className="w-full rounded-xl border border-ink-100 bg-slate-50 px-4 py-3 text-sm text-brand-900 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300 dark:border-ink-800 dark:bg-ink-800 dark:text-ink-50"
+          className="w-full rounded-xl border border-ink-100 bg-slate-50 px-4 py-3 text-base text-brand-900 md:text-sm transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300 dark:border-ink-800 dark:bg-ink-800 dark:text-ink-50"
         />
         <div className="flex justify-end">
           <button
             type="button"
             onClick={handleAdd}
             disabled={saving || !szoveg.trim()}
-            className="flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex min-h-11 items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-soft transition-colors duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <PiChatCircleTextLight className="h-4 w-4" />
             {saving ? "Mentés..." : "Hozzáfűzés"}
@@ -103,7 +103,7 @@ export default function HelyszinMegjegyzesek({ helyszinId, szerzoTipus, szerzoId
                     <button
                       type="button"
                       onClick={() => handleDelete(m.id)}
-                      className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg text-ink-300 transition-colors duration-200 hover:bg-red-50 hover:text-red-600 dark:text-ink-600 dark:hover:bg-red-950/50 dark:hover:text-red-300"
+                      className="flex -m-2 h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg text-ink-300 transition-colors duration-200 hover:bg-red-50 hover:text-red-600 dark:text-ink-600 dark:hover:bg-red-950/50 dark:hover:text-red-300"
                       aria-label="Megjegyzés törlése"
                     >
                       <PiTrashLight className="h-3.5 w-3.5" />

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useHistory } from "react-router-dom";
 import {
   PiPlayFill,
@@ -7,6 +7,9 @@ import {
   PiUploadSimpleLight,
   PiPencilSimpleLight,
   PiCheckLight,
+  PiNavigationArrowLight,
+  PiCrosshairLight,
+  PiImageLight,
 } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { fileToBase64 } from "utils/fileToBase64";
@@ -14,6 +17,8 @@ import { toast } from "utils/toast";
 import MobileHeader from "components/UI/MobileHeader.js";
 import Spinner from "components/UI/Spinner.js";
 import HelyszinMegjegyzesek from "components/Helyszin/HelyszinMegjegyzesek.js";
+import { elokeszitFeltoltesre } from "utils/feltoltesElokeszites.js";
+import { navigacioUrl } from "utils/helyEgyeztetes";
 
 const getKind = (filename) => {
   const ext = (filename.split(".").pop() || "").toLowerCase();
@@ -21,6 +26,49 @@ const getKind = (filename) => {
   if (["mp4", "mov", "webm", "avi", "mkv"].includes(ext)) return "video";
   return "other";
 };
+
+function KepCsempe({ fajl, src, onBetoltve }) {
+  const ref = useRef(null);
+  const [hiba, setHiba] = useState(false);
+
+  useEffect(() => {
+    if (src || hiba) return undefined;
+    const node = ref.current;
+    if (!node) return undefined;
+    const betolt = () =>
+      fetchAction("downloadFile", { id: fajl.sorszam }).then((result) => {
+        if (result?.success && result.mime?.startsWith("image/")) onBetoltve(fajl.sorszam, `data:${result.mime};base64,${result.file}`);
+        else setHiba(true);
+      });
+    if (typeof IntersectionObserver === "undefined") {
+      betolt();
+      return undefined;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0].isIntersecting) return;
+        observer.disconnect();
+        betolt();
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fajl.sorszam, src, hiba]);
+
+  return (
+    <span ref={ref} className="flex h-full w-full items-center justify-center">
+      {src && !hiba ? (
+        <img src={src} alt={fajl.filename} className="h-full w-full object-cover" onError={() => setHiba(true)} />
+      ) : hiba ? (
+        <PiImageLight className="h-7 w-7 text-ink-400" />
+      ) : (
+        <Spinner wrapperClassName="flex" />
+      )}
+    </span>
+  );
+}
 
 // A helyszín fotóit/videóit közvetlenül a képernyőn mutatjuk meg
 // (nem böngésző-letöltést indítunk), hogy vezetés előtt/közben egy
@@ -42,6 +90,18 @@ export default function HelyszinReszletek() {
   const [preview, setPreview] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [cim, setCim] = useState(location.state?.data?.cim || "");
+  const [pozicio, setPozicio] = useState(
+    location.state?.data?.lat != null ? { lat: Number(location.state.data.lat), lng: Number(location.state.data.lng) } : null,
+  );
+  const [helyKeres, setHelyKeres] = useState(false);
+
+  useEffect(() => {
+    if (!preview) return undefined;
+    const esc = (e) => e.key === "Escape" && setPreview(null);
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [preview]);
 
   const loadFiles = async () => {
     const result = await fetchAction("getFiles", { id: helyszin.id, tabla: "helyszin" });
@@ -57,20 +117,6 @@ export default function HelyszinReszletek() {
     loadFiles();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    // Csak a képeket töltjük be előre, hogy a rácsban valódi
-    // képelőnézet legyen — a videók (jellemzően jóval nagyobbak)
-    // csak koppintásra töltődnek be.
-    const imageFiles = files.filter((f) => getKind(f.filename) === "image" && !thumbs[f.sorszam]);
-    imageFiles.forEach(async (f) => {
-      const result = await fetchAction("downloadFile", { id: f.sorszam });
-      if (result?.success) {
-        setThumbs((prev) => ({ ...prev, [f.sorszam]: `data:${result.mime};base64,${result.file}` }));
-      }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [files]);
 
   const openPreview = async (file) => {
     const kind = getKind(file.filename);
@@ -92,9 +138,15 @@ export default function HelyszinReszletek() {
     if (!nev.trim()) return;
     setSavingNev(true);
     try {
-      const result = await fetchAction("saveHelyszinData", { id: helyszin.id, nev: nev.trim() });
+      const result = await fetchAction("saveHelyszinData", {
+        id: helyszin.id,
+        nev: nev.trim(),
+        cim: cim.trim() || null,
+        lat: pozicio?.lat ?? null,
+        lng: pozicio?.lng ?? null,
+      });
       if (result?.success) {
-        setHelyszin((prev) => ({ ...prev, nev: nev.trim() }));
+        setHelyszin((prev) => ({ ...prev, nev: nev.trim(), cim: cim.trim() || null, lat: pozicio?.lat ?? null, lng: pozicio?.lng ?? null }));
         setEditingNev(false);
         toast.success("Mentve.");
       } else {
@@ -105,78 +157,150 @@ export default function HelyszinReszletek() {
     }
   };
 
+  const pozicioFrissitese = () => {
+    if (!navigator.geolocation) {
+      toast.error("A helymeghatározás nem támogatott ezen az eszközön.");
+      return;
+    }
+    setHelyKeres(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setPozicio({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setHelyKeres(false);
+      },
+      (err) => {
+        setHelyKeres(false);
+        toast.error(err?.code === 1 ? "A helyhozzáférés le van tiltva. Engedélyezd a beállításokban." : "Nem sikerült lekérni a helyzetet.");
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+    );
+  };
+
   const handleFileUpload = async (e) => {
-    const selectedFiles = Array.from(e.target.files);
+    const selectedFiles = Array.from(e.target.files || []);
+    e.target.value = "";
     if (selectedFiles.length === 0) return;
     setIsUploading(true);
+    let sikeres = 0;
     try {
-      const uploads = selectedFiles.map(async (file) => {
+      for (const eredeti of selectedFiles) {
+        // eslint-disable-next-line no-await-in-loop
+        const { file, hiba } = await elokeszitFeltoltesre(eredeti);
+        if (hiba) {
+          toast.error(hiba);
+          continue;
+        }
+        // eslint-disable-next-line no-await-in-loop
         const base64File = await fileToBase64(file);
-        return fetchAction("fileUpload", {
-          admin: user.admin,
-          id: helyszin.id,
-          tabla: "helyszin",
-          file: base64File,
-          name: file.name,
-          size: file.size,
-        });
-      });
-      const results = await Promise.all(uploads);
-      if (results.every((r) => r?.success)) {
-        await loadFiles();
-      } else {
-        toast.error("Néhány fájl feltöltése sikertelen volt.");
+        // eslint-disable-next-line no-await-in-loop
+        const result = await fetchAction(
+          "fileUpload",
+          { admin: user.admin, id: helyszin.id, tabla: "helyszin", file: base64File, name: file.name, size: file.size },
+          { timeoutMs: 120000 },
+        );
+        if (result?.success) sikeres += 1;
+        else toast.error(`${eredeti.name}: ${result?.message || "a feltöltés sikertelen."}`);
       }
+      if (sikeres > 0) toast.success(sikeres === selectedFiles.length ? "Feltöltve." : `${sikeres}/${selectedFiles.length} fájl feltöltve.`);
+      await loadFiles();
     } finally {
       setIsUploading(false);
-      e.target.value = "";
     }
   };
+
+  const nav = navigacioUrl(helyszin);
 
   if (!helyszin) return null;
 
   return (
     <div className="flex flex-col gap-3">
-      <MobileHeader title="Helyszín" />
+      <MobileHeader title="Hely" vissza="/user/helyszinek" />
 
       <div className="rounded-2xl border border-ink-100 bg-white p-4 shadow-soft">
         {editingNev ? (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-2">
             <input
               autoFocus
               value={nev}
               onChange={(e) => setNev(e.target.value)}
-              className="min-w-0 flex-1 rounded-lg border border-ink-100 bg-slate-50 px-3 py-2 text-sm font-bold text-ink-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300"
+              placeholder="Név"
+              className="min-h-11 rounded-xl border border-ink-100 bg-slate-50 px-3 text-base font-bold text-ink-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300"
+            />
+            <input
+              value={cim}
+              onChange={(e) => setCim(e.target.value)}
+              placeholder="Cím (opcionális)"
+              autoComplete="street-address"
+              className="min-h-11 rounded-xl border border-ink-100 bg-slate-50 px-3 text-base text-ink-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300"
             />
             <button
               type="button"
-              onClick={handleSaveNev}
-              disabled={savingNev || !nev.trim()}
-              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
-              aria-label="Mentés"
+              onClick={pozicioFrissitese}
+              disabled={helyKeres}
+              className={`flex min-h-11 items-center justify-center gap-2 rounded-xl text-sm font-semibold ${
+                pozicio ? "bg-emerald-50 text-emerald-700" : "border border-ink-200 bg-white text-ink-700"
+              }`}
             >
-              <PiCheckLight className="h-5 w-5" />
+              <PiCrosshairLight className="h-5 w-5" />
+              {helyKeres ? "Helyzet lekérése…" : pozicio ? "Pozíció mentve — frissítés a mostanira" : "Itt vagyok most — mentsd a pozíciót"}
             </button>
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => setEditingNev(false)} className="min-h-11 rounded-xl text-sm font-semibold text-ink-600 active:bg-slate-100">
+                Mégse
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveNev}
+                disabled={savingNev || !nev.trim()}
+                className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-brand-600 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <PiCheckLight className="h-5 w-5" /> {savingNev ? "Mentés…" : "Mentés"}
+              </button>
+            </div>
           </div>
         ) : (
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="truncate text-base font-bold text-ink-900">{helyszin.nev}</h2>
-            <button
-              type="button"
-              onClick={() => setEditingNev(true)}
-              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-slate-100 hover:text-ink-700"
-              aria-label="Név szerkesztése"
-            >
-              <PiPencilSimpleLight className="h-4 w-4" />
-            </button>
-          </div>
+          <>
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <h2 className="text-lg font-bold text-ink-900">{helyszin.nev}</h2>
+                {helyszin.cim && <p className="text-sm text-ink-500">{helyszin.cim}</p>}
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingNev(true)}
+                className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-ink-500 hover:bg-slate-100 hover:text-ink-700"
+                aria-label="Hely adatainak szerkesztése"
+              >
+                <PiPencilSimpleLight className="h-5 w-5" />
+              </button>
+            </div>
+            {nav ? (
+              <a
+                href={nav}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 flex min-h-[3.25rem] items-center justify-center gap-2 rounded-xl bg-brand-600 text-base font-semibold text-white active:bg-brand-700"
+              >
+                <PiNavigationArrowLight className="h-5 w-5" /> Navigálás ide
+              </a>
+            ) : null}
+            {helyszin.lat == null && (
+              <button
+                type="button"
+                onClick={() => setEditingNev(true)}
+                className="mt-2 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl text-sm font-semibold text-brand-600 active:bg-brand-50"
+              >
+                <PiCrosshairLight className="h-4 w-4" /> Pozíció hozzáadása a pontos navigációhoz
+              </button>
+            )}
+          </>
         )}
       </div>
 
       <div>
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-400">Fotók / videók</h2>
-          <label className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-brand-50 px-3 py-1.5 text-xs font-bold text-brand-700">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-500">Fotók / videók</h2>
+          <label className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-xl bg-brand-50 px-4 text-sm font-bold text-brand-700">
             <PiUploadSimpleLight className="h-4 w-4" />
             {isUploading ? "Feltöltés..." : "Feltöltés"}
             <input
@@ -192,8 +316,8 @@ export default function HelyszinReszletek() {
         {loading ? (
           <Spinner wrapperClassName="flex justify-center py-10" />
         ) : files.length === 0 ? (
-          <div className="rounded-2xl border border-ink-100 bg-white p-6 text-center text-sm text-ink-400 shadow-soft">
-            Ehhez a helyszínhez még nincs feltöltött fotó/videó.
+          <div className="rounded-2xl border border-ink-100 bg-white p-6 text-center text-sm text-ink-500 shadow-soft">
+            Még nincs fotó. Fotózd le a bejáratot, a rámpát vagy a parkolást — a kollégák is látni fogják.
           </div>
         ) : (
           <div className="grid grid-cols-3 gap-2">
@@ -207,16 +331,11 @@ export default function HelyszinReszletek() {
                   className="relative flex aspect-square items-center justify-center overflow-hidden rounded-xl border border-ink-100 bg-white shadow-soft"
                 >
                   {kind === "image" ? (
-                    thumbs[f.sorszam] ? (
-                      <img
-                        src={thumbs[f.sorszam]}
-                        alt={f.filename}
-                        loading="lazy"
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <Spinner wrapperClassName="flex" />
-                    )
+                    <KepCsempe
+                      fajl={f}
+                      src={thumbs[f.sorszam]}
+                      onBetoltve={(id, src) => setThumbs((prev) => ({ ...prev, [id]: src }))}
+                    />
                   ) : kind === "video" ? (
                     <div className="flex h-full w-full items-center justify-center bg-ink-900/90">
                       <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-ink-900">
@@ -226,7 +345,7 @@ export default function HelyszinReszletek() {
                   ) : (
                     <div className="flex flex-col items-center gap-1.5 p-2">
                       <PiFileLight className="h-6 w-6 text-ink-400" />
-                      <span className="w-full truncate text-center text-[10px] text-ink-500">{f.filename}</span>
+                      <span className="w-full truncate text-center text-xs text-ink-500">{f.filename}</span>
                     </div>
                   )}
                 </button>
@@ -237,7 +356,7 @@ export default function HelyszinReszletek() {
       </div>
 
       <div>
-        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">Megjegyzések</h2>
+        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-500">Megjegyzések</h2>
         <HelyszinMegjegyzesek
           helyszinId={helyszin.id}
           szerzoTipus="sofor"
@@ -253,13 +372,13 @@ export default function HelyszinReszletek() {
       )}
 
       {preview && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-black">
-          <div className="flex items-center justify-between p-4">
+        <div className="fixed inset-0 z-50 flex flex-col bg-black" role="dialog" aria-modal="true" aria-label={preview.filename}>
+          <div className="flex items-center justify-between p-4" style={{ paddingTop: "calc(1rem + env(safe-area-inset-top))" }}>
             <p className="truncate pr-4 text-sm font-semibold text-white">{preview.filename}</p>
             <button
               type="button"
               onClick={() => setPreview(null)}
-              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-white"
+              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-white"
               aria-label="Bezárás"
             >
               <PiXLight className="h-5 w-5" />

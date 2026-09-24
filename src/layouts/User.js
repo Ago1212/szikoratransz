@@ -7,14 +7,19 @@ import {
   useLocation,
   useHistory,
 } from "react-router-dom";
-import { PiBellLight, PiSignOutLight } from "react-icons/pi";
+import { PiBellLight, PiSignOutLight, PiWifiSlashLight } from "react-icons/pi";
 
 import useNoIndex from "utils/useNoIndex";
-import { fetchAction } from "utils/fetchAction";
+import { useMediaQuery } from "react-responsive";
 import { useSajatErtesitesek } from "utils/useSajatErtesitesek.js";
 import { ensurePushSubscriptionSynced } from "utils/pushSubscribe.js";
 import BottomNav from "components/UI/BottomNav.js";
 import Spinner from "components/UI/Spinner.js";
+import HibaHatar from "components/UI/HibaHatar.js";
+import { toast } from "utils/toast";
+import { useOnline } from "utils/useOnline.js";
+import { sorUritese } from "utils/feltoltesiSor.js";
+import { kijelentkezes } from "utils/kijelentkezes";
 
 const UserDashboard = React.lazy(() => import("views/user/Dashboard.js"));
 const JarmuValaszto = React.lazy(() => import("views/user/JarmuValaszto.js"));
@@ -59,10 +64,10 @@ const PrivateRoute = ({ component: Component, ...rest }) => {
 };
 
 const desktopLinks = [
-  { to: "/user/dashboard", label: "Kezdőlap" },
+  { to: "/user/dashboard", label: "Ma" },
   { to: "/user/fuvarok", label: "Fuvarjaim" },
   { to: "/user/bejelentesek", label: "Bejelentéseim" },
-  { to: "/user/helyszinek", label: "Helyszínek" },
+  { to: "/user/helyszinek", label: "Helyek" },
   { to: "/user/profil", label: "Profil" },
 ];
 
@@ -75,13 +80,10 @@ function DesktopNav() {
   const location = useLocation();
   const history = useHistory();
   const isActive = (path) => location.pathname.startsWith(path);
-  const { osszesSzam } = useSajatErtesitesek();
+  const { ujSzam } = useSajatErtesitesek();
 
   const handleLogout = async () => {
-    const user = JSON.parse(localStorage.getItem("user") || "null");
-    await fetchAction("logoutUser", { id: user?.id });
-    localStorage.removeItem("user");
-    localStorage.removeItem("sessionToken");
+    await kijelentkezes();
     history.push("/auth/login");
   };
 
@@ -126,7 +128,7 @@ function DesktopNav() {
             aria-label="Értesítések"
           >
             <PiBellLight className="h-[18px] w-[18px]" />
-            {osszesSzam > 0 && (
+            {ujSzam > 0 && (
               <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />
             )}
           </Link>
@@ -163,10 +165,39 @@ export default function User() {
     ensurePushSubscriptionSynced();
   }, []);
 
+  const online = useOnline();
+  const asztali = useMediaQuery({ minWidth: 768 });
+  useEffect(() => {
+    if (!online) return;
+    sorUritese().then(({ feltoltve, hibak } = {}) => {
+      if (feltoltve > 0) toast.success(`${feltoltve} függőben lévő fotó feltöltve.`);
+      (hibak || []).forEach((h) => toast.error(h));
+    });
+  }, [online]);
+
   return (
     <div className="min-h-screen bg-slate-50">
-      <DesktopNav />
-      <div className="mx-auto w-full max-w-lg px-4 pb-24 pt-5 md:max-w-3xl md:pb-10 md:pt-6">
+      <style>{`@media (min-width: 768px) { .mobil-fejlec { top: 57px !important; } }`}</style>
+      <div
+        className="pointer-events-none fixed inset-x-0 top-0 z-30 bg-slate-50 md:hidden"
+        style={{ height: "env(safe-area-inset-top)" }}
+      />
+      {asztali && <DesktopNav />}
+      {!online && (
+        <div
+          className="sticky top-0 z-40 flex items-center justify-center gap-2 bg-ink-800 px-4 py-2 text-sm font-medium text-white"
+          style={{ paddingTop: "calc(0.5rem + env(safe-area-inset-top))" }}
+          role="status"
+        >
+          <PiWifiSlashLight className="h-4 w-4 flex-shrink-0" />
+          Nincs internetkapcsolat — a legutóbb betöltött adatokat látod.
+        </div>
+      )}
+      <div
+        className="mx-auto w-full max-w-lg px-4 pb-24 md:max-w-3xl md:pb-10 md:pt-6"
+        style={{ paddingTop: "calc(1.25rem + env(safe-area-inset-top))" }}
+      >
+        <HibaHatar>
         <Suspense
           fallback={<Spinner wrapperClassName="flex justify-center py-20" />}
         >
@@ -222,6 +253,7 @@ export default function User() {
             <Redirect from="/user" to="/user/dashboard" />
           </Switch>
         </Suspense>
+        </HibaHatar>
       </div>
       <BottomNav />
     </div>

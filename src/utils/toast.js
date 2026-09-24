@@ -20,4 +20,5 @@ function emit(type, message) {
 export const toast = {
   success: (message) => emit("success", message),
   error: (message) => emit("error", message),
+  clear: () => listeners.forEach((fn) => fn({ clear: true })),
 };

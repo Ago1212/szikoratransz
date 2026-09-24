@@ -4,7 +4,7 @@ import { PiCheckCircleFill, PiWarningCircleFill, PiXLight } from "react-icons/pi
 import { subscribeToast } from "utils/toast";
 import { useDarkMode } from "utils/useDarkMode.js";
 
-const AUTO_DISMISS_MS = 5000;
+const AUTO_DISMISS_MS = { success: 3000, error: 5000 };
 
 // A `dark` osztály a layouts/Admin.js SAJÁT gyökér wrapperén ül (ld.
 // useDarkMode.js komment) — ez a komponens viszont az index.js-ben, a
@@ -26,8 +26,15 @@ export default function ToastContainer() {
 
   useEffect(() => {
     return subscribeToast((item) => {
-      setToasts((prev) => [...prev, item]);
-      setTimeout(() => remove(item.id), AUTO_DISMISS_MS);
+      if (item.clear) {
+        setToasts([]);
+        return;
+      }
+      setToasts((prev) => {
+        const maradek = prev.filter((t) => t.message !== item.message);
+        return [...maradek, item].slice(-3);
+      });
+      setTimeout(() => remove(item.id), AUTO_DISMISS_MS[item.type] || 5000);
     });
   }, [remove]);
 
@@ -35,13 +42,16 @@ export default function ToastContainer() {
 
   return (
     <div
-      className={`fixed inset-x-0 top-0 z-[9999] flex flex-col items-center gap-2 px-4 pt-4 md:inset-x-auto md:right-4 md:items-end ${darkActive ? "dark" : ""}`}
-      style={{ paddingTop: "calc(1rem + env(safe-area-inset-top))" }}
+      className={`toast-stack fixed inset-x-0 bottom-0 z-[9999] flex flex-col items-center gap-2 px-4 md:inset-x-auto md:bottom-auto md:right-4 md:top-0 md:items-end ${darkActive ? "dark" : ""}`}
     >
+      <style>{`
+        .toast-stack { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
+        @media (min-width: 768px) { .toast-stack { padding-bottom: 0; padding-top: calc(1rem + env(safe-area-inset-top)); } }
+      `}</style>
       {toasts.map((t) => (
         <div
           key={t.id}
-          role="status"
+          role={t.type === "error" ? "alert" : "status"}
           className={`flex w-full max-w-sm items-start gap-3 rounded-2xl border p-4 shadow-soft-lg transition-all duration-200 ${
             t.type === "success"
               ? "border-emerald-100 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/70 dark:text-emerald-200"
@@ -61,6 +71,7 @@ export default function ToastContainer() {
           <button
             type="button"
             onClick={() => remove(t.id)}
+            aria-label="Értesítés bezárása"
             className="flex-shrink-0 text-current/50 transition-colors duration-150 hover:text-current"
           >
             <PiXLight className="h-4 w-4" />

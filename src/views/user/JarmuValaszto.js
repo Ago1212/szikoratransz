@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { PiMagnifyingGlassLight, PiTruckLight, PiCheckCircleFill, PiClockLight } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
+import { confirmDialog } from "utils/confirm.js";
+import HibaKartya from "components/UI/HibaKartya.js";
 import MobileHeader from "components/UI/MobileHeader.js";
 import QrScanButton from "components/UI/QrScanButton.js";
 import Spinner from "components/UI/Spinner.js";
@@ -28,6 +30,7 @@ export default function JarmuValaszto() {
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("mind");
+  const [hiba, setHiba] = useState(null);
 
   const loadPending = (soforId) => {
     fetchAction("getSajatJarmuValtasKerelmek", { sofor_id: soforId }).then((result) => {
@@ -51,6 +54,7 @@ export default function JarmuValaszto() {
     });
     fetchAction("getKamionok", { id: userData.admin }).then((result) => {
       if (result?.success) setKamionok(result.kamionok || []);
+      else setHiba(result?.message || "Nem sikerült betölteni a listát.");
       setLoading(false);
     });
     loadPending(userData.id);
@@ -70,6 +74,11 @@ export default function JarmuValaszto() {
 
   const request = async (kamion) => {
     if (String(kamion.id) === String(user?.kamion)) return;
+    const uzenet =
+      pendingKerelem && String(pendingKerelem.jarmu_id) !== String(kamion.id)
+        ? `Kéred a(z) ${kamion.rendszam} kamiont? A(z) ${pendingKerelem.jarmu_rendszam} kérésed ezzel visszavonódik.`
+        : `Kéred a(z) ${kamion.rendszam} kamiont? Az admin jóváhagyása után lesz a tiéd.`;
+    if (!(await confirmDialog(uzenet, { confirmLabel: "Kérés küldése", danger: false }))) return;
     setSaving(true);
     const result = await fetchAction("requestJarmuValtas", {
       admin: user.admin,
@@ -87,11 +96,15 @@ export default function JarmuValaszto() {
   };
 
   const withdraw = async () => {
-    if (!pendingKerelem) return;
+    if (!pendingKerelem || saving) return;
+    setSaving(true);
     const result = await fetchAction("visszavonJarmuValtas", { id: pendingKerelem.id });
+    setSaving(false);
     if (result?.success) {
       toast.success("Kérés visszavonva.");
       setPendingKerelem(null);
+    } else {
+      toast.error(result?.message || "A visszavonás sikertelen.");
     }
   };
 
@@ -114,22 +127,26 @@ export default function JarmuValaszto() {
         <div className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-3.5 py-3">
           <PiClockLight className="h-5 w-5 flex-shrink-0 text-amber-600" />
           <p className="flex-1 text-sm text-amber-800">
-            Kéréd jóváhagyásra vár: <span className="font-bold">{pendingKerelem.jarmu_rendszam}</span>
+            Kéréd jóváhagyásra vár: <span className="whitespace-nowrap font-bold">{pendingKerelem.jarmu_rendszam}</span>
           </p>
-          <button type="button" onClick={withdraw} className="text-xs font-bold text-amber-700 underline">
+          <button type="button" onClick={withdraw} disabled={saving} className="min-h-11 flex-shrink-0 px-2 text-sm font-bold text-amber-700 underline">
             Visszavonás
           </button>
         </div>
       )}
 
       <div className="flex items-center gap-2">
-        <div className="flex flex-1 items-center gap-2 rounded-xl border border-ink-100 bg-white px-3 py-2.5 focus-within:ring-2 focus-within:ring-brand-300">
+        <div className="flex min-h-11 flex-1 items-center gap-2 rounded-xl border border-ink-100 bg-white px-3 focus-within:ring-2 focus-within:ring-brand-300">
           <PiMagnifyingGlassLight className="h-4 w-4 flex-shrink-0 text-ink-400" />
           <input
+            type="search"
+            enterKeyHint="search"
+            autoCapitalize="characters"
+            autoCorrect="off"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Rendszám vagy típus keresése"
-            className="w-full bg-transparent text-sm text-ink-900 placeholder-ink-300 focus:outline-none"
+            className="w-full border-0 bg-transparent p-0 text-base text-ink-900 placeholder-ink-400 shadow-none focus:outline-none focus:ring-0"
           />
         </div>
         <QrScanButton onResult={handleQr} label="Kamion QR-kód beolvasása" />
@@ -141,7 +158,7 @@ export default function JarmuValaszto() {
             key={f.key}
             type="button"
             onClick={() => setFilter(f.key)}
-            className={`flex-shrink-0 rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors duration-150 ${
+            className={`min-h-11 flex-shrink-0 rounded-full px-4 text-sm font-bold transition-colors duration-150 ${
               filter === f.key ? "bg-brand-600 text-white" : "bg-white text-ink-500 border border-ink-100"
             }`}
           >
@@ -152,9 +169,11 @@ export default function JarmuValaszto() {
 
       {loading ? (
         <Spinner wrapperClassName="flex justify-center py-16" />
+      ) : hiba ? (
+        <HibaKartya uzenet={hiba} onRetry={() => window.location.reload()} />
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl border border-ink-100 bg-white p-6 text-center text-sm text-ink-400 shadow-soft">
-          Nincs a szűrésnek megfelelő kamion.
+        <div className="rounded-2xl border border-ink-100 bg-white p-6 text-center text-sm text-ink-500 shadow-soft">
+          {kamionok.length === 0 ? "Még nincs kamion a rendszerben." : search.trim() || filter !== "mind" ? "Nincs a szűrésnek megfelelő kamion." : "Nincs megjeleníthető kamion."}
         </div>
       ) : (
         <div className="flex flex-col gap-2">
@@ -167,7 +186,7 @@ export default function JarmuValaszto() {
                 type="button"
                 disabled={saving || active}
                 onClick={() => request(k)}
-                className={`flex items-center gap-3 rounded-2xl border bg-white p-3.5 text-left shadow-soft transition-colors duration-150 disabled:opacity-60 ${
+                className={`flex items-center gap-3 rounded-2xl border bg-white p-3.5 text-left shadow-soft transition-colors duration-150 ${saving && !active ? "opacity-60" : ""} ${
                   active ? "border-brand-300 ring-1 ring-brand-200" : requested ? "border-amber-300" : "border-ink-100"
                 }`}
               >
@@ -176,7 +195,7 @@ export default function JarmuValaszto() {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block font-mono text-sm font-bold text-ink-900">{k.rendszam}</span>
-                  <span className="block truncate text-xs text-ink-500">
+                  <span className="block truncate text-sm text-ink-500">
                     {k.tipus || "—"}
                     {k.aktualis_km ? ` · ${Number(k.aktualis_km).toLocaleString("hu-HU")} km` : ""}
                   </span>
@@ -184,12 +203,12 @@ export default function JarmuValaszto() {
                 {active ? (
                   <PiCheckCircleFill className="h-6 w-6 flex-shrink-0 text-brand-500" />
                 ) : requested ? (
-                  <span className="flex-shrink-0 rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-bold text-amber-700">
+                  <span className="flex-shrink-0 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-700">
                     Kérve
                   </span>
                 ) : (
                   <span
-                    className={`flex-shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                    className={`flex-shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${
                       ALLAPOT_TONE[k.allapot] || "bg-ink-100 text-ink-500"
                     }`}
                   >

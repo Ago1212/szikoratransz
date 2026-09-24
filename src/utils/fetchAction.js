@@ -11,22 +11,26 @@ import { toast } from "utils/toast";
 const SESSION_EXPIRED_MESSAGE = "A munkamenet lejárt, jelentkezz be újra.";
 let utolsoKapcsolatiHiba = 0;
 
-function jelezKapcsolatiHibat() {
+const KAPCSOLATI_HIBA_UZENET = "Nem sikerült kapcsolódni a szerverhez. Ellenőrizd az internetkapcsolatot, és próbáld újra.";
+const IDOTULLEPES_UZENET = "A szerver nem válaszolt időben. Gyenge a térerő? Próbáld újra.";
+
+function jelezKapcsolatiHibat(uzenet) {
   const most = Date.now();
   if (most - utolsoKapcsolatiHiba < 5000) return;
   utolsoKapcsolatiHiba = most;
-  toast.error("Nem sikerült kapcsolódni a szerverhez. Ellenőrizd az internetkapcsolatot, és próbáld újra.");
+  toast.error(uzenet);
 }
 
 function handleExpiredSession() {
   localStorage.removeItem("user");
   localStorage.removeItem("sessionToken");
   if (!window.location.pathname.startsWith("/auth")) {
-    window.location.assign("/auth/login");
+    const vissza = window.location.pathname + window.location.search;
+    window.location.assign(`/auth/login?lejart=1&vissza=${encodeURIComponent(vissza)}`);
   }
 }
 
-export const fetchAction = async (action, payload) => {
+export const fetchAction = async (action, payload, { timeoutMs = 60000 } = {}) => {
   const authHash = "nIrINP&o!PU|+pM*Q8'j1R07U57W,qD";
   //const modulename = "https://szikora-transz.hu/backend/api.php"; //http://localhost:8000/api.php
   const modulename =
@@ -34,8 +38,11 @@ export const fetchAction = async (action, payload) => {
       ? "http://localhost:8000/api.php"
       : "https://szikora-transz.hu/backend/api.php";
 
+  const controller = new AbortController();
+  const idozito = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch(modulename, {
+      signal: controller.signal,
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -64,7 +71,10 @@ export const fetchAction = async (action, payload) => {
     return result;
   } catch (error) {
     console.error("Error fetching data:", error);
-    jelezKapcsolatiHibat();
-    return { success: false, message: error.message };
+    const uzenet = error.name === "AbortError" ? IDOTULLEPES_UZENET : KAPCSOLATI_HIBA_UZENET;
+    jelezKapcsolatiHibat(uzenet);
+    return { success: false, message: uzenet, halozatiHiba: true };
+  } finally {
+    clearTimeout(idozito);
   }
 };
