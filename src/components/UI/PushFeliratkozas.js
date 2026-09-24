@@ -10,7 +10,7 @@ import { urlBase64ToUint8Array } from "utils/pushSubscribe.js";
 // feliratkoztatása + a kapott endpoint/kulcsok elküldése a backendnek
 // (savePushFeliratkozas/deletePushFeliratkozas, ld. pushInterface.php).
 
-export default function PushFeliratkozas() {
+export default function PushFeliratkozas({ sofor = false }) {
   const [supported, setSupported] = useState(true);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -111,8 +111,12 @@ export default function PushFeliratkozas() {
           <p className="text-sm font-semibold text-ink-800 dark:text-ink-100">Push-értesítések</p>
           <p className="text-xs text-ink-400 dark:text-ink-500">
             {subscribed
-              ? "Ezen az eszközön be vannak kapcsolva — új bejelentésnél/kérelemnél azonnal értesítést kapsz."
-              : "Kapj azonnali értesítést ezen az eszközön, amint egy új bejelentés/jármű-váltási kérelem érkezik."}
+              ? sofor
+                ? "Ezen az eszközön be vannak kapcsolva — új fuvarnál azonnal értesítést kapsz."
+                : "Ezen az eszközön be vannak kapcsolva — új bejelentésnél/kérelemnél azonnal értesítést kapsz."
+              : sofor
+                ? "Kapj azonnali értesítést ezen az eszközön, amint új fuvart kapsz."
+                : "Kapj azonnali értesítést ezen az eszközön, amint egy új bejelentés/jármű-váltási kérelem érkezik."}
           </p>
         </div>
       </div>

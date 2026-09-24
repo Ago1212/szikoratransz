@@ -288,7 +288,7 @@ const CardPotkocsiAdatokForm = ({ potkocsi, setFormData, handleSave }) => {
         <FormField
           type="date"
           icon={PiShieldCheckLight}
-          label={<>Adr <LejaratTag date={potkocsi.adr_lejarat} /></>}
+          label={<>ADR <LejaratTag date={potkocsi.adr_lejarat} /></>}
           id="adr_lejarat"
           value={potkocsi.adr_lejarat}
           onChange={handleFormChange}
@@ -296,7 +296,7 @@ const CardPotkocsiAdatokForm = ({ potkocsi, setFormData, handleSave }) => {
         <FormField
           type="date"
           icon={PiIdentificationCardLight}
-          label={<>Taográf illesztés <LejaratTag date={potkocsi.taograf_illesztes} /></>}
+          label={<>Tachográf illesztés <LejaratTag date={potkocsi.taograf_illesztes} /></>}
           id="taograf_illesztes"
           value={potkocsi.taograf_illesztes}
           onChange={handleFormChange}

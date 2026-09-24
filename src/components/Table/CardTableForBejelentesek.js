@@ -93,7 +93,7 @@ export default function CardTable({ bejelentesek = [], isLoading = false, select
           <ActionIcon
             icon={<PiTrashLight />}
             danger
-            onClick={() => handleDelete(row.id)}
+            onClick={() => handleDelete(row.id, row.cim)}
             title="Törlés"
           />
         </div>

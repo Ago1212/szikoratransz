@@ -73,26 +73,28 @@ const Karbantartasok = () => {
   const user = JSON.parse(localStorage.getItem("user"));
   const [openDialog, setOpenDialog] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [editingTipus, setEditingTipus] = useState(null);
   const [newKarbantartas, setNewKarbantartas] = useState(emptyKarbantartas(user.ceg_id));
   const [jarmuTipus, setJarmuTipus] = useState("kamion");
   const [files, setFiles] = useState({});
   const [isFileUploading, setIsFileUploading] = useState(false);
 
-  const fetchFilesForKarbantartas = async (karbantartasId) => {
+  const fetchFilesForKarbantartas = async (tipus, karbantartasId) => {
     try {
       const result = await fetchAction("getFiles", {
         id: karbantartasId,
         tabla: "karbantartasok",
+        jarmuTipus: tipus,
       });
       if (result?.success) {
-        setFiles((prev) => ({ ...prev, [karbantartasId]: result.files || [] }));
+        setFiles((prev) => ({ ...prev, [`${tipus}:${karbantartasId}`]: result.files || [] }));
       }
     } catch (error) {
       console.error("Hiba történt a fájlok betöltésekor:", error);
     }
   };
 
-  const handleFileUpload = async (event, karbantartasId) => {
+  const handleFileUpload = async (event, tipus, karbantartasId) => {
     const selectedFiles = Array.from(event.target.files);
     if (selectedFiles.length === 0) return;
 
@@ -115,6 +117,7 @@ const Karbantartasok = () => {
                 admin: user.ceg_id,
                 id: karbantartasId,
                 tabla: "karbantartasok",
+                jarmuTipus: tipus,
                 file: base64File,
                 name: file.name,
                 size: file.size,
@@ -127,7 +130,7 @@ const Karbantartasok = () => {
 
       const results = await Promise.all(uploadPromises);
       if (results.every(Boolean)) {
-        await fetchFilesForKarbantartas(karbantartasId);
+        await fetchFilesForKarbantartas(tipus, karbantartasId);
       } else {
         toast.error("Néhány fájl feltöltése sikertelen volt.");
       }
@@ -139,13 +142,13 @@ const Karbantartasok = () => {
     }
   };
 
-  const handleFileDelete = async (fileId, karbantartasId) => {
+  const handleFileDelete = async (fileId, tipus, karbantartasId) => {
     if (!(await confirmDialog("Biztosan törölni szeretné ezt a fájlt?"))) return;
 
     try {
       const result = await fetchAction("deleteFile", { id: fileId });
       if (result?.success) {
-        await fetchFilesForKarbantartas(karbantartasId);
+        await fetchFilesForKarbantartas(tipus, karbantartasId);
       }
     } catch (error) {
       console.error("Hiba történt a törlés során:", error);
@@ -208,9 +211,6 @@ const Karbantartasok = () => {
         setKarbantartasok(result.karbantartasok);
         setTotal(result.total ?? result.karbantartasok.length);
         setOsszesKoltseg(result.osszesKoltseg ?? 0);
-        result.karbantartasok.forEach((karb) => {
-          fetchFilesForKarbantartas(karb.id);
-        });
       } else {
         setTotal(0);
         setOsszesKoltseg(0);
@@ -272,6 +272,8 @@ const Karbantartasok = () => {
 
   const handleEditKarbantartas = (karb) => {
     setEditingId(karb.id);
+    setEditingTipus(karb.tipus);
+    fetchFilesForKarbantartas(karb.tipus, karb.id);
     setJarmuTipus(karb.potkocsi_id ? "potkocsi" : karb.furgon_id ? "furgon" : "kamion");
     setNewKarbantartas({
       admin: user.ceg_id,
@@ -358,7 +360,7 @@ const Karbantartasok = () => {
     return { text: "Tervezett", className: "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300" };
   };
 
-  const renderFileUpload = (karbantartasId) => (
+  const renderFileUpload = (tipus, karbantartasId) => (
     <div className="rounded-xl border border-ink-100 bg-slate-50 p-3 dark:border-ink-800 dark:bg-ink-800">
       <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-ink-600 shadow-soft transition-colors duration-200 hover:bg-brand-50 hover:text-brand-700 dark:bg-ink-900 dark:text-ink-300 dark:hover:bg-brand-950/40 dark:hover:text-brand-300">
         <PiUploadSimpleLight className="h-4 w-4" />
@@ -366,13 +368,13 @@ const Karbantartasok = () => {
         <input
           type="file"
           className="hidden"
-          onChange={(e) => handleFileUpload(e, karbantartasId)}
+          onChange={(e) => handleFileUpload(e, tipus, karbantartasId)}
           disabled={isFileUploading}
           multiple
         />
       </label>
       <div className="mt-2 space-y-1.5">
-        {files[karbantartasId]?.map((file) => (
+        {files[`${tipus}:${karbantartasId}`]?.map((file) => (
           <div
             key={file.sorszam}
             className="flex items-center justify-between rounded-lg bg-white px-3 py-2 dark:bg-ink-900"
@@ -387,7 +389,7 @@ const Karbantartasok = () => {
             </button>
             <button
               type="button"
-              onClick={() => handleFileDelete(file.sorszam, karbantartasId)}
+              onClick={() => handleFileDelete(file.sorszam, tipus, karbantartasId)}
               className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-ink-400 transition-colors duration-200 hover:bg-red-50 hover:text-red-600 dark:text-ink-500 dark:hover:bg-red-950/50 dark:hover:text-red-300"
             >
               <PiTrashLight className="h-3.5 w-3.5" />
@@ -442,7 +444,7 @@ const Karbantartasok = () => {
       key: "fajlok",
       label: "Fájl",
       render: (row) => {
-        const count = files[row.id]?.length || 0;
+        const count = files[`${row.tipus}:${row.id}`]?.length ?? row.fajlok_szama ?? 0;
         return count > 0 ? (
           <span
             className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-1 text-xs font-semibold text-brand-700 dark:bg-brand-950/40 dark:text-brand-300"
@@ -525,7 +527,7 @@ const Karbantartasok = () => {
     {
       key: "fajlok",
       label: "Fájlok száma",
-      exportValue: (row) => files[row.id]?.length || 0,
+      exportValue: (row) => files[`${row.tipus}:${row.id}`]?.length ?? row.fajlok_szama ?? 0,
     },
     { key: "kovetkezo_karbantartas", label: "Következő karbantartás dátuma" },
     {
@@ -905,7 +907,7 @@ const Karbantartasok = () => {
             onChange={handleNewKarbantartasChange}
           />
 
-          {editingId && renderFileUpload(editingId)}
+          {editingId && renderFileUpload(editingTipus, editingId)}
 
           <div className="flex justify-end gap-3 pt-2">
             <button

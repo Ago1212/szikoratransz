@@ -3602,10 +3602,6 @@ h1,
   vertical-align: text-bottom;
 }
 
-.font-\[Overpass\] {
-  font-family: Overpass;
-}
-
 .font-display {
   font-family: Overpass, system-ui, sans-serif;
 }
@@ -3684,10 +3680,6 @@ h1,
 .text-xs {
   font-size: 0.75rem;
   line-height: 1rem;
-}
-
-.font-\[Overpass_Mono\] {
-  font-weight: Overpass Mono;
 }
 
 .font-bold {
@@ -5845,6 +5837,11 @@ h1,
     font-size: 11px;
   }
 
+  .sm\:text-xl {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+
   .sm\:tracking-\[0\.12em\] {
     letter-spacing: 0.12em;
   }
@@ -5922,6 +5919,10 @@ h1,
     height: 2.5rem;
   }
 
+  .md\:h-7 {
+    height: 1.75rem;
+  }
+
   .md\:h-8 {
     height: 2rem;
   }
@@ -5956,6 +5957,10 @@ h1,
 
   .md\:w-4\/12 {
     width: 33.333333%;
+  }
+
+  .md\:w-7 {
+    width: 1.75rem;
   }
 
   .md\:w-8 {

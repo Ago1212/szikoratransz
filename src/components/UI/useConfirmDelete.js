@@ -12,10 +12,11 @@ import { confirmDialog } from "utils/confirm.js";
 export function useConfirmDelete({ action, confirmMessage, successMessage, listPath, onSuccess, extraParams = {} }) {
   const history = useHistory();
 
-  return async (id) => {
+  return async (id, megnevezes) => {
     // UX-audit — natív `window.confirm()` helyett a márkázott, Modal-alapú
     // dialógus (ld. utils/confirm.js), sötét módban is konzisztens.
-    if (!(await confirmDialog(confirmMessage))) return;
+    const uzenet = megnevezes ? confirmMessage.replace(/\?$/, ` („${megnevezes}”)?`) : confirmMessage;
+    if (!(await confirmDialog(uzenet, { confirmLabel: "Törlés" }))) return;
 
     try {
       const result = await fetchAction(action, { id, ...extraParams });

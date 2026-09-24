@@ -38,6 +38,7 @@ import Spinner from "components/UI/Spinner.js";
 import CardStats from "components/Cards/CardStats.js";
 import LejaratTag from "components/UI/LejaratTag.js";
 import { confirmDialog } from "utils/confirm.js";
+import { helyiDatum } from "utils/helyiDatum";
 // A CardUzemanyagElemzes (üzemanyag-fogyasztás anomália-elemzés) import és
 // megjelenítés egyenlőre szándékosan ki van véve (felhasználói kérésre) — a
 // komponens fájlja változatlan, később egy `import` + JSX-sor
@@ -137,7 +138,7 @@ const KATEGORIA_BADGE = {
 const emptyEgyebTetel = (irany = "kiado") => ({
   irany,
   kategoria: "",
-  datum: new Date().toISOString().slice(0, 10),
+  datum: helyiDatum(),
   teljesites_datum: "",
   fizetesi_hatarido: "",
   megnevezes: "",
@@ -419,9 +420,9 @@ const DATUM_ALAP_OPCIOK = [
 ];
 
 function PeriodControl({ filter, onPreset, onFieldChange, displayedYear, onChangeYear, datumAlap, onChangeDatumAlap }) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = helyiDatum();
   const honapEleje = `${today.slice(0, 7)}-01`;
-  const napja30Elott = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const napja30Elott = helyiDatum(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
   const evEleje = `${new Date().getFullYear()}-01-01`;
   const evVege = `${new Date().getFullYear()}-12-31`;
 
@@ -554,7 +555,7 @@ export default function Koltsegek() {
   // évre vált — a Dátumtól/Dátumig mezők pedig ettől függetlenül bármikor
   // felülírhatók egy pontos, egyedi időszakra is.
   const [filter, setFilter] = useState(() => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = helyiDatum();
     const honapEleje = `${today.slice(0, 7)}-01`;
     return { datumTol: honapEleje, datumIg: today };
   });
@@ -1666,7 +1667,7 @@ export default function Koltsegek() {
               részlet a lenti Figyelem-sávban jelenik meg, ha releváns).
               `layout="row"` — ugyanaz a KPI-csempe minta, amit a
               Dashboard/Flottakövetés is használ. */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <CardStats
               statSubtitle="Bevétel"
               statTitle={formatHuf(adat.osszesen.bevetel)}

@@ -14,12 +14,14 @@ import {
 import CardStats from "components/Cards/CardStats.js";
 import { fetchAction } from "utils/fetchAction";
 
-const forint = (ertek) => (ertek != null ? `${Number(ertek).toLocaleString("hu-HU")} Ft` : "—");
+const forint = (ertek) =>
+  ertek != null ? `${Math.round(Number(ertek)).toLocaleString("hu-HU")}\u00a0Ft` : "—";
 
 const HAVI_NEV = [
   "jan", "feb", "márc", "ápr", "máj", "jún", "júl", "aug", "szept", "okt", "nov", "dec",
 ];
 const haviCimke = (honap) => {
+  if (!honap) return "—";
   const [ev, ho] = honap.split("-");
   return `${HAVI_NEV[parseInt(ho, 10) - 1]} ${ev}`;
 };

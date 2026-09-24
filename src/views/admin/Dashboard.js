@@ -21,6 +21,7 @@ import {
 // components
 import CardCalender from "components/Cards/CardCalender";
 import { fetchAction } from "utils/fetchAction";
+import { helyiDatum } from "utils/helyiDatum";
 
 const formatHuf = (value) =>
   new Intl.NumberFormat("hu-HU", {
@@ -89,7 +90,8 @@ function PenzugyiAllapotCard({ className, cashflow, varhato, varhatoLoading, isA
       )}
       {!varhatoLoading && (
         <p className="mt-1 text-xs text-ink-400 dark:text-ink-300">
-          Bevétel (6 havi átlag): {formatHuf(varhato.atlagBevetel)} · Fix költségek ({fixKoltsegLabel}):{" "}
+          Bevétel (6 havi átlag): {formatHuf(varhato.atlagBevetel)} · Egyéb kiadások (átlag):{" "}
+          {formatHuf(varhato.atlagEgyebKiadas)} · Fix költségek ({fixKoltsegLabel}):{" "}
           {formatHuf(varhato.fixKoltsegek)}
           {vanKarbantartas &&
             ` · ebből ${formatHuf(varhato.tervezettKarbantartas)} tervezett karbantartás (${varhato.tervezettKarbantartasTetelSzam} tétel)`}
@@ -390,6 +392,7 @@ export default function Dashboard() {
   const [varhato, setVarhato] = useState({
     atlagBevetel: 0,
     fixKoltsegek: 0,
+    atlagEgyebKiadas: 0,
     varhatoEredmeny: 0,
     tervezettKarbantartas: 0,
     tervezettKarbantartasTetelSzam: 0,
@@ -466,12 +469,12 @@ export default function Dashboard() {
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
     const ma = new Date();
-    const honapEleje = new Date(ma.getFullYear(), ma.getMonth(), 1).toISOString().slice(0, 10);
+    const honapEleje = helyiDatum(new Date(ma.getFullYear(), ma.getMonth(), 1));
     fetchAction("getKoltsegOsszesito", {
       ceg_id: user.ceg_id,
       kerelmezo_id: user.id,
       datumTol: honapEleje,
-      datumIg: ma.toISOString().slice(0, 10),
+      datumIg: helyiDatum(ma),
     }).then((result) => {
       if (result?.success) {
         setCashflow({
@@ -494,6 +497,7 @@ export default function Dashboard() {
         setVarhato({
           atlagBevetel: result.atlagBevetel,
           fixKoltsegek: result.fixKoltsegek,
+          atlagEgyebKiadas: result.atlagEgyebKiadas || 0,
           varhatoEredmeny: result.varhatoEredmeny,
           tervezettKarbantartas: result.tervezettKarbantartas || 0,
           tervezettKarbantartasTetelSzam: result.tervezettKarbantartasTetelSzam || 0,

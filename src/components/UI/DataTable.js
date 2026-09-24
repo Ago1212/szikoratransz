@@ -457,7 +457,7 @@ export default function DataTable({
           type="button"
           disabled={safePage <= 1}
           onClick={() => goToPage(safePage - 1)}
-          className="flex h-7 w-7 items-center justify-center rounded-lg border border-ink-200 text-ink-500 transition-colors duration-150 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-ink-700 dark:text-ink-400 dark:hover:bg-ink-800"
+          className="flex h-11 w-11 items-center justify-center rounded-lg border border-ink-200 text-ink-500 md:h-7 md:w-7 transition-colors duration-150 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-ink-700 dark:text-ink-400 dark:hover:bg-ink-800"
           aria-label="Előző oldal"
         >
           <PiCaretLeftLight className="h-3.5 w-3.5" />
@@ -469,7 +469,7 @@ export default function DataTable({
           type="button"
           disabled={safePage >= totalPages}
           onClick={() => goToPage(safePage + 1)}
-          className="flex h-7 w-7 items-center justify-center rounded-lg border border-ink-200 text-ink-500 transition-colors duration-150 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-ink-700 dark:text-ink-400 dark:hover:bg-ink-800"
+          className="flex h-11 w-11 items-center justify-center rounded-lg border border-ink-200 text-ink-500 md:h-7 md:w-7 transition-colors duration-150 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-ink-700 dark:text-ink-400 dark:hover:bg-ink-800"
           aria-label="Következő oldal"
         >
           <PiCaretRightLight className="h-3.5 w-3.5" />
@@ -682,7 +682,7 @@ export default function DataTable({
               tényleges (kisebb) magasságát, és mivel a szülő `overflow`-ja
               `visible` marad, ez a túlcsordulás a KÜLSŐ, `overflow-hidden`
               DataTable-gyökérnél vágódik le csendben, görgetés nélkül. */}
-          <div className={`relative flex flex-col ${bodyFillClass}`}>
+          <div className={`relative hidden flex-col md:flex ${bodyFillClass}`}>
           <div
             ref={scrollContainerRef}
             onScroll={updateScrollShadow}

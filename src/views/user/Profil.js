@@ -314,7 +314,7 @@ export default function Profil() {
 
       <WebAuthnRegisztracio />
 
-      <PushFeliratkozas />
+      <PushFeliratkozas sofor />
 
       <button
         type="button"

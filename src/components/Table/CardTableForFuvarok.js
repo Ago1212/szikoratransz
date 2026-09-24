@@ -148,9 +148,12 @@ const CardTable = ({
         if (!row.felrako_ceg && !row.lerako_ceg) {
           return <span className="text-ink-400">Nincs útvonal megadva</span>;
         }
-        const teljesCim = [row.felrako_cim, row.lerako_cim].filter(Boolean).join(" → ");
+        const teljes = [
+          [row.felrako_ceg, row.felrako_cim].filter(Boolean).join(", "),
+          [row.lerako_ceg, row.lerako_cim].filter(Boolean).join(", "),
+        ].join(" → ");
         return (
-          <span title={teljesCim}>
+          <span title={teljes} className="block max-w-xs truncate">
             {row.felrako_ceg || "—"} → {row.lerako_ceg || "—"}
           </span>
         );
@@ -203,7 +206,7 @@ const CardTable = ({
       render: (row) => (
         <div className="flex justify-end gap-1">
           <ActionIcon icon={<PiPencilSimpleLight />} onClick={() => handleEditClick(row)} title="Szerkesztés" />
-          <ActionIcon icon={<PiTrashLight />} danger onClick={() => handleDelete(row.id)} title="Törlés" />
+          <ActionIcon icon={<PiTrashLight />} danger onClick={() => handleDelete(row.id, [row.felrako_ceg, row.lerako_ceg].filter(Boolean).join(" → "))} title="Törlés" />
         </div>
       ),
     },

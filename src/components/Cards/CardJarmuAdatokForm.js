@@ -314,7 +314,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
         <FormField
           type="date"
           icon={PiShieldCheckLight}
-          label={<>Adr <LejaratTag date={kamion.adr_lejarat} /></>}
+          label={<>ADR <LejaratTag date={kamion.adr_lejarat} /></>}
           id="adr_lejarat"
           value={kamion.adr_lejarat}
           onChange={handleFormChange}
@@ -322,7 +322,7 @@ const CardJarmuAdatokForm = ({ kamion, setFormData, handleSave }) => {
         <FormField
           type="date"
           icon={PiIdentificationCardLight}
-          label={<>Taográf illesztés <LejaratTag date={kamion.taograf_illesztes} /></>}
+          label={<>Tachográf illesztés <LejaratTag date={kamion.taograf_illesztes} /></>}
           id="taograf_illesztes"
           value={kamion.taograf_illesztes}
           onChange={handleFormChange}

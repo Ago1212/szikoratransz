@@ -8,8 +8,8 @@ export default function AutocompleteSelect({
   value,
   onChange,
   placeholder,
-  required,
-  disabled,
+  required = false,
+  disabled = false,
   className,
 }) {
   const [open, setOpen] = useState(false);
@@ -58,7 +58,7 @@ export default function AutocompleteSelect({
       )}
       <div
         onClick={() => !disabled && inputRef.current?.focus()}
-        className="flex cursor-text items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm text-ink-700 focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-300 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-100"
+        className="flex min-h-11 cursor-text items-center gap-2 rounded-lg border border-ink-100 bg-slate-50 px-3 py-2 text-sm text-ink-700 focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-300 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-100"
       >
         <input
           ref={inputRef}
@@ -126,9 +126,4 @@ AutocompleteSelect.propTypes = {
   required: PropTypes.bool,
   disabled: PropTypes.bool,
   className: PropTypes.string,
-};
-
-AutocompleteSelect.defaultProps = {
-  required: false,
-  disabled: false,
 };

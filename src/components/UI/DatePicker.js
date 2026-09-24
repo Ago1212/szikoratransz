@@ -146,7 +146,7 @@ export default function DatePicker({
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        className="flex w-full items-center gap-2 rounded-lg border border-ink-100 bg-slate-50 px-3 py-2 text-left text-sm text-brand-900 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300 disabled:cursor-not-allowed disabled:opacity-60 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-50 dark:focus:border-brand-500"
+        className="flex min-h-11 w-full items-center gap-2 rounded-lg border border-ink-100 bg-slate-50 px-3 py-2 text-left text-sm text-brand-900 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300 disabled:cursor-not-allowed disabled:opacity-60 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-50 dark:focus:border-brand-500"
       >
         <PiCalendarBlankLight className="h-3.5 w-3.5 flex-shrink-0 text-ink-400 dark:text-ink-400" />
         <span className={`truncate ${selected ? "" : "text-ink-400 dark:text-ink-500"}`}>

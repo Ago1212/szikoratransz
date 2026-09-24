@@ -56,7 +56,7 @@ const CardTable = ({ helyszinek = [], loading, total, page, pageSize, onPageChan
           <ActionIcon
             icon={<PiTrashLight />}
             danger
-            onClick={() => handleDelete(row.id)}
+            onClick={() => handleDelete(row.id, row.nev)}
             title="Törlés"
           />
         </div>

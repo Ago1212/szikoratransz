@@ -285,7 +285,7 @@ const CardFurgonAdatokForm = ({ furgon, setFormData, handleSave }) => {
         <FormField
           type="date"
           icon={PiShieldCheckLight}
-          label={<>Adr <LejaratTag date={furgon.adr_lejarat} /></>}
+          label={<>ADR <LejaratTag date={furgon.adr_lejarat} /></>}
           id="adr_lejarat"
           value={furgon.adr_lejarat}
           onChange={handleFormChange}
@@ -293,7 +293,7 @@ const CardFurgonAdatokForm = ({ furgon, setFormData, handleSave }) => {
         <FormField
           type="date"
           icon={PiIdentificationCardLight}
-          label={<>Taográf illesztés <LejaratTag date={furgon.taograf_illesztes} /></>}
+          label={<>Tachográf illesztés <LejaratTag date={furgon.taograf_illesztes} /></>}
           id="taograf_illesztes"
           value={furgon.taograf_illesztes}
           onChange={handleFormChange}

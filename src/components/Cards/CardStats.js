@@ -63,14 +63,14 @@ export default function CardStats({
       >
         {Icon && (
           <span
-            className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl transition-transform duration-300 ease-fluid group-hover:scale-105 ${t.icon}`}
+            className={`hidden h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl transition-transform duration-300 ease-fluid group-hover:scale-105 sm:flex ${t.icon}`}
           >
             <Icon className="h-5 w-5" />
           </span>
         )}
         <div className="min-w-0">
           <p
-            className={`font-display text-xl font-bold leading-tight tabular-nums ${t.value}`}
+            className={`font-display text-lg font-bold leading-tight tabular-nums sm:text-xl ${t.value}`}
           >
             {statTitle}
           </p>
