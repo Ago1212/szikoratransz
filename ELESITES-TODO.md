@@ -14,6 +14,8 @@
   - új oszlop: `fajlok.karbantartas_jarmu_tipus`, és a meglévő karbantartás-mellékletek besorolása
   - **Miért kell előbb:** az új `filesInterface.php` minden fájlfeltöltésnél ebbe az oszlopba ír. Ha a kód előbb kerül fel, minden fájlfeltöltés hibára fut.
 - [ ] Ellenőrzés: `SHOW COLUMNS FROM fajlok LIKE 'karbantartas_jarmu_tipus';` és `SHOW TABLES LIKE 'sofor_lejarat_ertesites_log';`
+- [ ] `backend/sql/47.sql` futtatása: `mysql -u root kamion < 47.sql` — a `helyszinek` tábla `cim`, `lat`, `lng` oszlopai (a sofőr-app Helyek funkciójához). Az új `helyszinInterface.php` ezekbe ír, ezért ez is a backend feltöltése ELŐTT kell.
+  - Ellenőrzés: `SHOW COLUMNS FROM helyszinek LIKE 'lat';`
 
 ## 2. Backend fájlok felmásolása (`backend/` alá, azonos útvonalra)
 
@@ -24,10 +26,12 @@
 - [ ] `backend/interface/fuvarInterface.php`
 - [ ] `backend/interface/karbantartasokInterface.php`
 - [ ] `backend/interface/koltsegInterface.php`
+- [ ] `backend/interface/helyszinInterface.php`
+- [ ] `backend/interface/pushInterface.php`
 - [ ] `backend/cron/lejarat_emlekezteto.php`
 - [ ] `backend/cron/db_mentes.php` (új fájl)
 
-A `backend/sql/46.sql`-t nem kell a szerverre másolni, csak lefuttatni (1. pont).
+A `backend/sql/46.sql`-t és a `47.sql`-t nem kell a szerverre másolni, csak lefuttatni (1. pont).
 
 ## 3. Frontend
 
@@ -60,6 +64,9 @@ A `backend/sql/46.sql`-t nem kell a szerverre másolni, csak lefuttatni (1. pont
 - [ ] Naptárban minden sofőr okmány-lejárata megjelenik
 - [ ] Push: egy teszt-sofőrnek válaszolj egy bejelentésére, és nézd meg, megérkezik-e az értesítés
 - [ ] Dark mode: néhány oldalon nézd végig az olvashatóságot
+- [ ] Sofőr-app telefonon (lehetőleg telepített PWA-ként is): Ma kártya, „+” gomb, menetlevél fotó közvetlenül a Ma oldalról, repülő üzemmódban fotó → „Függőben”, majd kapcsolat után automatikus feltöltés
+- [ ] Sofőr-app iPhone-on: a fejléc nem csúszik a státuszsor / notch alá (viewport-fit=cover)
+- [ ] Profil → Push-értesítések: egy MÁSIK telefonon bejelentkezve „Bekapcsolás” gombot kell mutatnia (nem „ezen az eszközön bekapcsolva”)
 
 ## Később
 
