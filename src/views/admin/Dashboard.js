@@ -194,6 +194,8 @@ function MireFigyeljekMaCard({
         ) : (
           <div className="space-y-4">
             {teendokOsszesen > 0 && (
+              <div>
+              <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-ink-500 dark:text-ink-300">Teendők ({teendokOsszesen})</p>
               <ul className="-mx-3 divide-y divide-ink-100 dark:divide-ink-800 md:-mx-4">
                 {teendok.jarmuValtas.map((k) => (
                   <li key={`jv-${k.id}`} className="flex flex-col gap-2 px-3 py-3 sm:flex-row sm:items-center sm:justify-between md:px-4">
@@ -258,7 +260,7 @@ function MireFigyeljekMaCard({
                       <button
                         type="button"
                         onClick={() => onAjanlatkeresFelvette(a.id)}
-                        className="flex min-h-11 items-center gap-1 rounded-lg bg-brand-600 px-2.5 py-1.5 text-xs font-bold text-white hover:bg-brand-700"
+                        className="flex min-h-11 items-center gap-1 rounded-lg border border-brand-200 bg-white px-2.5 py-1.5 text-xs font-bold text-brand-700 hover:bg-brand-50 dark:border-brand-800 dark:bg-transparent dark:text-brand-300 dark:hover:bg-brand-950/40"
                       >
                         <PiCheckLight className="h-3.5 w-3.5" /> Felvettem
                       </button>
@@ -294,8 +296,11 @@ function MireFigyeljekMaCard({
                   </li>
                 ))}
               </ul>
+              </div>
             )}
             {tetelek.length > 0 && (
+              <div>
+              <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-ink-500 dark:text-ink-300">Határidők</p>
               <ul className="space-y-1.5">
                 {tetelek.map((e, idx) => {
                   const tone = toneClass(e._napok);
@@ -311,6 +316,7 @@ function MireFigyeljekMaCard({
                   );
                 })}
               </ul>
+              </div>
             )}
           </div>
         )}

@@ -541,6 +541,7 @@ export default function DataTable({
         <GradientCardHeader
           icon={icon}
           title={title}
+          count={loading ? null : effectiveTotal}
           action={resolvedHeaderAction}
         />
       )}
@@ -723,7 +724,7 @@ export default function DataTable({
                         <button
                           type="button"
                           onClick={() => handleSortClick(col)}
-                          className={`inline-flex items-center gap-1 hover:text-ink-700 dark:hover:text-ink-200 ${
+                          className={`inline-flex items-center gap-1 uppercase tracking-wider hover:text-ink-700 dark:hover:text-ink-200 ${
                             col.align === "right" ? "flex-row-reverse" : ""
                           }`}
                         >

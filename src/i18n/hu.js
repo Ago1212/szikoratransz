@@ -329,6 +329,7 @@ export const quoteForm = {
     consentLinkText: "Adatvédelmi tájékoztató",
     submit: "Árajánlatot kérek",
     submitLoading: "Küldés...",
+    captchaHint: "A küldéshez erősítsd meg fent, hogy nem vagy robot.",
     footnote: "Nem jár kötelezettséggel · Válasz 24 órán belül",
   },
   placeholders: {

@@ -1,6 +1,6 @@
 import React from "react";
 
-export function GradientCardHeader({ icon: Icon, title, action }) {
+export function GradientCardHeader({ icon: Icon, title, action, count }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink-100 px-6 py-4 dark:border-ink-800">
       <div className="flex items-center gap-3">
@@ -10,6 +10,11 @@ export function GradientCardHeader({ icon: Icon, title, action }) {
           </span>
         )}
         <h3 className="font-display text-base font-semibold text-brand-900 dark:text-ink-50">{title}</h3>
+        {count != null && (
+          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold tabular-nums text-ink-600 dark:bg-ink-800 dark:text-ink-300">
+            {count.toLocaleString("hu-HU")}
+          </span>
+        )}
       </div>
       {action}
     </div>

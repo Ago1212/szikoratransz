@@ -311,7 +311,7 @@ export default function CardSettings() {
             />
           </FormSection>
 
-          <FormSection id="iratok" title="Iratok" columns={4}>
+          <FormSection id="iratok" title="Saját iratok (opcionális)" columns={4}>
             <FormField
               icon={PiIdentificationCardLight}
               label="Személyigazolvány lejárat"

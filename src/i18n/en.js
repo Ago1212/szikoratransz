@@ -326,6 +326,7 @@ export const quoteForm = {
     consentLinkText: "Privacy Policy",
     submit: "Request a Quote",
     submitLoading: "Sending...",
+    captchaHint: "Please complete the verification above to submit.",
     footnote: "No obligation · Response within 24 hours",
   },
   placeholders: {

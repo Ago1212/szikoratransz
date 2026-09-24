@@ -32,14 +32,14 @@ export default function Settings() {
   return (
     <>
       <PageHeader eyebrow="Saját adatok" title="Beállítások" />
-      <div className="flex flex-wrap">
-        <div className="w-full lg:w-12/12 px-4">
+      <div className="flex flex-col gap-4">
+        <div className="w-full">
           <CardSettings />
         </div>
-        <div className="w-full px-4 mt-4">
+        <div className="w-full">
           <PushFeliratkozas />
         </div>
-        <div className="w-full px-4 mt-4 md:hidden">
+        <div className="w-full md:hidden">
           <button
             type="button"
             onClick={handleLogout}

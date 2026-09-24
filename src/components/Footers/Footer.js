@@ -35,7 +35,7 @@ export default function Footer() {
               alt="Szikora Transz Kft"
               width="1600"
               height="578"
-              className="h-8 w-auto mb-4"
+              className="h-8 w-auto mb-4 brightness-0 invert"
             />
             <p className="text-sm text-white/60 leading-relaxed mb-5">{t("footer.description")}</p>
             <ul className="space-y-2 text-xs text-white/50 font-mono uppercase tracking-wide">

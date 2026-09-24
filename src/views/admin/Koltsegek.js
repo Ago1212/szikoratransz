@@ -34,7 +34,7 @@ import PageHeader from "components/UI/PageHeader.js";
 import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import Modal from "components/UI/Modal.js";
 import FormField, { FormSection } from "components/UI/FormField.js";
-import Spinner from "components/UI/Spinner.js";
+import TableSkeleton from "components/UI/Skeleton.js";
 import CardStats from "components/Cards/CardStats.js";
 import LejaratTag from "components/UI/LejaratTag.js";
 import { confirmDialog } from "utils/confirm.js";
@@ -1654,7 +1654,22 @@ export default function Koltsegek() {
       />
 
       {loading ? (
-        <Spinner wrapperClassName="flex justify-center py-16" />
+        <div className="flex flex-col gap-4" aria-busy="true" aria-label="Betöltés">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-soft ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800">
+                <div className="hidden h-11 w-11 flex-shrink-0 animate-pulse rounded-xl bg-ink-100 motion-reduce:animate-none dark:bg-ink-700 sm:block" />
+                <div className="flex-1">
+                  <div className="h-5 w-24 animate-pulse rounded bg-ink-100 motion-reduce:animate-none dark:bg-ink-700" />
+                  <div className="mt-2 h-3 w-16 animate-pulse rounded bg-ink-100 motion-reduce:animate-none dark:bg-ink-700" />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="overflow-hidden rounded-3xl bg-white shadow-soft ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800">
+            <TableSkeleton columns={6} rows={6} />
+          </div>
+        </div>
       ) : (
         <>
           {/* KPI-sor — EGYETLEN hiteles hely a Bevétel/Kiadás/Nettó/Várható

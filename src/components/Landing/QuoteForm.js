@@ -370,6 +370,9 @@ export default function QuoteForm({ title, subtitle }) {
 
           <div className="mt-6">
             <Turnstile ref={turnstileRef} onVerify={setTurnstileToken} />
+            {!turnstileToken && (
+              <p className="mt-2 text-xs text-[#23262B]/60">{t("quoteForm.labels.captchaHint")}</p>
+            )}
           </div>
 
           <button

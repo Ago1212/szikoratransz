@@ -58,7 +58,7 @@ export default function KanbanBoard({ fuvarok, onAllapotChange, onFuvarClick }) 
             }}
             onDragLeave={() => setDragOverKulcs((k) => (k === oszlop.key ? null : k))}
             onDrop={(e) => handleDrop(e, oszlop.key)}
-            className={`flex w-64 flex-shrink-0 flex-col rounded-2xl p-2 transition-colors ${
+            className={`flex min-w-[13rem] flex-1 flex-shrink-0 flex-col rounded-2xl p-2 transition-colors ${
               dragOverKulcs === oszlop.key ? "bg-brand-50 dark:bg-brand-950/30" : "bg-slate-50 dark:bg-ink-800/50"
             }`}
           >

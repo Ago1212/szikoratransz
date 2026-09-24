@@ -353,6 +353,7 @@ export default function Landing() {
               }
             `}</style>
             {locale === "en" ? <EuropeMapBackground /> : <HungaryMapBackground />}
+            <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-3/5 bg-gradient-to-r from-[#F2F3F5] via-[#F2F3F5]/80 to-transparent md:block" />
           </div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
@@ -934,6 +935,9 @@ export default function Landing() {
 
                     <div className="mt-6">
                       <Turnstile ref={applicationTurnstileRef} onVerify={setApplicationTurnstileToken} />
+                      {!applicationTurnstileToken && (
+                        <p className="mt-2 text-xs text-[#23262B]/60">{t("quoteForm.labels.captchaHint")}</p>
+                      )}
                     </div>
 
                     <button

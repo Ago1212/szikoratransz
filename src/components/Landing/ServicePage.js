@@ -182,6 +182,7 @@ export default function ServicePage({
       >
         <div className="absolute inset-0 overflow-hidden bg-[#F2F3F5]">
           {locale === "en" ? <EuropeMapBackground /> : <HungaryMapBackground />}
+          <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-3/5 bg-gradient-to-r from-[#F2F3F5] via-[#F2F3F5]/80 to-transparent md:block" />
         </div>
         <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           {breadcrumbItems.length > 0 && (
