@@ -32,7 +32,9 @@
     "tailwindcss": "^3.4.15"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "node scripts/dev.js",
+    "start:frontend": "react-scripts start",
+    "start:backend": "cd backend && php8.2 -S localhost:8000",
     "build": "react-scripts build && gulp licenses",
     "postbuild": "node scripts/prerender.js",
     "test": "react-scripts test",

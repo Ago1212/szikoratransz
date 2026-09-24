@@ -11,7 +11,8 @@ Domain modules (mirrored across frontend views, backend interfaces, and API acti
 ## Commands
 
 Frontend (run from repo root):
-- `npm start` — CRA dev server (localhost:3000)
+- `npm start` — a CRA dev servert (localhost:3000) ÉS a PHP backendet (localhost:8000, `backend/` gyökérrel) együtt indítja (`scripts/dev.js`, 2026-09-24); Ctrl+C mindkettőt leállítja. Ha a 8000-es port foglalt (már fut egy backend), csak figyelmeztet és a frontend indul. PHP bináris: `PHP_BIN` env, különben `php8.2`/`php`; port: `BACKEND_PORT`. A frontend a `react-scripts/scripts/start.js`-t közvetlenül indítja, nem a `bin/react-scripts.js` wrappert — az utóbbi nem továbbítja a SIGTERM-et, és árva dev szervert hagyott a 3000-es porton.
+- `npm run start:frontend` / `npm run start:backend` — csak az egyiket indítja
 - `npm run build` — production build into `build/` (also strips template license comments via `gulp licenses`)
 - `npm test` — CRA/Jest test runner (no test files currently exist in the repo)
 - `npm run build:tailwind` (or `npx tailwindcss -i ./src/assets/styles/index.css -o ./src/assets/styles/tailwind.css`) — rebuild `src/assets/styles/tailwind.css` from `src/assets/styles/index.css`. **This is NOT automatic.** `src/index.js` imports the pre-built `tailwind.css` directly (not `index.css`), so CRA does not recompile Tailwind on the fly. Any new utility class used in JSX must be followed by this rebuild, or it silently won't exist in the stylesheet (e.g. an element with `hidden md:flex` can end up permanently hidden if `.md\:flex` was never compiled in).
