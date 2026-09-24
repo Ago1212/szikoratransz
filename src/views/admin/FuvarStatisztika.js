@@ -12,6 +12,7 @@ import CardStats from "components/Cards/CardStats.js";
 import DataTable from "components/UI/DataTable.js";
 import StatusBadge from "components/UI/StatusBadge.js";
 import { fetchAction } from "utils/fetchAction";
+import { helyiDatum } from "utils/helyiDatum";
 
 const FUVAR_ALLAPOT_OPTIONS = [
   { value: "", label: "Mind" },
@@ -29,16 +30,16 @@ const DOKUMENTUM_OPTIONS = [
 ];
 
 function todayIso() {
-  return new Date().toISOString().slice(0, 10);
+  return helyiDatum();
 }
 
 function StatisztikaFilterBar({ filter, onPreset, onFieldChange, soforok }) {
   const today = todayIso();
   const hetElso = new Date();
   hetElso.setDate(hetElso.getDate() - hetElso.getDay() + (hetElso.getDay() === 0 ? -6 : 1));
-  const hetElejeIso = hetElso.toISOString().slice(0, 10);
+  const hetElejeIso = helyiDatum(hetElso);
   const honapEleje = `${today.slice(0, 7)}-01`;
-  const napja30Elott = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const napja30Elott = helyiDatum(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
 
   const presets = [
     { key: "het", label: "Ez a hét", tol: hetElejeIso, ig: today },

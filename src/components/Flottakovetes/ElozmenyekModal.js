@@ -4,8 +4,9 @@ import { fetchAction } from "utils/fetchAction";
 import { toast } from "utils/toast";
 import Modal from "components/UI/Modal.js";
 import FormField, { FormSection } from "components/UI/FormField.js";
+import { helyiDatum } from "utils/helyiDatum";
 
-const ma = () => new Date().toISOString().slice(0, 10);
+const ma = () => helyiDatum();
 
 // Útvonal-előzmény — a GPSmart `waybill.pl` végpontja adja vissza egy adott
 // jármű (saját GPSmart `car_id`-je) tényleges GPS-nyomvonalát egy dátum-

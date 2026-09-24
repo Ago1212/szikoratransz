@@ -8,7 +8,7 @@ import React from "react";
 // a küszöb itt is, csak a mezőcímke mellett egy kis jelvényként, hogy a két
 // felület ne mondjon vizuálisan ellent egymásnak.
 export default function LejaratTag({ date }) {
-  if (!date) return null;
+  if (!date || String(date).startsWith("0000")) return null;
   const napok = Math.floor(
     (new Date(`${date}T00:00:00`) - new Date(new Date().toDateString())) / 86400000
   );

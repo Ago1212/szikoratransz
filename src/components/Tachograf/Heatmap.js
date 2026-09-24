@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { helyiDatum } from "utils/helyiDatum";
 
 // Egysoros, időrendi (régi → mai) napi vezetési-idő sáv. Minden cella
 // `flex-1` (nem fix szélesség) — a sáv mindig pontosan a rendelkezésre álló
@@ -39,7 +40,7 @@ export function epitsNapiCellak(sorok, napokSzama) {
   for (let i = napokSzama - 1; i >= 0; i -= 1) {
     const nap = new Date(ma);
     nap.setDate(nap.getDate() - i);
-    const datum = nap.toISOString().slice(0, 10);
+    const datum = helyiDatum(nap);
     eredmeny.push({ datum, perc: map[datum] ?? null });
   }
   return eredmeny;

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { PiCaretDownLight } from "react-icons/pi";
 import { fetchAction } from "utils/fetchAction";
+import { helyiDatum } from "utils/helyiDatum";
 
 const FRISSITES_MS = 5 * 60 * 1000; // a backend saját 1/12 órás gyorsítótárán belül elég 5 percenként újranézni
 
@@ -17,7 +18,7 @@ const formatSzazalek = (ertek) =>
     Math.abs(ertek),
   );
 
-const maiDatum = () => new Date().toISOString().slice(0, 10);
+const maiDatum = () => helyiDatum();
 
 // UX-audit 5. pont ("mikor frissült utoljára, dátum-tudatosan") — a
 // backend "YYYY-MM-DD HH:MM:SS" (szerver saját időzónája szerinti, naiv)

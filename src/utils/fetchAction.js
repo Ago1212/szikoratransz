@@ -1,3 +1,5 @@
+import { toast } from "utils/toast";
+
 // A backend most már valódi, adatbázisban tárolt munkamenet-tokent kér
 // (ld. ApiHandler::requireValidSession) minden akcióhoz a bejelentkezés/
 // jelszó-visszaállítás kivételével — korábban a kliens bármilyen
@@ -7,6 +9,14 @@
 // egy érvénytelen tokennel végtelenül "Sikertelen" hibákat mutatna anélkül,
 // hogy a felhasználó tudná, mit kell tennie.
 const SESSION_EXPIRED_MESSAGE = "A munkamenet lejárt, jelentkezz be újra.";
+let utolsoKapcsolatiHiba = 0;
+
+function jelezKapcsolatiHibat() {
+  const most = Date.now();
+  if (most - utolsoKapcsolatiHiba < 5000) return;
+  utolsoKapcsolatiHiba = most;
+  toast.error("Nem sikerült kapcsolódni a szerverhez. Ellenőrizd az internetkapcsolatot, és próbáld újra.");
+}
 
 function handleExpiredSession() {
   localStorage.removeItem("user");
@@ -54,6 +64,7 @@ export const fetchAction = async (action, payload) => {
     return result;
   } catch (error) {
     console.error("Error fetching data:", error);
+    jelezKapcsolatiHibat();
     return { success: false, message: error.message };
   }
 };

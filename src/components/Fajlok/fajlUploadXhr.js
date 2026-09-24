@@ -7,7 +7,7 @@ export const uploadFajlXhr = (payload, onProgress, action = "fileUpload") => {
   const authHash = "nIrINP&o!PU|+pM*Q8'j1R07U57W,qD";
   const modulename =
     process.env.NODE_ENV === "development"
-      ? "http://localhost:8001/api.php"
+      ? "http://localhost:8000/api.php"
       : "https://szikora-transz.hu/backend/api.php";
 
   return new Promise((resolve, reject) => {

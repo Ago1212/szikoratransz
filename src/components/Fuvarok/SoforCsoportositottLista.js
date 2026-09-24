@@ -5,6 +5,7 @@ import StatusBadge from "components/UI/StatusBadge.js";
 import Spinner from "components/UI/Spinner.js";
 import { fetchAction } from "utils/fetchAction";
 import { formatFuvarDatum } from "utils/formatDatum";
+import { helyiDatum } from "utils/helyiDatum";
 
 const ALLAPOT_LABEL = {
   rogzitett: "Rögzítve",
@@ -31,7 +32,7 @@ function hetHetfoje(datum) {
 }
 
 function toIsoDatum(d) {
-  return d.toISOString().slice(0, 10);
+  return helyiDatum(d);
 }
 
 function toCimke(d) {

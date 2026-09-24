@@ -23,6 +23,7 @@ import FajlPreviewPanel from "components/Fajlok/FajlPreviewPanel.js";
 import { kategoriaInfo, MODUL_LABEL, formatFileSize, formatDate } from "components/Fajlok/fajlKategoriaInfo.js";
 import { downloadZipAction } from "utils/downloadZipAction.js";
 import { confirmDialog } from "utils/confirm.js";
+import { helyiDatum } from "utils/helyiDatum";
 
 const PAGE_SIZE = 20;
 const NEZET_KULCS = "fajlok-nezet-mod";
@@ -31,7 +32,7 @@ const UJ_SZURO = { modul: "", feltoltoId: "", datumTol: "", datumIg: "" };
 const hetElott = () => {
   const d = new Date();
   d.setDate(d.getDate() - 7);
-  return d.toISOString().slice(0, 10);
+  return helyiDatum(d);
 };
 
 export default function Fajlok() {
