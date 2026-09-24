@@ -279,7 +279,7 @@ export default function Bejelentkezes() {
       <div>
         <label
           htmlFor="email"
-          className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/40 mb-2"
+          className="block text-xs font-mono uppercase tracking-wide text-white/40 mb-2"
         >
           Email cím
         </label>
@@ -303,7 +303,7 @@ export default function Bejelentkezes() {
       <div>
         <label
           htmlFor="password"
-          className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/40 mb-2"
+          className="block text-xs font-mono uppercase tracking-wide text-white/40 mb-2"
         >
           Jelszó
         </label>
@@ -340,7 +340,7 @@ export default function Bejelentkezes() {
       type="button"
       onClick={handleLogin}
       disabled={isLoading}
-      className="w-full mt-7 px-8 py-4 bg-[#1E3AA8] hover:bg-[#172E86] text-white font-[Overpass] font-bold rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-xl disabled:opacity-50 disabled:hover:scale-100 disabled:hover:shadow-none flex items-center justify-center gap-3"
+      className="w-full mt-7 px-8 py-4 bg-[#1E3AA8] hover:bg-[#172E86] text-white font-display font-bold rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-xl disabled:opacity-50 disabled:hover:scale-100 disabled:hover:shadow-none flex items-center justify-center gap-3"
     >
       {isLoading ? (
         <>
@@ -375,7 +375,7 @@ export default function Bejelentkezes() {
                 className="h-8 w-auto"
               />
             </div>
-            <h2 className="font-[Overpass] font-extrabold text-2xl text-white mt-3 mb-3">
+            <h2 className="font-display font-extrabold text-2xl text-white mt-3 mb-3">
               Bejelentkezés
             </h2>
             <p className="text-white/60 mb-8">
@@ -406,7 +406,7 @@ export default function Bejelentkezes() {
         <div className="w-full max-w-5xl grid lg:grid-cols-[1.05fr_0.95fr] gap-12 items-start">
           {/* Bal oszlop — branding, világos háttér (csak lg-től) */}
           <div className="hidden lg:block">
-            <h1 className="font-[Overpass] font-extrabold text-4xl xl:text-5xl leading-[1.1] text-[#23262B] tracking-tight mb-5">
+            <h1 className="font-display font-extrabold text-4xl xl:text-5xl leading-[1.1] text-[#23262B] tracking-tight mb-5">
               Üdvözöljük
               <br />
               <span className="text-[#1E3AA8]">újra.</span>
@@ -444,14 +444,14 @@ export default function Bejelentkezes() {
               <button
                 type="button"
                 onClick={navigateToHome}
-                className="inline-flex items-center gap-2 text-white/60 hover:text-white text-sm font-[Overpass] font-semibold transition-colors duration-300"
+                className="inline-flex items-center gap-2 text-white/60 hover:text-white text-sm font-display font-semibold transition-colors duration-300"
               >
                 <BackIcon />
                 Vissza
               </button>
             </div>
 
-            <h2 className="font-[Overpass] font-extrabold text-2xl md:text-3xl text-white mt-3 mb-3">
+            <h2 className="font-display font-extrabold text-2xl md:text-3xl text-white mt-3 mb-3">
               Bejelentkezés
             </h2>
             <p className="text-white/60 mb-8">

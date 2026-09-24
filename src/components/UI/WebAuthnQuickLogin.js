@@ -63,7 +63,7 @@ export default function WebAuthnQuickLogin({ onSuccess, onError }) {
       type="button"
       onClick={handleClick}
       disabled={busy}
-      className="mb-5 flex w-full items-center justify-center gap-2.5 rounded-xl border border-white/15 bg-white/5 px-4 py-3 font-[Overpass] text-sm font-semibold text-white transition-all duration-300 hover:bg-white/10 disabled:cursor-wait disabled:opacity-60"
+      className="mb-5 flex w-full items-center justify-center gap-2.5 rounded-xl border border-white/15 bg-white/5 px-4 py-3 font-display text-sm font-semibold text-white transition-all duration-300 hover:bg-white/10 disabled:cursor-wait disabled:opacity-60"
     >
       <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
         <path

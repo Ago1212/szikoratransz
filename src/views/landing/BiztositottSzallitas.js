@@ -32,13 +32,13 @@ export default function BiztositottSzallitas() {
           {steps.map((item, i) => (
             <li key={item.step} className="flex items-start gap-4">
               <span
-                className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-[Overpass_Mono] font-bold"
+                className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-mono font-bold"
                 style={{ backgroundColor: "#6D28D91A", color: "#6D28D9" }}
               >
                 {i + 1}
               </span>
               <div>
-                <p className="font-[Overpass] font-semibold text-[#23262B]">{item.step}</p>
+                <p className="font-display font-semibold text-[#23262B]">{item.step}</p>
                 <p className="text-[#23262B]/70 text-sm mt-1">{item.desc}</p>
               </div>
             </li>

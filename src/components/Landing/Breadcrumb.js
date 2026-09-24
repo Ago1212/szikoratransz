@@ -15,7 +15,7 @@ export default function Breadcrumb({
   navLabel = "Morzsamenü",
 }) {
   return (
-    <nav aria-label={navLabel} className="text-xs font-[Overpass_Mono] text-[#23262B]/50 mb-4">
+    <nav aria-label={navLabel} className="text-xs font-mono text-[#23262B]/50 mb-4">
       <ol className="flex items-center flex-wrap gap-x-2 gap-y-1">
         <li>
           <Link to={homePath} className="hover:text-[#1E3AA8] transition-colors duration-300">

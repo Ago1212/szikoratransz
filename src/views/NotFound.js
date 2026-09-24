@@ -18,10 +18,10 @@ export default function NotFound() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F2F3F5] px-4 font-sans">
       <div className="text-center max-w-md">
-        <p className="font-[Overpass_Mono] text-sm uppercase tracking-[0.2em] text-[#1E3AA8] mb-4">
+        <p className="font-mono text-sm uppercase tracking-[0.2em] text-[#1E3AA8] mb-4">
           404
         </p>
-        <h1 className="font-[Overpass] font-extrabold text-3xl text-[#23262B] mb-4">
+        <h1 className="font-display font-extrabold text-3xl text-[#23262B] mb-4">
           Az oldal nem található
         </h1>
         <p className="text-[#23262B]/60 mb-8">
@@ -29,7 +29,7 @@ export default function NotFound() {
         </p>
         <Link
           to="/"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-[#1E3AA8] hover:bg-[#172E86] text-white font-[Overpass] font-semibold rounded-xl transition-colors duration-300"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-[#1E3AA8] hover:bg-[#172E86] text-white font-display font-semibold rounded-xl transition-colors duration-300"
         >
           Vissza a főoldalra
         </Link>

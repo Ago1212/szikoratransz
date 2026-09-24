@@ -90,14 +90,14 @@ export default function ElfelejtettJelszo() {
             <button
               type="button"
               onClick={() => history.push("/auth/login")}
-              className="inline-flex items-center gap-2 text-white/60 hover:text-white text-sm font-[Overpass] font-semibold transition-colors duration-300"
+              className="inline-flex items-center gap-2 text-white/60 hover:text-white text-sm font-display font-semibold transition-colors duration-300"
             >
               <BackIcon />
               Vissza
             </button>
           </div>
 
-          <h2 className="font-[Overpass] font-extrabold text-2xl text-white mt-3 mb-3">Elfelejtett jelszó</h2>
+          <h2 className="font-display font-extrabold text-2xl text-white mt-3 mb-3">Elfelejtett jelszó</h2>
 
           {sent ? (
             <div
@@ -131,7 +131,7 @@ export default function ElfelejtettJelszo() {
 
               <label
                 htmlFor="email"
-                className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/40 mb-2"
+                className="block text-xs font-mono uppercase tracking-wide text-white/40 mb-2"
               >
                 Email cím
               </label>
@@ -155,7 +155,7 @@ export default function ElfelejtettJelszo() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={isLoading}
-                className="w-full px-8 py-4 bg-[#1E3AA8] hover:bg-[#172E86] text-white font-[Overpass] font-bold rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-3"
+                className="w-full px-8 py-4 bg-[#1E3AA8] hover:bg-[#172E86] text-white font-display font-bold rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-3"
               >
                 {isLoading ? (
                   <>

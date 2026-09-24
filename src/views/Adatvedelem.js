@@ -45,7 +45,7 @@ export default function Adatvedelem() {
           </Link>
           <Link
             to={localizePath("/", locale)}
-            className="text-sm font-[Overpass] font-semibold text-[#23262B]/70 hover:text-[#1E3AA8] transition-colors duration-300"
+            className="text-sm font-display font-semibold text-[#23262B]/70 hover:text-[#1E3AA8] transition-colors duration-300"
           >
             {t("adatvedelem.backLink")}
           </Link>
@@ -59,17 +59,17 @@ export default function Adatvedelem() {
           homePath={localizePath("/", locale)}
           navLabel={t("landing.breadcrumbNavLabel")}
         />
-        <span className="inline-flex items-center gap-2 text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-[#1E3AA8] mb-5">
+        <span className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-[0.2em] text-[#1E3AA8] mb-5">
           <span className="w-1.5 h-1.5 rounded-full bg-[#1E3AA8]"></span>
           {t("adatvedelem.eyebrow")}
         </span>
-        <h1 className="font-[Overpass] font-extrabold text-4xl text-[#23262B] tracking-tight mb-6">
+        <h1 className="font-display font-extrabold text-4xl text-[#23262B] tracking-tight mb-6">
           {t("adatvedelem.h1")}
         </h1>
 
         <div className="prose prose-p:text-[#23262B]/75 prose-headings:text-[#23262B] max-w-none space-y-8 text-[#23262B]/75 leading-relaxed">
           <section>
-            <h2 className="font-[Overpass] font-bold text-xl text-[#23262B] mb-2">
+            <h2 className="font-display font-bold text-xl text-[#23262B] mb-2">
               {t("adatvedelem.section1.heading")}
             </h2>
             {locale === "en" ? (
@@ -96,7 +96,7 @@ export default function Adatvedelem() {
           </section>
 
           <section>
-            <h2 className="font-[Overpass] font-bold text-xl text-[#23262B] mb-2">
+            <h2 className="font-display font-bold text-xl text-[#23262B] mb-2">
               {t("adatvedelem.section2.heading")}
             </h2>
             <p>{t("adatvedelem.section2.intro")}</p>
@@ -108,28 +108,28 @@ export default function Adatvedelem() {
           </section>
 
           <section>
-            <h2 className="font-[Overpass] font-bold text-xl text-[#23262B] mb-2">
+            <h2 className="font-display font-bold text-xl text-[#23262B] mb-2">
               {t("adatvedelem.section3.heading")}
             </h2>
             <p>{t("adatvedelem.section3.body")}</p>
           </section>
 
           <section>
-            <h2 className="font-[Overpass] font-bold text-xl text-[#23262B] mb-2">
+            <h2 className="font-display font-bold text-xl text-[#23262B] mb-2">
               {t("adatvedelem.section4.heading")}
             </h2>
             <p>{t("adatvedelem.section4.body")}</p>
           </section>
 
           <section>
-            <h2 className="font-[Overpass] font-bold text-xl text-[#23262B] mb-2">
+            <h2 className="font-display font-bold text-xl text-[#23262B] mb-2">
               {t("adatvedelem.section5.heading")}
             </h2>
             <p>{t("adatvedelem.section5.body")}</p>
           </section>
 
           <section>
-            <h2 className="font-[Overpass] font-bold text-xl text-[#23262B] mb-2">
+            <h2 className="font-display font-bold text-xl text-[#23262B] mb-2">
               {t("adatvedelem.section6.heading")}
             </h2>
             <p>{t("adatvedelem.section6.intro")}</p>
@@ -158,7 +158,7 @@ export default function Adatvedelem() {
           </section>
 
           <section>
-            <h2 className="font-[Overpass] font-bold text-xl text-[#23262B] mb-2">
+            <h2 className="font-display font-bold text-xl text-[#23262B] mb-2">
               {t("adatvedelem.section7.heading")}
             </h2>
             <p>{t("adatvedelem.section7.body")}</p>

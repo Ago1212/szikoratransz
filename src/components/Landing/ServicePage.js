@@ -153,7 +153,7 @@ export default function ServicePage({
           <div className="flex items-center gap-4">
             <Link
               to={localizePath("/", locale)}
-              className="text-sm font-[Overpass] font-semibold text-[#23262B]/70 hover:text-[#1E3AA8] transition-colors duration-300"
+              className="text-sm font-display font-semibold text-[#23262B]/70 hover:text-[#1E3AA8] transition-colors duration-300"
             >
               {t("servicePage.backLink")}
             </Link>
@@ -206,7 +206,7 @@ export default function ServicePage({
                 felülírjuk). */}
             <div className="min-w-0">
               <span
-                className="inline-flex items-center gap-2.5 pl-3 pr-4 py-2 rounded-full text-[13px] font-[Overpass_Mono] font-bold uppercase tracking-[0.16em] mb-6"
+                className="inline-flex items-center gap-2.5 pl-3 pr-4 py-2 rounded-full text-[13px] font-mono font-bold uppercase tracking-[0.16em] mb-6"
                 style={{ backgroundColor: `${accent}1F`, color: shade(accent, -8) }}
               >
                 <span
@@ -215,7 +215,7 @@ export default function ServicePage({
                 ></span>
                 {eyebrow}
               </span>
-              <h1 className="font-[Overpass] font-extrabold text-[2.6rem] sm:text-5xl md:text-6xl leading-[1.03] text-[#181B1F] tracking-tight text-balance">
+              <h1 className="font-display font-extrabold text-[2.6rem] sm:text-5xl md:text-6xl leading-[1.03] text-[#181B1F] tracking-tight text-balance">
                 {h1}
               </h1>
               <p className="text-lg md:text-xl text-[#23262B]/85 leading-relaxed max-w-xl mt-6 text-balance">
@@ -224,7 +224,7 @@ export default function ServicePage({
               <div className="flex flex-wrap items-center gap-x-7 gap-y-4 mt-8">
                 <a
                   href="#ajanlatkeres"
-                  className="relative inline-flex items-center gap-2 px-8 py-4 text-white font-[Overpass] font-bold rounded-xl overflow-hidden shadow-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                  className="relative inline-flex items-center gap-2 px-8 py-4 text-white font-display font-bold rounded-xl overflow-hidden shadow-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                   style={{ backgroundColor: accent, boxShadow: `0 20px 35px -15px ${accent}80` }}
                 >
                   <span className="svcpage-cta-shimmer absolute inset-0 pointer-events-none"></span>
@@ -233,11 +233,11 @@ export default function ServicePage({
                 </a>
                 <a
                   href="tel:+36308115776"
-                  className="inline-flex items-center gap-2 text-sm font-[Overpass] font-semibold text-[#23262B]/70 hover:text-[#23262B] transition-colors duration-300"
+                  className="inline-flex items-center gap-2 text-sm font-display font-semibold text-[#23262B]/70 hover:text-[#23262B] transition-colors duration-300"
                 >
                   <PiPhoneLight className="text-base" style={{ color: accent }} />
                   {t("servicePage.callPrefix")}{" "}
-                  <span className="font-[Overpass_Mono]">+36 30 811 5776</span>
+                  <span className="font-mono">+36 30 811 5776</span>
                 </a>
               </div>
             </div>
@@ -298,13 +298,13 @@ export default function ServicePage({
                     </span>
                   )}
                   <span
-                    className="text-[10px] font-[Overpass_Mono] font-bold uppercase tracking-[0.16em]"
+                    className="text-[10px] font-mono font-bold uppercase tracking-[0.16em]"
                     style={{ color: shade(accent, 42) }}
                   >
                     {eyebrow}
                   </span>
                 </div>
-                <h2 className="font-[Overpass] font-extrabold text-xl leading-tight text-white mb-2.5 text-balance">
+                <h2 className="font-display font-extrabold text-xl leading-tight text-white mb-2.5 text-balance">
                   {currentServiceLabel || eyebrow}
                 </h2>
                 {bullets.length > 0 && (
@@ -334,12 +334,12 @@ export default function ServicePage({
           <section className="py-14 border-t border-[#23262B]/10">
             <div className="max-w-2xl mb-10">
               <span
-                className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em]"
+                className="text-xs font-mono uppercase tracking-[0.2em]"
                 style={{ color: accent }}
               >
                 {t("servicePage.whyUsEyebrow")}
               </span>
-              <h2 className="font-[Overpass] font-extrabold text-2xl md:text-3xl text-[#23262B] mt-3">
+              <h2 className="font-display font-extrabold text-2xl md:text-3xl text-[#23262B] mt-3">
                 {t("servicePage.whyUsTitle")}
               </h2>
             </div>
@@ -359,7 +359,7 @@ export default function ServicePage({
                       <PiCheckLight />
                     </span>
                     <div>
-                      <h3 className="font-[Overpass] font-bold text-[#23262B]">{b.title}</h3>
+                      <h3 className="font-display font-bold text-[#23262B]">{b.title}</h3>
                       <p className="text-[#23262B]/70 text-sm mt-1">{b.desc}</p>
                     </div>
                   </div>
@@ -395,12 +395,12 @@ export default function ServicePage({
             </div>
             <div className="order-1 lg:order-2">
               <span
-                className="text-xs font-[Overpass_Mono] font-bold uppercase tracking-[0.18em]"
+                className="text-xs font-mono font-bold uppercase tracking-[0.18em]"
                 style={{ color: accent }}
               >
                 {t("landing.about.eyebrow")}
               </span>
-              <h2 className="font-[Overpass] font-extrabold text-2xl md:text-3xl text-[#23262B] mt-3 mb-5">
+              <h2 className="font-display font-extrabold text-2xl md:text-3xl text-[#23262B] mt-3 mb-5">
                 {t("landing.about.title")}
               </h2>
               <p className="text-[#23262B]/80 leading-relaxed mb-4">{t("landing.about.paragraph1")}</p>
@@ -418,7 +418,7 @@ export default function ServicePage({
                       {index === 0 ? <PiTruckLight /> : <PiUserCircleLight />}
                     </span>
                     <div>
-                      <div className="font-[Overpass] font-semibold text-sm text-[#23262B]">{tile.title}</div>
+                      <div className="font-display font-semibold text-sm text-[#23262B]">{tile.title}</div>
                       <div className="text-xs text-[#23262B]/60">{tile.desc}</div>
                     </div>
                   </div>
@@ -434,7 +434,7 @@ export default function ServicePage({
 
         {/* REFERENCIÁK */}
         <section className="py-14 border-t border-[#23262B]/10">
-          <h2 className="font-[Overpass] font-extrabold text-2xl text-[#23262B] mb-6">
+          <h2 className="font-display font-extrabold text-2xl text-[#23262B] mb-6">
             {t("servicePage.testimonialsTitle")}
           </h2>
           <div className="grid md:grid-cols-3 gap-6">
@@ -444,7 +444,7 @@ export default function ServicePage({
                   <PiQuotesLight className="text-[#1E3AA8]/30 text-2xl mb-3" />
                   <p className="text-[#23262B]/75 text-sm leading-relaxed mb-5 flex-grow">{testimonial.quote}</p>
                   <div className="text-sm pt-3 border-t border-[#23262B]/10">
-                    <div className="font-[Overpass] font-semibold text-[#23262B]">{testimonial.name}</div>
+                    <div className="font-display font-semibold text-[#23262B]">{testimonial.name}</div>
                     <div className="text-[#23262B]/50 text-xs">
                       {testimonial.role}, {testimonial.company}
                     </div>
@@ -459,14 +459,14 @@ export default function ServicePage({
         {/* GYIK */}
         {faqItems.length > 0 && (
           <section className="py-14 border-t border-[#23262B]/10">
-            <h2 className="font-[Overpass] font-extrabold text-2xl text-[#23262B] mb-6">
+            <h2 className="font-display font-extrabold text-2xl text-[#23262B] mb-6">
               {t("servicePage.faqTitle")}
             </h2>
             <div className="divide-y divide-[#23262B]/10 border-t border-b border-[#23262B]/10">
               {faqItems.map((item) => (
                 <details key={item.q} className="group py-5">
                   <summary className="cursor-pointer list-none flex items-center justify-between gap-4">
-                    <h3 className="font-[Overpass] font-semibold text-[#23262B] m-0">{item.q}</h3>
+                    <h3 className="font-display font-semibold text-[#23262B] m-0">{item.q}</h3>
                     <span className="text-[#1E3AA8] text-sm flex-shrink-0 transition-transform duration-300 group-open:rotate-180">
                       ▾
                     </span>
@@ -487,7 +487,7 @@ export default function ServicePage({
 
         {/* EGYÉB SZOLGÁLTATÁSOK */}
         <section className="py-14 border-t border-[#23262B]/10">
-          <h2 className="font-[Overpass_Mono] text-xs uppercase tracking-[0.2em] text-[#23262B]/50 mb-4">
+          <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-[#23262B]/50 mb-4">
             {t("servicePage.otherServicesTitle")}
           </h2>
           <div className="flex flex-wrap gap-3">
@@ -495,7 +495,7 @@ export default function ServicePage({
               <Link
                 key={s.path}
                 to={localizePath(s.path, locale)}
-                className="px-4 py-2 rounded-full border border-[#23262B]/15 bg-white text-sm font-[Overpass] font-medium text-[#23262B]/70 transition-all duration-300 hover:border-[#1E3AA8]/50 hover:text-[#1E3AA8] hover:shadow-md hover:-translate-y-0.5"
+                className="px-4 py-2 rounded-full border border-[#23262B]/15 bg-white text-sm font-display font-medium text-[#23262B]/70 transition-all duration-300 hover:border-[#1E3AA8]/50 hover:text-[#1E3AA8] hover:shadow-md hover:-translate-y-0.5"
               >
                 {t(`landing.servicePages.${s.id}`)}
               </Link>

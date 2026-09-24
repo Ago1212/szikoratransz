@@ -39,7 +39,7 @@ function PillGroup({ options, value, onChange }) {
             type="button"
             aria-pressed={selected}
             onClick={() => onChange(selected ? "" : opt.value)}
-            className={`px-3.5 py-2 rounded-lg text-sm font-[Overpass] font-medium border transition-colors duration-200 ${
+            className={`px-3.5 py-2 rounded-lg text-sm font-display font-medium border transition-colors duration-200 ${
               selected
                 ? "bg-[#1E3AA8] border-[#1E3AA8] text-white"
                 : "bg-white/5 border-white/15 text-white/70 hover:border-white/30 hover:text-white"
@@ -185,10 +185,10 @@ export default function QuoteForm({ title, subtitle }) {
           <div className="w-12 h-12 bg-white/10 text-white rounded-xl flex items-center justify-center flex-shrink-0">
             <PiEnvelopeLight className="text-lg" />
           </div>
-          <h3 className="font-[Overpass] font-bold text-2xl text-white">{resolvedTitle}</h3>
+          <h3 className="font-display font-bold text-2xl text-white">{resolvedTitle}</h3>
         </div>
         <p className="text-white/50 mb-3">{resolvedSubtitle}</p>
-        <div className="inline-flex items-center gap-1.5 text-xs font-[Overpass_Mono] uppercase tracking-wide text-[#7C93FF] bg-[#2F4DE0]/15 px-3 py-1 rounded-full mb-8">
+        <div className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wide text-[#7C93FF] bg-[#2F4DE0]/15 px-3 py-1 rounded-full mb-8">
           <PiClockLight />
           {t("quoteForm.responseBadge")}
         </div>
@@ -216,7 +216,7 @@ export default function QuoteForm({ title, subtitle }) {
         <form onSubmit={submitQuoteRequest} noValidate={false}>
           <div className="space-y-5">
             <div>
-              <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/55 mb-2">
+              <label className="block text-xs font-mono uppercase tracking-wide text-white/55 mb-2">
                 {t("quoteForm.labels.name")}
               </label>
               <input
@@ -233,7 +233,7 @@ export default function QuoteForm({ title, subtitle }) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/55 mb-2">
+                <label className="block text-xs font-mono uppercase tracking-wide text-white/55 mb-2">
                   {t("quoteForm.labels.phone")}
                 </label>
                 <input
@@ -249,7 +249,7 @@ export default function QuoteForm({ title, subtitle }) {
               </div>
 
               <div>
-                <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/55 mb-2">
+                <label className="block text-xs font-mono uppercase tracking-wide text-white/55 mb-2">
                   {t("quoteForm.labels.email")}
                 </label>
                 <input
@@ -269,14 +269,14 @@ export default function QuoteForm({ title, subtitle }) {
                 blokkolják a küldést, de pontosabb ajánlatot tesznek
                 lehetővé. Ld. a form-koncepció 2.3-as pontját. */}
             <div className="pt-1 border-t border-white/10">
-              <p className="text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/40 mt-5 mb-3">
+              <p className="text-xs font-mono uppercase tracking-wide text-white/40 mt-5 mb-3">
                 {t("quoteForm.labels.shipmentDetailsHeading")}{" "}
                 <span className="normal-case text-white/30">{t("quoteForm.labels.shipmentDetailsHint")}</span>
               </p>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/55 mb-2">
+                  <label className="block text-xs font-mono uppercase tracking-wide text-white/55 mb-2">
                     {t("quoteForm.labels.direction")}
                   </label>
                   <PillGroup
@@ -288,7 +288,7 @@ export default function QuoteForm({ title, subtitle }) {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/55 mb-2">
+                    <label className="block text-xs font-mono uppercase tracking-wide text-white/55 mb-2">
                       {t("quoteForm.labels.from")}
                     </label>
                     <input
@@ -301,7 +301,7 @@ export default function QuoteForm({ title, subtitle }) {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/55 mb-2">
+                    <label className="block text-xs font-mono uppercase tracking-wide text-white/55 mb-2">
                       {t("quoteForm.labels.to")}
                     </label>
                     <input
@@ -316,7 +316,7 @@ export default function QuoteForm({ title, subtitle }) {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/55 mb-2">
+                  <label className="block text-xs font-mono uppercase tracking-wide text-white/55 mb-2">
                     {t("quoteForm.labels.timing")}
                   </label>
                   <PillGroup
@@ -329,7 +329,7 @@ export default function QuoteForm({ title, subtitle }) {
             </div>
 
             <div className="pt-1 border-t border-white/10">
-              <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/55 mb-2 mt-5">
+              <label className="block text-xs font-mono uppercase tracking-wide text-white/55 mb-2 mt-5">
                 {t("quoteForm.labels.description")}
               </label>
               <textarea
@@ -375,7 +375,7 @@ export default function QuoteForm({ title, subtitle }) {
           <button
             type="submit"
             disabled={isSubmitting || !turnstileToken}
-            className="w-full mt-6 px-6 py-4 bg-[#1E3AA8] hover:bg-[#172E86] text-white font-[Overpass] font-bold uppercase tracking-wide text-sm rounded-xl transition duration-300 disabled:opacity-50"
+            className="w-full mt-6 px-6 py-4 bg-[#1E3AA8] hover:bg-[#172E86] text-white font-display font-bold uppercase tracking-wide text-sm rounded-xl transition duration-300 disabled:opacity-50"
           >
             {isSubmitting ? (
               <span className="flex items-center justify-center">

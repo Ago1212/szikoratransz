@@ -27,7 +27,7 @@ export default function ContentCard({ heading, accent = "#1E3AA8", icon: Icon, c
           className="absolute top-0 left-0 bottom-0 w-1"
           style={{ background: `linear-gradient(180deg, ${accent}, ${accent}00)` }}
         ></div>
-        <h2 className="relative font-[Overpass] font-extrabold text-2xl text-[#23262B] mb-6">{heading}</h2>
+        <h2 className="relative font-display font-extrabold text-2xl text-[#23262B] mb-6">{heading}</h2>
         <div className="relative">{children}</div>
       </div>
     </section>

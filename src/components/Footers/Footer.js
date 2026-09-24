@@ -38,7 +38,7 @@ export default function Footer() {
               className="h-8 w-auto mb-4"
             />
             <p className="text-sm text-white/60 leading-relaxed mb-5">{t("footer.description")}</p>
-            <ul className="space-y-2 text-xs text-white/50 font-[Overpass_Mono] uppercase tracking-wide">
+            <ul className="space-y-2 text-xs text-white/50 font-mono uppercase tracking-wide">
               {t("footer.bullets").map((item) => (
                 <li key={item}>{item}</li>
               ))}
@@ -47,7 +47,7 @@ export default function Footer() {
 
           {/* 2 — Szolgáltatásaink (site-szintű belső link minden long-tail oldalra) */}
           <div>
-            <span className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-white/80">
+            <span className="text-xs font-mono uppercase tracking-[0.2em] text-white/80">
               {t("footer.servicesHeading")}
             </span>
             <ul className="mt-4 space-y-3 text-sm text-white/70">
@@ -66,7 +66,7 @@ export default function Footer() {
 
           {/* 3 — Cég / fontos oldalak */}
           <div>
-            <span className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-white/80">
+            <span className="text-xs font-mono uppercase tracking-[0.2em] text-white/80">
               {t("footer.companyHeading")}
             </span>
             <ul className="mt-4 space-y-3 text-sm text-white/70">
@@ -123,7 +123,7 @@ export default function Footer() {
 
           {/* 4 — Kapcsolat + CTA */}
           <div>
-            <span className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-white/80">
+            <span className="text-xs font-mono uppercase tracking-[0.2em] text-white/80">
               {t("footer.contactHeading")}
             </span>
             <ul className="mt-4 space-y-4 text-sm text-white/70">
@@ -181,7 +181,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-white/10 mt-12 pt-6 flex flex-col sm:flex-row justify-between gap-2 text-xs text-white/30 font-[Overpass_Mono] uppercase tracking-wide">
+        <div className="border-t border-white/10 mt-12 pt-6 flex flex-col sm:flex-row justify-between gap-2 text-xs text-white/30 font-mono uppercase tracking-wide">
           <span>
             © {new Date().getFullYear()} Szikora Transz Kft. · {t("footer.taxIdLabel")} 26381626-2-11
           </span>

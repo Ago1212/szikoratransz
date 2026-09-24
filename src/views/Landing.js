@@ -360,13 +360,13 @@ export default function Landing() {
               {/* Bal oszlop — fő üzenet */}
               <div className="relative">
                 <Reveal delay={0}>
-                  <span className="inline-flex items-center gap-2 text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-[#1E3AA8] mb-6">
+                  <span className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-[0.2em] text-[#1E3AA8] mb-6">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#1E3AA8] animate-pulse"></span>
                     {t("landing.hero.eyebrow")}
                   </span>
                 </Reveal>
 
-                <h1 className="font-[Overpass] font-extrabold text-4xl md:text-7xl leading-[1.05] text-[#23262B] tracking-tight">
+                <h1 className="font-display font-extrabold text-4xl md:text-7xl leading-[1.05] text-[#23262B] tracking-tight">
                   {/* Szóköz minden sor-span között: a `.hero-line-mask` maga
                       display:block-kel vizuálisan úgyis külön sorra töri
                       ezeket, de szóköz nélkül a nyers DOM-szöveg (amit pl.
@@ -411,7 +411,7 @@ export default function Landing() {
                       e.preventDefault();
                       smoothScroll("services");
                     }}
-                    className="mt-6 inline-flex items-center gap-2 text-[#23262B]/70 hover:text-[#23262B] text-sm font-[Overpass] font-semibold transition-colors duration-300"
+                    className="mt-6 inline-flex items-center gap-2 text-[#23262B]/70 hover:text-[#23262B] text-sm font-display font-semibold transition-colors duration-300"
                   >
                     {t("landing.hero.servicesLink")}
                     <PiArrowRightLight className="text-xs" />
@@ -426,10 +426,10 @@ export default function Landing() {
               >
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1E3AA8] to-[#172E86]"></div>
 
-                <span className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-white">
+                <span className="text-xs font-mono uppercase tracking-[0.2em] text-white">
                   {t("landing.hero.quoteCard.eyebrow")}
                 </span>
-                <h2 className="font-[Overpass] font-extrabold text-2xl md:text-3xl text-white mt-3 mb-3">
+                <h2 className="font-display font-extrabold text-2xl md:text-3xl text-white mt-3 mb-3">
                   {t("landing.hero.quoteCard.title")}
                 </h2>
                 <p className="text-white/60 mb-4 md:mb-6">{t("landing.hero.quoteCard.subtitle")}</p>
@@ -450,7 +450,7 @@ export default function Landing() {
 
                 <button
                   onClick={() => smoothScroll("contact")}
-                  className="w-full px-8 py-4 bg-[#1E3AA8] hover:bg-[#172E86] text-white font-[Overpass] font-bold rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-xl"
+                  className="w-full px-8 py-4 bg-[#1E3AA8] hover:bg-[#172E86] text-white font-display font-bold rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-xl"
                 >
                   {t("landing.hero.quoteCard.ctaButton")}
                 </button>
@@ -459,7 +459,7 @@ export default function Landing() {
                   {t("landing.hero.quoteCard.callPrefix")}{" "}
                   <a
                     href="tel:+36308115776"
-                    className="text-white/70 hover:text-[#7C93FF] font-[Overpass_Mono]"
+                    className="text-white/70 hover:text-[#7C93FF] font-mono"
                   >
                     +36 30 811 5776
                   </a>
@@ -475,10 +475,10 @@ export default function Landing() {
         <section id="folyamat" className="py-24 bg-[#F2F3F5]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-2xl mb-16">
-              <span className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-[#1E3AA8]">
+              <span className="text-xs font-mono uppercase tracking-[0.2em] text-[#1E3AA8]">
                 {t("landing.process.eyebrow")}
               </span>
-              <h2 className="font-[Overpass] font-extrabold text-3xl md:text-4xl text-[#23262B] mt-3">
+              <h2 className="font-display font-extrabold text-3xl md:text-4xl text-[#23262B] mt-3">
                 {t("landing.process.title")}
               </h2>
               <p className="text-[#23262B]/70 mt-4 text-lg">{t("landing.process.intro")}</p>
@@ -488,10 +488,10 @@ export default function Landing() {
               <div className="hidden md:block absolute left-7 right-[calc(25%-3.25rem)] top-7 border-t-2 border-dashed border-[#23262B]/15"></div>
               {PROCESS_STEPS.map((step, index) => (
                 <Reveal key={step.id} delay={index * 100} className="relative">
-                  <div className="relative z-10 w-14 h-14 rounded-full bg-[#1E3AA8] text-white flex items-center justify-center font-[Overpass_Mono] font-bold border-4 border-[#F2F3F5] mb-5">
+                  <div className="relative z-10 w-14 h-14 rounded-full bg-[#1E3AA8] text-white flex items-center justify-center font-mono font-bold border-4 border-[#F2F3F5] mb-5">
                     {step.n}
                   </div>
-                  <p className="font-[Overpass] font-bold text-lg text-[#23262B] mb-2">
+                  <p className="font-display font-bold text-lg text-[#23262B] mb-2">
                     {t(`landing.processSteps.${step.id}.title`)}
                   </p>
                   <p className="text-[#23262B]/70 text-sm leading-relaxed">
@@ -509,10 +509,10 @@ export default function Landing() {
         <section id="services" className="py-24 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-2xl mb-16">
-              <span className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-[#1E3AA8]">
+              <span className="text-xs font-mono uppercase tracking-[0.2em] text-[#1E3AA8]">
                 {t("landing.services.eyebrow")}
               </span>
-              <h2 className="font-[Overpass] font-extrabold text-3xl md:text-4xl text-[#23262B] mt-3">
+              <h2 className="font-display font-extrabold text-3xl md:text-4xl text-[#23262B] mt-3">
                 {t("landing.services.title")}
               </h2>
               <p className="text-[#23262B]/70 mt-4 text-lg">{t("landing.services.intro")}</p>
@@ -537,7 +537,7 @@ export default function Landing() {
                       <div className="w-12 h-12 bg-[#1E3AA8]/10 text-[#1E3AA8] rounded-xl flex items-center justify-center mb-6">
                         <feature.icon className="text-lg" />
                       </div>
-                      <h3 className="font-[Overpass] font-bold text-xl text-[#23262B] mb-2">
+                      <h3 className="font-display font-bold text-xl text-[#23262B] mb-2">
                         {feature.href ? (
                           <Link
                             to={localizePath(feature.href, locale)}
@@ -553,7 +553,7 @@ export default function Landing() {
                         {t(`landing.features.${feature.id}.desc`)}
                       </p>
                       {feature.href && (
-                        <span className="mt-4 inline-flex items-center gap-1 text-sm font-[Overpass] font-semibold text-[#1E3AA8] opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <span className="mt-4 inline-flex items-center gap-1 text-sm font-display font-semibold text-[#1E3AA8] opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                           {t("landing.services.detailsLink")}
                           <PiArrowRightLight className="text-xs" />
                         </span>
@@ -567,10 +567,10 @@ export default function Landing() {
             {/* Miért válasszon minket */}
             <div className="mt-24 grid lg:grid-cols-2 gap-12 items-center">
               <div>
-                <span className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-[#1E3AA8]">
+                <span className="text-xs font-mono uppercase tracking-[0.2em] text-[#1E3AA8]">
                   {t("landing.services.whyUs.eyebrow")}
                 </span>
-                <h3 className="font-[Overpass] font-extrabold text-3xl text-[#23262B] mt-3 mb-6">
+                <h3 className="font-display font-extrabold text-3xl text-[#23262B] mt-3 mb-6">
                   {t("landing.services.whyUs.title")}
                 </h3>
                 <p className="text-lg text-[#23262B]/70 mb-8">{t("landing.services.whyUs.intro")}</p>
@@ -579,7 +579,7 @@ export default function Landing() {
                     <Reveal key={item.title} delay={index * 80}>
                       <div className="flex items-start gap-4 border-l-2 border-dashed border-[#1E3AA8]/40 pl-5 py-1">
                         <div>
-                          <p className="font-[Overpass] font-bold text-[#23262B]">
+                          <p className="font-display font-bold text-[#23262B]">
                             {item.title}
                           </p>
                           <p className="text-[#23262B]/70 text-sm mt-1">
@@ -603,7 +603,7 @@ export default function Landing() {
                 </picture>
                 <div className="absolute inset-0 bg-gradient-to-t from-[#23262B] via-transparent to-transparent"></div>
                 <div className="absolute bottom-0 left-0 p-6">
-                  <p className="font-[Overpass] font-bold text-xl text-white mb-1">
+                  <p className="font-display font-bold text-xl text-white mb-1">
                     {t("landing.services.whyUs.imageCaption.title")}
                   </p>
                   <p className="text-white/70 text-sm">{t("landing.services.whyUs.imageCaption.desc")}</p>
@@ -634,10 +634,10 @@ export default function Landing() {
                 <div className="absolute inset-0 bg-[#23262B]/20"></div>
               </div>
               <div className="order-1 lg:order-2">
-                <span className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-[#1E3AA8]">
+                <span className="text-xs font-mono uppercase tracking-[0.2em] text-[#1E3AA8]">
                   {t("landing.about.eyebrow")}
                 </span>
-                <h2 className="font-[Overpass] font-extrabold text-3xl md:text-4xl text-[#23262B] mt-3 mb-6">
+                <h2 className="font-display font-extrabold text-3xl md:text-4xl text-[#23262B] mt-3 mb-6">
                   {t("landing.about.title")}
                 </h2>
                 <p className="text-lg text-[#23262B]/70 mb-4">{t("landing.about.paragraph1")}</p>
@@ -648,7 +648,7 @@ export default function Landing() {
                       <PiTruckLight />
                     </div>
                     <div>
-                      <h3 className="font-[Overpass] font-semibold text-[#23262B]">
+                      <h3 className="font-display font-semibold text-[#23262B]">
                         {t("landing.about.tiles")[0].title}
                       </h3>
                       <p className="text-[#23262B]/70 text-sm">{t("landing.about.tiles")[0].desc}</p>
@@ -659,7 +659,7 @@ export default function Landing() {
                       <PiUserCircleLight />
                     </div>
                     <div>
-                      <h3 className="font-[Overpass] font-semibold text-[#23262B]">
+                      <h3 className="font-display font-semibold text-[#23262B]">
                         {t("landing.about.tiles")[1].title}
                       </h3>
                       <p className="text-[#23262B]/70 text-sm">{t("landing.about.tiles")[1].desc}</p>
@@ -677,10 +677,10 @@ export default function Landing() {
         <section id="referenciak" className="py-24 bg-[#F2F3F5]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-2xl mb-16">
-              <span className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-[#1E3AA8]">
+              <span className="text-xs font-mono uppercase tracking-[0.2em] text-[#1E3AA8]">
                 {t("landing.testimonials.eyebrow")}
               </span>
-              <h2 className="font-[Overpass] font-extrabold text-3xl md:text-4xl text-[#23262B] mt-3">
+              <h2 className="font-display font-extrabold text-3xl md:text-4xl text-[#23262B] mt-3">
                 {t("landing.testimonials.title")}
               </h2>
             </div>
@@ -694,14 +694,14 @@ export default function Landing() {
                       {t(`landing.testimonialItems.${testimonial.id}.quote`)}
                     </p>
                     <div className="flex items-center gap-3 pt-4 border-t border-[#23262B]/10">
-                      <div className="w-11 h-11 rounded-full bg-[#23262B] text-white flex items-center justify-center font-[Overpass_Mono] font-bold text-sm flex-shrink-0">
+                      <div className="w-11 h-11 rounded-full bg-[#23262B] text-white flex items-center justify-center font-mono font-bold text-sm flex-shrink-0">
                         {testimonial.name
                           .split(" ")
                           .map((p) => p[0])
                           .join("")}
                       </div>
                       <div>
-                        <div className="font-[Overpass] font-semibold text-[#23262B] text-sm">
+                        <div className="font-display font-semibold text-[#23262B] text-sm">
                           {testimonial.name}
                         </div>
                         <div className="text-[#23262B]/50 text-xs">
@@ -743,10 +743,10 @@ export default function Landing() {
         <section id="gyik" className="py-24 bg-white">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="mb-12">
-              <span className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-[#1E3AA8]">
+              <span className="text-xs font-mono uppercase tracking-[0.2em] text-[#1E3AA8]">
                 {t("landing.faq.eyebrow")}
               </span>
-              <h2 className="font-[Overpass] font-extrabold text-3xl md:text-4xl text-[#23262B] mt-3">
+              <h2 className="font-display font-extrabold text-3xl md:text-4xl text-[#23262B] mt-3">
                 {t("landing.faq.title")}
               </h2>
             </div>
@@ -760,7 +760,7 @@ export default function Landing() {
                       <button
                         onClick={() => setOpenFaq(isOpen ? null : index)}
                         aria-expanded={isOpen}
-                        className="w-full flex items-center justify-between gap-4 py-6 text-left font-[Overpass] font-semibold text-[#23262B] text-lg"
+                        className="w-full flex items-center justify-between gap-4 py-6 text-left font-display font-semibold text-[#23262B] text-lg"
                       >
                         {t(`landing.faqItems.${item.id}.q`)}
                         <PiCaretDownLight
@@ -788,10 +788,10 @@ export default function Landing() {
         <section id="contact" className="py-24 bg-[#F2F3F5]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-2xl mb-16">
-              <span className="text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-[#1E3AA8]">
+              <span className="text-xs font-mono uppercase tracking-[0.2em] text-[#1E3AA8]">
                 {t("landing.contact.eyebrow")}
               </span>
-              <h2 className="font-[Overpass] font-extrabold text-3xl md:text-4xl text-[#23262B] mt-3">
+              <h2 className="font-display font-extrabold text-3xl md:text-4xl text-[#23262B] mt-3">
                 {t("landing.contact.title")}
               </h2>
               <p className="text-[#23262B]/70 mt-4 text-lg">{t("landing.contact.intro")}</p>
@@ -833,7 +833,7 @@ export default function Landing() {
               <div className="bg-emerald-50/60 border border-emerald-200 rounded-xl overflow-hidden">
                 <div className="h-1 bg-gradient-to-r from-emerald-500 to-emerald-600"></div>
                 <div className="p-8">
-                  <span className="inline-flex items-center gap-2 text-xs font-[Overpass_Mono] uppercase tracking-[0.2em] text-emerald-700 mb-3">
+                  <span className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-[0.2em] text-emerald-700 mb-3">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
                     {t("landing.contact.driverForm.eyebrow")}
                   </span>
@@ -841,7 +841,7 @@ export default function Landing() {
                     <div className="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center flex-shrink-0">
                       <PiTruckLight className="text-lg" />
                     </div>
-                    <h3 className="font-[Overpass] font-bold text-xl text-[#23262B]">
+                    <h3 className="font-display font-bold text-xl text-[#23262B]">
                       {t("landing.contact.driverForm.title")}
                     </h3>
                   </div>
@@ -872,7 +872,7 @@ export default function Landing() {
                   <form onSubmit={submitDriverApplication}>
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-[#23262B]/40 mb-2">
+                        <label className="block text-xs font-mono uppercase tracking-wide text-[#23262B]/40 mb-2">
                           {t("landing.contact.driverForm.nameLabel")}
                         </label>
                         <input
@@ -887,7 +887,7 @@ export default function Landing() {
                       </div>
 
                       <div>
-                        <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-[#23262B]/40 mb-2">
+                        <label className="block text-xs font-mono uppercase tracking-wide text-[#23262B]/40 mb-2">
                           {t("landing.contact.driverForm.phoneLabel")}
                         </label>
                         <input
@@ -902,7 +902,7 @@ export default function Landing() {
                       </div>
 
                       <div>
-                        <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-[#23262B]/40 mb-2">
+                        <label className="block text-xs font-mono uppercase tracking-wide text-[#23262B]/40 mb-2">
                           {t("landing.contact.driverForm.emailLabel")}
                         </label>
                         <input
@@ -917,7 +917,7 @@ export default function Landing() {
                       </div>
 
                       <div>
-                        <label className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-[#23262B]/40 mb-2">
+                        <label className="block text-xs font-mono uppercase tracking-wide text-[#23262B]/40 mb-2">
                           {t("landing.contact.driverForm.messageLabel")}
                         </label>
                         <textarea
@@ -939,7 +939,7 @@ export default function Landing() {
                     <button
                       type="submit"
                       disabled={isSubmitting || !applicationTurnstileToken}
-                      className="w-full mt-6 px-6 py-3 border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-600 hover:text-white font-[Overpass] font-bold uppercase tracking-wide text-sm rounded-xl transition duration-300 disabled:opacity-50"
+                      className="w-full mt-6 px-6 py-3 border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-600 hover:text-white font-display font-bold uppercase tracking-wide text-sm rounded-xl transition duration-300 disabled:opacity-50"
                     >
                       {isSubmitting ? (
                         <span className="flex items-center justify-center">

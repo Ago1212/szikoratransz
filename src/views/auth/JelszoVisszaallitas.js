@@ -85,7 +85,7 @@ export default function JelszoVisszaallitas() {
             <img src="/logo2.png" alt="Szikora Transz Kft" className="h-8 w-auto" />
           </div>
 
-          <h2 className="font-[Overpass] font-extrabold text-2xl text-white mt-3 mb-3">Új jelszó beállítása</h2>
+          <h2 className="font-display font-extrabold text-2xl text-white mt-3 mb-3">Új jelszó beállítása</h2>
 
           {done ? (
             <>
@@ -101,7 +101,7 @@ export default function JelszoVisszaallitas() {
               <button
                 type="button"
                 onClick={() => history.push("/auth/login")}
-                className="w-full px-8 py-4 bg-[#1E3AA8] hover:bg-[#172E86] text-white font-[Overpass] font-bold rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                className="w-full px-8 py-4 bg-[#1E3AA8] hover:bg-[#172E86] text-white font-display font-bold rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
               >
                 Bejelentkezés
               </button>
@@ -124,7 +124,7 @@ export default function JelszoVisszaallitas() {
                 <div>
                   <label
                     htmlFor="password"
-                    className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/40 mb-2"
+                    className="block text-xs font-mono uppercase tracking-wide text-white/40 mb-2"
                   >
                     Új jelszó
                   </label>
@@ -146,7 +146,7 @@ export default function JelszoVisszaallitas() {
                 <div>
                   <label
                     htmlFor="confirm"
-                    className="block text-xs font-[Overpass_Mono] uppercase tracking-wide text-white/40 mb-2"
+                    className="block text-xs font-mono uppercase tracking-wide text-white/40 mb-2"
                   >
                     Új jelszó megerősítése
                   </label>
@@ -172,7 +172,7 @@ export default function JelszoVisszaallitas() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={isLoading}
-                className="w-full px-8 py-4 bg-[#1E3AA8] hover:bg-[#172E86] text-white font-[Overpass] font-bold rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-3"
+                className="w-full px-8 py-4 bg-[#1E3AA8] hover:bg-[#172E86] text-white font-display font-bold rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-3"
               >
                 {isLoading ? (
                   <>
