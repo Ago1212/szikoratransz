@@ -22,6 +22,10 @@ class Database {
     }
 
     // Csatlakozás létrehozása
+    public function kapcsolatiAdatok(): array {
+        return ['host' => $this->host, 'db_name' => $this->db_name, 'username' => $this->username, 'password' => $this->password];
+    }
+
     public function connect() {
         $this->db = null;
 
