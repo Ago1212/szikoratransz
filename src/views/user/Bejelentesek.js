@@ -6,7 +6,7 @@ import MobileHeader from "components/UI/MobileHeader.js";
 import StatusBadge from "components/UI/StatusBadge.js";
 import Spinner from "components/UI/Spinner.js";
 
-const STATUSZ_TONE = { uj: "warning", folyamatban: "info", lezart: "success" };
+const STATUSZ_TONE = { uj: "info", folyamatban: "warning", lezart: "success" };
 const STATUSZ_LABEL = { uj: "Új", folyamatban: "Folyamatban", lezart: "Lezárva" };
 
 // Valódi, backenddel rendelkező üzenetfolyam a bejelentéshez — korábban az

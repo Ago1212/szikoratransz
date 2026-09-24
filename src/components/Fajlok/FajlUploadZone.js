@@ -91,9 +91,12 @@ export default function FajlUploadZone({ admin, id, tabla, onUploadSuccess, comp
       >
         <PiCloudArrowUpLight className={`${compact ? "h-6 w-6" : "h-10 w-10"} text-brand-500`} />
         <p className={`text-center font-medium text-ink-700 dark:text-ink-200 ${compact ? "text-xs" : "text-sm"}`}>
-          {compact ? "Húzd ide a fájlokat, vagy kattints a feltöltéshez" : "Húzd ide a fájlokat feltöltéshez"}
+          <span className="md:hidden">Koppints a fájlok feltöltéséhez</span>
+          <span className="hidden md:inline">
+            {compact ? "Húzd ide a fájlokat, vagy kattints a feltöltéshez" : "Húzd ide a fájlokat feltöltéshez"}
+          </span>
         </p>
-        {!compact && <p className="text-xs text-ink-400 dark:text-ink-300">vagy kattints a tallózáshoz — egyszerre több fájl is</p>}
+        {!compact && <p className="hidden text-xs text-ink-400 dark:text-ink-300 md:block">vagy kattints a tallózáshoz — egyszerre több fájl is</p>}
         <input
           ref={inputRef}
           type="file"

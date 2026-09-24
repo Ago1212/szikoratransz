@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useLocation, useHistory } from "react-router-dom";
-import { useMediaQuery } from "react-responsive";
 import {
   PiFunnelLight,
   PiFunnelFill,
@@ -50,10 +49,9 @@ const PAGE_SIZE = 15;
 const Karbantartasok = () => {
   const location = useLocation();
   const history = useHistory();
-  const isMobile = useMediaQuery({ maxWidth: 767 });
   // Mobilon alapból zárva (helyet spórolunk), asztali nézeten viszont
   // változatlanul mindig nyitva indul, ahogy eddig is.
-  const [filtersOpen, setFiltersOpen] = useState(!isMobile);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [karbantartasok, setKarbantartasok] = useState([]);
   const [kamionok, setKamionok] = useState([]);
   const [potkocsik, setPotkocsik] = useState([]);
@@ -618,6 +616,9 @@ const Karbantartasok = () => {
         >
           <PiFunnelLight className="h-4 w-4 text-brand-500" />
           <h2 className="text-sm font-semibold uppercase tracking-wide">Szűrők</h2>
+          {activeFilterCount > 0 && (
+            <span className="rounded-full bg-brand-600 px-2 py-0.5 text-[11px] font-bold text-white">{activeFilterCount}</span>
+          )}
           <span className="ml-auto text-ink-400 dark:text-ink-300">
             {filtersOpen ? <PiCaretUpLight /> : <PiCaretDownLight />}
           </span>

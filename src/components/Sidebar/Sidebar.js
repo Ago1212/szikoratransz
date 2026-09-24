@@ -1000,6 +1000,7 @@ export default function Sidebar({ isDark, onToggleDark }) {
               </ul>
             )}
           </div>
+          <div className="pointer-events-none sticky bottom-0 -mx-3 -mb-4 h-8 bg-gradient-to-t from-white to-transparent dark:from-ink-900" />
         </div>
 
         {/* Piaci árak (EUR/USD árfolyam + benzinár) — a görgethető

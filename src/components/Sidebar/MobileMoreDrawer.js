@@ -164,6 +164,7 @@ export default function MobileMoreDrawer({
             </div>
           );
         })}
+        <div className="pointer-events-none sticky bottom-0 -mx-3 -mb-3 h-8 bg-gradient-to-t from-white to-transparent dark:from-ink-900" />
       </div>
 
       <div className="flex-shrink-0 border-t border-ink-100 px-4 py-4 dark:border-ink-800">

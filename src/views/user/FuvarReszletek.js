@@ -230,12 +230,14 @@ export default function FuvarReszletek() {
 
   return (
     <div className="flex flex-col gap-4 pb-4">
-      <div className="flex items-center justify-between">
-        <MobileHeader title="Fuvar" />
-        <StatusBadge tone={fuvar.dokumentum_feltoltve ? "success" : "brand"}>
-          {fuvar.dokumentum_feltoltve ? "Dokumentálva" : "Aktív"}
-        </StatusBadge>
-      </div>
+      <MobileHeader
+        title="Fuvar"
+        action={
+          <StatusBadge tone={fuvar.dokumentum_feltoltve ? "success" : "brand"}>
+            {fuvar.dokumentum_feltoltve ? "Dokumentálva" : "Aktív"}
+          </StatusBadge>
+        }
+      />
 
       <RouteTimelineCard
         felrako={{ ceg: fuvar.felrako_ceg, cim: fuvar.felrako_cim, datum: fuvar.felrakas_datuma }}

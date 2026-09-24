@@ -58,9 +58,10 @@ export default function RouteTimelineCard({ felrako, lerako, tavolsagKm, aru, me
           onClick={onUtvonalterv}
           disabled={!eleheto}
           aria-label="Útvonaltervezés indítása"
-          className="ml-auto flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-brand-600 text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-ink-400"
+          className="ml-auto flex h-11 flex-shrink-0 items-center justify-center gap-1.5 rounded-full bg-brand-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-ink-400"
         >
           <PiMapTrifoldLight className="h-5 w-5" />
+          Útvonal
         </button>
       </div>
     </div>

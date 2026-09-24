@@ -17,6 +17,7 @@ import {
   getDocumentStatus,
   daysUntil,
 } from "utils/documentStatus.js";
+import { formatFuvarDatum } from "utils/formatDatum";
 
 // A BottomNav középső FAB-ja 2026-07-28 óta Fuvarokra vezet, nem
 // Bejelentésre (ld. BottomNav.js komment) — a Bejelentés emiatt egy
@@ -185,8 +186,15 @@ export default function UserDashboard() {
                 }}
                 className="flex items-center justify-between gap-2 rounded-xl bg-white px-3 py-2.5 text-sm"
               >
-                <span className="min-w-0 truncate text-ink-800">
-                  {f.felrako_ceg || "—"} → {f.lerako_ceg || "—"}
+                <span className="min-w-0">
+                  <span className="block truncate text-ink-800">
+                    {f.felrako_ceg || "—"} → {f.lerako_ceg || "—"}
+                  </span>
+                  <span className="block truncate text-xs text-ink-500">
+                    {[formatFuvarDatum(f.felrakas_datuma) || formatFuvarDatum(f.lerakas_datuma), f.megbizo_nev]
+                      .filter(Boolean)
+                      .join(" · ") || "Nincs dátum megadva"}
+                  </span>
                 </span>
                 <PiCaretRightLight className="h-4 w-4 flex-shrink-0 text-ink-400" />
               </Link>

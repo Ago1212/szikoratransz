@@ -3,6 +3,7 @@ import { useHistory } from "react-router-dom";
 import {
   PiTruckLight,
   PiTruckTrailerLight,
+  PiVanLight,
   PiSignOutLight,
   PiIdentificationCardLight,
   PiHouseLineLight,
@@ -41,6 +42,7 @@ export default function Profil() {
   const [form, setForm] = useState(null);
   const [kamion, setKamion] = useState(null);
   const [potkocsi, setPotkocsi] = useState(null);
+  const [furgon, setFurgon] = useState(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -68,6 +70,17 @@ export default function Profil() {
           setPotkocsi(
             (result.potkocsik || []).find(
               (p) => String(p.id) === String(user.aktiv_potkocsi),
+            ) || null,
+          );
+        }
+      });
+    }
+    if (user.furgon) {
+      fetchAction("getFurgonok", { id: user.admin }).then((result) => {
+        if (result?.success) {
+          setFurgon(
+            (result.furgonok || []).find(
+              (f) => String(f.id) === String(user.furgon),
             ) || null,
           );
         }
@@ -140,7 +153,7 @@ export default function Profil() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-2">
         <div className="rounded-2xl border border-ink-100 bg-white p-3.5 shadow-soft">
           <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-400">
             <PiTruckLight className="h-4 w-4" /> Kamion
@@ -155,6 +168,14 @@ export default function Profil() {
           </div>
           <p className="mt-1 font-mono text-sm font-bold text-ink-900">
             {potkocsi?.rendszam || "—"}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-ink-100 bg-white p-3.5 shadow-soft">
+          <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-400">
+            <PiVanLight className="h-4 w-4" /> Furgon
+          </div>
+          <p className="mt-1 font-mono text-sm font-bold text-ink-900">
+            {furgon?.rendszam || "—"}
           </p>
         </div>
       </div>

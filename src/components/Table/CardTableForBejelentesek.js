@@ -7,7 +7,7 @@ import DataTable, { ActionIcon } from "components/UI/DataTable.js";
 import { useConfirmDelete } from "components/UI/useConfirmDelete.js";
 import StatusBadge from "components/UI/StatusBadge.js";
 
-const PRIORITAS_TONE = { alacsony: "neutral", kozepes: "warning", magas: "danger" };
+const PRIORITAS_TONE = { alacsony: "neutral", kozepes: "neutral", magas: "danger" };
 const PRIORITAS_LABEL = { alacsony: "Alacsony", kozepes: "Közepes", magas: "Magas" };
 
 const STATUSZ_TONE = { uj: "info", folyamatban: "warning", lezart: "success" };
