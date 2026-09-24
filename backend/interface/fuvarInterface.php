@@ -92,6 +92,9 @@ class FuvarInterface {
         if ($hiba !== null) {
             return ['success' => false, 'message' => $hiba];
         }
+        if (!$this->ervenyesEntitasE('fuvarok', $data['id'] ?? null, $ceg_id)) {
+            return ['success' => false, 'message' => 'A fuvar nem található.'];
+        }
         try {
             $query = "UPDATE fuvarok SET
                         sofor_id = :sofor_id, kamion_id = :kamion_id, furgon_id = :furgon_id, potkocsi_id = :potkocsi_id,
@@ -101,7 +104,7 @@ class FuvarInterface {
                         megbizo_id = :megbizo_id, aru_megnevezese = :aru_megnevezese, megjegyzes = :megjegyzes,
                         fuvardij = :fuvardij, egyeb_koltseg = :egyeb_koltseg, raklapszam = :raklapszam,
                         beerkezett_dokumentum_id = :beerkezett_dokumentum_id, allapot = :allapot
-                      WHERE id = :id AND admin = :admin";
+                      WHERE id = :id AND admin = :admin AND torolt <> 'I'";
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(':id', $data['id'], PDO::PARAM_INT);
             $this->bindFuvarMezok($stmt, $data, $ceg_id);
@@ -690,7 +693,7 @@ class FuvarInterface {
         // 4. Havi statisztika (utolsó 12, lerakás dátuma szerinti hónap)
         $havi = [];
         foreach ($fuvarok as $f) {
-            if (empty($f['lerakas_datuma'])) {
+            if (empty($f['lerakas_datuma']) || str_starts_with($f['lerakas_datuma'], '0000')) {
                 continue;
             }
             $ho = substr($f['lerakas_datuma'], 0, 7);
@@ -987,7 +990,7 @@ class FuvarInterface {
         }
         $trendBucket = [];
         foreach ($fuvarok as $f) {
-            if (empty($f['lerakas_datuma'])) {
+            if (empty($f['lerakas_datuma']) || str_starts_with($f['lerakas_datuma'], '0000')) {
                 continue;
             }
             if ($granularitas === 'nap') {

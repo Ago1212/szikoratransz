@@ -206,6 +206,9 @@ class BejelentesekInterface {
     // szánt beküldése), az ténylegesen törli — ez a különbség számít.
     public function saveBejelentesData($data, $ceg_id) {
         try {
+            if (!$this->bejelentesElerheto($data['id'], $ceg_id)) {
+                return ['success' => false, 'message' => 'A bejelentés nem található, vagy nem a te céged tulajdona.'];
+            }
             $lezarva = $data['statusz'] === 'lezart' ? date('Y-m-d H:i:s') : null;
             $query = "UPDATE bejelentesek SET
                       cim = :cim, leiras = :leiras, prioritas = :prioritas, statusz = :statusz,
@@ -221,10 +224,6 @@ class BejelentesekInterface {
             $stmt->bindValue(':id', $data['id'], PDO::PARAM_INT);
             $stmt->bindValue(':ceg_id', $ceg_id);
             $stmt->execute();
-
-            if ($stmt->rowCount() === 0) {
-                return ['success' => false, 'message' => 'A bejelentés nem található, vagy nem a te céged tulajdona.'];
-            }
 
             return ['success' => true, 'message' => 'Bejelentés frissítve.'];
         } catch (Exception $e) {

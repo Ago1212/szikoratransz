@@ -13,6 +13,24 @@ class KarbantartasInterface {
     // potkocsi_id: "",
     // datumTol: "",
     // datumIg: "",
+    private function hozzafuzFajlokSzama(array $sorok, $ceg_id) {
+        $idk = array_values(array_unique(array_map(fn($s) => (int) $s['id'], $sorok)));
+        $szamok = [];
+        if ($idk) {
+            $helyek = implode(',', array_fill(0, count($idk), '?'));
+            $stmt = $this->db->prepare("SELECT rowid, karbantartas_jarmu_tipus, COUNT(*) AS db FROM fajlok WHERE tabla = 'karbantartasok' AND admin = ? AND torolt <> 'I' AND rowid IN ($helyek) GROUP BY rowid, karbantartas_jarmu_tipus");
+            $stmt->execute(array_merge([(int) $ceg_id], $idk));
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $sor) {
+                $szamok[$sor['karbantartas_jarmu_tipus'] . ':' . (int) $sor['rowid']] = (int) $sor['db'];
+            }
+        }
+        foreach ($sorok as &$sor) {
+            $sor['fajlok_szama'] = $szamok[$sor['tipus'] . ':' . (int) $sor['id']] ?? 0;
+        }
+        unset($sor);
+        return $sorok;
+    }
+
     public function getKarbantartasok($id, $kamion_id, $potkocsi_id, $datumTol, $datumIg, $elvegezte, $search = null, $page = null, $pageSize = null, $furgon_id = null) {
         $filter = [
             'kamion_id' => $kamion_id,
@@ -145,6 +163,7 @@ class KarbantartasInterface {
                 $sumStmt->execute();
                 $osszesKoltseg = (float) ($sumStmt->fetch(PDO::FETCH_ASSOC)['osszeg'] ?? 0);
 
+                $result = $this->hozzafuzFajlokSzama($result, $id);
                 return ['success' => true, 'message' => 'Karbantartások lekérdezve.', 'karbantartasok' => $result, 'total' => $total, 'page' => $page, 'pageSize' => $pageSize, 'osszesKoltseg' => $osszesKoltseg];
             }
 
@@ -156,7 +175,7 @@ class KarbantartasInterface {
             }
 
             $stmt->execute();
-            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $result = $this->hozzafuzFajlokSzama($stmt->fetchAll(PDO::FETCH_ASSOC), $id);
 
             return ['success' => true, 'message' => 'Karbantartások lekérdezve.', 'karbantartasok' => $result];
         } catch (Exception $e) {

@@ -29,6 +29,8 @@ if (PHP_SAPI !== 'cli') {
 
 require __DIR__ . '/../db.php';
 require __DIR__ . '/../interface/emailInterface.php';
+require_once __DIR__ . '/../config.php';
+require __DIR__ . '/../interface/pushInterface.php';
 
 $database = new Database();
 $db = $database->connect();
@@ -148,8 +150,53 @@ foreach ($adminStmt->fetchAll(PDO::FETCH_ASSOC) as $admin) {
     }
 
     $result = $emailInterface->sendLejaratEmlekezteto($admin['email'], $admin['name'], $items, $WARNING_WINDOW_DAYS);
+    try {
+        $pushInterface->sendPushAdminnak(
+            $admin['id'],
+            count($items) . ' lejáró határidő a következő ' . $WARNING_WINDOW_DAYS . ' napban',
+            $items[0] . (count($items) > 1 ? ' (+' . (count($items) - 1) . ' további)' : ''),
+            '/admin/esemenyek',
+            'lejarat-' . $ma
+        );
+    } catch (Exception $e) {
+        echo date('c') . ' — push sikertelen: ' . $e->getMessage() . PHP_EOL;
+    }
     echo date('c') . ' — ' . $admin['email'] . ': ' . count($items) . ' tétel, küldés ' . ($result['success'] ? 'sikeres' : 'sikertelen') . PHP_EOL;
     if ($result['success']) {
         $logInsertStmt->execute([':admin_id' => $admin['id'], ':datum' => $ma]);
+    }
+}
+
+$SOFOR_MERFOLDKOVEK = [30, 7, 1, 0];
+$soforCimkek = [
+    'szemelyi_lejarat' => 'Személyi igazolványod',
+    'jogsi_lejarat' => 'Jogosítványod',
+    'gki_lejarat' => 'GKI-igazolványod',
+    'adr_lejarat' => 'ADR-igazolványod',
+];
+$soforLogInsert = $db->prepare("INSERT IGNORE INTO sofor_lejarat_ertesites_log (sofor_id, mezo, lejarat, merfoldko) VALUES (:sofor_id, :mezo, :lejarat, :merfoldko)");
+$maDatum = new DateTime('today');
+$soforStmt = $db->query("SELECT id, szemelyi_lejarat, jogsi_lejarat, gki_lejarat, adr_lejarat FROM user WHERE torolt <> 'I'");
+foreach ($soforStmt->fetchAll(PDO::FETCH_ASSOC) as $sofor) {
+    foreach ($soforCimkek as $mezo => $cimke) {
+        $ertek = $sofor[$mezo];
+        if (empty($ertek) || str_starts_with($ertek, '0000')) {
+            continue;
+        }
+        $napok = (int) $maDatum->diff(new DateTime($ertek))->format('%r%a');
+        if (!in_array($napok, $SOFOR_MERFOLDKOVEK, true)) {
+            continue;
+        }
+        $soforLogInsert->execute([':sofor_id' => $sofor['id'], ':mezo' => $mezo, ':lejarat' => $ertek, ':merfoldko' => $napok]);
+        if ($soforLogInsert->rowCount() === 0) {
+            continue;
+        }
+        $szoveg = $napok === 0 ? 'ma lejár.' : $napok . ' nap múlva lejár (' . $ertek . ').';
+        try {
+            $pushInterface->sendPushSofornak($sofor['id'], 'Lejáró okmány', $cimke . ' ' . $szoveg, '/user/profil', 'okmany-' . $mezo);
+            echo date('c') . ' — sofőr #' . $sofor['id'] . ': ' . $mezo . ' (' . $napok . ' nap) push elküldve.' . PHP_EOL;
+        } catch (Exception $e) {
+            echo date('c') . ' — sofőr #' . $sofor['id'] . ' push sikertelen: ' . $e->getMessage() . PHP_EOL;
+        }
     }
 }

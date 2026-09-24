@@ -35,7 +35,7 @@ class FilesInterface {
     // `tabla !== "admin"` ág (kamion/pótkocsi/furgon/sofőr/karbantartás/
     // bejelentés fájlok) MINDIG üres listát adott vissza — funkcionális
     // regresszió, nem csak biztonsági rés (ld. biztonsági audit).
-    function getFiles($tabla, $id, $search = null, $page = null, $pageSize = null, $ceg_id = null, $szurok = []) {
+    function getFiles($tabla, $id, $search = null, $page = null, $pageSize = null, $ceg_id = null, $szurok = [], $jarmuTipus = null) {
         try {
             if ($tabla === "admin") {
                 $params = [':id' => $ceg_id];
@@ -96,10 +96,17 @@ class FilesInterface {
                 // (pl. egy karbantartás/sofőr azonosítót végigpróbálva)
                 // hozzáférhetne annak fájllistájához.
                 $query = "SELECT * FROM fajlok WHERE rowid = :id AND tabla = :tabla AND admin = :ceg_id";
+                $jarmuTipus = $this->karbantartasJarmuTipus($tabla, $jarmuTipus);
+                if ($jarmuTipus !== null) {
+                    $query .= " AND karbantartas_jarmu_tipus = :jarmu_tipus";
+                }
                 $stmt = $this->db->prepare($query);
                 $stmt->bindParam(':id', $id);
                 $stmt->bindParam(':tabla', $tabla);
                 $stmt->bindValue(':ceg_id', $ceg_id);
+                if ($jarmuTipus !== null) {
+                    $stmt->bindValue(':jarmu_tipus', $jarmuTipus);
+                }
             }
             $stmt->execute();
             $files = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -170,14 +177,19 @@ class FilesInterface {
         ]);
     }
 
-    function fileToDatabase($admin, $tabla, $rowid, $hely, $name, $size, $kategoria, $feltoltoTipus, $feltoltoId, $feltoltoNev, $fajlKategoria, $cimkek) {
-        $query = "INSERT INTO fajlok (admin,tabla,kategoria,rowid,hely,filename,filesize,feltoltve,feltolto_tipus,feltolto_id,feltolto_nev,fajl_kategoria,cimkek)
-                   VALUES (:admin,:tabla,:kategoria,:id,:hely,:filename,:filesize,NOW(),:feltolto_tipus,:feltolto_id,:feltolto_nev,:fajl_kategoria,:cimkek)";
+    private function karbantartasJarmuTipus($tabla, $jarmuTipus) {
+        return $tabla === 'karbantartasok' && in_array($jarmuTipus, ['kamion', 'potkocsi', 'furgon'], true) ? $jarmuTipus : null;
+    }
+
+    function fileToDatabase($admin, $tabla, $rowid, $hely, $name, $size, $kategoria, $feltoltoTipus, $feltoltoId, $feltoltoNev, $fajlKategoria, $cimkek, $jarmuTipus = null) {
+        $query = "INSERT INTO fajlok (admin,tabla,kategoria,rowid,karbantartas_jarmu_tipus,hely,filename,filesize,feltoltve,feltolto_tipus,feltolto_id,feltolto_nev,fajl_kategoria,cimkek)
+                   VALUES (:admin,:tabla,:kategoria,:id,:jarmu_tipus,:hely,:filename,:filesize,NOW(),:feltolto_tipus,:feltolto_id,:feltolto_nev,:fajl_kategoria,:cimkek)";
         $stmt = $this->db->prepare($query);
         $stmt->bindParam(':admin', $admin);
         $stmt->bindParam(':tabla', $tabla);
         $stmt->bindParam(':kategoria', $kategoria);
         $stmt->bindParam(':id', $rowid);
+        $stmt->bindValue(':jarmu_tipus', $this->karbantartasJarmuTipus($tabla, $jarmuTipus));
         $stmt->bindParam(':hely', $hely);
         $stmt->bindParam(':filename', $name);
         $stmt->bindParam(':filesize', $size);
@@ -238,7 +250,7 @@ class FilesInterface {
     // kliens által küldött mezőből (ugyanaz az elv, mint az `$admin`
     // paraméternél: a kliens `admin` mezőjét ez a kód már korábban is
     // figyelmen kívül hagyta, `resolveSajatCegId()`-t hívva helyette).
-    function fileUpload($admin, $tabla, $rowid, $base64File, $name, $size, $kategoria = null, $feltoltoTipus = null, $feltoltoId = null, $feltoltoNev = null, $cimkek = null) {
+    function fileUpload($admin, $tabla, $rowid, $base64File, $name, $size, $kategoria = null, $feltoltoTipus = null, $feltoltoId = null, $feltoltoNev = null, $cimkek = null, $jarmuTipus = null) {
         $kiterjesztes = strtolower(pathinfo($name, PATHINFO_EXTENSION));
         if (!in_array($kiterjesztes, self::MEGENGEDETT_KITERJESZTESEK, true)) {
             return ['success' => false, 'message' => 'Ez a fájltípus nem engedélyezett.'];
@@ -269,7 +281,7 @@ class FilesInterface {
         $fajlKategoria = self::KATEGORIA_TERKEP[$kiterjesztes] ?? 'egyeb';
 
         if (file_put_contents($filePath, $fileData) !== false) {
-            if ($this->fileToDatabase($admin, $tabla, $rowid, $filePath, $displayName, strlen($fileData), $kategoria, $feltoltoTipus, $feltoltoId, $feltoltoNev, $fajlKategoria, $cimkek)) {
+            if ($this->fileToDatabase($admin, $tabla, $rowid, $filePath, $displayName, strlen($fileData), $kategoria, $feltoltoTipus, $feltoltoId, $feltoltoNev, $fajlKategoria, $cimkek, $jarmuTipus)) {
                 return ['success' => true, 'message' => 'A fájl mentve', 'id' => $this->db->lastInsertId()];
             }
             unlink($filePath);

@@ -608,6 +608,54 @@ class ApiHandler {
     // "saját ceg_id" feloldás, ami MINDKÉT munkamenet-típusnál a valódi,
     // szerver-oldali hovatartozást adja vissza, sosem a kliens által
     // küldött `admin`/`ceg_id` mezőt.
+    private function ellenorizSoforFajlTabla(array $request, $tabla, $rowid, bool $iras): void {
+        $session = $this->requireValidSession($request);
+        if ($session['felhasznalo_tipus'] !== 'sofor') {
+            return;
+        }
+        if ($tabla === 'helyszin') {
+            return;
+        }
+        if ($iras && $tabla === 'bejelentesek' && $this->soforSajatSora('bejelentesek', $rowid, $session['felhasznalo_id'])) {
+            return;
+        }
+        throw new Exception('Ehhez a fájlművelethez nincs jogosultságod.');
+    }
+
+    private function ellenorizSoforFajlLetoltes(array $request, $fajlId): void {
+        $session = $this->requireValidSession($request);
+        if ($session['felhasznalo_tipus'] !== 'sofor') {
+            return;
+        }
+        $soforId = $session['felhasznalo_id'];
+        $stmt = $this->db->prepare("SELECT tabla, rowid, feltolto_tipus, feltolto_id FROM fajlok WHERE sorszam = :id AND admin = :ceg_id AND torolt <> 'I'");
+        $stmt->bindValue(':id', $fajlId);
+        $stmt->bindValue(':ceg_id', $this->resolveSajatCegId($request));
+        $stmt->execute();
+        $fajl = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($fajl) {
+            if ($fajl['tabla'] === 'helyszin'
+                || ($fajl['feltolto_tipus'] === 'sofor' && (string) $fajl['feltolto_id'] === (string) $soforId)
+                || ($fajl['tabla'] === 'sofor' && (string) $fajl['rowid'] === (string) $soforId)
+                || ($fajl['tabla'] === 'fuvar' && $this->soforSajatSora('fuvarok', $fajl['rowid'], $soforId))
+                || ($fajl['tabla'] === 'bejelentesek' && $this->soforSajatSora('bejelentesek', $fajl['rowid'], $soforId))) {
+                return;
+            }
+        }
+        throw new Exception('Ehhez a fájlhoz nincs hozzáférésed.');
+    }
+
+    private function soforSajatSora(string $tabla, $id, $soforId): bool {
+        if (!in_array($tabla, ['bejelentesek', 'fuvarok'], true) || empty($id)) {
+            return false;
+        }
+        $stmt = $this->db->prepare("SELECT id FROM $tabla WHERE id = :id AND sofor_id = :sofor_id AND torolt <> 'I'");
+        $stmt->bindValue(':id', $id);
+        $stmt->bindValue(':sofor_id', $soforId);
+        $stmt->execute();
+        return (bool) $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     private function resolveSajatCegId(array $request): int {
         $session = $this->requireValidSession($request);
         if ($session['felhasznalo_tipus'] === 'admin') {
@@ -1051,9 +1099,11 @@ class ApiHandler {
                     return;
                 case 'saveBejelentesData':
                     $kerelmezo = $this->resolveKerelmezo($request);
+                    $elotte = $this->bejelentesAlapadat($request['id'], $kerelmezo['ceg_id']);
                     $result = $bejelentesekInterface->saveBejelentesData($request, $kerelmezo['ceg_id']);
                     if ($result['success']) {
                         $this->logAudit($kerelmezo['ceg_id'], 'bejelentesek', $request['id'], 'modositas', $request['cim'] ?? null);
+                        $this->ertesitBejelentesValtozasrol($elotte, $this->bejelentesAlapadat($request['id'], $kerelmezo['ceg_id']));
                     }
                     echo json_encode($result);
                     return;
@@ -1092,9 +1142,25 @@ class ApiHandler {
                         echo json_encode(['success' => false, 'message' => 'Ehhez a művelethez adminisztrátori jogosultság szükséges.']);
                         return;
                     }
+                    $kerelemStmt = $this->db->prepare("SELECT sofor_id, tipus FROM jarmu_valtas_kerelmek WHERE id = :id AND admin = :ceg_id");
+                    $kerelemStmt->bindValue(':id', $request['id']);
+                    $kerelemStmt->bindValue(':ceg_id', $kerelmezo['ceg_id']);
+                    $kerelemStmt->execute();
+                    $kerelem = $kerelemStmt->fetch(PDO::FETCH_ASSOC);
                     $result = $jarmuValtasInterface->elbiralJarmuValtas($request['id'], $request['allapot'], $kerelmezo['ceg_id']);
                     if ($result['success']) {
                         $this->logAudit($kerelmezo['ceg_id'], 'jarmu_valtas_kerelmek', $request['id'], 'modositas', $request['allapot']);
+                        if ($kerelem && !empty($kerelem['sofor_id'])) {
+                            $jovahagyva = $request['allapot'] === 'jovahagyva';
+                            $jarmuNev = ['kamion' => 'Kamion', 'potkocsi' => 'Pótkocsi', 'furgon' => 'Furgon'][$kerelem['tipus']] ?? 'Jármű';
+                            $this->ertesitSofort(
+                                $kerelem['sofor_id'],
+                                $jovahagyva ? 'Jármű-váltás jóváhagyva' : 'Jármű-váltás elutasítva',
+                                $jarmuNev . '-váltási kérelmedet ' . ($jovahagyva ? 'jóváhagyták.' : 'elutasították.'),
+                                '/user/dashboard',
+                                'jarmuvaltas-' . $request['id']
+                            );
+                        }
                     }
                     echo json_encode($result);
                     return;
@@ -1608,6 +1674,12 @@ class ApiHandler {
                         $nevStmt->execute();
                         $szerzoNev = $nevStmt->fetch(PDO::FETCH_ASSOC)['name'] ?? 'Admin';
                         $result = $bejelentesekInterface->sendMessage($request['bejelentes_id'], $request['szoveg'], $cegId, 'admin', $szerzoId, $szerzoNev);
+                        if ($result['success']) {
+                            $bejelentes = $this->bejelentesAlapadat($request['bejelentes_id'], $cegId);
+                            if ($bejelentes && !empty($bejelentes['sofor_id'])) {
+                                $this->ertesitSofort($bejelentes['sofor_id'], 'Válasz a bejelentésedre', $szerzoNev . ' írt: ' . ($bejelentes['cim'] ?: 'bejelentés'), '/user/bejelentesek', 'bejelentes-' . $request['bejelentes_id']);
+                            }
+                        }
                     }
                     echo json_encode($result);
                     return;
@@ -1922,7 +1994,8 @@ class ApiHandler {
                         'sortKey' => $request['sortKey'] ?? null,
                         'sortDir' => $request['sortDir'] ?? null,
                     ];
-                    echo json_encode($filesInterface->getFiles($request['tabla'], $request['id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $this->resolveSajatCegId($request), $szurok));
+                    $this->ellenorizSoforFajlTabla($request, $request['tabla'], $request['id'] ?? null, false);
+                    echo json_encode($filesInterface->getFiles($request['tabla'], $request['id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null, $this->resolveSajatCegId($request), $szurok, $request['jarmuTipus'] ?? null));
                     return;
                 case 'fileUpload':
                     // A fájlt a SAJÁT (szerver-oldalon feloldott) ceg_id-vel
@@ -1931,6 +2004,7 @@ class ApiHandler {
                     // idegen cég fájllistájába "csempészhetne" fel tartalmat.
                     // A feltöltő azonosítója/neve ugyanígy kizárólag a
                     // munkamenetből (ld. resolveFeltolto()), sosem kliens-mezőből.
+                    $this->ellenorizSoforFajlTabla($request, $request['tabla'], $request['id'] ?? null, true);
                     [$feltoltoTipus, $feltoltoId, $feltoltoNev] = $this->resolveFeltolto($request);
                     echo json_encode($filesInterface->fileUpload(
                         $this->resolveSajatCegId($request),
@@ -1943,29 +2017,31 @@ class ApiHandler {
                         $feltoltoTipus,
                         $feltoltoId,
                         $feltoltoNev,
-                        $request['cimkek'] ?? null
+                        $request['cimkek'] ?? null,
+                        $request['jarmuTipus'] ?? null
                     ));
                     return;
                 case 'downloadFile':
+                    $this->ellenorizSoforFajlLetoltes($request, $request['id']);
                     echo json_encode($filesInterface->downloadFile($request['id'], $this->resolveSajatCegId($request)));
                     return;
                 case 'deleteFile':
-                    echo json_encode($filesInterface->deleteFile($request['id'], $this->resolveSajatCegId($request)));
+                    echo json_encode($filesInterface->deleteFile($request['id'], $this->resolveKerelmezo($request)['ceg_id']));
                     return;
                 case 'updateFajlCimkek':
-                    echo json_encode($filesInterface->updateFajlCimkek($request['id'], $this->resolveSajatCegId($request), $request['cimkek']));
+                    echo json_encode($filesInterface->updateFajlCimkek($request['id'], $this->resolveKerelmezo($request)['ceg_id'], $request['cimkek']));
                     return;
                 case 'renameFile':
-                    echo json_encode($filesInterface->renameFile($request['id'], $this->resolveSajatCegId($request), $request['name']));
+                    echo json_encode($filesInterface->renameFile($request['id'], $this->resolveKerelmezo($request)['ceg_id'], $request['name']));
                     return;
                 case 'downloadFilesZip':
-                    echo json_encode($filesInterface->downloadFilesZip($request['ids'], $this->resolveSajatCegId($request)));
+                    echo json_encode($filesInterface->downloadFilesZip($request['ids'], $this->resolveKerelmezo($request)['ceg_id']));
                     return;
                 case 'getFajlStatisztika':
-                    echo json_encode($filesInterface->getStatisztika($this->resolveSajatCegId($request)));
+                    echo json_encode($filesInterface->getStatisztika($this->resolveKerelmezo($request)['ceg_id']));
                     return;
                 case 'getHasonloFajlok':
-                    echo json_encode($filesInterface->getHasonloFajlok($request['id'], $this->resolveSajatCegId($request)));
+                    echo json_encode($filesInterface->getHasonloFajlok($request['id'], $this->resolveKerelmezo($request)['ceg_id']));
                     return;
                 case 'getEgyediHataridok':
                     echo json_encode($this->getEgyediHataridok($this->resolveKerelmezo($request)['ceg_id'], $request['search'] ?? null, $request['page'] ?? null, $request['pageSize'] ?? null));
@@ -2131,13 +2207,13 @@ class ApiHandler {
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':id', $id);
             $stmt->execute();
-            $sofor_esemenyek = $stmt->fetch(PDO::FETCH_ASSOC);
+            $sofor_esemenyek = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            if ($sofor_esemenyek) {
-                $data = array_merge($data, $this->formatEvents($sofor_esemenyek, [
+            foreach ($sofor_esemenyek as $sofor) {
+                $data = array_merge($data, $this->formatEvents($sofor, [
                     'szemelyi_lejarat' => 'Személyi igazolvány lejárat',
                     'jogsi_lejarat' => 'Jogosítvány lejárat',
-                    'gki_lejarat' => 'Gépjármű-kötelező biztosítás lejárat',
+                    'gki_lejarat' => 'GKI igazolvány lejárat',
                     'adr_lejarat' => 'ADR igazolvány lejárat'
                 ]));
             }
@@ -2496,7 +2572,7 @@ class ApiHandler {
         $formattedEvents = [];
         foreach ($events as $key => $value) {
             $leiras = $events['leiras'];
-            if ($key != "leiras" && $value && isset($labels[$key])) {
+            if ($key != "leiras" && $value && $value !== '0000-00-00' && isset($labels[$key])) {
                 $formattedEvents[] = [
                     'start' => $value,
                     'end' => $value,
@@ -2620,6 +2696,7 @@ class ApiHandler {
             $stmt->execute();
 
             $token = bin2hex(random_bytes(32));
+            $this->db->exec("DELETE FROM sessions WHERE lejarat < NOW()");
             $stmt = $this->db->prepare("INSERT INTO sessions (token, felhasznalo_tipus, felhasznalo_id, lejarat) VALUES (:token, :tipus, :id, DATE_ADD(NOW(), INTERVAL 30 DAY))");
             $stmt->bindValue(':token', $token);
             $stmt->bindValue(':tipus', $user['is_admin'] ? 'admin' : 'sofor');
@@ -2705,6 +2782,7 @@ class ApiHandler {
         unset($user['password']);
 
         $token = bin2hex(random_bytes(32));
+        $this->db->exec("DELETE FROM sessions WHERE lejarat < NOW()");
         $stmt = $this->db->prepare("INSERT INTO sessions (token, felhasznalo_tipus, felhasznalo_id, lejarat) VALUES (:token, 'sofor', :id, DATE_ADD(NOW(), INTERVAL 30 DAY))");
         $stmt->bindValue(':token', $token);
         $stmt->bindValue(':id', $soforId, PDO::PARAM_INT);
@@ -3072,11 +3150,41 @@ class ApiHandler {
     }
 
     // Új bejelentés-üzenetről a cég MINDEN admin-fiókját (gyökér + minden
-    // csapattag) értesíti, akinek van aktív Web Push feliratkozása — a
-    // driver-oldali push-infrastruktúra még nem létezik (ld. CLAUDE.md), ezért
-    // ez csak a sofőr -> admin irányt fedi le. `sendPushAdminnak()` némán nem
+    // csapattag) értesíti, akinek van aktív Web Push feliratkozása (a
+    // sofőr -> admin irány; a fordítottat ertesitSofort() kezeli). `sendPushAdminnak()` némán nem
     // csinál semmit egy nem-feliratkozott admin-nál, tehát biztonságos minden
     // csapattagra meghívni szűrés nélkül.
+    private function bejelentesAlapadat($id, $ceg_id) {
+        $stmt = $this->db->prepare("SELECT id, sofor_id, cim, statusz, admin_valasz FROM bejelentesek WHERE id = :id AND admin = :ceg_id AND torolt <> 'I'");
+        $stmt->bindValue(':id', $id);
+        $stmt->bindValue(':ceg_id', $ceg_id);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+
+    private function ertesitBejelentesValtozasrol($elotte, $utana) {
+        if (!$elotte || !$utana || empty($utana['sofor_id'])) {
+            return;
+        }
+        $cim = $utana['cim'] ?: 'Bejelentés';
+        $tag = 'bejelentes-' . $utana['id'];
+        if ($elotte['statusz'] !== $utana['statusz']) {
+            $cimke = ['uj' => 'Új', 'folyamatban' => 'Folyamatban', 'lezart' => 'Lezárva'][$utana['statusz']] ?? $utana['statusz'];
+            $this->ertesitSofort($utana['sofor_id'], 'Bejelentés: ' . $cimke, $cim, '/user/bejelentesek', $tag);
+        } elseif (trim((string) $utana['admin_valasz']) !== '' && $utana['admin_valasz'] !== $elotte['admin_valasz']) {
+            $this->ertesitSofort($utana['sofor_id'], 'Válasz a bejelentésedre', $cim, '/user/bejelentesek', $tag);
+        }
+    }
+
+    private function ertesitSofort($soforId, $cim, $szoveg, $url, $tag) {
+        global $pushInterface;
+        try {
+            $pushInterface->sendPushSofornak($soforId, $cim, $szoveg, $url, $tag);
+        } catch (Exception $e) {
+            error_log('Sofőr push értesítés sikertelen: ' . $e->getMessage());
+        }
+    }
+
     private function ertesitBejelentesUjUzenetrol($ceg_id, $bejelentes_id, $szerzoNev) {
         global $pushInterface;
         try {

@@ -996,6 +996,7 @@ class KoltsegInterface {
             $honapokSzama = max(count($osszesito['havi']), 1);
             $atlagBevetel = round($osszesito['osszesen']['bevetel'] / $honapokSzama, 2);
             $atlagBiztositas = round($osszesito['osszesen']['biztositas'] / $honapokSzama, 2);
+            $atlagEgyebKiadas = round(($osszesito['osszesen']['uzemanyag'] + $osszesito['osszesen']['utdij'] + $osszesito['osszesen']['egyeb']) / $honapokSzama, 2);
 
             // Item 9: a következő naptári hónapra ütemezett, még el nem
             // végzett karbantartások becsült költsége — nem privát adat
@@ -1012,6 +1013,7 @@ class KoltsegInterface {
                 'datumIg' => $datumIg->format('Y-m-d'),
                 'atlagBevetel' => $atlagBevetel,
                 'atlagBiztositas' => $atlagBiztositas,
+                'atlagEgyebKiadas' => $atlagEgyebKiadas,
                 'tervezettKarbantartas' => $karbantartasBecsult['osszeg'],
                 'tervezettKarbantartasTetelSzam' => $karbantartasBecsult['tetelSzam'],
             ];
@@ -1020,10 +1022,10 @@ class KoltsegInterface {
                 $aktivBer = $this->getAktivBerOsszeg($ceg_id);
                 $result['aktivBer'] = $aktivBer;
                 $result['fixKoltsegek'] = round($atlagBiztositas + $aktivBer + $karbantartasBecsult['osszeg'], 2);
-                $result['varhatoEredmeny'] = round($atlagBevetel - $atlagBiztositas - $aktivBer - $karbantartasBecsult['osszeg'], 2);
+                $result['varhatoEredmeny'] = round($atlagBevetel - $atlagEgyebKiadas - $atlagBiztositas - $aktivBer - $karbantartasBecsult['osszeg'], 2);
             } else {
                 $result['fixKoltsegek'] = round($atlagBiztositas + $karbantartasBecsult['osszeg'], 2);
-                $result['varhatoEredmeny'] = round($atlagBevetel - $atlagBiztositas - $karbantartasBecsult['osszeg'], 2);
+                $result['varhatoEredmeny'] = round($atlagBevetel - $atlagEgyebKiadas - $atlagBiztositas - $karbantartasBecsult['osszeg'], 2);
             }
 
             return $result;
